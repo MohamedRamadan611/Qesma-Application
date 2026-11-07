@@ -436,9 +436,7 @@ UI design is produced separately from `STITCH_PROMPTS.md`. Required screens:
 9. **Expense details**: payers, per-person breakdown, items (if itemized), "edited" badge, edit/delete.
 10. **Balances tab**: per-member net (green = is owed, red/orange = owes) and the simplified transfers list; each transfer has **Record payment**.
 11. **Record payment** (bottom sheet: from, to, amount prefilled, date, note).
-12. **Settings Hub**: language (ar/en), default currency, navigation to Edit Profile and Account Settings, sign out.
-13. **Edit profile**: display name, avatar picker, phone number, read-only Google account info.
-14. **Account settings**: linked Google account status, payment handles (InstaPay/wallet handle), data export, sign out from all devices, delete account.
+12. **Settings**: language (ar/en), sign out.
 
 Client rules:
 - Debounce calls to `preview` (≈300 ms) on the itemized and multi-payer screens.
@@ -541,3 +539,17 @@ Code compiles; unit + integration tests pass; OpenAPI updated; migrations includ
 | A8 | A payer may be a non-participant; a participant may owe without paying. | Decided |
 | A9 | Tie-breaks for rounding use `sort_order` (member creation order). | Decided |
 | A10 | Pricing, paywall and monetization are Phase 5 hypotheses to be tested with real users, not decided. | Open |
+| A11 | V4 transfer order: applying 7.7 literally yields `Z→X 125.00`, `W→Y 75.00`, `W→X 50.00` (largest creditor is re-picked each round). Same set and amounts as the V4 text; the fixture follows the rule's order. | Decided (B3) |
+| A12 | ITEMIZED: if an adjustment would make any single member's `owed` negative, the bill is rejected with `VALIDATION_ERROR` (in addition to total > 0). | Decided (B3) |
+| A13 | Engine arithmetic overflow is reported as `VALIDATION_ERROR` (no new error code). EQUAL and EXACT keep participants whose share is 0; only ITEMIZED drops zero-owed members (7.4 step 6). | Decided (B3) |
+| A14 | Service and tax rates are limited to 0–10000 bps (0–100%). | Assumption (B3) |
+| A15 | Error codes beyond spec 8.5: `INTERNAL_ERROR` (500), `RATE_LIMITED` (429, auth endpoints), `AUTH_PROVIDER_UNAVAILABLE` (503, Google keys unreachable). | Decided (B0/B1) |
+| A16 | `POST /auth/google` is naturally idempotent and does not use `Idempotency-Key` (8.3 applies to expense/settlement creates). Logout always returns 204. | Decided (B1) |
+| A17 | Access JWT 15 min; refresh token 30 days, rotating, reuse revokes the whole family. Access tokens are not revocable before expiry. See ADR-002. | Decided (B1) |
+| A18 | Only a Google-verified email is stored. Display name defaults to Google's name, else the email local part, else "Qesma user"; max 60 characters (code points). | Decided (B1) |
+| A19 | `GET /groups` returns per group `id, name, type, currencyCode, memberCount, totalSpentMinor, lastExpenseAt` (the UI needs them); the last two are `0` / `null` until expenses exist (B4). Paged: `page` (0-based, default 0), `size` (default 20, max 100, out of range = 422), newest group first, envelope `{items, page, size, totalElements, totalPages}`. | Decided (B2) |
+| A20 | `expense_groups.member_seq` counter and `UNIQUE (group_id, sort_order)` are added to the spec 6 tables so `sort_order` is never reused (7.10), even after the newest member is deleted. The counter moves under a row lock on the group and does not change `version`. | Decided (B2) |
+| A21 | Group PATCH needs `If-Match: "<version>"`: missing = 428 `VALIDATION_ERROR`, malformed = 422 `VALIDATION_ERROR`, stale = 409 `VERSION_CONFLICT`. `ETag` is the quoted version. Adding members does not change it. Member rename is last-write-wins (members have no version column). | Decided (B2) |
+| A22 | Group currency is fixed at creation (default EGP; any ISO 4217 code with a minor unit, case-normalized). Currencies whose minor unit is not 1/100 (e.g. JPY, KWD) are accepted but the app assumes 100 minor units per unit. | Assumption (B2), to review |
+| A23 | Groups and members are hard-deleted (they are not ledger rows); deleting a group also deletes its members. Both deletes first ask `GroupUsageChecker` / `MemberUsageChecker`, which B4/B7 implement (defaults say "unused"). | Decided (B2) |
+| A24 | `POST /groups` and `POST /groups/{gid}/members` do not use `Idempotency-Key` in B2 (spec 8.2/8.3 require it only for expenses and settlements); a retried group create can duplicate a group, a retried member create is stopped by the unique-name rule. Revisit with the B4 mechanism. | Decided (B2) |

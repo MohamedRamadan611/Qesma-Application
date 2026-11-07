@@ -1,0 +1,54 @@
+spring:
+  application:
+    name: qesma-backend
+  profiles:
+    default: local
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate.jdbc.time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  mvc:
+    problemdetails:
+      enabled: true
+
+server:
+  shutdown: graceful
+  error:
+    include-stacktrace: never
+    include-message: never
+    include-binding-errors: never
+
+qesma:
+  auth:
+    # Both are required in prod and have no default here. Secret: base64 of >= 32 random bytes.
+    jwt-secret: ${QESMA_JWT_SECRET}
+    google-client-ids: ${GOOGLE_CLIENT_IDS}
+    access-token-ttl: 15m
+    refresh-token-ttl: 30d
+    rate-limit:
+      max-requests: 10
+      window: 1m
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+  health:
+    db:
+      enabled: true
+
+# OpenAPI docs are off everywhere except the local profile.
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

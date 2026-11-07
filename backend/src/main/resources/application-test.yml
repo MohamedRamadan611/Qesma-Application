@@ -1,0 +1,13 @@
+# Datasource comes from Testcontainers (@ServiceConnection / @DynamicPropertySource) in integration tests.
+qesma:
+  auth:
+    # Test-only constants, not secrets.
+    jwt-secret: dGVzdC1vbmx5LXNlY3JldC1mb3ItaW50ZWdyYXRpb24tdGVzdHMtMDEyMzQ1Njc4OQ==
+    google-client-ids: test-client-id
+    rate-limit:
+      max-requests: 1000
+
+logging:
+  structured:
+    format:
+      console: ecs

@@ -1,0 +1,22 @@
+# Local development database only. Credentials here are dev-only defaults, not secrets.
+# Override via a root .env file (see .env.example).
+services:
+  db:
+    image: postgres:16.6-alpine
+    container_name: qesma-db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-qesma}
+      POSTGRES_USER: ${DB_USER:-qesma}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-qesma_local_dev}
+    ports:
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
+    volumes:
+      - qesma-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  qesma-db-data:

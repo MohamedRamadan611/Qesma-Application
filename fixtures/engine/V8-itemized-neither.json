@@ -1,0 +1,21 @@
+{
+  "name": "V8 itemized, neither service nor tax",
+  "input": {
+    "members": [ { "id": "A", "sortOrder": 1 }, { "id": "B", "sortOrder": 2 }, { "id": "C", "sortOrder": 3 } ],
+    "expenses": [
+      { "type": "ITEMIZED",
+        "payers": [ { "memberId": "A", "amountMinor": 44000 } ],
+        "items": [
+          { "name": "Pizza",  "amountMinor": 20000, "assigneeMemberIds": [ "A", "B" ] },
+          { "name": "Pasta",  "amountMinor": 15000, "assigneeMemberIds": [ "C" ] },
+          { "name": "Drinks", "amountMinor": 9000,  "assigneeMemberIds": [ "A", "B", "C" ] }
+        ],
+        "adjustmentMinor": 0 }
+    ],
+    "settlements": []
+  },
+  "expected": {
+    "expenses": [ { "owed": { "A": 13000, "B": 13000, "C": 18000 },
+                    "subtotalMinor": 44000, "serviceMinor": 0, "taxMinor": 0, "totalMinor": 44000 } ]
+  }
+}

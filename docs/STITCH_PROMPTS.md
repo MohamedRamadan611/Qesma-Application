@@ -3,9 +3,9 @@
 ## How to use
 1. Create **one Stitch project** for the app (Mobile / Android).
 2. Paste **Prompt 0** first to establish the design system. Review it, adjust colors/fonts if you like.
-3. Then paste **Prompts 1–11** one at a time (Phase 1 screens). Each prompt covers one group of related screens. Every prompt repeats a short **STYLE line** so the screens stay consistent even if Stitch treats each prompt independently.
+3. Then paste **Prompts 1–10** one at a time (Phase 1 screens). Each prompt covers one group of related screens. Every prompt repeats a short **STYLE line** so the screens stay consistent even if Stitch treats each prompt independently.
 4. Iterate on each result with short follow-ups ("make the total bar sticky", "increase the touch targets", "show the empty state").
-5. Prompts 12–14 are for **Phase 2** (collaboration). Use them later.
+5. Prompts 11–13 are for **Phase 2** (collaboration). Use them later.
 6. The UI text is **Arabic** (Egyptian-friendly wording, written inside the prompts). The prompts themselves are in English.
 
 > If Stitch limits prompt length, shorten the descriptions but keep the STYLE line and the sample data.
@@ -196,63 +196,22 @@ Design the "سجّل دفعة" bottom sheet: from (member picker, prefilled يو
 
 ---
 
-## Prompt 10 — Settings, Edit Profile & Account Settings
+## Prompt 10 — Settings, profile & system states
 
 ```
 STYLE: Arabic-first RTL Android 360×800, teal #0F766E primary, Cairo font, 16px radius cards, green=owed to you (#15803D), orange-red=you owe (#C2410C), Western digits, currency "ج.م". Friendly, trustworthy, clean.
 
-Design the settings, profile editing, and account management suite for "قسمة":
-1) Settings / Profile Hub (screen titled "الإعدادات" with back arrow):
-   - Profile header card: user avatar (teal circle with white initials "م.ر" or photo), display name "محمد رمضان", email "mohamed@example.com", and a secondary text/outline button "تعديل الملف الشخصي" (opens Edit Profile).
-   - "الحساب" section card: row "إعدادات الحساب" with a chevron (opens Account Settings).
-   - "التفضيلات" section card: row "لغة التطبيق" with value "العربية" (opens language modal "العربية" / "English"); row "العملة الافتراضية" with value "جنيه مصري (ج.م)".
-   - "عن التطبيق" section card: links "الشروط والأحكام", "سياسة الخصوصية", and app version "قسمة 1.0.0 (تجريبي)".
-   - Destructive text button at the bottom: "تسجيل الخروج" with sign-out confirmation dialog.
-
-2) Edit Profile screen (opened from "تعديل الملف الشخصي", full screen with back arrow and top bar action "حفظ"):
-   - Centered large circular avatar (96×96) with an edit badge/camera icon button ("تغيير الصورة الشخصية").
-   - Field 1: "الاسم المعروض" with value "محمد رمضان" and helper caption "الاسم ده هيظهر لأصحابك في المجموعات والمصاريف". Show inline error state for empty name: "اكتب اسمك عشان أصحابك يعرفوك".
-   - Field 2: "البريد الإلكتروني" read-only field with Google icon and subtle chip "مرتبط بحساب جوجل".
-   - Field 3: "رقم الموبايل" with Egyptian prefix "+20" and placeholder "01X XXXX XXXX" (optional, with caption "اختياري — لتسهيل إضافتك للمجموعات").
-   - Bottom sheet for avatar: "التقاط صورة", "اختيار من المعرض", "استخدام الحرف الأول بالألوان", "إزالة الصورة".
-   - Dialog state: unsaved changes warning "تجاهل التعديلات؟" with buttons "استمرار التعديل" / "تجاهل".
-   - Success state: snackbar "تم حفظ التعديلات بنجاح".
-
-3) Account Settings screen (opened from "إعدادات الحساب", full screen with back arrow and title "إعدادات الحساب"):
-   - "بيانات الحساب": Google account card showing email "mohamed@example.com", status chip "متصل ✔", and "آخر دخول: النهاردة".
-   - "بيانات الدفع والتسوية": card with note "البيانات دي بتظهر لأعضاء مجموعاتك بس عشان يسهل عليهم يحولولك فلوسك — التطبيق مبيحوّلش فلوس":
-     • Field "عنوان إنستا باي (InstaPay)": placeholder "asem@instapay".
-     • Field "رقم المحفظة الذكية (Smart Wallet)": placeholder "010XXXXXXXX".
-   - "البيانات والخصوصية": row "تصدير ملخص حساباتي" (export CSV) and row "الأجهزة النشطة".
-   - "المنطقة الخطرة" (red tinted card):
-     • Button "تسجيل الخروج من كل الأجهزة".
-     • Destructive button "حذف الحساب نهائيًا" that opens a two-step confirmation dialog explaining that account deletion permanently deletes groups owned by the user, unlinks balances, and cannot be undone: "هل أنت متأكد من حذف حسابك نهائيًا؟" with actions "إلغاء" and destructive "تأكيد حذف الحساب".
-```
-
----
-
-## Prompt 11 — System states, errors & onboarding coach marks
-
-```
-STYLE: Arabic-first RTL Android 360×800, teal #0F766E primary, Cairo font, 16px radius cards, green=owed to you (#15803D), orange-red=you owe (#C2410C), Western digits, currency "ج.م". Friendly, trustworthy, clean.
-
-Design reusable system states and onboarding guidance for "قسمة":
-1) No-internet screen (full-screen): friendly illustration of an unplugged cable or desert dune, headline "مفيش اتصال بالإنترنت", friendly body "التطبيق محتاج إنترنت عشان يحفظ ويسجّل المصاريف — اتأكد من شبكة الواي فاي أو باقة الموبايل", and primary button "حاول تاني".
-2) Generic error screen (full-screen): friendly line illustration, headline "حصل خطأ غير متوقع", body "حاولنا ننفّذ طلبك بس حصلت مشكلة تقنية بسيطة", button "تحديث الصفحة" and text button "الرجوع للرئيسية".
-3) Inline & component loading patterns: pull-to-refresh indicator (custom teal spinner), skeleton loading cards for group list and expense list tiles (subtle shimmer #F1F5F9).
-4) Session expired dialog: modal dialog with headline "انتهت الجلسة", body "مر وقت طويل من غير نشاط، سجّل دخولك تاني عشان تكمل بأمان", primary button "تسجيل الدخول" (navigates to Google Sign-in).
-5) First-use coach marks: sequence of 3 friendly floating tooltip cards on the Group Home screen:
-   - Tooltip 1 pointing to FAB: "ابدأ من هنا وسجّل أول مصروف للرحلة".
-   - Tooltip 2 pointing to tab 'الأرصدة': "هنا هتشوف مين عليه فلوس ومين ليه في ثواني".
-   - Tooltip 3 pointing to tab 'الأعضاء': "ضيف أصحابك بالاسم بس ومن غير ما يحتاجوا يسجلوا حساب".
-   Each tooltip has a "التالي" (Next) or "فهمت" (Got it) action and a "تخطي" (Skip) text button.
+Design:
+1) Profile/Settings screen: avatar and name (editable), email (read-only), language selector ("العربية" / "English"), app version, links "الشروط والأحكام" و"سياسة الخصوصية", and a destructive "تسجيل الخروج" button with a confirmation dialog.
+2) System states, as reusable full-screen and inline patterns: no-internet screen ("مفيش اتصال بالإنترنت" with a retry button "حاول تاني" — explain that the app needs internet for now), a generic error screen, a pull-to-refresh indicator, skeleton loading for lists, and a "session expired — sign in again" dialog.
+3) A first-use coach mark sequence of 3 tooltips on the Group Home screen: pointing at "إضافة مصروف", at the "الأرصدة" tab, and at "الأعضاء".
 ```
 
 ---
 
 # Phase 2 prompts (use later, after Phase 1 is built and validated)
 
-## Prompt 12 — Invite & join flow
+## Prompt 11 — Invite & join flow
 
 ```
 STYLE: Arabic-first RTL Android 360×800, teal #0F766E primary, Cairo font, 16px radius cards, green=owed to you (#15803D), orange-red=you owe (#C2410C), Western digits, currency "ج.م". Friendly, trustworthy, clean.
@@ -263,7 +222,7 @@ Design the collaboration entry flow for "قسمة":
 3) Members tab updates: badges "متصل بحساب" vs "اسم فقط", role chips "مالك" / "أدمن", and a member options sheet with "ترقية لأدمن", "فصل الحساب", "عضو غادر".
 ```
 
-## Prompt 13 — Settlement confirmation, payment handles & reminders
+## Prompt 12 — Settlement confirmation, payment handles & reminders
 
 ```
 STYLE: Arabic-first RTL Android 360×800, teal #0F766E primary, Cairo font, 16px radius cards, green=owed to you (#15803D), orange-red=you owe (#C2410C), Western digits, currency "ج.م". Friendly, trustworthy, clean.
@@ -276,7 +235,7 @@ Design the two-sided settlement flow:
 5) Profile section "بيانات الدفع" to add/edit InstaPay address and wallet number with a privacy note "بتظهر لأعضاء مجموعاتك بس".
 ```
 
-## Prompt 14 — Notifications center & activity feed
+## Prompt 13 — Notifications center & activity feed
 
 ```
 STYLE: Arabic-first RTL Android 360×800, teal #0F766E primary, Cairo font, 16px radius cards, green=owed to you (#15803D), orange-red=you owe (#C2410C), Western digits, currency "ج.م". Friendly, trustworthy, clean.

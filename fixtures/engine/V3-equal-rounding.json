@@ -1,0 +1,15 @@
+{
+  "name": "V3 equal split rounding (100.00 among three)",
+  "input": {
+    "members": [ { "id": "M1", "sortOrder": 1 }, { "id": "M2", "sortOrder": 2 }, { "id": "M3", "sortOrder": 3 } ],
+    "expenses": [
+      { "type": "EQUAL", "totalMinor": 10000, "participantMemberIds": [ "M1", "M2", "M3" ],
+        "payers": [ { "memberId": "M1", "amountMinor": 10000 } ] }
+    ],
+    "settlements": []
+  },
+  "expected": {
+    "expenses": [ { "owed": { "M1": 3334, "M2": 3333, "M3": 3333 }, "totalMinor": 10000 } ],
+    "nets": { "M1": 6666, "M2": -3333, "M3": -3333 }
+  }
+}

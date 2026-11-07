@@ -12,6 +12,7 @@ Thumbs.db
 
 # Backend (Maven)
 backend/target/
+backend/.jqwik-database
 *.log
 
 # Flutter

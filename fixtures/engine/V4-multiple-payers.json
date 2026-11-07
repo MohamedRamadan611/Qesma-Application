@@ -1,0 +1,20 @@
+{
+  "name": "V4 multiple payers (500.00, X pays 300.00 and Y pays 200.00, equal among four)",
+  "input": {
+    "members": [ { "id": "X", "sortOrder": 1 }, { "id": "Y", "sortOrder": 2 }, { "id": "Z", "sortOrder": 3 }, { "id": "W", "sortOrder": 4 } ],
+    "expenses": [
+      { "type": "EQUAL", "totalMinor": 50000, "participantMemberIds": [ "X", "Y", "Z", "W" ],
+        "payers": [ { "memberId": "X", "amountMinor": 30000 }, { "memberId": "Y", "amountMinor": 20000 } ] }
+    ],
+    "settlements": []
+  },
+  "expected": {
+    "expenses": [ { "owed": { "X": 12500, "Y": 12500, "Z": 12500, "W": 12500 }, "totalMinor": 50000 } ],
+    "nets": { "X": 17500, "Y": 7500, "Z": -12500, "W": -12500 },
+    "transfers": [
+      { "fromMemberId": "Z", "toMemberId": "X", "amountMinor": 12500 },
+      { "fromMemberId": "W", "toMemberId": "Y", "amountMinor": 7500 },
+      { "fromMemberId": "W", "toMemberId": "X", "amountMinor": 5000 }
+    ]
+  }
+}

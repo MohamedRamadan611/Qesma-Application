@@ -1,0 +1,26 @@
+# Local development. Defaults match docker-compose.yml (dev-only credentials, not secrets).
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/qesma}
+    username: ${DB_USER:qesma}
+    password: ${DB_PASSWORD:qesma_local_dev}
+
+qesma:
+  auth:
+    # Dev-only signing secret. Never reuse outside local development.
+    jwt-secret: ${QESMA_JWT_SECRET:bG9jYWwtZGV2LW9ubHktc2VjcmV0LW5ldmVyLXVzZS1pbi1wcm9kLTAxMjM0NTY3ODk=}
+    # Empty is fine with the fake-auth profile; real Google sign-in needs your OAuth client id(s).
+    google-client-ids: ${GOOGLE_CLIENT_IDS:}
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
+# Local logs stay human-readable; test/prod use structured JSON.
+logging:
+  pattern:
+    correlation: "[%X{requestId:-}] "
+  level:
+    app.qesma: DEBUG

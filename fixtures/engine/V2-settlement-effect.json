@@ -1,0 +1,19 @@
+{
+  "name": "V2 settlement effect (V1 plus A pays M 80.00)",
+  "input": {
+    "members": [ { "id": "M", "sortOrder": 1 }, { "id": "A", "sortOrder": 2 }, { "id": "S", "sortOrder": 3 } ],
+    "expenses": [
+      { "type": "EXACT", "totalMinor": 10000,
+        "payers": [ { "memberId": "M", "amountMinor": 10000 } ],
+        "shares": [ { "memberId": "A", "amountMinor": 5000 }, { "memberId": "S", "amountMinor": 5000 } ] },
+      { "type": "EXACT", "totalMinor": 3000,
+        "payers": [ { "memberId": "S", "amountMinor": 3000 } ],
+        "shares": [ { "memberId": "A", "amountMinor": 3000 } ] }
+    ],
+    "settlements": [ { "fromMemberId": "A", "toMemberId": "M", "amountMinor": 8000 } ]
+  },
+  "expected": {
+    "nets": { "M": 2000, "A": 0, "S": -2000 },
+    "transfers": [ { "fromMemberId": "S", "toMemberId": "M", "amountMinor": 2000 } ]
+  }
+}

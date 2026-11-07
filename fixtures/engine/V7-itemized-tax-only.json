@@ -1,0 +1,22 @@
+{
+  "name": "V7 itemized, tax only (14% on subtotal)",
+  "input": {
+    "members": [ { "id": "A", "sortOrder": 1 }, { "id": "B", "sortOrder": 2 }, { "id": "C", "sortOrder": 3 } ],
+    "expenses": [
+      { "type": "ITEMIZED",
+        "payers": [ { "memberId": "A", "amountMinor": 50160 } ],
+        "items": [
+          { "name": "Pizza",  "amountMinor": 20000, "assigneeMemberIds": [ "A", "B" ] },
+          { "name": "Pasta",  "amountMinor": 15000, "assigneeMemberIds": [ "C" ] },
+          { "name": "Drinks", "amountMinor": 9000,  "assigneeMemberIds": [ "A", "B", "C" ] }
+        ],
+        "tax": { "bps": 1400, "base": "SUBTOTAL" },
+        "adjustmentMinor": 0 }
+    ],
+    "settlements": []
+  },
+  "expected": {
+    "expenses": [ { "owed": { "A": 14820, "B": 14820, "C": 20520 },
+                    "subtotalMinor": 44000, "serviceMinor": 0, "taxMinor": 6160, "totalMinor": 50160 } ]
+  }
+}
