@@ -15,7 +15,7 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -30,7 +30,7 @@ jobs:
     # The Dart client for the mobile app is generated from docs/openapi.json (docs/mobile-client.md): it must be valid.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Validate docs/openapi.json
         run: >
           docker run --rm -v "$PWD:/local" openapitools/openapi-generator-cli:v7.8.0
@@ -40,14 +40,14 @@ jobs:
     # Backups are only real if a restore works: throwaway PostgreSQL containers, no secrets.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Backup and restore round trip
         run: bash scripts/test-restore.sh
 
   secret-scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Gitleaks
@@ -59,7 +59,7 @@ jobs:
     # Known vulnerabilities in the Maven dependencies and the production image (ADR-003).
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Trivy filesystem scan (dependencies, configuration)
         uses: aquasecurity/trivy-action@0.28.0
         with:
