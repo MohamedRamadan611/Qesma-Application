@@ -41,7 +41,8 @@ class DeleteRulesIT extends AbstractApiIT {
         assertThat(code(blocked)).isEqualTo("MEMBER_HAS_TRANSACTIONS");
         assertThat(status(call(DELETE, "/api/v1/groups/" + gid + "/members/" + free, ali, null))).isEqualTo(204);
 
-        assertThat(body(call(GET, "/api/v1/groups/" + gid, ali, null)).get("members")).hasSize(1);
+        // the owner's own member (B9) plus the one that was in use
+        assertThat(body(call(GET, "/api/v1/groups/" + gid, ali, null)).get("members")).hasSize(2);
     }
 
     @Test
@@ -56,7 +57,7 @@ class DeleteRulesIT extends AbstractApiIT {
         assertThat(code(blocked)).isEqualTo("GROUP_NOT_EMPTY");
 
         JsonNodeHolder after = new JsonNodeHolder(body(call(GET, "/api/v1/groups/" + gid, ali, null)));
-        assertThat(after.membersCount()).isEqualTo(1);
+        assertThat(after.membersCount()).isEqualTo(2);   // the owner's member and "Someone"
 
         when(groupUsage.hasLedgerData(java.util.UUID.fromString(gid))).thenReturn(false);
         assertThat(status(call(DELETE, "/api/v1/groups/" + gid, ali, null))).isEqualTo(204);

@@ -5,7 +5,7 @@ import java.util.Locale;
 
 /**
  * Stable machine-readable error codes (spec 8.5). Add codes here as milestones need them.
- * INTERNAL_ERROR, RATE_LIMITED and AUTH_PROVIDER_UNAVAILABLE are additions beyond spec 8.5
+ * INTERNAL_ERROR, RATE_LIMITED, AUTH_PROVIDER_UNAVAILABLE and OWNER_MEMBER_PROTECTED are additions beyond spec 8.5
  * (see Decision Log A15).
  */
 public enum ErrorCode {
@@ -16,6 +16,7 @@ public enum ErrorCode {
     IDEMPOTENCY_KEY_REUSED,
     DUPLICATE_MEMBER_NAME,
     MEMBER_HAS_TRANSACTIONS,
+    OWNER_MEMBER_PROTECTED,
     VERSION_CONFLICT,
     GROUP_NOT_EMPTY,
     NOT_FOUND,

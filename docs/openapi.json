@@ -317,9 +317,18 @@
           "version" : {
             "format" : "int32",
             "type" : "integer"
+          },
+          "yourMemberId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "yourNetMinor" : {
+            "description" : "Integer minor units (piasters: 1 EGP = 100). Never a decimal.",
+            "format" : "int64",
+            "type" : "integer"
           }
         },
-        "required" : [ "createdAt", "currencyCode", "id", "members", "name", "totalSpentMinor", "type", "updatedAt", "version" ],
+        "required" : [ "createdAt", "currencyCode", "id", "members", "name", "totalSpentMinor", "type", "updatedAt", "version", "yourMemberId", "yourNetMinor" ],
         "type" : "object"
       },
       "GroupSummaryDto" : {
@@ -350,9 +359,14 @@
           },
           "type" : {
             "type" : "string"
+          },
+          "yourNetMinor" : {
+            "description" : "Integer minor units (piasters: 1 EGP = 100). Never a decimal.",
+            "format" : "int64",
+            "type" : "integer"
           }
         },
-        "required" : [ "currencyCode", "id", "memberCount", "name", "totalSpentMinor", "type" ],
+        "required" : [ "currencyCode", "id", "memberCount", "name", "totalSpentMinor", "type", "yourNetMinor" ],
         "type" : "object"
       },
       "ItemInput" : {
@@ -414,12 +428,15 @@
             "format" : "uuid",
             "type" : "string"
           },
+          "isYou" : {
+            "type" : "boolean"
+          },
           "sortOrder" : {
             "format" : "int32",
             "type" : "integer"
           }
         },
-        "required" : [ "createdAt", "displayName", "id", "sortOrder" ],
+        "required" : [ "createdAt", "displayName", "id", "isYou", "sortOrder" ],
         "type" : "object"
       },
       "Net" : {
@@ -556,7 +573,7 @@
         "properties" : {
           "code" : {
             "description" : "Stable machine-readable error code.",
-            "enum" : [ "VALIDATION_ERROR", "PAYERS_TOTAL_MISMATCH", "SPLIT_TOTAL_MISMATCH", "MEMBER_NOT_IN_GROUP", "IDEMPOTENCY_KEY_REUSED", "DUPLICATE_MEMBER_NAME", "MEMBER_HAS_TRANSACTIONS", "VERSION_CONFLICT", "GROUP_NOT_EMPTY", "NOT_FOUND", "UNAUTHORIZED", "INTERNAL_ERROR", "RATE_LIMITED", "AUTH_PROVIDER_UNAVAILABLE" ],
+            "enum" : [ "VALIDATION_ERROR", "PAYERS_TOTAL_MISMATCH", "SPLIT_TOTAL_MISMATCH", "MEMBER_NOT_IN_GROUP", "IDEMPOTENCY_KEY_REUSED", "DUPLICATE_MEMBER_NAME", "MEMBER_HAS_TRANSACTIONS", "OWNER_MEMBER_PROTECTED", "VERSION_CONFLICT", "GROUP_NOT_EMPTY", "NOT_FOUND", "UNAUTHORIZED", "INTERNAL_ERROR", "RATE_LIMITED", "AUTH_PROVIDER_UNAVAILABLE" ],
             "type" : "string"
           },
           "detail" : {
@@ -1229,7 +1246,7 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
+          "201" : {
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1237,7 +1254,23 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Created",
+            "headers" : {
+              "ETag" : {
+                "description" : "Version of the group",
+                "schema" : {
+                  "type" : "string"
+                },
+                "style" : "simple"
+              },
+              "Location" : {
+                "description" : "URL of the new group",
+                "schema" : {
+                  "type" : "string"
+                },
+                "style" : "simple"
+              }
+            }
           },
           "400" : {
             "content" : {
@@ -1382,7 +1415,16 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "The group with its members",
+            "headers" : {
+              "ETag" : {
+                "description" : "Version of the group",
+                "schema" : {
+                  "type" : "string"
+                },
+                "style" : "simple"
+              }
+            }
           },
           "401" : {
             "content" : {
@@ -1466,7 +1508,16 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "The updated group",
+            "headers" : {
+              "ETag" : {
+                "description" : "New version of the group",
+                "schema" : {
+                  "type" : "string"
+                },
+                "style" : "simple"
+              }
+            }
           },
           "400" : {
             "content" : {
@@ -1851,6 +1902,20 @@
                   "type" : "string"
                 },
                 "style" : "simple"
+              },
+              "Idempotency-Replayed" : {
+                "description" : "true when this is the stored answer of an identical earlier request",
+                "schema" : {
+                  "type" : "string"
+                },
+                "style" : "simple"
+              },
+              "Location" : {
+                "description" : "URL of the expense",
+                "schema" : {
+                  "type" : "string"
+                },
+                "style" : "simple"
               }
             }
           },
@@ -2113,8 +2178,17 @@
           }
         } ],
         "responses" : {
-          "200" : {
-            "description" : "OK"
+          "204" : {
+            "description" : "Deleted",
+            "headers" : {
+              "ETag" : {
+                "description" : "Version after the delete",
+                "schema" : {
+                  "type" : "string"
+                },
+                "style" : "simple"
+              }
+            }
           },
           "401" : {
             "content" : {
@@ -2208,7 +2282,16 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "The expense",
+            "headers" : {
+              "ETag" : {
+                "description" : "Version of the expense",
+                "schema" : {
+                  "type" : "string"
+                },
+                "style" : "simple"
+              }
+            }
           },
           "401" : {
             "content" : {
@@ -2365,7 +2448,16 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "The updated expense",
+            "headers" : {
+              "ETag" : {
+                "description" : "New version of the expense",
+                "schema" : {
+                  "type" : "string"
+                },
+                "style" : "simple"
+              }
+            }
           },
           "400" : {
             "content" : {
@@ -2555,7 +2647,7 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
+          "201" : {
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -2563,7 +2655,16 @@
                 }
               }
             },
-            "description" : "OK"
+            "description" : "Created",
+            "headers" : {
+              "Location" : {
+                "description" : "URL of the new member",
+                "schema" : {
+                  "type" : "string"
+                },
+                "style" : "simple"
+              }
+            }
           },
           "400" : {
             "content" : {
@@ -2691,7 +2792,7 @@
                 }
               }
             },
-            "description" : "Conflict (code: MEMBER_HAS_TRANSACTIONS)"
+            "description" : "Conflict (code: MEMBER_HAS_TRANSACTIONS, OWNER_MEMBER_PROTECTED)"
           },
           "422" : {
             "content" : {
@@ -2977,7 +3078,23 @@
                 }
               }
             },
-            "description" : "Created (or the stored answer of an identical earlier request: header Idempotency-Replayed: true)"
+            "description" : "Created (or the stored answer of an identical earlier request: header Idempotency-Replayed: true)",
+            "headers" : {
+              "Idempotency-Replayed" : {
+                "description" : "true when this is the stored answer of an identical earlier request",
+                "schema" : {
+                  "type" : "string"
+                },
+                "style" : "simple"
+              },
+              "Location" : {
+                "description" : "URL of the settlement",
+                "schema" : {
+                  "type" : "string"
+                },
+                "style" : "simple"
+              }
+            }
           },
           "400" : {
             "content" : {
@@ -3065,8 +3182,8 @@
           }
         } ],
         "responses" : {
-          "200" : {
-            "description" : "OK"
+          "204" : {
+            "description" : "Deleted"
           },
           "401" : {
             "content" : {

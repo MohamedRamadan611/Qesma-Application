@@ -35,8 +35,8 @@ class ExpenseEditDeleteIT extends AbstractApiIT {
     /** [groupId, A, B, C] with A, B, C in sort order. */
     private List<String> abc(Session owner) throws Exception {
         String gid = createGroup(owner, "G " + UUID.randomUUID()).get("id").asText();
-        return List.of(gid, addMember(owner, gid, "A").get("id").asText(), addMember(owner, gid, "B").get("id").asText(),
-                addMember(owner, gid, "C").get("id").asText());
+        return List.of(gid, member(owner, gid, "A").get("id").asText(), member(owner, gid, "B").get("id").asText(),
+                member(owner, gid, "C").get("id").asText());
     }
 
     private static Map<String, Object> item(String name, long amount, String... assignees) {

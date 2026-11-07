@@ -38,7 +38,7 @@ class ExpensesIT extends AbstractApiIT {
         List<String> ids = new ArrayList<>();
         ids.add(createGroup(owner, "G " + UUID.randomUUID()).get("id").asText());
         for (String n : names) {
-            ids.add(addMember(owner, ids.get(0), n).get("id").asText());
+            ids.add(member(owner, ids.get(0), n).get("id").asText());
         }
         return ids;
     }
@@ -114,7 +114,7 @@ class ExpensesIT extends AbstractApiIT {
         assertThat(jdbc.queryForObject("select count(*) from expense_splits where expense_id = ?::uuid",
                 Integer.class, id)).isEqualTo(3);
 
-        addMember(ali, g.get(0), "Late joiner");
+        member(ali, g.get(0), "Late joiner");
 
         assertThat(jdbc.queryForObject("select count(*) from expense_splits where expense_id = ?::uuid",
                 Integer.class, id)).isEqualTo(3);
@@ -390,17 +390,17 @@ class ExpensesIT extends AbstractApiIT {
     @Test
     void aMemberInAnyExpenseCannotBeDeletedAndNeitherCanAGroupWithExpenses() throws Exception {
         Session ali = newUser();
-        List<String> g = groupWith(ali, "Payer", "Participant", "Bystander");
+        List<String> g = groupWith(ali, "Owner", "Payer", "Participant", "Bystander");
         JsonNode e = createExpense(ali, g.get(0),
-                equalBody("x", 100, List.of(g.get(1), g.get(2)), g.get(1), 100L));
+                equalBody("x", 100, List.of(g.get(2), g.get(3)), g.get(2), 100L));
         String base = GROUPS + "/" + g.get(0);
 
-        for (String used : List.of(g.get(1), g.get(2))) { // payer+participant, and participant only
+        for (String used : List.of(g.get(2), g.get(3))) { // payer+participant, and participant only
             MvcResult r = call(DELETE, base + "/members/" + used, ali, null);
             assertThat(status(r)).isEqualTo(409);
             assertThat(code(r)).isEqualTo("MEMBER_HAS_TRANSACTIONS");
         }
-        assertThat(status(call(DELETE, base + "/members/" + g.get(3), ali, null))).isEqualTo(204); // bystander
+        assertThat(status(call(DELETE, base + "/members/" + g.get(4), ali, null))).isEqualTo(204); // bystander
 
         MvcResult group = call(DELETE, base, ali, null);
         assertThat(status(group)).isEqualTo(409);
@@ -408,16 +408,16 @@ class ExpensesIT extends AbstractApiIT {
 
         // soft-deleting the expense does not free its members or its group (the ledger is never erased)
         jdbc.update("update expenses set deleted_at = now() where id = ?::uuid", e.get("id").asText());
-        assertThat(status(call(DELETE, base + "/members/" + g.get(1), ali, null))).isEqualTo(409);
+        assertThat(status(call(DELETE, base + "/members/" + g.get(2), ali, null))).isEqualTo(409);
         assertThat(status(call(DELETE, base, ali, null))).isEqualTo(409);
     }
 
     @Test
     void aMemberOnlyAPayerIsAlsoProtected() throws Exception {
         Session ali = newUser();
-        List<String> g = groupWith(ali, "OnlyPays", "Owes");
-        createExpense(ali, g.get(0), equalBody("x", 100, List.of(g.get(2)), g.get(1), 100L));
-        MvcResult r = call(DELETE, GROUPS + "/" + g.get(0) + "/members/" + g.get(1), ali, null);
+        List<String> g = groupWith(ali, "Owner", "OnlyPays", "Owes");
+        createExpense(ali, g.get(0), equalBody("x", 100, List.of(g.get(3)), g.get(2), 100L));
+        MvcResult r = call(DELETE, GROUPS + "/" + g.get(0) + "/members/" + g.get(2), ali, null);
         assertThat(status(r)).isEqualTo(409);
         assertThat(code(r)).isEqualTo("MEMBER_HAS_TRANSACTIONS");
     }

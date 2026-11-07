@@ -53,7 +53,7 @@ curl -s -X POST localhost:8080/api/v1/auth/logout  -H 'Content-Type: application
 ```bash
 H='Content-Type: application/json'
 curl -si -X POST localhost:8080/api/v1/groups -H "Authorization: Bearer $T" -H "$H" \
-     -d '{"name":"Dahab trip","type":"TRIP"}'                      # 201, Location + ETag: "1"
+     -d '{"name":"Dahab trip","type":"TRIP"}'                      # 201, Location + ETag: "1"; the creator is already member #1 (isYou: true) and can be renamed, not deleted
 curl -s  "localhost:8080/api/v1/groups?page=0&size=20" -H "Authorization: Bearer $T"
 curl -s  -X POST localhost:8080/api/v1/groups/<gid>/members -H "Authorization: Bearer $T" -H "$H" -d '{"displayName":"Sara"}'
 curl -si -X PATCH localhost:8080/api/v1/groups/<gid> -H "Authorization: Bearer $T" -H "$H" -H 'If-Match: "1"' -d '{"name":"Dahab 2026"}'
@@ -116,6 +116,14 @@ Using an already-used refresh token again returns 401 and ends that whole sessio
 Auth endpoints are limited to 10 requests/minute per IP (in memory, per instance); behind a reverse proxy enable forwarded headers (`server.forward-headers-strategy=native`) so the real client IP is used. See `../docs/adr/ADR-002-auth.md`.
 
 Copy `../.env.example` to `../.env` (git-ignored) to override compose defaults.
+
+## Smoke test (end to end, against a running backend)
+`scripts/smoke.sh` (bash + curl + jq) signs in two fake users, then walks the Phase 1 flow and asserts exact minor-unit values: group + 5 members, equal expense (V3), idempotent replay, user B gets 404, multi-payer (V4), itemized V5-V8 with preview parity, edit/ETag/stale ETag/delete/revisions, V1 balances and transfers, `yourNetMinor`, settlement and V2 balances. It prints one `PASS`/`FAIL` line per check and exits non-zero on the first failure. Each run creates fresh users and groups, so it can be repeated.
+```bash
+./mvnw spring-boot:run -Dspring-boot.run.profiles=local,fake-auth     # in backend/
+BASE_URL=http://localhost:8080 ../scripts/smoke.sh                       # default BASE_URL is http://localhost:8080
+```
+Only for local/staging with the fake verifier; never against production. Auth endpoints are rate limited (10/min per IP): the script uses 2 logins.
 
 ## Docker image
 ```bash

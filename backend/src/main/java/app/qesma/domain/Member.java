@@ -12,7 +12,7 @@ import java.util.UUID;
 import org.springframework.data.domain.Persistable;
 
 /**
- * A person in a group's ledger. In Phase 1 every member is a "ghost" (no account): {@code userId} is null.
+ * A person in a group's ledger. Members added by name are "ghosts" ({@code userId} null); the owner of the group is member #1 and linked to their account (B9).
  * {@code sortOrder} is assigned once from the group's counter and never changes or repeats (spec 7.10).
  */
 @Entity
@@ -51,6 +51,13 @@ public class Member implements Persistable<UUID> {
         this.createdAt = createdAt;
     }
 
+    /** The owner of a group as its first member, linked to their account (B9, Decision A53). */
+    public static Member forOwner(UUID id, UUID groupId, String displayName, UUID ownerUserId, Instant createdAt) {
+        Member m = new Member(id, groupId, displayName, 1, createdAt);
+        m.userId = ownerUserId;
+        return m;
+    }
+
     @Override
     public UUID getId() {
         return id;
@@ -71,16 +78,17 @@ public class Member implements Persistable<UUID> {
         return groupId;
     }
 
+    /** The linked account, or null for a ghost member. Never exposed by the API (only {@code isYou} is). */
+    public UUID getUserId() {
+        return userId;
+    }
+
     public String getDisplayName() {
         return displayName;
     }
 
     public void rename(String newName) {
         this.displayName = newName;
-    }
-
-    public UUID getUserId() {
-        return userId;
     }
 
     public int getSortOrder() {

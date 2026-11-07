@@ -21,6 +21,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -52,6 +53,8 @@ class ApiContractCoverageIT extends AbstractApiIT {
     private final Set<String> succeeded = new TreeSet<>();
     /** code -> statuses seen on real responses. */
     private final Map<String, Set<Integer>> errors = new LinkedHashMap<>();
+    /** "METHOD template" -> the 2xx statuses the real responses used. */
+    private final Map<String, Set<Integer>> successStatuses = new TreeMap<>();
 
     private MvcResult hit(HttpMethod method, String url, Session as, Object body, String... headers) throws Exception {
         MvcResult r = call(method, url, as, body, headers);
@@ -59,6 +62,7 @@ class ApiContractCoverageIT extends AbstractApiIT {
         int status = status(r);
         if (status >= 200 && status < 300 && template != null) {
             succeeded.add(method.name() + " " + template);
+            successStatuses.computeIfAbsent(method.name() + " " + template, k -> new TreeSet<>()).add(status);
         }
         if (status >= 400 && r.getResponse().getContentType() != null
                 && r.getResponse().getContentType().startsWith("application/problem+json")) {
@@ -95,6 +99,7 @@ class ApiContractCoverageIT extends AbstractApiIT {
         MvcResult group = hit(POST, "/api/v1/groups", me, Map.of("name", "Walk", "type", "TRIP"));
         assertThat(status(group)).isEqualTo(201);
         String gid = body(group).get("id").asText();
+        String ownerMember = body(group).get("members").get(0).get("id").asText();   // B9: the creator is member #1
         String g = "/api/v1/groups/" + gid;
         assertThat(status(hit(GET, "/api/v1/groups", me, null))).isEqualTo(200);
         assertThat(status(hit(GET, g, me, null))).isEqualTo(200);
@@ -141,6 +146,7 @@ class ApiContractCoverageIT extends AbstractApiIT {
                 ErrorCode.IDEMPOTENCY_KEY_REUSED);
         expect(hit(POST, g + "/members", me, Map.of("displayName", "a")), 409, ErrorCode.DUPLICATE_MEMBER_NAME);
         expect(hit(DELETE, g + "/members/" + a, me, null), 409, ErrorCode.MEMBER_HAS_TRANSACTIONS);
+        expect(hit(DELETE, g + "/members/" + ownerMember, me, null), 409, ErrorCode.OWNER_MEMBER_PROTECTED);
         expect(hit(PATCH, g, me, Map.of("name", "Stale"), "If-Match", "\"1\""), 409, ErrorCode.VERSION_CONFLICT);
         expect(hit(DELETE, g, me, null), 409, ErrorCode.GROUP_NOT_EMPTY);
         String empty = body(hit(POST, "/api/v1/groups", me, Map.of("name", "Empty", "type", "OTHER"))).get("id").asText();
@@ -179,6 +185,24 @@ class ApiContractCoverageIT extends AbstractApiIT {
             path.getValue().fieldNames().forEachRemaining(m -> documented.add(m.toUpperCase() + " " + path.getKey()));
         }
         assertThat(succeeded).as("operations that never answered 2xx in this walk").containsAll(documented);
+        // the declared success statuses must be the real ones, per operation (review B9: the document once said 200 for 201/204)
+        Iterator<Map.Entry<String, JsonNode>> declaredPaths = doc.get("paths").fields();
+        while (declaredPaths.hasNext()) {
+            Map.Entry<String, JsonNode> path = declaredPaths.next();
+            Iterator<Map.Entry<String, JsonNode>> ops = path.getValue().fields();
+            while (ops.hasNext()) {
+                Map.Entry<String, JsonNode> op = ops.next();
+                Set<Integer> declared = new TreeSet<>();
+                op.getValue().get("responses").fieldNames().forEachRemaining(code -> {
+                    if (code.startsWith("2")) {
+                        declared.add(Integer.parseInt(code));
+                    }
+                });
+                String key = op.getKey().toUpperCase() + " " + path.getKey();
+                assertThat(successStatuses.get(key)).as("real success statuses of " + key + " vs declared " + declared)
+                        .isEqualTo(declared);
+            }
+        }
         for (ErrorCode code : ErrorCode.values()) {
             assertThat(errors).as("error code never produced by a real response").containsKey(code.name());
         }

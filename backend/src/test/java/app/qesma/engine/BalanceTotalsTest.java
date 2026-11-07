@@ -113,6 +113,24 @@ class BalanceTotalsTest {
     }
 
     @Test
+    void memberNetIsTheSameRuleForOneMemberAndMatchesTheWholeGroupResult() {
+        assertThat(BalanceCalculator.memberNet(new MemberTotals("M", 10000, 0, 0, 8000))).isEqualTo(2000);   // V2
+        assertThat(BalanceCalculator.memberNet(new MemberTotals("A", 0, 8000, 8000, 0))).isZero();
+        assertThat(BalanceCalculator.memberNet(new MemberTotals("S", 3000, 5000, 0, 0))).isEqualTo(-2000);
+        Random rnd = new Random(11L);
+        for (int round = 0; round < 200; round++) {
+            long paid = rnd.nextInt(1_000_000);
+            long owed = rnd.nextInt(1_000_000);
+            long sent = rnd.nextInt(1_000_000);
+            long received = rnd.nextInt(1_000_000);
+            MemberTotals t = new MemberTotals("m", paid, owed, sent, received);
+            assertThat(BalanceCalculator.memberNet(t)).isEqualTo(paid - owed + sent - received);
+        }
+        assertThatThrownBy(() -> BalanceCalculator.memberNet(new MemberTotals("m", Long.MAX_VALUE, -1, 0, 0)))
+                .isInstanceOf(EngineException.class);
+    }
+
+    @Test
     void theAmountCapIsTenBillionPounds() {
         assertThat(Limits.MAX_AMOUNT_MINOR).isEqualTo(1_000_000_000_000L);
         assertThat(Limits.withinAmountLimit(Limits.MAX_AMOUNT_MINOR)).isTrue();

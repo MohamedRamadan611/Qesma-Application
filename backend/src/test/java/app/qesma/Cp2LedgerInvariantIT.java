@@ -192,7 +192,7 @@ class Cp2LedgerInvariantIT extends AbstractApiIT {
         String gid = createGroup(ali, "Random " + UUID.randomUUID()).get("id").asText();
         List<String> ids = new ArrayList<>();
         for (String n : List.of("A", "B", "C", "D", "E")) {
-            ids.add(addMember(ali, gid, n).get("id").asText());
+            ids.add(member(ali, gid, n).get("id").asText());
         }
         Random rnd = new Random(SEED);
         String base = "/api/v1/groups/" + gid + "/expenses";
@@ -313,7 +313,7 @@ class Cp2LedgerInvariantIT extends AbstractApiIT {
         Session owner = newUser();
         Session stranger = newUser();
         String gid = createGroup(owner, "Owned").get("id").asText();
-        String a = addMember(owner, gid, "A").get("id").asText();
+        String a = member(owner, gid, "A").get("id").asText();
         String strangerGroup = createGroup(stranger, "Theirs").get("id").asText();
         String key = UUID.randomUUID().toString();
         Object body = equalBody("Shared key", 1000, null, a, 1000L);
@@ -343,7 +343,7 @@ class Cp2LedgerInvariantIT extends AbstractApiIT {
         Session owner = newUser();
         Session stranger = newUser();
         String gid = createGroup(owner, "Probed").get("id").asText();
-        String a = addMember(owner, gid, "A").get("id").asText();
+        String a = member(owner, gid, "A").get("id").asText();
         String key = UUID.randomUUID().toString();
         Object body = equalBody("Probe me", 1000, null, a, 1000L);
         String first = body(postExpenseOk(owner, gid, UUID.randomUUID().toString(), body)).get("id").asText();
@@ -378,7 +378,7 @@ class Cp2LedgerInvariantIT extends AbstractApiIT {
         Session owner = newUser();
         Session stranger = newUser();
         String gid = createGroup(owner, "Race").get("id").asText();
-        String a = addMember(owner, gid, "A").get("id").asText();
+        String a = member(owner, gid, "A").get("id").asText();
         String eid = body(postExpenseOk(owner, gid, UUID.randomUUID().toString(),
                 equalBody("Base", 1000, null, a, 1000L))).get("id").asText();
         String url = "/api/v1/groups/" + gid + "/expenses/" + eid;
@@ -412,7 +412,7 @@ class Cp2LedgerInvariantIT extends AbstractApiIT {
     void replayingTheOriginalCreateAfterAnEditAndADeleteServesTheStoredAnswerAndCreatesNothing() throws Exception {
         Session owner = newUser();
         String gid = createGroup(owner, "Replay").get("id").asText();
-        String a = addMember(owner, gid, "A").get("id").asText();
+        String a = member(owner, gid, "A").get("id").asText();
         String key = UUID.randomUUID().toString();
         Object body = equalBody("Original", 1000, null, a, 1000L);
         JsonNode created = body(postExpenseOk(owner, gid, key, body));
@@ -437,8 +437,8 @@ class Cp2LedgerInvariantIT extends AbstractApiIT {
     void explainTheHotQueriesOnAThreeThousandExpenseGroup() throws Exception {
         Session ali = newUser();
         String gid = createGroup(ali, "Big " + UUID.randomUUID()).get("id").asText();
-        String m1 = addMember(ali, gid, "A").get("id").asText();
-        String m2 = addMember(ali, gid, "B").get("id").asText();
+        String m1 = member(ali, gid, "A").get("id").asText();
+        String m2 = member(ali, gid, "B").get("id").asText();
         String user = ali.userId().toString();
         jdbc.update("""
                 insert into expenses (id, group_id, title, split_type, total_minor, expense_date, created_by_user_id,

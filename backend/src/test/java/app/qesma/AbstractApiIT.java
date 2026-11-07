@@ -76,6 +76,27 @@ public abstract class AbstractApiIT extends AbstractIntegrationTest {
         return body(r);
     }
 
+    private final java.util.Set<String> claimedOwnerMembers = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+    /**
+     * The first member a test "adds" to a group is the owner's own member (member #1 since B9), renamed; later ones
+     * are real additions. This keeps the ids, sort orders and "all members" splits of tests that were written when
+     * groups started empty, without weakening any assertion. Tests about member management use {@link #addMember}.
+     */
+    protected JsonNode member(Session as, String groupId, String name) throws Exception {
+        if (claimedOwnerMembers.add(groupId)) {
+            JsonNode group = body(call(org.springframework.http.HttpMethod.GET, "/api/v1/groups/" + groupId, as, null));
+            String ownerMember = group.get("members").get(0).get("id").asText();
+            MvcResult r = call(org.springframework.http.HttpMethod.PATCH,
+                    "/api/v1/groups/" + groupId + "/members/" + ownerMember, as, java.util.Map.of("displayName", name));
+            if (status(r) != 200) {
+                throw new AssertionError("rename owner member failed: " + status(r) + " " + r.getResponse().getContentAsString());
+            }
+            return body(r);
+        }
+        return addMember(as, groupId, name);
+    }
+
     protected JsonNode addMember(Session as, String groupId, String name) throws Exception {
         MvcResult r = call(HttpMethod.POST, "/api/v1/groups/" + groupId + "/members", as,
                 java.util.Map.of("displayName", name));

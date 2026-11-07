@@ -46,8 +46,8 @@ class BalancesSettlementsIT extends AbstractApiIT {
     /** [groupId, M, A, S] in sort order (the founder's example members). */
     private List<String> mas(Session owner) throws Exception {
         String gid = createGroup(owner, "G " + UUID.randomUUID()).get("id").asText();
-        return List.of(gid, addMember(owner, gid, "M").get("id").asText(), addMember(owner, gid, "A").get("id").asText(),
-                addMember(owner, gid, "S").get("id").asText());
+        return List.of(gid, member(owner, gid, "M").get("id").asText(), member(owner, gid, "A").get("id").asText(),
+                member(owner, gid, "S").get("id").asText());
     }
 
     /** V1: E1 paid by M 100.00 (A 50.00, S 50.00); E2 paid by S 30.00 (A 30.00). Returns [E1, E2] ids. */
@@ -134,8 +134,11 @@ class BalancesSettlementsIT extends AbstractApiIT {
         JsonNode b = balances(ali, g.get(0));
         assertThat(netsOf(b).values()).hasSize(3).containsOnly(0L);
         assertThat(b.get("transfers")).isEmpty();
-        String lonely = createGroup(ali, "No members").get("id").asText();
-        assertThat(balances(ali, lonely).get("nets")).isEmpty();
+        // a brand-new group has exactly one member since B9 (the owner), with a zero balance and nothing to settle
+        String lonely = createGroup(ali, "Just me").get("id").asText();
+        JsonNode alone = balances(ali, lonely);
+        assertThat(netsOf(alone).values()).hasSize(1).containsOnly(0L);
+        assertThat(alone.get("transfers")).isEmpty();
     }
 
     // ---- soft deletes, edits, partial and excess ----------------------------------------------------------------
@@ -356,16 +359,17 @@ class BalancesSettlementsIT extends AbstractApiIT {
     @Test
     void aMemberInASettlementEvenADeletedOneAndAGroupWithSettlementsCannotBeDeleted() throws Exception {
         Session ali = newUser();
-        List<String> g = mas(ali);
-        String sid = settleOk(ali, g.get(0), g.get(2), g.get(1), 100).get("id").asText();
+        List<String> g = new java.util.ArrayList<>(mas(ali));
+        g.add(member(ali, g.get(0), "X").get("id").asText());
+        String sid = settleOk(ali, g.get(0), g.get(2), g.get(3), 100).get("id").asText();
         call(DELETE, GROUPS + g.get(0) + "/settlements/" + sid, ali, null);
 
         MvcResult member = call(DELETE, GROUPS + g.get(0) + "/members/" + g.get(2), ali, null);
         assertThat(status(member)).isEqualTo(409);
         assertThat(code(member)).isEqualTo("MEMBER_HAS_TRANSACTIONS");
-        MvcResult receiver = call(DELETE, GROUPS + g.get(0) + "/members/" + g.get(1), ali, null);
+        MvcResult receiver = call(DELETE, GROUPS + g.get(0) + "/members/" + g.get(3), ali, null);
         assertThat(code(receiver)).isEqualTo("MEMBER_HAS_TRANSACTIONS");
-        assertThat(status(call(DELETE, GROUPS + g.get(0) + "/members/" + g.get(3), ali, null))).isEqualTo(204); // unused
+        assertThat(status(call(DELETE, GROUPS + g.get(0) + "/members/" + g.get(4), ali, null))).isEqualTo(204); // unused
         MvcResult group = call(DELETE, GROUPS + g.get(0), ali, null);
         assertThat(status(group)).isEqualTo(409);
         assertThat(code(group)).isEqualTo("GROUP_NOT_EMPTY");
@@ -458,7 +462,7 @@ class BalancesSettlementsIT extends AbstractApiIT {
         String gid = createGroup(ali, "Random " + UUID.randomUUID()).get("id").asText();
         List<String> ids = new ArrayList<>();
         for (String n : List.of("A", "B", "C", "D", "E", "F")) {
-            ids.add(addMember(ali, gid, n).get("id").asText());
+            ids.add(member(ali, gid, n).get("id").asText());
         }
         List<String> liveExpenses = new ArrayList<>();
         Map<String, Integer> expenseVersion = new LinkedHashMap<>();

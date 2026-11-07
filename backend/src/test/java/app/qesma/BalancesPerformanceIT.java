@@ -56,7 +56,7 @@ class BalancesPerformanceIT extends AbstractApiIT {
         String gid = createGroup(ali, "Max " + UUID.randomUUID()).get("id").asText();
         List<String> members = new ArrayList<>();
         for (int i = 0; i < 15; i++) {
-            members.add(addMember(ali, gid, "M" + i).get("id").asText());
+            members.add(member(ali, gid, "M" + i).get("id").asText());
         }
         String user = ali.userId().toString();
         // member (n mod 15) pays expense n; three consecutive members share it equally; plain SQL, no temp tables

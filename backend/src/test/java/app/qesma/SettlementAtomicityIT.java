@@ -40,8 +40,8 @@ class SettlementAtomicityIT extends AbstractApiIT {
     void ifTheKeyRowCannotBeWrittenTheSettlementIsRolledBackAndTheSameKeyThenWorks() throws Exception {
         Session ali = newUser();
         String gid = createGroup(ali, "Atomic " + UUID.randomUUID()).get("id").asText();
-        String a = addMember(ali, gid, "A").get("id").asText();
-        String b = addMember(ali, gid, "B").get("id").asText();
+        String a = member(ali, gid, "A").get("id").asText();
+        String b = member(ali, gid, "B").get("id").asText();
         String key = UUID.randomUUID().toString();
         Map<String, Object> body = Map.of("fromMemberId", a, "toMemberId", b, "amountMinor", 500L,
                 "settledOn", "2026-10-20");

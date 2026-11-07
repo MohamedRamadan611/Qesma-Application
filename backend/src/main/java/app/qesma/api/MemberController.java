@@ -33,16 +33,21 @@ public class MemberController {
     }
 
     @PostMapping
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Created",
+            headers = @io.swagger.v3.oas.annotations.headers.Header(name = "Location", description = "URL of the new member",
+                    schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string")),
+            content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+                    schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = MemberDto.class)))
     public ResponseEntity<MemberDto> add(@PathVariable UUID gid, @RequestBody CreateMemberRequest request) {
         Member member = members.add(currentUser.id(), gid, request.displayName());
         return ResponseEntity.created(URI.create("/api/v1/groups/" + gid + "/members/" + member.getId()))
-                .body(MemberDto.from(member));
+                .body(MemberDto.from(member, currentUser.id()));
     }
 
     @PatchMapping("/{mid}")
     public MemberDto rename(@PathVariable UUID gid, @PathVariable UUID mid,
                             @RequestBody UpdateMemberRequest request) {
-        return MemberDto.from(members.rename(currentUser.id(), gid, mid, request.displayName()));
+        return MemberDto.from(members.rename(currentUser.id(), gid, mid, request.displayName()), currentUser.id());
     }
 
     @DeleteMapping("/{mid}")

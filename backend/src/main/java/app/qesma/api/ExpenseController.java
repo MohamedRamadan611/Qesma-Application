@@ -63,8 +63,13 @@ public class ExpenseController {
             @ExampleObject(name = "EXACT", value = ApiExamples.EXACT),
             @ExampleObject(name = "ITEMIZED", value = ApiExamples.ITEMIZED)}))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Created (or the stored answer of an identical earlier request: header Idempotency-Replayed: true)",
-            headers = @io.swagger.v3.oas.annotations.headers.Header(name = "ETag", description = "Version of the expense",
+            headers = {@io.swagger.v3.oas.annotations.headers.Header(name = "ETag", description = "Version of the expense",
                     schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string")),
+                    @io.swagger.v3.oas.annotations.headers.Header(name = "Location", description = "URL of the expense",
+                    schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string")),
+                    @io.swagger.v3.oas.annotations.headers.Header(name = "Idempotency-Replayed",
+                    description = "true when this is the stored answer of an identical earlier request",
+                    schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string"))},
             content = @Content(mediaType = "application/json",
                     schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ExpenseView.class)))
     public ResponseEntity<String> create(@PathVariable UUID gid,
@@ -113,6 +118,11 @@ public class ExpenseController {
     }
 
     @GetMapping("/{eid}")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "The expense",
+            headers = @io.swagger.v3.oas.annotations.headers.Header(name = "ETag", description = "Version of the expense",
+                    schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string")),
+            content = @Content(mediaType = "application/json",
+                    schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ExpenseView.class)))
     public ResponseEntity<ExpenseView> get(@PathVariable UUID gid, @PathVariable UUID eid) {
         ExpenseView view = expenses.get(currentUser.id(), gid, eid);
         return ResponseEntity.ok().eTag(Integer.toString(view.version())).body(view);
@@ -124,6 +134,11 @@ public class ExpenseController {
      * version is what makes a retry safe (a repeated PUT with the old version is a 409).
      */
     @PutMapping("/{eid}")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "The updated expense",
+            headers = @io.swagger.v3.oas.annotations.headers.Header(name = "ETag", description = "New version of the expense",
+                    schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string")),
+            content = @Content(mediaType = "application/json",
+                    schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ExpenseView.class)))
     @Operation(summary = "Edit an expense (replaces payers, shares and items)",
             description = "If-Match with the current version is required. Send the explicit participant list: "
                     + "members who joined later are never added silently. Writes a revision.")
@@ -141,6 +156,9 @@ public class ExpenseController {
 
     /** Soft delete. The expense leaves lists and balances; its history stays. A second delete is a plain 404. */
     @DeleteMapping("/{eid}")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "Deleted",
+            headers = @io.swagger.v3.oas.annotations.headers.Header(name = "ETag", description = "Version after the delete",
+                    schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string")))
     @Operation(summary = "Delete an expense (soft delete, keeps the history)",
             description = "If-Match with the current version is required. Answers 204 with the new ETag.")
     public ResponseEntity<Void> delete(@PathVariable UUID gid, @PathVariable UUID eid,

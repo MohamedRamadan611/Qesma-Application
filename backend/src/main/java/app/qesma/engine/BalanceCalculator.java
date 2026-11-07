@@ -70,6 +70,15 @@ public final class BalanceCalculator {
     }
 
     /**
+     * One member's net from their sums: {@code paid - owed + sent - received} (positive = is owed). The same rule as
+     * {@link #netsFromTotals}, for callers that need a single member (the group list's "your balance").
+     */
+    public static long memberNet(MemberTotals t) {
+        return Exact.add(Exact.add(t.paidMinor(), Exact.negate(t.owedMinor())),
+                Exact.add(t.sentMinor(), Exact.negate(t.receivedMinor())));
+    }
+
+    /**
      * Same rule as {@link #nets} (spec 7.6) but from per-member sums instead of rows:
      * {@code net = paid - owed + sent - received}. Members without totals are 0. Returns every roster member in
      * {@code sortOrder} order and throws if the nets do not sum to 0 (the ledger invariant: a violation is a bug,
@@ -85,8 +94,7 @@ public final class BalanceCalculator {
             }
         }
         for (MemberTotals t : totals) {
-            add(nets, t.memberId(), Exact.add(Exact.add(t.paidMinor(), Exact.negate(t.owedMinor())),
-                    Exact.add(t.sentMinor(), Exact.negate(t.receivedMinor()))));
+            add(nets, t.memberId(), memberNet(t));
         }
         long sum = 0;
         for (long v : nets.values()) {

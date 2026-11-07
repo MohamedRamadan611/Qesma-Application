@@ -53,6 +53,11 @@ public class SettlementController {
                      "toMemberId":"11111111-1111-1111-1111-111111111111",
                      "amountMinor":8000,"settledOn":"2026-10-20","note":"Cash at the hotel"}""")))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Created (or the stored answer of an identical earlier request: header Idempotency-Replayed: true)",
+            headers = {@io.swagger.v3.oas.annotations.headers.Header(name = "Location", description = "URL of the settlement",
+                    schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string")),
+                    @io.swagger.v3.oas.annotations.headers.Header(name = "Idempotency-Replayed",
+                    description = "true when this is the stored answer of an identical earlier request",
+                    schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string"))},
             content = @Content(mediaType = "application/json",
                     schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SettlementView.class)))
     public ResponseEntity<String> create(@PathVariable UUID gid,
@@ -80,6 +85,7 @@ public class SettlementController {
 
     /** Soft delete: the payment no longer counts in balances. A second delete is a plain 404. */
     @DeleteMapping("/{sid}")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "Deleted")
     @Operation(summary = "Delete a settlement (soft delete; its effect on balances is reversed)")
     public ResponseEntity<Void> delete(@PathVariable UUID gid, @PathVariable UUID sid) {
         settlements.delete(currentUser.id(), gid, sid);

@@ -44,7 +44,7 @@ class ExpenseListQueryCountIT extends AbstractApiIT {
         String gid = createGroup(ali, "Many " + UUID.randomUUID()).get("id").asText();
         List<String> members = new ArrayList<>();
         for (String n : List.of("A", "B", "C", "D")) {
-            members.add(addMember(ali, gid, n).get("id").asText());
+            members.add(member(ali, gid, n).get("id").asText());
         }
         for (int i = 0; i < 50; i++) {
             createExpense(ali, gid, equalBody("e" + i, 1000 + i, null, members.get(i % 4), 1000L + i));
@@ -67,8 +67,8 @@ class ExpenseListQueryCountIT extends AbstractApiIT {
     void aPageWithItemizedBillsCostsTwoMoreStatementsNotOnePerBill() throws Exception {
         Session ali = newUser();
         String gid = createGroup(ali, "Bills " + UUID.randomUUID()).get("id").asText();
-        String a = addMember(ali, gid, "A").get("id").asText();
-        String b = addMember(ali, gid, "B").get("id").asText();
+        String a = member(ali, gid, "A").get("id").asText();
+        String b = member(ali, gid, "B").get("id").asText();
         for (int i = 0; i < 30; i++) {
             Map<String, Object> bill = new java.util.LinkedHashMap<>();
             bill.put("title", "bill" + i);
@@ -92,8 +92,8 @@ class ExpenseListQueryCountIT extends AbstractApiIT {
     void settlementListCostsTheSameFewStatementsForOneSettlementAsForThirty() throws Exception {
         Session ali = newUser();
         String gid = createGroup(ali, "Pay " + UUID.randomUUID()).get("id").asText();
-        String a = addMember(ali, gid, "A").get("id").asText();
-        String b = addMember(ali, gid, "B").get("id").asText();
+        String a = member(ali, gid, "A").get("id").asText();
+        String b = member(ali, gid, "B").get("id").asText();
         for (int i = 0; i < 30; i++) {
             MvcResult r = call(org.springframework.http.HttpMethod.POST, "/api/v1/groups/" + gid + "/settlements", ali,
                     Map.of("fromMemberId", a, "toMemberId", b, "amountMinor", 100L + i, "settledOn", "2026-10-20"),
@@ -111,7 +111,7 @@ class ExpenseListQueryCountIT extends AbstractApiIT {
     void revisionsAndGroupDetailCostAFixedNumberOfStatementsWhateverTheirSize() throws Exception {
         Session ali = newUser();
         String gid = createGroup(ali, "Detail " + UUID.randomUUID()).get("id").asText();
-        String a = addMember(ali, gid, "A").get("id").asText();
+        String a = member(ali, gid, "A").get("id").asText();
         String eid = createExpense(ali, gid, equalBody("e", 1000, null, a, 1000L)).get("id").asText();
         String revisions = "/api/v1/groups/" + gid + "/expenses/" + eid + "/revisions";
         String detail = "/api/v1/groups/" + gid;
@@ -124,7 +124,7 @@ class ExpenseListQueryCountIT extends AbstractApiIT {
             assertThat(status(r)).isEqualTo(200);
         }
         for (int m = 0; m < 14; m++) {
-            addMember(ali, gid, "M" + m);
+            member(ali, gid, "M" + m);
         }
 
         assertThat(statementsFor(ali, revisions)).as("revisions: 13 entries cost the same as 1").isEqualTo(revisionsFew);
@@ -138,7 +138,7 @@ class ExpenseListQueryCountIT extends AbstractApiIT {
         Session ali = newUser();
         for (int i = 0; i < 12; i++) {
             String gid = createGroup(ali, "G" + i).get("id").asText();
-            addMember(ali, gid, "A");
+            member(ali, gid, "A");
         }
         long few = statementsFor(ali, "/api/v1/groups?size=1");
         long many = statementsFor(ali, "/api/v1/groups?size=12");

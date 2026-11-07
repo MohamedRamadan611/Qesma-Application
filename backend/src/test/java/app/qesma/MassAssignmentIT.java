@@ -43,6 +43,9 @@ class MassAssignmentIT extends AbstractApiIT {
         evil.put("owedMinor", 1);
         evil.put("authSubject", "stolen");
         evil.put("email", "stolen@example.com");
+        evil.put("isYou", true);
+        evil.put("yourMemberId", UUID.randomUUID().toString());
+        evil.put("yourNetMinor", 123456);
         return evil;
     }
 
@@ -63,7 +66,11 @@ class MassAssignmentIT extends AbstractApiIT {
                 + "from expense_groups where id = ?::uuid", gid);
         assertThat(row.get("owner")).isEqualTo(me.userId().toString());
         assertThat(row.get("version")).isEqualTo(1);
-        assertThat(row.get("member_seq")).isEqualTo(0);
+        assertThat(row.get("member_seq")).isEqualTo(1);               // the owner is member #1 since B9
+        assertThat(jdbc.queryForObject("select count(*) from members where group_id = ?::uuid and user_id = ?::uuid", Long.class,
+                gid, me.userId())).as("the owner is linked to exactly one member").isEqualTo(1L);
+        assertThat(body(g).get("members").get(0).get("isYou").asBoolean()).isTrue();
+        assertThat(body(g).get("yourMemberId").asText()).isEqualTo(body(g).get("members").get(0).get("id").asText());
         assertThat(row.get("created_at").toString()).doesNotContain("2001");
 
         // group update
@@ -85,12 +92,13 @@ class MassAssignmentIT extends AbstractApiIT {
         Map<String, Object> member = jdbc.queryForMap("select group_id::text as grp, sort_order, user_id from members "
                 + "where id = ?::uuid", a);
         assertThat(member.get("grp")).isEqualTo(gid);
-        assertThat(member.get("sort_order")).isEqualTo(1);
-        assertThat(member.get("user_id")).isNull();
-        assertThat(jdbc.queryForObject("select sort_order from members where id = ?::uuid", Integer.class, b)).isEqualTo(2);
+        assertThat(member.get("sort_order")).isEqualTo(2);              // after the owner's member #1
+        assertThat(member.get("user_id")).as("a client cannot link a member to an account").isNull();
+        assertThat(body(m1).get("isYou").asBoolean()).isFalse();
+        assertThat(jdbc.queryForObject("select sort_order from members where id = ?::uuid", Integer.class, b)).isEqualTo(3);
         assertThat(status(call(PATCH, "/api/v1/groups/" + gid + "/members/" + a, me,
                 withForbidden(Map.of("displayName", "A2"), other, foreignGroup)))).isEqualTo(200);
-        assertThat(jdbc.queryForObject("select sort_order from members where id = ?::uuid", Integer.class, a)).isEqualTo(1);
+        assertThat(jdbc.queryForObject("select sort_order from members where id = ?::uuid", Integer.class, a)).isEqualTo(2);
 
         // profile
         String emailBefore = jdbc.queryForObject("select email from users where id = ?::uuid", String.class, me.userId());
@@ -144,7 +152,8 @@ class MassAssignmentIT extends AbstractApiIT {
         assertThat(settlement.get("deleted_at")).isNull();
 
         // nothing leaked into the other user's group
-        assertThat(jdbc.queryForObject("select count(*) from members where group_id = ?::uuid", Long.class, foreignGroup)).isZero();
+        assertThat(jdbc.queryForObject("select count(*) from members where group_id = ?::uuid", Long.class, foreignGroup))
+                .as("only the other owner's own member").isEqualTo(1L);
         assertThat(countExpenses(foreignGroup)).isZero();
         assertThat(jdbc.queryForObject("select count(*) from settlements where group_id = ?::uuid", Long.class, foreignGroup))
                 .isZero();

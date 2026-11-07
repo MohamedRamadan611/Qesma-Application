@@ -74,7 +74,11 @@ class GroupsMembersIT extends AbstractApiIT {
         MvcResult read = call(GET, GROUPS + "/" + g.get("id").asText(), ali, null);
         assertThat(status(read)).isEqualTo(200);
         assertThat(etagOf(read)).isEqualTo("\"1\"");
-        assertThat(body(read).get("members")).isEmpty();
+        // the creator is the group's first member (B9): exactly one member, linked to them
+        assertThat(body(read).get("members")).hasSize(1);
+        assertThat(body(read).get("members").get(0).get("isYou").asBoolean()).isTrue();
+        assertThat(body(read).get("members").get(0).get("sortOrder").asInt()).isEqualTo(1);
+        assertThat(body(read).get("yourMemberId").asText()).isEqualTo(body(read).get("members").get(0).get("id").asText());
         assertThat(body(read).get("totalSpentMinor").asLong()).isZero();
     }
 
@@ -142,8 +146,8 @@ class GroupsMembersIT extends AbstractApiIT {
         JsonNode intact = body(call(GET, g, owner, null));
         assertThat(intact.get("name").asText()).isEqualTo("Private");
         assertThat(intact.get("version").asInt()).isEqualTo(1);
-        assertThat(intact.get("members")).hasSize(1);
-        assertThat(intact.get("members").get(0).get("displayName").asText()).isEqualTo("Secret Friend");
+        assertThat(intact.get("members")).hasSize(2);             // the owner's member and the friend
+        assertThat(intact.get("members").get(1).get("displayName").asText()).isEqualTo("Secret Friend");
         assertThat(body(call(GET, GROUPS, intruder, null)).get("totalElements").asLong()).isZero();
     }
 
@@ -160,8 +164,8 @@ class GroupsMembersIT extends AbstractApiIT {
         MvcResult delete = call(DELETE, GROUPS + "/" + otherGroup + "/members/" + victim, other, null);
         assertThat(status(rename)).isEqualTo(404);
         assertThat(status(delete)).isEqualTo(404);
-        assertThat(body(call(GET, GROUPS + "/" + ownerGroup, owner, null)).get("members").get(0).get("displayName")
-                .asText()).isEqualTo("Victim");
+        assertThat(body(call(GET, GROUPS + "/" + ownerGroup, owner, null)).get("members").get(1).get("displayName")
+                .asText()).isEqualTo("Victim");   // member #2: the owner is #1
     }
 
     @Test
@@ -180,11 +184,12 @@ class GroupsMembersIT extends AbstractApiIT {
             addMember(ali, gid, name);
         }
         JsonNode members = body(call(GET, GROUPS + "/" + gid, ali, null)).get("members");
-        assertThat(members).hasSize(3);
-        for (int i = 0; i < 3; i++) {
+        assertThat(members).hasSize(4);                          // the owner (#1) plus the three added
+        for (int i = 0; i < 4; i++) {
             assertThat(members.get(i).get("sortOrder").asInt()).isEqualTo(i + 1);
         }
-        assertThat(members.get(0).get("displayName").asText()).isEqualTo("Zed"); // creation order, not alphabetical
+        assertThat(members.get(0).get("isYou").asBoolean()).isTrue();
+        assertThat(members.get(1).get("displayName").asText()).isEqualTo("Zed"); // creation order, not alphabetical
     }
 
     @Test
@@ -206,7 +211,7 @@ class GroupsMembersIT extends AbstractApiIT {
         MvcResult ownCase = call(PATCH, GROUPS + "/" + gid + "/members/" + sara, ali, Map.of("displayName", "SARA"));
         assertThat(status(ownCase)).isEqualTo(200);
         assertThat(body(ownCase).get("displayName").asText()).isEqualTo("SARA");
-        assertThat(body(ownCase).get("sortOrder").asInt()).isEqualTo(1); // sort order never changes
+        assertThat(body(ownCase).get("sortOrder").asInt()).isEqualTo(2); // sort order never changes (Sara is member #2 after the owner)
 
         // the same name is fine in a different group
         String other = createGroup(ali, "Other").get("id").asText();
@@ -234,7 +239,7 @@ class GroupsMembersIT extends AbstractApiIT {
         String b = addMember(ali, gid, "B").get("id").asText();
         assertThat(status(call(DELETE, GROUPS + "/" + gid + "/members/" + b, ali, null))).isEqualTo(204);
 
-        assertThat(addMember(ali, gid, "C").get("sortOrder").asInt()).isEqualTo(3); // not 2
+        assertThat(addMember(ali, gid, "C").get("sortOrder").asInt()).isEqualTo(4); // owner 1, A 2, B 3 deleted: not 3
     }
 
     @Test
@@ -263,10 +268,10 @@ class GroupsMembersIT extends AbstractApiIT {
             assertThat(status(r)).isEqualTo(201);
             orders.add(body(r).get("sortOrder").asInt());
         }
-        assertThat(orders).containsExactlyInAnyOrder(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+        assertThat(orders).containsExactlyInAnyOrder(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17); // owner is #1
         Integer distinct = jdbc.queryForObject(
                 "select count(distinct sort_order) from members where group_id = ?::uuid", Integer.class, gid);
-        assertThat(distinct).isEqualTo(16);
+        assertThat(distinct).isEqualTo(17);                      // 16 added plus the owner
     }
 
     @Test
@@ -290,7 +295,7 @@ class GroupsMembersIT extends AbstractApiIT {
             }
         }
         // a rejected duplicate must not burn a sort_order number
-        assertThat(addMember(ali, gid, "Next").get("sortOrder").asInt()).isEqualTo(2);
+        assertThat(addMember(ali, gid, "Next").get("sortOrder").asInt()).isEqualTo(3); // owner 1, Twin 2
     }
 
     // ---- optimistic concurrency on groups ----------------------------------------------------------------
@@ -403,7 +408,7 @@ class GroupsMembersIT extends AbstractApiIT {
         String gid = createGroup(ali, "Members").get("id").asText();
         String mid = addMember(ali, gid, "Temp").get("id").asText();
         assertThat(status(call(DELETE, GROUPS + "/" + gid + "/members/" + mid, ali, null))).isEqualTo(204);
-        assertThat(body(call(GET, GROUPS + "/" + gid, ali, null)).get("members")).isEmpty();
+        assertThat(body(call(GET, GROUPS + "/" + gid, ali, null)).get("members")).hasSize(1);   // only the owner remains
     }
 
     // ---- listing ----------------------------------------------------------------------------------------
@@ -434,8 +439,8 @@ class GroupsMembersIT extends AbstractApiIT {
         assertThat(p0.get("totalPages").asInt()).isEqualTo(3);
         assertThat(p0.get("items").get(0).get("name").asText()).isEqualTo("Group 24"); // newest first
         assertThat(p2.get("items").get(4).get("name").asText()).isEqualTo("Group 00");
-        assertThat(p2.get("items").get(4).get("memberCount").asLong()).isEqualTo(3);
-        assertThat(p0.get("items").get(0).get("memberCount").asLong()).isZero();
+        assertThat(p2.get("items").get(4).get("memberCount").asLong()).isEqualTo(4);   // owner + 3
+        assertThat(p0.get("items").get(0).get("memberCount").asLong()).isEqualTo(1);   // only the owner
         assertThat(p0.get("items").get(0).get("totalSpentMinor").asLong()).isZero();
         assertThat(p0.get("items").get(0).get("lastExpenseAt").isNull()).isTrue();
 

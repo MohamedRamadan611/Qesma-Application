@@ -122,6 +122,7 @@ public class OpenApiConfig {
         }
         if (path.endsWith("/members/{mid}") && method == PathItem.HttpMethod.DELETE) {
             add(errors, 409, ErrorCode.MEMBER_HAS_TRANSACTIONS);
+            add(errors, 409, ErrorCode.OWNER_MEMBER_PROTECTED);
         }
         if (path.endsWith("/groups/{gid}") && method == PathItem.HttpMethod.DELETE) {
             add(errors, 409, ErrorCode.GROUP_NOT_EMPTY);

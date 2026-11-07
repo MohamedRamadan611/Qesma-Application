@@ -70,7 +70,7 @@ Group name 60 code points · member name 40 · expense title 100 · item name 10
 | `GET /groups/{gid}/balances` | 200 `BalanceView` | positive net = is owed |
 | `GET/POST /groups/{gid}/settlements` (POST: Idempotency-Key), `DELETE .../{sid}` | 200 / 201 / **204** | |
 
-> Known contract defect (fixed by backend prompt `b9-owner-member-contract`): the OpenAPI document declares `200` for the three bold operations above that really answer 201/204. Until B9 is merged and the client regenerated, treat the bold values as the truth.
+> Since B9 the OpenAPI declares the real success statuses (201 for creates, 204 for deletes); regenerate the client after B9 (`docs/mobile-client.md`).
 
 ## 7. Error code -> UX
 | Code | Meaning | UX |
@@ -83,6 +83,7 @@ Group name 60 code points · member name 40 · expense title 100 · item name 10
 | `DUPLICATE_MEMBER_NAME` | name taken | inline in the add/rename sheet |
 | `MEMBER_HAS_TRANSACTIONS` | cannot delete | blocked dialog |
 | `GROUP_NOT_EMPTY` | cannot delete group | blocked dialog |
+| `OWNER_MEMBER_PROTECTED` | the group creator's own member cannot be deleted (B9) | do not offer delete for the member with `isYou`; if it happens, a short explanatory dialog (rename is allowed) |
 | `VERSION_CONFLICT` | edited elsewhere | conflict dialog: reload latest, keep the user's input, let them re-apply |
 | `NOT_FOUND` | gone or not yours | "no longer available", go back, refresh |
 | `UNAUTHORIZED` | token problem | refresh flow; if it fails: session-expired dialog |

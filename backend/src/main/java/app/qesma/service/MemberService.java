@@ -73,6 +73,10 @@ public class MemberService {
     public void delete(UUID userId, UUID groupId, UUID memberId) {
         ExpenseGroup group = access.requireOwnedForUpdate(userId, groupId);
         Member member = access.requireMember(group, memberId);
+        if (member.getUserId() != null) {
+            throw ApiException.conflict(ErrorCode.OWNER_MEMBER_PROTECTED,
+                    "The group owner's own member cannot be removed (it can be renamed)");
+        }
         if (usage.isUsed(groupId, memberId)) {
             throw ApiException.conflict(ErrorCode.MEMBER_HAS_TRANSACTIONS,
                     "The member appears in expenses or settlements and cannot be removed");

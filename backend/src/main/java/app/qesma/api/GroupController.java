@@ -37,12 +37,21 @@ public class GroupController {
         this.currentUser = currentUser;
     }
 
+    /** Creates a group. The caller becomes its first member (member #1, {@code isYou = true}). */
     @PostMapping
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Created",
+            headers = {@io.swagger.v3.oas.annotations.headers.Header(name = "Location",
+                    description = "URL of the new group", schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string")),
+                    @io.swagger.v3.oas.annotations.headers.Header(name = "ETag", description = "Version of the group",
+                    schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string"))},
+            content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+                    schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = GroupDto.class)))
     public ResponseEntity<GroupDto> create(@RequestBody CreateGroupRequest request) {
         ExpenseGroup created = groups.create(currentUser.id(), request.name(), request.type(), request.currencyCode());
+        GroupDto dto = GroupDto.from(groups.get(currentUser.id(), created.getId()), currentUser.id());
         return ResponseEntity.created(URI.create("/api/v1/groups/" + created.getId()))
-                .eTag(Integer.toString(created.getVersion()))
-                .body(GroupDto.fresh(created));
+                .eTag(Integer.toString(dto.version()))
+                .body(dto);
     }
 
     @GetMapping
@@ -52,19 +61,29 @@ public class GroupController {
     }
 
     @GetMapping("/{gid}")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "The group with its members",
+            headers = @io.swagger.v3.oas.annotations.headers.Header(name = "ETag", description = "Version of the group",
+                    schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string")),
+            content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+                    schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = GroupDto.class)))
     public ResponseEntity<GroupDto> get(@PathVariable UUID gid) {
-        GroupDto dto = GroupDto.from(groups.get(currentUser.id(), gid));
+        GroupDto dto = GroupDto.from(groups.get(currentUser.id(), gid), currentUser.id());
         return ResponseEntity.ok().eTag(Integer.toString(dto.version())).body(dto);
     }
 
     @PatchMapping("/{gid}")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "The updated group",
+            headers = @io.swagger.v3.oas.annotations.headers.Header(name = "ETag", description = "New version of the group",
+                    schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string")),
+            content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+                    schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = GroupDto.class)))
     public ResponseEntity<GroupDto> update(@PathVariable UUID gid,
                                            @RequestHeader(value = "If-Match", required = false) String ifMatch,
                                            @RequestBody UpdateGroupRequest request) {
         int expected = IfMatch.version(ifMatch);
         groups.update(currentUser.id(), gid, expected, request.name(), request.type());
         // Same body as GET (real members and totals), so a client can replace its copy with the response.
-        GroupDto dto = GroupDto.from(groups.get(currentUser.id(), gid));
+        GroupDto dto = GroupDto.from(groups.get(currentUser.id(), gid), currentUser.id());
         return ResponseEntity.ok().eTag(Integer.toString(dto.version())).body(dto);
     }
 

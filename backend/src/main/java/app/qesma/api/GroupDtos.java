@@ -3,6 +3,7 @@ package app.qesma.api;
 import app.qesma.domain.ExpenseGroup;
 import app.qesma.domain.Member;
 import app.qesma.service.GroupService;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -28,35 +29,41 @@ public final class GroupDtos {
     public record UpdateMemberRequest(String displayName) {
     }
 
-    public record MemberDto(UUID id, String displayName, int sortOrder, Instant createdAt) {
-        static MemberDto from(Member m) {
-            return new MemberDto(m.getId(), m.getDisplayName(), m.getSortOrder(), m.getCreatedAt());
+    /**
+     * A member. {@code isYou} is true for the member that represents the signed-in user (the group owner, who is
+     * member #1 of every group they create); it is computed by the server and cannot be set by a client.
+     */
+    public record MemberDto(UUID id, String displayName, int sortOrder, Instant createdAt,
+                            @JsonProperty("isYou") boolean isYou) {
+        static MemberDto from(Member m, UUID callerUserId) {
+            return new MemberDto(m.getId(), m.getDisplayName(), m.getSortOrder(), m.getCreatedAt(),
+                    m.getUserId() != null && m.getUserId().equals(callerUserId));
         }
     }
 
-    /** List row. totalSpentMinor sums non-deleted expenses; lastExpenseAt is null when there are none. */
+    /**
+     * List row. totalSpentMinor sums non-deleted expenses; lastExpenseAt is null when there are none.
+     * {@code yourNetMinor}: what the caller is owed (positive) or owes (negative) in this group, in integer piasters
+     * of the group's currency; null when the caller has no member in the group. Never add amounts of groups with
+     * different currencies.
+     */
     public record GroupSummaryDto(UUID id, String name, String type, String currencyCode, long memberCount,
-                                  long totalSpentMinor, Instant lastExpenseAt) {
+                                  long totalSpentMinor, Instant lastExpenseAt, Long yourNetMinor) {
         static GroupSummaryDto from(GroupService.GroupSummary s) {
             return new GroupSummaryDto(s.id(), s.name(), s.type(), s.currencyCode(), s.memberCount(),
-                    s.totalSpentMinor(), s.lastExpenseAt());
+                    s.totalSpentMinor(), s.lastExpenseAt(), s.yourNetMinor());
         }
     }
 
+    /** {@code yourMemberId} and {@code yourNetMinor} are null when the caller has no member in the group. */
     public record GroupDto(UUID id, String name, String type, String currencyCode, Instant createdAt,
                            Instant updatedAt, int version, long totalSpentMinor, Instant lastExpenseAt,
-                           List<MemberDto> members) {
-        /** A group that was just created: no members, no expenses. */
-        static GroupDto fresh(ExpenseGroup g) {
-            return new GroupDto(g.getId(), g.getName(), g.getType(), g.getCurrencyCode(), g.getCreatedAt(),
-                    g.getUpdatedAt(), g.getVersion(), 0L, null, List.of());
-        }
-
-        static GroupDto from(GroupService.GroupDetail d) {
+                           UUID yourMemberId, Long yourNetMinor, List<MemberDto> members) {
+        static GroupDto from(GroupService.GroupDetail d, UUID callerUserId) {
             ExpenseGroup g = d.group();
             return new GroupDto(g.getId(), g.getName(), g.getType(), g.getCurrencyCode(), g.getCreatedAt(),
-                    g.getUpdatedAt(), g.getVersion(), d.totalSpentMinor(), d.lastExpenseAt(),
-                    d.members().stream().map(MemberDto::from).toList());
+                    g.getUpdatedAt(), g.getVersion(), d.totalSpentMinor(), d.lastExpenseAt(), d.yourMemberId(),
+                    d.yourNetMinor(), d.members().stream().map(m -> MemberDto.from(m, callerUserId)).toList());
         }
     }
 }

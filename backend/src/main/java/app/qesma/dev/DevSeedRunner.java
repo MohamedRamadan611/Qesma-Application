@@ -70,7 +70,9 @@ public class DevSeedRunner implements ApplicationRunner {
         }
         ExpenseGroup group = groups.create(owner.getId(), GROUP_NAME, "TRIP", "EGP");
         List<UUID> ids = new ArrayList<>();
-        for (String name : MEMBER_NAMES) {
+        // the owner (named after their profile, "محمد") is already member #1 since B9; add the other four
+        ids.add(groups.get(owner.getId(), group.getId()).members().get(0).getId());
+        for (String name : MEMBER_NAMES.subList(1, MEMBER_NAMES.size())) {
             Member m = members.add(owner.getId(), group.getId(), name);
             ids.add(m.getId());
         }

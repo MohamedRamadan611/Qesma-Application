@@ -41,8 +41,8 @@ class ExpenseAtomicityIT extends AbstractApiIT {
         Session ali = newUser();
         List<String> g = new ArrayList<>();
         g.add(createGroup(ali, "Atomic " + UUID.randomUUID()).get("id").asText());
-        g.add(addMember(ali, g.get(0), "A").get("id").asText());
-        g.add(addMember(ali, g.get(0), "B").get("id").asText());
+        g.add(member(ali, g.get(0), "A").get("id").asText());
+        g.add(member(ali, g.get(0), "B").get("id").asText());
         String key = UUID.randomUUID().toString();
         Object body = equalBody("Doomed", 100, null, g.get(1), 100L);
 

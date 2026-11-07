@@ -31,7 +31,7 @@ class ExpenseIdempotencyIT extends AbstractApiIT {
         List<String> ids = new ArrayList<>();
         ids.add(createGroup(owner, "G " + UUID.randomUUID()).get("id").asText());
         for (String n : names) {
-            ids.add(addMember(owner, ids.get(0), n).get("id").asText());
+            ids.add(member(owner, ids.get(0), n).get("id").asText());
         }
         return ids;
     }
@@ -252,7 +252,7 @@ class ExpenseIdempotencyIT extends AbstractApiIT {
         Object body = equalBody("snapshot", 100, null, g.get(1), 100L);
         JsonNode created = body(postExpense(ali, g.get(0), key, body));
 
-        addMember(ali, g.get(0), "Joined later");
+        member(ali, g.get(0), "Joined later");
         JsonNode replayed = body(postExpense(ali, g.get(0), key, body));
 
         assertThat(replayed).isEqualTo(created);

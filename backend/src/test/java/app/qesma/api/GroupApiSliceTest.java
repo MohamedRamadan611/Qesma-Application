@@ -90,7 +90,13 @@ class GroupApiSliceTest {
     }
 
     private Member member(UUID id, String name, int sortOrder) {
+        return member(id, name, sortOrder, null);
+    }
+
+    /** {@code linkedUserId} non-null = the member is linked to that account (the group owner). */
+    private Member member(UUID id, String name, int sortOrder, UUID linkedUserId) {
         Member m = Mockito.mock(Member.class);
+        when(m.getUserId()).thenReturn(linkedUserId);
         when(m.getId()).thenReturn(id);
         when(m.getDisplayName()).thenReturn(name);
         when(m.getSortOrder()).thenReturn(sortOrder);
@@ -103,7 +109,12 @@ class GroupApiSliceTest {
     @Test
     void createReturns201WithLocationEtagAndOnlyUsesClientEditableFields() throws Exception {
         ExpenseGroup created = group(1);
+        UUID ownerMember = UUID.randomUUID();
         when(groups.create(any(), any(), any(), any())).thenReturn(created);
+        // the owner is member #1 and linked to the caller: the response shows it as "you"
+        Member ownerRow = member(ownerMember, "Me", 1, me);   // build the mock before stubbing with it
+        when(groups.get(me, gid)).thenReturn(new GroupService.GroupDetail(created, List.of(ownerRow), 0L, null,
+                ownerMember, 0L));
 
         // The client tries to smuggle in owner, version and id: they have nowhere to go.
         String evil = "{\"name\":\"Dahab\",\"type\":\"TRIP\",\"currencyCode\":\"EGP\","
@@ -113,7 +124,11 @@ class GroupApiSliceTest {
         assertThat(r.getResponse().getStatus()).isEqualTo(201);
         assertThat(r.getResponse().getHeader("Location")).isEqualTo("/api/v1/groups/" + gid);
         assertThat(r.getResponse().getHeader("ETag")).isEqualTo("\"1\"");
-        assertThat(body(r).get("members")).isEmpty();
+        assertThat(body(r).get("members")).hasSize(1);
+        assertThat(body(r).get("members").get(0).get("isYou").asBoolean()).isTrue();
+        assertThat(body(r).get("yourMemberId").asText()).isEqualTo(ownerMember.toString());
+        assertThat(body(r).get("yourNetMinor").asLong()).isZero();
+        assertThat(body(r).get("members").get(0).has("userId")).isFalse();   // account ids are never exposed
         verify(groups).create(eq(me), eq("Dahab"), eq("TRIP"), eq("EGP")); // owner is always the token's subject
     }
 
@@ -124,7 +139,7 @@ class GroupApiSliceTest {
         ExpenseGroup g = group(4);
         Member a = member(m1, "Ali", 1);
         Member b = member(m2, "Sara", 2);
-        when(groups.get(me, gid)).thenReturn(new GroupService.GroupDetail(g, List.of(a, b), 125_050L, Instant.parse("2026-02-03T04:05:06Z")));
+        when(groups.get(me, gid)).thenReturn(new GroupService.GroupDetail(g, List.of(a, b), 125_050L, Instant.parse("2026-02-03T04:05:06Z"), m1, -2_500L));
 
         MvcResult r = mvc.perform(authed(get("/api/v1/groups/" + gid))).andReturn();
 
@@ -141,7 +156,7 @@ class GroupApiSliceTest {
 
     @Test
     void listIsPagedAndCarriesTheUiFields() throws Exception {
-        var row = new GroupService.GroupSummary(gid, "Dahab", "TRIP", "EGP", 5, 9_900L, Instant.parse("2026-02-03T04:05:06Z"));
+        var row = new GroupService.GroupSummary(gid, "Dahab", "TRIP", "EGP", 5, 9_900L, Instant.parse("2026-02-03T04:05:06Z"), -2_500L);
         when(groups.list(me, 2, 10)).thenReturn(new PageImpl<>(List.of(row), PageRequest.of(2, 10), 21));
 
         MvcResult r = mvc.perform(authed(get("/api/v1/groups?page=2&size=10"))).andReturn();
@@ -181,7 +196,7 @@ class GroupApiSliceTest {
         ExpenseGroup updated = group(4);
         when(groups.update(me, gid, 3, "New", null)).thenReturn(updated);
         Member kept = member(UUID.randomUUID(), "Ali", 1);
-        when(groups.get(me, gid)).thenReturn(new GroupService.GroupDetail(updated, List.of(kept), 500L, null));
+        when(groups.get(me, gid)).thenReturn(new GroupService.GroupDetail(updated, List.of(kept), 500L, null, null, null));
 
         MvcResult r = mvc.perform(authed(patch("/api/v1/groups/" + gid)).header("If-Match", "\"3\"")
                 .content("{\"name\":\"New\"}")).andReturn();

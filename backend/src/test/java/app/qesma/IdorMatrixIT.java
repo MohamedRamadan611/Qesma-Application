@@ -125,8 +125,8 @@ class IdorMatrixIT extends AbstractApiIT {
         Session owner = newUser();
         Session attacker = newUser();
         String gid = createGroup(owner, "Private").get("id").asText();
-        String m1 = addMember(owner, gid, "A").get("id").asText();
-        String m2 = addMember(owner, gid, "B").get("id").asText();
+        String m1 = member(owner, gid, "A").get("id").asText();
+        String m2 = member(owner, gid, "B").get("id").asText();
         String eid = createExpense(owner, gid, equalBody("Mine", 3000, null, m1, 3000L)).get("id").asText();
         String sid = body(call(HttpMethod.POST, "/api/v1/groups/" + gid + "/settlements", owner,
                 Map.of("fromMemberId", m1, "toMemberId", m2, "amountMinor", 100L, "settledOn", "2026-10-20"),

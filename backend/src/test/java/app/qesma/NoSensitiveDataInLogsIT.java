@@ -93,8 +93,8 @@ class NoSensitiveDataInLogsIT extends AbstractApiIT {
             call(PATCH, "/api/v1/me", me, Map.of("displayName", displayName + "2"));
             secrets.add(displayName + "2");
             String gid = createGroup(me, groupName).get("id").asText();
-            String a = addMember(me, gid, memberA).get("id").asText();
-            String b = addMember(me, gid, memberB).get("id").asText();
+            String a = member(me, gid, memberA).get("id").asText();
+            String b = member(me, gid, memberB).get("id").asText();
             JsonNode expense = createExpense(me, gid, equalBody(title, 3000, null, a, 3000L));
             String eid = expense.get("id").asText();
             call(PUT, "/api/v1/groups/" + gid + "/expenses/" + eid, me, equalBody(title + "x", 4000, null, b, 4000L),
