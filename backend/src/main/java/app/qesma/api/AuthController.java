@@ -16,16 +16,34 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/auth")
 public class AuthController {
 
+    // toString of the records that carry credentials is redacted: frameworks may print request or response objects
+    // when someone raises a log level, and a token must never be readable there (invariant 10).
     public record GoogleLoginRequest(@NotBlank @Size(max = 4096) String idToken) {
+        @Override
+        public String toString() {
+            return "GoogleLoginRequest[idToken=***]";
+        }
     }
 
     public record RefreshRequest(@NotBlank @Size(max = 256) String refreshToken) {
+        @Override
+        public String toString() {
+            return "RefreshRequest[refreshToken=***]";
+        }
     }
 
     public record AuthResponse(String accessToken, String refreshToken, UserDto user) {
+        @Override
+        public String toString() {
+            return "AuthResponse[tokens=***]";
+        }
     }
 
     public record TokenResponse(String accessToken, String refreshToken) {
+        @Override
+        public String toString() {
+            return "TokenResponse[tokens=***]";
+        }
     }
 
     private final AuthService auth;

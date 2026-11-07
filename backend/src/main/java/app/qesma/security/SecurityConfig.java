@@ -2,6 +2,7 @@ package app.qesma.security;
 
 import app.qesma.api.ErrorCode;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
 import java.time.Clock;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,7 +38,10 @@ public class SecurityConfig {
             .authorizeHttpRequests(a -> a
                 .requestMatchers(HttpMethod.POST,
                         "/api/v1/auth/google", "/api/v1/auth/refresh", "/api/v1/auth/logout").permitAll()
-                .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
+                // Actuator endpoints that are exposed (see management.endpoints.web.exposure): health and info locally;
+                // health, info and metrics on the internal management port in prod. The matcher does not match on the
+                // public port when the management port differs, so the API port never serves them.
+                .requestMatchers(EndpointRequest.toAnyEndpoint()).permitAll()
                 // springdoc endpoints only exist in the local profile; otherwise they 404 anyway.
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .anyRequest().authenticated())
@@ -47,6 +51,8 @@ public class SecurityConfig {
             .exceptionHandling(e -> e.authenticationEntryPoint(entryPoint))
             // Built here (not a bean) so it is only part of the security chain, never registered twice.
             .addFilterBefore(new AuthRateLimitFilter(props.rateLimit(), clock, problems, metrics),
+                    BearerTokenAuthenticationFilter.class)
+            .addFilterBefore(new RequestSizeLimitFilter(RequestSizeLimitFilter.MAX_BODY_BYTES, problems, metrics),
                     BearerTokenAuthenticationFilter.class);
         return http.build();
     }

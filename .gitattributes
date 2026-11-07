@@ -1,0 +1,10 @@
+# Line endings are part of the build: shell scripts and the Maven wrapper must be LF (they run in Linux containers and
+# CI) even when checked out on Windows with core.autocrlf=true.
+* text=auto
+*.sh text eol=lf
+mvnw text eol=lf
+*.cmd text eol=crlf
+Caddyfile text eol=lf
+*.sql text eol=lf
+*.yml text eol=lf
+Dockerfile text eol=lf

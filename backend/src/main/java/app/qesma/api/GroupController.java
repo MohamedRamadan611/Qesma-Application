@@ -42,7 +42,7 @@ public class GroupController {
         ExpenseGroup created = groups.create(currentUser.id(), request.name(), request.type(), request.currencyCode());
         return ResponseEntity.created(URI.create("/api/v1/groups/" + created.getId()))
                 .eTag(Integer.toString(created.getVersion()))
-                .body(GroupDto.from(created, List.of()));
+                .body(GroupDto.fresh(created));
     }
 
     @GetMapping
@@ -62,10 +62,10 @@ public class GroupController {
                                            @RequestHeader(value = "If-Match", required = false) String ifMatch,
                                            @RequestBody UpdateGroupRequest request) {
         int expected = IfMatch.version(ifMatch);
-        ExpenseGroup updated = groups.update(currentUser.id(), gid, expected, request.name(), request.type());
-        // The response carries the group without members (they are unchanged); the new ETag is what clients need.
-        return ResponseEntity.ok().eTag(Integer.toString(updated.getVersion()))
-                .body(GroupDto.from(updated, List.of()));
+        groups.update(currentUser.id(), gid, expected, request.name(), request.type());
+        // Same body as GET (real members and totals), so a client can replace its copy with the response.
+        GroupDto dto = GroupDto.from(groups.get(currentUser.id(), gid));
+        return ResponseEntity.ok().eTag(Integer.toString(dto.version())).body(dto);
     }
 
     @DeleteMapping("/{gid}")

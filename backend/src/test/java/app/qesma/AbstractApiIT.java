@@ -4,6 +4,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
@@ -83,14 +85,71 @@ public abstract class AbstractApiIT extends AbstractIntegrationTest {
         return body(r);
     }
 
+    /** EQUAL expense body. {@code participants} null means "all members" (field omitted). */
+    protected Map<String, Object> equalBody(String title, long total, List<String> participants, Object... payers) {
+        Map<String, Object> body = baseBody(title, total, "EQUAL", payers);
+        if (participants != null) {
+            body.put("participantMemberIds", participants);
+        }
+        return body;
+    }
+
+    /** EXACT expense body; {@code shares} are alternating memberId, amount pairs. */
+    protected Map<String, Object> exactBody(String title, long total, List<Object> shares, Object... payers) {
+        Map<String, Object> body = baseBody(title, total, "EXACT", payers);
+        List<Map<String, Object>> list = new java.util.ArrayList<>();
+        for (int i = 0; i + 1 < shares.size(); i += 2) {
+            list.add(Map.of("memberId", shares.get(i), "amountMinor", shares.get(i + 1)));
+        }
+        body.put("shares", list);
+        return body;
+    }
+
+    /** {@code payers} are alternating memberId, amount pairs. */
+    private Map<String, Object> baseBody(String title, long total, String type, Object... payers) {
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("title", title);
+        body.put("expenseDate", "2026-10-18");
+        body.put("splitType", type);
+        body.put("totalMinor", total);
+        List<Map<String, Object>> list = new java.util.ArrayList<>();
+        for (int i = 0; i + 1 < payers.length; i += 2) {
+            list.add(Map.of("memberId", payers[i], "amountMinor", payers[i + 1]));
+        }
+        body.put("payers", list);
+        return body;
+    }
+
+    protected MvcResult postExpense(Session as, String groupId, String key, Object body) throws Exception {
+        return call(HttpMethod.POST, "/api/v1/groups/" + groupId + "/expenses", as, body, "Idempotency-Key", key);
+    }
+
+    /** Creates an expense with a fresh key and returns the response body; fails the test on any non-201. */
+    protected JsonNode createExpense(Session as, String groupId, Object body) throws Exception {
+        MvcResult r = postExpense(as, groupId, UUID.randomUUID().toString(), body);
+        if (status(r) != 201) {
+            throw new AssertionError("create expense failed: " + status(r) + " " + r.getResponse().getContentAsString());
+        }
+        return body(r);
+    }
+
+    protected int countExpenses(String groupId) {
+        return jdbc.queryForObject("select count(*) from expenses where group_id = ?::uuid", Integer.class, groupId);
+    }
+
     protected String etagOf(MvcResult r) {
         return r.getResponse().getHeader("ETag");
     }
 
-    /** A problem+json body without the per-request id, for comparing two error responses. */
+    /**
+     * A problem+json body without the fields that legitimately differ between two otherwise identical errors:
+     * the per-request id, and {@code instance} (an echo of the URL the caller itself sent, ids included).
+     * Everything else (type, title, status, code) must match exactly.
+     */
     protected JsonNode problemWithoutRequestId(MvcResult r) throws Exception {
         com.fasterxml.jackson.databind.node.ObjectNode node = (com.fasterxml.jackson.databind.node.ObjectNode) body(r);
         node.remove("requestId");
+        node.remove("instance");
         return node;
     }
 }

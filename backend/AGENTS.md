@@ -4,7 +4,7 @@
 - Build + all tests: `./mvnw verify` (integration tests need Docker running: Testcontainers + PostgreSQL)
 - One test class: `./mvnw -q test -Dtest=ClassName`
 - Local database: `docker compose up -d db`
-- Run the app: `./mvnw spring-boot:run -Dspring-boot.run.profiles=local`
+- Run the app: `./mvnw spring-boot:run -Dspring-boot.run.profiles=local,fake-auth` (profiles are always explicit: no default profile)
 
 ## Layout (base package `app.qesma`, placeholder)
 `api` (controllers, DTO records) · `domain` (entities) · `engine` (PURE Java: no Spring/JPA/IO) · `service` · `security` · `persistence`

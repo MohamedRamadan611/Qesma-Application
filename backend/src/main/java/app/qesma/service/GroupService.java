@@ -5,6 +5,8 @@ import app.qesma.api.ErrorCode;
 import app.qesma.domain.ExpenseGroup;
 import app.qesma.domain.Member;
 import app.qesma.persistence.ExpenseGroupRepository;
+import app.qesma.persistence.ExpenseRepository;
+import app.qesma.persistence.GroupTotals;
 import app.qesma.persistence.MemberRepository;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Clock;
@@ -25,25 +27,30 @@ public class GroupService {
     private static final Logger log = LoggerFactory.getLogger(GroupService.class);
 
     /** One row of the group list. */
-    public record GroupSummary(UUID id, String name, String type, String currencyCode, long memberCount) {
+    public record GroupSummary(UUID id, String name, String type, String currencyCode, long memberCount,
+                               long totalSpentMinor, java.time.Instant lastExpenseAt) {
     }
 
-    /** A group together with its members in {@code sort_order}. */
-    public record GroupDetail(ExpenseGroup group, List<Member> members) {
+    /** A group together with its members in {@code sort_order} and its expense totals (non-deleted expenses). */
+    public record GroupDetail(ExpenseGroup group, List<Member> members, long totalSpentMinor,
+                              java.time.Instant lastExpenseAt) {
     }
 
     private final GroupAccessService access;
     private final ExpenseGroupRepository groups;
     private final MemberRepository members;
+    private final ExpenseRepository expenses;
     private final GroupUsageChecker usage;
     private final Clock clock;
     private final MeterRegistry metrics;
 
     public GroupService(GroupAccessService access, ExpenseGroupRepository groups, MemberRepository members,
-                        ObjectProvider<GroupUsageChecker> usage, Clock clock, MeterRegistry metrics) {
+                        ExpenseRepository expenses, ObjectProvider<GroupUsageChecker> usage, Clock clock,
+                        MeterRegistry metrics) {
         this.access = access;
         this.groups = groups;
         this.members = members;
+        this.expenses = expenses;
         this.usage = usage.getIfAvailable(() -> GroupUsageChecker.EMPTY);
         this.clock = clock;
         this.metrics = metrics;
@@ -66,13 +73,16 @@ public class GroupService {
     public Page<GroupSummary> list(UUID userId, int page, int size) {
         FieldRules.page(page, size);
         return groups.findSummaries(userId, PageRequest.of(page, size)).map(r ->
-                new GroupSummary(r.id(), r.name(), r.type(), r.currencyCode(), r.memberCount()));
+                new GroupSummary(r.id(), r.name(), r.type(), r.currencyCode(), r.memberCount(),
+                        r.totalSpentMinor(), r.lastExpenseAt()));
     }
 
     @Transactional(readOnly = true)
     public GroupDetail get(UUID userId, UUID groupId) {
         ExpenseGroup group = access.requireOwned(userId, groupId);
-        return new GroupDetail(group, members.findByGroupIdOrderBySortOrderAsc(groupId));
+        GroupTotals totals = expenses.totals(groupId);
+        return new GroupDetail(group, members.findByGroupIdOrderBySortOrderAsc(groupId),
+                totals.totalSpentMinor(), totals.lastExpenseAt());
     }
 
     /**

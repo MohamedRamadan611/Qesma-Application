@@ -34,23 +34,29 @@ public final class GroupDtos {
         }
     }
 
-    /** List row. totalSpentMinor and lastExpenseAt are placeholders until expenses exist (B4). */
+    /** List row. totalSpentMinor sums non-deleted expenses; lastExpenseAt is null when there are none. */
     public record GroupSummaryDto(UUID id, String name, String type, String currencyCode, long memberCount,
                                   long totalSpentMinor, Instant lastExpenseAt) {
         static GroupSummaryDto from(GroupService.GroupSummary s) {
-            return new GroupSummaryDto(s.id(), s.name(), s.type(), s.currencyCode(), s.memberCount(), 0L, null);
+            return new GroupSummaryDto(s.id(), s.name(), s.type(), s.currencyCode(), s.memberCount(),
+                    s.totalSpentMinor(), s.lastExpenseAt());
         }
     }
 
     public record GroupDto(UUID id, String name, String type, String currencyCode, Instant createdAt,
-                           Instant updatedAt, int version, long totalSpentMinor, List<MemberDto> members) {
-        static GroupDto from(ExpenseGroup g, List<Member> members) {
+                           Instant updatedAt, int version, long totalSpentMinor, Instant lastExpenseAt,
+                           List<MemberDto> members) {
+        /** A group that was just created: no members, no expenses. */
+        static GroupDto fresh(ExpenseGroup g) {
             return new GroupDto(g.getId(), g.getName(), g.getType(), g.getCurrencyCode(), g.getCreatedAt(),
-                    g.getUpdatedAt(), g.getVersion(), 0L, members.stream().map(MemberDto::from).toList());
+                    g.getUpdatedAt(), g.getVersion(), 0L, null, List.of());
         }
 
         static GroupDto from(GroupService.GroupDetail d) {
-            return from(d.group(), d.members());
+            ExpenseGroup g = d.group();
+            return new GroupDto(g.getId(), g.getName(), g.getType(), g.getCurrencyCode(), g.getCreatedAt(),
+                    g.getUpdatedAt(), g.getVersion(), d.totalSpentMinor(), d.lastExpenseAt(),
+                    d.members().stream().map(MemberDto::from).toList());
         }
     }
 }

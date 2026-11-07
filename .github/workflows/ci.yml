@@ -22,8 +22,27 @@ jobs:
           java-version: "21"
           cache: maven
       # Testcontainers uses the Docker daemon preinstalled on ubuntu-latest.
+      # Also fails if docs/openapi.json differs from what the app generates (OpenApiExportIT).
       - name: Build and verify
         run: ./mvnw -B verify
+
+  openapi-valid:
+    # The Dart client for the mobile app is generated from docs/openapi.json (docs/mobile-client.md): it must be valid.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate docs/openapi.json
+        run: >
+          docker run --rm -v "$PWD:/local" openapitools/openapi-generator-cli:v7.8.0
+          validate -i /local/docs/openapi.json
+
+  restore-test:
+    # Backups are only real if a restore works: throwaway PostgreSQL containers, no secrets.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Backup and restore round trip
+        run: bash scripts/test-restore.sh
 
   secret-scan:
     runs-on: ubuntu-latest
@@ -35,3 +54,26 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  dependency-scan:
+    # Known vulnerabilities in the Maven dependencies and the production image (ADR-003).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trivy filesystem scan (dependencies, configuration)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: backend
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+      - name: Build the production image
+        run: docker build -t qesma-backend:ci backend
+      - name: Trivy image scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: qesma-backend:ci
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"

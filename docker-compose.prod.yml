@@ -1,0 +1,101 @@
+# Production stack for ONE small VPS (2 vCPU / 2 GB): PostgreSQL, the backend, Caddy (HTTPS) and a daily backup.
+# Only Caddy publishes ports (80/443). The backend and the database are reachable inside the compose network only.
+#
+#   cp .env.prod.example .env.prod      # fill every value; never commit .env.prod
+#   docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
+#
+# Runbook (deploy, backups, restore, secret rotation): backend/README.md and docs/adr/ADR-005-deploy.md.
+name: qesma
+
+services:
+  db:
+    image: postgres:16.6-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-qesma}
+      POSTGRES_USER: ${DB_USER:-qesma}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    # Small-VPS tuning: the app uses at most 10 connections (Hikari) plus the backup job.
+    command: ["postgres", "-c", "shared_buffers=192MB", "-c", "max_connections=30", "-c", "work_mem=4MB",
+              "-c", "log_min_duration_statement=500"]
+    volumes:
+      - qesma-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks: [internal]
+    mem_limit: 512m
+
+  backend:
+    build: ./backend
+    image: qesma-backend:${QESMA_VERSION:-latest}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:postgresql://db:5432/${DB_NAME:-qesma}
+      DB_USER: ${DB_USER:-qesma}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      QESMA_JWT_SECRET: ${QESMA_JWT_SECRET:?QESMA_JWT_SECRET is required (base64 of >= 32 random bytes)}
+      GOOGLE_CLIENT_IDS: ${GOOGLE_CLIENT_IDS:?GOOGLE_CLIENT_IDS is required (comma-separated OAuth client ids)}
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    networks: [internal]
+    mem_limit: 768m
+    stop_grace_period: 30s
+
+  caddy:
+    image: caddy:2.8.4-alpine
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      DOMAIN: ${DOMAIN:?DOMAIN is required (the public host name, DNS must point at this server)}
+      ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL is required (certificate expiry notices)}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks: [internal]
+    mem_limit: 128m
+
+  # Daily pg_dump (custom format, checksum, 14 days retention). Restore: scripts/restore.sh.
+  backup:
+    image: postgres:16.6-alpine
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGHOST: db
+      PGUSER: ${DB_USER:-qesma}
+      PGPASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      PGDATABASE: ${DB_NAME:-qesma}
+      BACKUP_DIR: /backups
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+    entrypoint: ["sh", "-c", "while true; do /scripts/backup.sh || echo 'BACKUP FAILED'; sleep 86400; done"]
+    volumes:
+      - ./scripts:/scripts:ro
+      - ${BACKUP_PATH:-./backups}:/backups
+    networks: [internal]
+    mem_limit: 128m
+
+networks:
+  internal:
+
+volumes:
+  qesma-db-data:
+  caddy-data:
+  caddy-config:

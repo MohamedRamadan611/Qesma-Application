@@ -184,3 +184,19 @@ Pure, fixture-driven engine with enforced purity; a single authorization door wi
 
 ## 9. Notes on this review
 No runtime metric in this report was estimated. Findings are graded by evidence; none is `Confirmed` because no runtime artifact exists. The machine-readable JSON block of the performance template was not produced: there is one low-confidence performance finding and no scripted `stable_id` run, so the Markdown is the only artifact.
+
+---
+
+## Addendum (2026-11-07, during B4): the Docker-backed checks have now run
+
+Docker became available while B4 was built, and `cd backend && ./mvnw clean verify` on JDK 21.0.12.1 passed:
+151 unit tests and 81 integration tests (`QesmaApplicationIT`, `AuthFlowIT`, `AuthRateLimitIT`, `GroupsMembersIT`,
+`DeleteRulesIT`, `ExpensesIT`, `ExpenseIdempotencyIT`, `ExpenseAtomicityIT`, `ExpenseListQueryCountIT`), 0 failures, 0 skipped.
+
+What this changes in the tables above:
+- Migrations V1–V5 apply to an empty PostgreSQL and Hibernate `ddl-auto=validate` accepts the entities (the `char(3)` currency and `bytea` hash mappings were the worry).
+- The concurrency claims now have evidence: 16 parallel first logins give one user; double refresh gives one success and a dead family; 16 parallel member creations give distinct `sort_order`; 8 parallel PATCHes give one winner; 20 parallel same-key expense creates give one expense.
+- The ownership-isolation integration tests pass for the six group-scoped routes (still a hand-written list, not generated from OpenAPI) and for the expense routes.
+- Still true: B0–B3 were committed by the project owner after this review (commits `f8bcafb`, `7ab5d3b`) but no `gate-*` tags exist, no gate reports `docs/gates/gate-b*.md` exist, `docs/openapi.json` does not exist, the CI workflow has never run, and findings SEC-001 (default profile and committed dev secret), COR-001 (run command), SEC-002, SEC-003, COR-003, MAINT-001/002 are unchanged. COR-002 (false empty member list on PATCH) was fixed as part of B4 because the totals made it newly wrong.
+- Two test-side corrections made when the tests first ran: error bodies legitimately differ in `instance` (the URL the caller sent), so the "same body as nonexistent" comparisons ignore it; and one log test used a member name over the 40-character limit.
+- **CP1 is still not passed** (it needs the independent gate reports and a tagged commit), but its "NOT VERIFIED" build/integration items are now verified.

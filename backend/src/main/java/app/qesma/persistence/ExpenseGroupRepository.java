@@ -38,7 +38,10 @@ public interface ExpenseGroupRepository extends JpaRepository<ExpenseGroup, UUID
     /** The owner's groups, newest first, with member counts from a single statement. */
     @Query(value = """
             select new app.qesma.persistence.GroupSummaryRow(g.id, g.name, g.type, g.currencyCode,
-                   (select count(m) from Member m where m.groupId = g.id))
+                   (select count(m) from Member m where m.groupId = g.id),
+                   (select coalesce(sum(x.totalMinor), 0L) from Expense x
+                     where x.groupId = g.id and x.deletedAt is null),
+                   (select max(x.createdAt) from Expense x where x.groupId = g.id and x.deletedAt is null))
             from ExpenseGroup g
             where g.ownerUserId = :owner
             order by g.createdAt desc, g.id desc

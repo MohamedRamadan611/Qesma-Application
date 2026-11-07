@@ -65,6 +65,39 @@ public final class BalanceCalculator {
         return nets;
     }
 
+    /** One member's sums over the live ledger, as computed by the database: expenses paid and owed, settlements sent and received. */
+    public record MemberTotals(String memberId, long paidMinor, long owedMinor, long sentMinor, long receivedMinor) {
+    }
+
+    /**
+     * Same rule as {@link #nets} (spec 7.6) but from per-member sums instead of rows:
+     * {@code net = paid - owed + sent - received}. Members without totals are 0. Returns every roster member in
+     * {@code sortOrder} order and throws if the nets do not sum to 0 (the ledger invariant: a violation is a bug,
+     * never a number to show).
+     */
+    public static Map<String, Long> netsFromTotals(List<MemberRef> members, List<MemberTotals> totals) {
+        List<MemberRef> roster = new ArrayList<>(members);
+        roster.sort(Comparator.comparingInt(MemberRef::sortOrder));
+        Map<String, Long> nets = new LinkedHashMap<>();
+        for (MemberRef m : roster) {
+            if (nets.put(m.id(), 0L) != null) {
+                throw EngineException.invalid("Duplicate member in roster");
+            }
+        }
+        for (MemberTotals t : totals) {
+            add(nets, t.memberId(), Exact.add(Exact.add(t.paidMinor(), Exact.negate(t.owedMinor())),
+                    Exact.add(t.sentMinor(), Exact.negate(t.receivedMinor()))));
+        }
+        long sum = 0;
+        for (long v : nets.values()) {
+            sum = Exact.add(sum, v);
+        }
+        if (sum != 0) {
+            throw new EngineException(EngineErrorCode.VALIDATION_ERROR, "Balances do not sum to zero");
+        }
+        return nets;
+    }
+
     private static void add(Map<String, Long> nets, String memberId, long delta) {
         Long current = nets.get(memberId);
         if (current == null) {

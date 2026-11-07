@@ -42,6 +42,31 @@ class LayeringTest {
     }
 
     @Test
+    void expenseRepositoriesAreUsedOnlyByTheExpenseSideOfTheServiceLayer() throws IOException {
+        List<String> allowed = List.of("ExpenseService.java", "GroupService.java", "ExpenseMemberUsageChecker.java",
+                "ExpenseGroupUsageChecker.java");
+        for (Path file : sources("service")) {
+            String text = Files.readString(file);
+            boolean usesLedger = text.contains("ExpenseRepository") || text.contains("ExpensePayerRepository")
+                    || text.contains("ExpenseSplitRepository");
+            if (usesLedger) {
+                assertThat(allowed).as(file + " must not read ledger data directly")
+                        .contains(file.getFileName().toString());
+            }
+        }
+    }
+
+    @Test
+    void idempotencyStorageIsReachedOnlyThroughTheIdempotencyService() throws IOException {
+        List<String> allowed = List.of("IdempotencyService.java", "IdempotencyCleanupJob.java");
+        for (Path file : sources("service")) {
+            if (Files.readString(file).contains("IdempotencyKeyStore")) {
+                assertThat(allowed).as(file.toString()).contains(file.getFileName().toString());
+            }
+        }
+    }
+
+    @Test
     void groupAndMemberRepositoriesAreUsedOnlyByTheGroupServices() throws IOException {
         List<String> allowed = List.of("GroupAccessService.java", "GroupService.java", "MemberService.java");
         for (Path file : sources("service")) {

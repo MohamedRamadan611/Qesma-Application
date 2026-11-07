@@ -1,0 +1,32 @@
+# Caddy: automatic HTTPS (Let's Encrypt) and reverse proxy to the backend. Chosen over Nginx because certificates,
+# renewal and the HTTP->HTTPS redirect need no extra tooling (no certbot, no cron) for a single VPS.
+{
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	# Defence in depth: the app also rejects bodies over 64 KB.
+	request_body {
+		max_size 100KB
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+
+	# Operational and documentation endpoints are never public.
+	@internal path /actuator* /v3/api-docs* /swagger-ui*
+	respond @internal 404
+
+	# Caddy sets X-Forwarded-For/-Proto; the backend (forward-headers-strategy: native) uses them for rate limiting.
+	# Caddy redacts the Authorization header in its access log by default.
+	reverse_proxy backend:8080
+
+	log {
+		output stdout
+		format json
+	}
+}

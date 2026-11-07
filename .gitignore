@@ -23,3 +23,5 @@ mobile/.flutter-plugins-dependencies
 
 # Agent local state
 .claude/settings.local.json
+!.env.prod.example
+/backups/

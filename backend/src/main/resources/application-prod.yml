@@ -4,6 +4,41 @@ spring:
     url: ${DB_URL}
     username: ${DB_USER}
     password: ${DB_PASSWORD}
+    # Sized for one small VPS (2 vCPU / 2 GB shared with PostgreSQL and the proxy): see docs/perf-notes.md.
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 5000
+      max-lifetime: 1500000     # 25 min, below typical proxy idle limits
+      leak-detection-threshold: 20000
+
+server:
+  # Behind Caddy: use the forwarded client address (rate limiter) and scheme. Never expose this port directly.
+  forward-headers-strategy: native
+  max-http-request-header-size: 16KB
+  tomcat:
+    threads:
+      max: 50
+      min-spare: 5
+    max-swallow-size: 128KB
+
+# Metrics and probes live on an internal port that compose does not publish and Caddy does not route.
+management:
+  server:
+    port: 8081
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
 
 logging:
   structured:

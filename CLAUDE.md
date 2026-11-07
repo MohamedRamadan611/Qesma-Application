@@ -73,7 +73,7 @@ Run commands from `/backend` unless otherwise noted:
 docker compose up -d db
 
 # Run Spring Boot with local profile
-./mvnw spring-boot:run -Dspring-boot.run.profiles=local
+./mvnw spring-boot:run -Dspring-boot.run.profiles=local,fake-auth
 
 # Check Flyway migration status
 ./mvnw flyway:info

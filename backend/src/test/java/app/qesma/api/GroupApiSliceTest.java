@@ -124,7 +124,7 @@ class GroupApiSliceTest {
         ExpenseGroup g = group(4);
         Member a = member(m1, "Ali", 1);
         Member b = member(m2, "Sara", 2);
-        when(groups.get(me, gid)).thenReturn(new GroupService.GroupDetail(g, List.of(a, b)));
+        when(groups.get(me, gid)).thenReturn(new GroupService.GroupDetail(g, List.of(a, b), 125_050L, Instant.parse("2026-02-03T04:05:06Z")));
 
         MvcResult r = mvc.perform(authed(get("/api/v1/groups/" + gid))).andReturn();
 
@@ -132,7 +132,8 @@ class GroupApiSliceTest {
         assertThat(r.getResponse().getHeader("ETag")).isEqualTo("\"4\"");
         JsonNode body = body(r);
         assertThat(body.get("version").asInt()).isEqualTo(4);
-        assertThat(body.get("totalSpentMinor").asLong()).isZero();
+        assertThat(body.get("totalSpentMinor").asLong()).isEqualTo(125_050L);
+        assertThat(body.get("lastExpenseAt").asText()).isEqualTo("2026-02-03T04:05:06Z");
         assertThat(body.get("members")).hasSize(2);
         assertThat(body.get("members").get(0).get("sortOrder").asInt()).isEqualTo(1);
         assertThat(body.has("ownerUserId")).as("owner id is not exposed").isFalse();
@@ -140,7 +141,7 @@ class GroupApiSliceTest {
 
     @Test
     void listIsPagedAndCarriesTheUiFields() throws Exception {
-        var row = new GroupService.GroupSummary(gid, "Dahab", "TRIP", "EGP", 5);
+        var row = new GroupService.GroupSummary(gid, "Dahab", "TRIP", "EGP", 5, 9_900L, Instant.parse("2026-02-03T04:05:06Z"));
         when(groups.list(me, 2, 10)).thenReturn(new PageImpl<>(List.of(row), PageRequest.of(2, 10), 21));
 
         MvcResult r = mvc.perform(authed(get("/api/v1/groups?page=2&size=10"))).andReturn();
@@ -153,8 +154,8 @@ class GroupApiSliceTest {
         assertThat(body.get("totalPages").asInt()).isEqualTo(3);
         JsonNode item = body.get("items").get(0);
         assertThat(item.get("memberCount").asLong()).isEqualTo(5);
-        assertThat(item.get("totalSpentMinor").asLong()).isZero();
-        assertThat(item.get("lastExpenseAt").isNull()).isTrue();
+        assertThat(item.get("totalSpentMinor").asLong()).isEqualTo(9_900L);
+        assertThat(item.get("lastExpenseAt").asText()).isEqualTo("2026-02-03T04:05:06Z");
     }
 
     @Test
@@ -179,12 +180,17 @@ class GroupApiSliceTest {
     void patchPassesTheParsedVersionAndReturnsTheNewEtag() throws Exception {
         ExpenseGroup updated = group(4);
         when(groups.update(me, gid, 3, "New", null)).thenReturn(updated);
+        Member kept = member(UUID.randomUUID(), "Ali", 1);
+        when(groups.get(me, gid)).thenReturn(new GroupService.GroupDetail(updated, List.of(kept), 500L, null));
 
         MvcResult r = mvc.perform(authed(patch("/api/v1/groups/" + gid)).header("If-Match", "\"3\"")
                 .content("{\"name\":\"New\"}")).andReturn();
 
         assertThat(r.getResponse().getStatus()).isEqualTo(200);
         assertThat(r.getResponse().getHeader("ETag")).isEqualTo("\"4\"");
+        // the body is the full group (same as GET): real members and totals, not an empty member list
+        assertThat(body(r).get("members")).hasSize(1);
+        assertThat(body(r).get("totalSpentMinor").asLong()).isEqualTo(500L);
     }
 
     @Test

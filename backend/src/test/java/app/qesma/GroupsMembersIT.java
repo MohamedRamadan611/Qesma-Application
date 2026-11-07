@@ -495,7 +495,7 @@ class GroupsMembersIT extends AbstractApiIT {
         appender.start();
         root.addAppender(appender);
         String groupName = "TopSecretTripName" + UUID.randomUUID();
-        String memberName = "TopSecretFriend" + UUID.randomUUID();
+        String memberName = "TopSecretFriend" + UUID.randomUUID().toString().substring(0, 8); // member names max 40
         try {
             Session ali = newUser();
             String gid = createGroup(ali, groupName).get("id").asText();

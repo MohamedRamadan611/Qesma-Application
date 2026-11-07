@@ -40,6 +40,12 @@ public class GroupAccessService {
         return groups.findOwnedForUpdate(groupId, userId).orElseThrow(ApiException::notFound);
     }
 
+    /** All members of a group the caller already proved they own, in {@code sort_order}. */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public java.util.List<Member> listMembers(ExpenseGroup ownedGroup) {
+        return members.findByGroupIdOrderBySortOrderAsc(ownedGroup.getId());
+    }
+
     /** A member, addressable only through the group it belongs to (a member id of another group is a 404). */
     @Transactional(propagation = Propagation.MANDATORY)
     public Member requireMember(ExpenseGroup ownedGroup, UUID memberId) {
