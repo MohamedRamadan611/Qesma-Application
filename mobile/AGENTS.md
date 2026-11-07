@@ -9,3 +9,9 @@ Status: placeholder. Mobile work starts after the backend API contract (`docs/op
 - Do NOT re-implement split/balance logic in Dart in Phase 1: call the backend `preview` and `balances` endpoints. (A Dart engine arrives in Phase 4, validated against `../fixtures`.)
 - Design tokens: `../docs/design/DESIGN.md`. Screen images: `../docs/design/screens/` named by screen ID (e.g. `P7-04-itemized-service-and-tax.png`); open the exact file before implementing a screen.
 - Online-only in Phase 1 (clear error + retry when offline).
+
+## Skill Routing (Mobile App)
+Follow root `AGENTS.md` (max 2–4 skills per task):
+- **Allowed Mobile Skills:** `ui-ux-pro-max`, `design-system`, `design-handoff`, `design-critique`, `accessibility-review`, `ux-copy`.
+- **API & Client Integration:** Use `api-doc-generator` / `api-docs-check` only when validating the generated client against `docs/openapi.json`.
+- **STRICTLY FORBIDDEN:** Backend DB/Flyway migrations (`migration-safety`, `data-modeling-discipline`, `query-discipline`), Spring Boot server skills, and reimplementing split calculation arithmetic in Dart for Phase 1.

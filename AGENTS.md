@@ -31,5 +31,34 @@
 - REST under `/api/v1`. UUID ids. Timestamps UTC `timestamptz`.
 - Shared test vectors live in `/fixtures/*.json` at the repo root.
 
+## Skill Routing & Execution Discipline
+To avoid prompt dilution and conflicting rules, **never activate all skills at once**. Limit active skills to at most **2–4 relevant skills** per prompt based strictly on directory and task scope:
+
+### By Directory & Subsystem
+- **Cross-cutting / Architecture (`/`, `/docs/`):** `think-before-coding`, `architecture`, `boring-by-default`, `documentation`, `deploy-checklist`.
+- **Pure Engine (`backend/src/.../engine/`):** `think-before-coding`, `test-driven-development`, `testing-with-discernment`.
+  - *Strictly FORBIDDEN in Engine:* DB/JPA/Flyway skills (`data-modeling-discipline`, `migration-safety`, `query-discipline`, `explain-this-query`, `hunt-n-plus-one`), HTTP/API skills (`api-doc-generator`, `api-docs-check`), and all UI/UX skills.
+- **Database & Persistence (`backend/.../persistence/`, `backend/.../db/migration/`):** `data-modeling-discipline`, `migration-safety`, `review-migration`, `query-discipline`, `explain-this-query`, `hunt-n-plus-one`.
+- **API & Controllers (`backend/.../api/`):** `api-doc-generator`, `api-docs-check`, `error-handling-as-design`, `auth-and-authorization`, `idempotency-and-side-effects`, `security-discipline`.
+- **Services & Security (`backend/.../service/`, `backend/.../security/`):** `think-before-coding`, `auth-and-authorization`, `idempotency-and-side-effects`, `observability-by-default`, `backend-performance-review`, `security-discipline`.
+- **Mobile Client (`mobile/`):** `ui-ux-pro-max`, `design-system`, `design-handoff`, `design-critique`, `accessibility-review`, `ux-copy`.
+  - *Strictly FORBIDDEN in Mobile:* Backend DB/migration skills and server-side framework skills. Phase 1 forbids client-side split calculations (must call backend API).
+- **User Research & UX Specs (`docs/design/`, `docs/user-research/`):** `user-research`, `research-synthesis`, `design-critique`, `ux-copy`.
+- **Maintenance, Audit & Bugs (Global):** `code-review`, `audit`, `debugging-discipline`.
+
+### By Workflow / Milestone
+- `/b0-bootstrap`: `think-before-coding`, `observability-by-default`, `deploy-checklist`
+- `/b3-engine`: `think-before-coding`, `test-driven-development`, `testing-with-discernment`
+- `/b1-auth`: `think-before-coding`, `auth-and-authorization`, `security-discipline`, `error-handling-as-design`
+- `/b2-groups-members`: `think-before-coding`, `data-modeling-discipline`, `migration-safety`, `auth-and-authorization`, `api-doc-generator`
+- `/b4-expenses-core`: `think-before-coding`, `data-modeling-discipline`, `migration-safety`, `idempotency-and-side-effects`, `error-handling-as-design`
+- `/b5-itemized-preview`: `think-before-coding`, `api-doc-generator`, `error-handling-as-design`, `testing-with-discernment`
+- `/b6-edit-delete-revisions`: `think-before-coding`, `data-modeling-discipline`, `migration-safety`, `idempotency-and-side-effects`, `audit`
+- `/b7-balances-settlements`: `think-before-coding`, `query-discipline`, `backend-performance-review`, `api-doc-generator`
+- `/b8-hardening-handoff`: `api-doc-generator`, `api-docs-check`, `security-discipline`, `deploy-checklist`, `audit`
+- `/r-review`: `audit`, `code-review`, `security-discipline`, `migration-safety` (if DB touched)
+- `/f-bugfix`: `debugging-discipline`, `testing-with-discernment`, `test-driven-development`
+- `/s-spec-change`: `architecture`, `boring-by-default`, `documentation`
+
 ## Stop protocol
 After finishing a prompt: (1) run the full test suite, (2) list assumptions and open questions, (3) list files changed, (4) do NOT start the next milestone.

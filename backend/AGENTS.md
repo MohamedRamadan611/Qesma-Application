@@ -15,3 +15,11 @@ Shared test vectors: `../fixtures/*.json`.
 - Money rules live only in `engine`. Controllers/services never compute money themselves.
 - Integration tests use Testcontainers PostgreSQL, never H2.
 - OpenAPI is generated from the code; `../docs/openapi.json` is the contract for the Flutter client.
+
+## Skill Routing (Backend Subsystems)
+Follow root `AGENTS.md` (max 2–4 skills per task). Never activate conflicting skills:
+- **`engine` (PURE Java):** `think-before-coding`, `test-driven-development`, `testing-with-discernment`. FORBIDDEN: DB/Flyway/ORM (`migration-safety`, `query-discipline`, etc.), HTTP/API, or UI skills.
+- **`persistence` & `src/main/resources/db/migration`:** `data-modeling-discipline`, `migration-safety`, `review-migration`, `query-discipline`, `explain-this-query`, `hunt-n-plus-one`.
+- **`api`:** `api-doc-generator`, `api-docs-check`, `error-handling-as-design`, `auth-and-authorization`, `idempotency-and-side-effects`, `security-discipline`.
+- **`service` & `security`:** `think-before-coding`, `auth-and-authorization`, `idempotency-and-side-effects`, `observability-by-default`, `backend-performance-review`, `security-discipline`.
+- **ALL Backend tasks:** FORBIDDEN to load Flutter/Mobile UI skills (`ui-ux-pro-max`, `design-handoff`, etc.).

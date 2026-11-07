@@ -282,7 +282,7 @@ Design the two-sided settlement flow:
 STYLE: Arabic-first RTL Android 360×800, teal #0F766E primary, Cairo font, 16px radius cards, green=owed to you (#15803D), orange-red=you owe (#C2410C), Western digits, currency "ج.م". Friendly, trustworthy, clean.
 
 Design:
-1) Notifications cetnter: list with unread indicators — "محمد ضافك في مصروف: فندق (600.00 ج.م)", "عاصم عدّل مصروف: بنزين", "يوسف بيقول إنه دفعلك 720.00 ج.م", "اتقبلت دعوتك: كريم انضم للمجموعة". Group-by day, mark-all-read action, empty state.
+1) Notifications center: list with unread indicators — "محمد ضافك في مصروف: فندق (600.00 ج.م)", "عاصم عدّل مصروف: بنزين", "يوسف بيقول إنه دفعلك 720.00 ج.م", "اتقبلت دعوتك: كريم انضم للمجموعة". Group-by day, mark-all-read action, empty state.
 2) Group activity feed (a 4th tab or a screen from the group menu "النشاط"): a vertical timeline with avatars, concise Arabic sentences ("محمد أضاف: عشاء مأكولات بحرية — 561.79 ج.م"), relative times, and tap-through to the related expense.
 3) Notification settings: global toggle, per-group mute switches, and a short explanation of when reminders are sent.
 ```
