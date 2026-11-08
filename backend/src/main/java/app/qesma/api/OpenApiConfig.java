@@ -68,12 +68,50 @@ public class OpenApiConfig {
                     if (path.startsWith("/api/v1/auth/")) {
                         op.setSecurity(List.of());            // sign-in, refresh and logout carry no access token
                     }
+                    op.setOperationId(operationId(path, method));
                     markRequiredHeaders(op);
                     jsonOnly(op);
                     addErrors(path, method, op);
                 }));
             }
         };
+    }
+
+    // ---- operation ids (the method names of the generated Dart client) ---------------------------------------------
+
+    /** Meaningful, stable names instead of springdoc's {@code delete_1}/{@code get_2}. A new endpoint must be added here. */
+    public static final Map<String, String> OPERATION_IDS = Map.ofEntries(
+            Map.entry("POST /api/v1/auth/google", "signInWithGoogle"),
+            Map.entry("POST /api/v1/auth/refresh", "refreshSession"),
+            Map.entry("POST /api/v1/auth/logout", "signOut"),
+            Map.entry("GET /api/v1/me", "getMe"),
+            Map.entry("PATCH /api/v1/me", "updateMe"),
+            Map.entry("GET /api/v1/groups", "listGroups"),
+            Map.entry("POST /api/v1/groups", "createGroup"),
+            Map.entry("GET /api/v1/groups/{gid}", "getGroup"),
+            Map.entry("PATCH /api/v1/groups/{gid}", "updateGroup"),
+            Map.entry("DELETE /api/v1/groups/{gid}", "deleteGroup"),
+            Map.entry("POST /api/v1/groups/{gid}/members", "addMember"),
+            Map.entry("PATCH /api/v1/groups/{gid}/members/{mid}", "renameMember"),
+            Map.entry("DELETE /api/v1/groups/{gid}/members/{mid}", "deleteMember"),
+            Map.entry("GET /api/v1/groups/{gid}/expenses", "listExpenses"),
+            Map.entry("POST /api/v1/groups/{gid}/expenses", "createExpense"),
+            Map.entry("POST /api/v1/groups/{gid}/expenses/preview", "previewExpense"),
+            Map.entry("GET /api/v1/groups/{gid}/expenses/{eid}", "getExpense"),
+            Map.entry("PUT /api/v1/groups/{gid}/expenses/{eid}", "updateExpense"),
+            Map.entry("DELETE /api/v1/groups/{gid}/expenses/{eid}", "deleteExpense"),
+            Map.entry("GET /api/v1/groups/{gid}/expenses/{eid}/revisions", "listExpenseRevisions"),
+            Map.entry("GET /api/v1/groups/{gid}/balances", "getBalances"),
+            Map.entry("GET /api/v1/groups/{gid}/settlements", "listSettlements"),
+            Map.entry("POST /api/v1/groups/{gid}/settlements", "createSettlement"),
+            Map.entry("DELETE /api/v1/groups/{gid}/settlements/{sid}", "deleteSettlement"));
+
+    static String operationId(String path, PathItem.HttpMethod method) {
+        String id = OPERATION_IDS.get(method + " " + path);
+        if (id == null) {
+            throw new IllegalStateException("No operationId for " + method + " " + path + ": add it to OpenApiConfig.OPERATION_IDS");
+        }
+        return id;
     }
 
     // ---- error responses ---------------------------------------------------------------------------------------

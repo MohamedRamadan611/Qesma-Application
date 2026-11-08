@@ -889,7 +889,7 @@
   "paths" : {
     "/api/v1/auth/google" : {
       "post" : {
-        "operationId" : "google",
+        "operationId" : "signInWithGoogle",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -988,7 +988,7 @@
     },
     "/api/v1/auth/logout" : {
       "post" : {
-        "operationId" : "logout",
+        "operationId" : "signOut",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1070,7 +1070,7 @@
     },
     "/api/v1/auth/refresh" : {
       "post" : {
-        "operationId" : "refresh",
+        "operationId" : "refreshSession",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1159,7 +1159,7 @@
     },
     "/api/v1/groups" : {
       "get" : {
-        "operationId" : "list",
+        "operationId" : "listGroups",
         "parameters" : [ {
           "in" : "query",
           "name" : "page",
@@ -1234,7 +1234,7 @@
         "tags" : [ "group-controller" ]
       },
       "post" : {
-        "operationId" : "create",
+        "operationId" : "createGroup",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1328,7 +1328,7 @@
     },
     "/api/v1/groups/{gid}" : {
       "delete" : {
-        "operationId" : "delete_1",
+        "operationId" : "deleteGroup",
         "parameters" : [ {
           "in" : "path",
           "name" : "gid",
@@ -1396,7 +1396,7 @@
         "tags" : [ "group-controller" ]
       },
       "get" : {
-        "operationId" : "get_1",
+        "operationId" : "getGroup",
         "parameters" : [ {
           "in" : "path",
           "name" : "gid",
@@ -1470,7 +1470,7 @@
         "tags" : [ "group-controller" ]
       },
       "patch" : {
-        "operationId" : "update_2",
+        "operationId" : "updateGroup",
         "parameters" : [ {
           "in" : "path",
           "name" : "gid",
@@ -1606,7 +1606,7 @@
     "/api/v1/groups/{gid}/balances" : {
       "get" : {
         "description" : "Positive net = the member is owed; negative = owes. Every member is listed, zeros included. Transfers are a deterministic greedy suggestion (spec 7.7), not a guaranteed minimum.",
-        "operationId" : "get_2",
+        "operationId" : "getBalances",
         "parameters" : [ {
           "in" : "path",
           "name" : "gid",
@@ -1674,7 +1674,7 @@
     },
     "/api/v1/groups/{gid}/expenses" : {
       "get" : {
-        "operationId" : "list_2",
+        "operationId" : "listExpenses",
         "parameters" : [ {
           "in" : "path",
           "name" : "gid",
@@ -1792,7 +1792,7 @@
       },
       "post" : {
         "description" : "Idempotency-Key (UUID) is required. For ITEMIZED, totalMinor is optional: the server computes it and the payers must add up to it (PAYERS_TOTAL_MISMATCH otherwise).",
-        "operationId" : "create_2",
+        "operationId" : "createExpense",
         "parameters" : [ {
           "in" : "path",
           "name" : "gid",
@@ -1987,7 +1987,7 @@
     "/api/v1/groups/{gid}/expenses/preview" : {
       "post" : {
         "description" : "Same body as create. Returns the computed total, charges and per-member breakdown, and payersTotalMatches. Persists nothing. Itemized-only totals are null for EQUAL/EXACT.",
-        "operationId" : "preview",
+        "operationId" : "previewExpense",
         "parameters" : [ {
           "in" : "path",
           "name" : "gid",
@@ -2150,7 +2150,7 @@
     "/api/v1/groups/{gid}/expenses/{eid}" : {
       "delete" : {
         "description" : "If-Match with the current version is required. Answers 204 with the new ETag.",
-        "operationId" : "delete",
+        "operationId" : "deleteExpense",
         "parameters" : [ {
           "in" : "path",
           "name" : "gid",
@@ -2255,7 +2255,7 @@
         "tags" : [ "expense-controller" ]
       },
       "get" : {
-        "operationId" : "get",
+        "operationId" : "getExpense",
         "parameters" : [ {
           "in" : "path",
           "name" : "gid",
@@ -2338,7 +2338,7 @@
       },
       "put" : {
         "description" : "If-Match with the current version is required. Send the explicit participant list: members who joined later are never added silently. Writes a revision.",
-        "operationId" : "update",
+        "operationId" : "updateExpense",
         "parameters" : [ {
           "in" : "path",
           "name" : "gid",
@@ -2547,7 +2547,7 @@
     "/api/v1/groups/{gid}/expenses/{eid}/revisions" : {
       "get" : {
         "description" : "Each entry carries the full expense as it was after that change. Still available after the expense was deleted.",
-        "operationId" : "revisions",
+        "operationId" : "listExpenseRevisions",
         "parameters" : [ {
           "in" : "path",
           "name" : "gid",
@@ -2626,7 +2626,7 @@
     },
     "/api/v1/groups/{gid}/members" : {
       "post" : {
-        "operationId" : "add",
+        "operationId" : "addMember",
         "parameters" : [ {
           "in" : "path",
           "name" : "gid",
@@ -2742,7 +2742,7 @@
     },
     "/api/v1/groups/{gid}/members/{mid}" : {
       "delete" : {
-        "operationId" : "delete_2",
+        "operationId" : "deleteMember",
         "parameters" : [ {
           "in" : "path",
           "name" : "gid",
@@ -2818,7 +2818,7 @@
         "tags" : [ "member-controller" ]
       },
       "patch" : {
-        "operationId" : "rename",
+        "operationId" : "renameMember",
         "parameters" : [ {
           "in" : "path",
           "name" : "gid",
@@ -2933,7 +2933,7 @@
     },
     "/api/v1/groups/{gid}/settlements" : {
       "get" : {
-        "operationId" : "list_1",
+        "operationId" : "listSettlements",
         "parameters" : [ {
           "in" : "path",
           "name" : "gid",
@@ -3028,7 +3028,7 @@
       },
       "post" : {
         "description" : "Idempotency-Key (UUID) is required. amountMinor is in piasters, 1 to 10^12.",
-        "operationId" : "create_1",
+        "operationId" : "createSettlement",
         "parameters" : [ {
           "in" : "path",
           "name" : "gid",
@@ -3163,7 +3163,7 @@
     },
     "/api/v1/groups/{gid}/settlements/{sid}" : {
       "delete" : {
-        "operationId" : "delete_3",
+        "operationId" : "deleteSettlement",
         "parameters" : [ {
           "in" : "path",
           "name" : "gid",
@@ -3232,7 +3232,7 @@
     },
     "/api/v1/me" : {
       "get" : {
-        "operationId" : "me",
+        "operationId" : "getMe",
         "responses" : {
           "200" : {
             "content" : {
@@ -3278,7 +3278,7 @@
         "tags" : [ "me-controller" ]
       },
       "patch" : {
-        "operationId" : "update_1",
+        "operationId" : "updateMe",
         "requestBody" : {
           "content" : {
             "application/json" : {

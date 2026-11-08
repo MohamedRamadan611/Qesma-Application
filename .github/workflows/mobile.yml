@@ -1,0 +1,40 @@
+name: Mobile
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "mobile/**"
+      - "docs/openapi.json"
+      - ".github/workflows/mobile.yml"
+  pull_request:
+    paths:
+      - "mobile/**"
+      - "docs/openapi.json"
+      - ".github/workflows/mobile.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  flutter:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      # Version pinned to the one in mobile/pubspec.yaml and ADR-006.
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: "3.47.9"
+          cache: true
+      - name: Dependencies
+        run: flutter pub get
+      - name: Analyze
+        run: flutter analyze
+      # Includes the contract hash test (fails when docs/openapi.json changed without
+      # regenerating the client: run mobile/tool/generate_api.sh), the 24-operations test and the guards.
+      - name: Test
+        run: flutter test

@@ -13,9 +13,11 @@ import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.http.HttpMethod.PUT;
 
 import app.qesma.api.ErrorCode;
+import app.qesma.api.OpenApiConfig;
 import app.qesma.persistence.IdempotencyKeyStore;
 import app.qesma.security.GoogleIdTokenVerifier;
 import com.fasterxml.jackson.databind.JsonNode;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -203,6 +205,12 @@ class ApiContractCoverageIT extends AbstractApiIT {
                         .isEqualTo(declared);
             }
         }
+        // operation ids become method names of the generated client: meaningful, unique, no springdoc "_1" suffixes
+        List<String> operationIds = new ArrayList<>();
+        doc.get("paths").forEach(item -> item.forEach(op -> operationIds.add(op.get("operationId").asText())));
+        assertThat(operationIds).hasSize(documented.size()).doesNotHaveDuplicates()
+                .allMatch(id -> id.matches("[a-z][A-Za-z]+"), "camelCase without numeric suffix");
+        assertThat(new TreeSet<>(operationIds)).isEqualTo(new TreeSet<>(OpenApiConfig.OPERATION_IDS.values()));
         for (ErrorCode code : ErrorCode.values()) {
             assertThat(errors).as("error code never produced by a real response").containsKey(code.name());
         }

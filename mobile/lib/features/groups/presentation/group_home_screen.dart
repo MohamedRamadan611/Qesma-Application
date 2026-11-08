@@ -1,0 +1,113 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../core/errors/error_copy.dart';
+import '../../../core/l10n/generated/app_localizations.dart';
+import '../../../core/router/app_router.dart';
+import '../../../core/theme/tokens.dart';
+import '../../../core/widgets/widgets.dart';
+import '../application/group_detail_controller.dart';
+import '../data/group_type.dart';
+import 'group_ui.dart';
+import 'members_tab.dart';
+
+/// Group home shell (P3-01): header with name, type, member count and total spent, and the
+/// three tabs in the design's order (Expenses, Balances, Members: first on the right in
+/// Arabic). Expenses and Balances bodies are placeholders owned by FL4 and FL7.
+class GroupHomeScreen extends ConsumerStatefulWidget {
+  const GroupHomeScreen({super.key, required this.gid, this.initialTab});
+
+  final String gid;
+  final String? initialTab;
+
+  @override
+  ConsumerState<GroupHomeScreen> createState() => _GroupHomeScreenState();
+}
+
+class _GroupHomeScreenState extends ConsumerState<GroupHomeScreen> {
+  static const _tabNames = ['expenses', 'balances', 'members'];
+  late int _tab = _tabNames.indexOf(widget.initialTab ?? '').clamp(0, 2);
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final detail = ref.watch(groupDetailControllerProvider(widget.gid));
+    final group = detail.group;
+
+    if (group == null) {
+      final Widget body = detail.failure == null
+          ? const SkeletonList(itemCount: 3)
+          : detail.gone
+              ? EmptyState(
+                  icon: Icons.search_off,
+                  title: l10n.groupOpenFailedGone,
+                  actionLabel: l10n.groupBackToList,
+                  onAction: () => context.go(Routes.home),
+                )
+              : ErrorState(
+                  onRetry: ref.read(groupDetailControllerProvider(widget.gid).notifier).load,
+                  message: errorCopyFor(l10n, detail.failure!).message,
+                  requestId: detail.failure!.problem?.requestId,
+                );
+      return AppScaffold(title: l10n.groupsTitle, showBack: true, onBack: () => context.go(Routes.home), body: body);
+    }
+
+    final type = GroupType.fromWire(group.type);
+    final tabs = [
+      AppTabItem(label: l10n.groupTabExpenses, icon: Icons.receipt_long),
+      AppTabItem(label: l10n.groupTabBalances, icon: Icons.account_balance_wallet_outlined),
+      AppTabItem(label: l10n.groupTabMembers, icon: Icons.group_outlined),
+    ];
+
+    final Widget tabBody = switch (_tab) {
+      2 => MembersTab(group: group),
+      _ => const _NotBuilt(),
+    };
+
+    return AppScaffold(
+      title: group.name,
+      subtitle: l10n.groupHeaderSubtitle(memberCountText(l10n, group.members.length), moneyDisplay(l10n, group.totalSpentMinor)),
+      titleTag: AppTag(label: type.label(l10n), tone: AppTagTone.info),
+      showBack: true,
+      onBack: () => context.go(Routes.home),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.edit_outlined),
+          tooltip: l10n.groupEditTitle,
+          onPressed: () => context.push(Routes.editGroup(group.id)),
+        ),
+      ],
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(QesmaSpacing.margin, 0, QesmaSpacing.margin, QesmaSpacing.sm),
+            child: AppSegmentedTabs(items: tabs, selectedIndex: _tab, onChanged: (i) => setState(() => _tab = i)),
+          ),
+          Expanded(child: tabBody),
+        ],
+      ),
+    );
+  }
+}
+
+/// Placeholder body for tabs a later milestone builds. Clearly marked, no fake data.
+class _NotBuilt extends StatelessWidget {
+  const _NotBuilt();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(QesmaSpacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(l10n.groupNotBuiltYet, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: QesmaColors.textSecondary)),
+          ],
+        ),
+      ),
+    );
+  }
+}

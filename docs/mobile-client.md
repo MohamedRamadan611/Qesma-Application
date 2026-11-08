@@ -16,7 +16,7 @@ docker run --rm -v "${PWD}:/local" openapitools/openapi-generator-cli:v7.8.0 gen
 
 cd mobile/packages/qesma_api
 dart pub get
-dart run build_runner build --delete-conflicting-outputs     # built_value serializers
+dart run build_runner build     # built_value serializers
 ```
 
 Check the file first (this is also a CI job):
@@ -24,6 +24,8 @@ Check the file first (this is also a CI job):
 ```bash
 docker run --rm -v "${PWD}:/local" openapitools/openapi-generator-cli:v7.8.0 validate -i /local/docs/openapi.json
 ```
+
+`mobile/tool/generate_api.sh` runs all of the above (and refreshes `mobile/openapi.sha256`). The generated paths already include `/api/v1`, so the app's `API_BASE_URL` is the server origin only.
 
 The generator names the HTTP-GET helper `callGet` (a Dart reserved word); that warning is harmless.
 
@@ -34,6 +36,10 @@ cd backend
 ./mvnw -o verify -Dit.test=OpenApiExportIT -Dtest=NoSuchTest -Dsurefire.failIfNoSpecifiedTests=false -Dopenapi.write=true
 ```
 Commit the updated `docs/openapi.json`, then re-run the client generation above.
+
+## 2b. Operation names
+
+Every operation has an explicit, stable `operationId` (the Dart method name): `signInWithGoogle`, `refreshSession`, `signOut`, `getMe`, `updateMe`, `listGroups`, `createGroup`, `getGroup`, `updateGroup`, `deleteGroup`, `addMember`, `renameMember`, `deleteMember`, `listExpenses`, `createExpense`, `previewExpense`, `getExpense`, `updateExpense`, `deleteExpense`, `listExpenseRevisions`, `getBalances`, `listSettlements`, `createSettlement`, `deleteSettlement`. They live in one table (`OpenApiConfig.OPERATION_IDS`); a new endpoint without an entry fails the OpenAPI export, and `ApiContractCoverageIT` checks they are unique and well formed. Renaming one is a breaking change for the generated client.
 
 ## 3. Rules a client must follow
 

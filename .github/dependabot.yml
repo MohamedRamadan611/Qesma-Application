@@ -10,6 +10,12 @@ updates:
     directory: /backend
     schedule:
       interval: weekly
+  # The Flutter app and its generated client (ADR-006). Versions are pinned exactly; these PRs are how they move.
+  - package-ecosystem: pub
+    directory: /mobile
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
   - package-ecosystem: github-actions
     directory: /
     schedule:

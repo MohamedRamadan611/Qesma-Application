@@ -1,6 +1,6 @@
 # mobile/AGENTS.md — Flutter app (extends the root AGENTS.md)
 
-Status: placeholder. Mobile work starts after the backend API contract (`docs/openapi.json`) exists.
+Status: FL3 done (groups list, create, edit, delete, group home shell, members tab). FL2 done before it (splash, welcome, Google sign-in, secure token storage, refresh rotation, session expiry; see README). FL1 done before it (design system: tokens, bundled font, shared widgets in `lib/core/widgets`, debug catalogue). FL0 done before it (bootstrap, generated client in `packages/qesma_api`, core helpers). Stack decisions: `../docs/adr/ADR-006-mobile-stack.md`. Run commands and layout: `README.md`. Never edit `packages/qesma_api`; regenerate with `tool/generate_api.sh`.
 
 ## Planned conventions (spec section 5.2)
 - Flutter + Dart, Android first. State: Riverpod. Navigation: go_router. HTTP: dio with a client GENERATED from `docs/openapi.json` (never hand-write API models).

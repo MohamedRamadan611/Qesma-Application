@@ -70,6 +70,8 @@ Group name 60 code points · member name 40 · expense title 100 · item name 10
 | `GET /groups/{gid}/balances` | 200 `BalanceView` | positive net = is owed |
 | `GET/POST /groups/{gid}/settlements` (POST: Idempotency-Key), `DELETE .../{sid}` | 200 / 201 / **204** | |
 
+Operation ids (the method names of the generated client, fixed in `OpenApiConfig.OPERATION_IDS` and checked by `ApiContractCoverageIT`): `signInWithGoogle`, `refreshSession`, `signOut`, `getMe`, `updateMe`, `listGroups`, `createGroup`, `getGroup`, `updateGroup`, `deleteGroup`, `addMember`, `renameMember`, `deleteMember`, `listExpenses`, `createExpense`, `previewExpense`, `getExpense`, `updateExpense`, `deleteExpense`, `listExpenseRevisions`, `getBalances`, `listSettlements`, `createSettlement`, `deleteSettlement`.
+
 > Since B9 the OpenAPI declares the real success statuses (201 for creates, 204 for deletes); regenerate the client after B9 (`docs/mobile-client.md`).
 
 ## 7. Error code -> UX
