@@ -351,5 +351,427 @@
   "@memberDeleteConfirmBody": {
     "description": "Delete member confirmation body.",
     "placeholders": { "name": { "type": "String" } }
-  }
+  },
+  "expensesEmptyTitle": "لسه مفيش مصاريف",
+  "@expensesEmptyTitle": { "description": "Expenses tab empty state title (the group has no expenses)." },
+  "expensesEmptyBody": "ضيف أول مصروف وقسّمه على الشلة.",
+  "@expensesEmptyBody": { "description": "Expenses tab empty state body." },
+  "expensesAdd": "إضافة مصروف",
+  "@expensesAdd": { "description": "Button and floating button: add an expense." },
+  "expensesNoMatchTitle": "مفيش مصاريف مطابقة",
+  "@expensesNoMatchTitle": { "description": "Filtered list is empty." },
+  "expensesNoMatchBody": "جرّب تغيّر الفلاتر أو امسحها.",
+  "@expensesNoMatchBody": { "description": "Filtered list is empty: body." },
+  "expensesClearFilters": "امسح الفلاتر",
+  "@expensesClearFilters": { "description": "Button that removes every filter." },
+  "expensesLoadMoreFailed": "معرفناش نحمّل باقي المصاريف.",
+  "@expensesLoadMoreFailed": { "description": "Snackbar when the next page fails." },
+  "expensesRefreshFailed": "معرفناش نحدّث المصاريف. المعروض هو آخر نسخة عندنا.",
+  "@expensesRefreshFailed": { "description": "Snackbar when pull to refresh fails." },
+  "expenseFilterDate": "التاريخ",
+  "@expenseFilterDate": { "description": "Filter chip: date range." },
+  "expenseFilterMember": "العضو",
+  "@expenseFilterMember": { "description": "Filter chip: member." },
+  "expenseFilterAll": "الكل",
+  "@expenseFilterAll": { "description": "Filter chip value when no filter is set." },
+  "expenseFilterRange": "من {from} لحد {to}",
+  "@expenseFilterRange": {
+    "description": "Filter chip value: date range.",
+    "placeholders": { "from": { "type": "String" }, "to": { "type": "String" } }
+  },
+  "expenseFilterFrom": "من {from}",
+  "@expenseFilterFrom": {
+    "description": "Filter chip value: only a start date.",
+    "placeholders": { "from": { "type": "String" } }
+  },
+  "expenseFilterUntil": "لحد {to}",
+  "@expenseFilterUntil": {
+    "description": "Filter chip value: only an end date.",
+    "placeholders": { "to": { "type": "String" } }
+  },
+  "expenseFilterRemove": "شيل الفلتر: {label}",
+  "@expenseFilterRemove": {
+    "description": "Screen-reader label of a removable filter chip.",
+    "placeholders": { "label": { "type": "String" } }
+  },
+  "expenseFilterDateTitle": "فلتر التاريخ",
+  "@expenseFilterDateTitle": { "description": "Date filter sheet title." },
+  "expenseFilterFromLabel": "من تاريخ",
+  "@expenseFilterFromLabel": { "description": "Date filter: start date button label." },
+  "expenseFilterToLabel": "لحد تاريخ",
+  "@expenseFilterToLabel": { "description": "Date filter: end date button label." },
+  "expenseFilterPickDate": "اختار التاريخ",
+  "@expenseFilterPickDate": { "description": "Date filter: shown before a date is picked." },
+  "expenseFilterApply": "تطبيق",
+  "@expenseFilterApply": { "description": "Filter sheet: apply." },
+  "expenseFilterClear": "مسح",
+  "@expenseFilterClear": { "description": "Filter sheet: clear this filter." },
+  "expenseFilterRangeInvalid": "تاريخ البداية لازم يكون قبل تاريخ النهاية.",
+  "@expenseFilterRangeInvalid": { "description": "Date filter: backwards range." },
+  "expenseFilterMemberTitle": "فلتر العضو",
+  "@expenseFilterMemberTitle": { "description": "Member filter sheet title." },
+  "expenseFilterMemberHint": "بنعرض المصاريف اللي العضو ده دفع فيها أو شارك فيها.",
+  "@expenseFilterMemberHint": { "description": "Member filter sheet subtitle." },
+  "expenseFilterAllMembers": "كل الأعضاء",
+  "@expenseFilterAllMembers": { "description": "Member filter: no member selected." },
+  "expenseDayToday": "النهارده — {date}",
+  "@expenseDayToday": {
+    "description": "Date header of the list: today. Date is yyyy-mm-dd.",
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "expenseDayYesterday": "إمبارح — {date}",
+  "@expenseDayYesterday": {
+    "description": "Date header of the list: yesterday.",
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "expensePaidBy": "دفع: {payers}",
+  "@expensePaidBy": {
+    "description": "Who paid, on an expense row.",
+    "placeholders": { "payers": { "type": "String" } }
+  },
+  "expensePayerAmount": "{name} ({amount})",
+  "@expensePayerAmount": {
+    "description": "One payer with the amount they paid, when several people paid.",
+    "placeholders": { "name": { "type": "String" }, "amount": { "type": "String" } }
+  },
+  "expenseListSeparator": "، ",
+  "@expenseListSeparator": { "description": "Separator between names in a list." },
+  "expenseUnknownMember": "عضو",
+  "@expenseUnknownMember": { "description": "Name shown when a member id is not in the group." },
+  "expenseSplitAmongOne": "على فرد واحد",
+  "@expenseSplitAmongOne": { "description": "Participant count when it is one." },
+  "expenseSplitAmong": "مقسومة على {count} أفراد",
+  "@expenseSplitAmong": {
+    "description": "Participant count (2 or more). Count is a string with Western digits.",
+    "placeholders": { "count": { "type": "String" } }
+  },
+  "expenseYourShare": "نصيبك: {amount}",
+  "@expenseYourShare": {
+    "description": "Your share of an expense.",
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "expenseCardSpoken": "{title}، {total}، {split}، {payers}، {participants}",
+  "@expenseCardSpoken": {
+    "description": "Screen-reader label of an expense row.",
+    "placeholders": { "title": { "type": "String" }, "total": { "type": "String" }, "split": { "type": "String" }, "payers": { "type": "String" }, "participants": { "type": "String" } }
+  },
+  "expenseCardSpokenWithShare": "{title}، {total}، {split}، {payers}، {participants}، {share}",
+  "@expenseCardSpokenWithShare": {
+    "description": "Screen-reader label of an expense row that has your share.",
+    "placeholders": { "title": { "type": "String" }, "total": { "type": "String" }, "split": { "type": "String" }, "payers": { "type": "String" }, "participants": { "type": "String" }, "share": { "type": "String" } }
+  },
+  "expenseSplitEqual": "بالتساوي",
+  "@expenseSplitEqual": { "description": "Split type chip: equal." },
+  "expenseSplitExact": "مبالغ محددة",
+  "@expenseSplitExact": { "description": "Split type chip: exact amounts." },
+  "expenseSplitItemized": "فاتورة مفصلة",
+  "@expenseSplitItemized": { "description": "Split type chip: itemized." },
+  "expenseDetailsTitle": "تفاصيل المصروف",
+  "@expenseDetailsTitle": { "description": "Title of the expense details screen." },
+  "expenseDetailsTotal": "إجمالي المصروف",
+  "@expenseDetailsTotal": { "description": "Label above the expense total." },
+  "expenseEditedBadge": "معدّل (النسخة {version})",
+  "@expenseEditedBadge": {
+    "description": "Badge on an expense that was edited. Version is a string.",
+    "placeholders": { "version": { "type": "String" } }
+  },
+  "expensePayersTitle": "الدافعون",
+  "@expensePayersTitle": { "description": "Details: payers block title." },
+  "expensePayersCountOne": "دافع واحد",
+  "@expensePayersCountOne": { "description": "Details: payers count of one." },
+  "expensePayersCount": "{count} دافعين",
+  "@expensePayersCount": {
+    "description": "Details: payers count (2 or more).",
+    "placeholders": { "count": { "type": "String" } }
+  },
+  "expensePaidTotal": "مجموع المدفوع: {amount}",
+  "@expensePaidTotal": {
+    "description": "Details: the payers added up.",
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "expenseItemsTitle": "الأصناف والإضافات",
+  "@expenseItemsTitle": { "description": "Details: items block title." },
+  "expenseItemsCountOne": "صنف واحد",
+  "@expenseItemsCountOne": { "description": "Details: items count of one." },
+  "expenseItemsCount": "{count} أصناف",
+  "@expenseItemsCount": {
+    "description": "Details: items count (2 or more).",
+    "placeholders": { "count": { "type": "String" } }
+  },
+  "expenseSubtotal": "مجموع الأصناف",
+  "@expenseSubtotal": { "description": "Details: subtotal row." },
+  "expenseServiceLabel": "رسوم الخدمة",
+  "@expenseServiceLabel": { "description": "Details: service row." },
+  "expenseTaxLabel": "الضريبة",
+  "@expenseTaxLabel": { "description": "Details: tax row." },
+  "expenseTaxBaseSubtotal": "على مجموع الأصناف",
+  "@expenseTaxBaseSubtotal": { "description": "Details: tax base is the subtotal." },
+  "expenseTaxBaseSubtotalPlusService": "على الأصناف + الخدمة",
+  "@expenseTaxBaseSubtotalPlusService": { "description": "Details: tax base is subtotal plus service." },
+  "expenseAdjustmentLabel": "تسوية",
+  "@expenseAdjustmentLabel": { "description": "Details: adjustment row." },
+  "expenseBillTotal": "إجمالي الفاتورة",
+  "@expenseBillTotal": { "description": "Details: total row of the charges block." },
+  "expensePercent": "{rate}%",
+  "@expensePercent": {
+    "description": "A percentage rate, Western digits.",
+    "placeholders": { "rate": { "type": "String" } }
+  },
+  "expenseBreakdownTitle": "نصيب كل فرد",
+  "@expenseBreakdownTitle": { "description": "Details: per-person block title." },
+  "expenseBreakdownCountOne": "فرد واحد",
+  "@expenseBreakdownCountOne": { "description": "Details: per-person count of one." },
+  "expenseBreakdownCount": "{count} أفراد",
+  "@expenseBreakdownCount": {
+    "description": "Details: per-person count (2 or more).",
+    "placeholders": { "count": { "type": "String" } }
+  },
+  "expensePartItems": "أصناف {amount}",
+  "@expensePartItems": {
+    "description": "Share breakdown part: items.",
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "expensePartService": "خدمة {amount}",
+  "@expensePartService": {
+    "description": "Share breakdown part: service.",
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "expensePartTax": "ضريبة {amount}",
+  "@expensePartTax": {
+    "description": "Share breakdown part: tax.",
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "expensePartAdjustment": "تسوية {amount}",
+  "@expensePartAdjustment": {
+    "description": "Share breakdown part: adjustment.",
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "expenseEdit": "تعديل المصروف",
+  "@expenseEdit": { "description": "Details: edit button." },
+  "expenseEditItemized": "تعديل الفاتورة والأصناف",
+  "@expenseEditItemized": { "description": "Details: edit button of an itemized bill." },
+  "expenseDelete": "حذف المصروف",
+  "@expenseDelete": { "description": "Details: delete button." },
+  "expenseHistory": "سجل التعديلات",
+  "@expenseHistory": { "description": "Details: history button and sheet title." },
+  "expenseDeleteConfirmTitle": "تحذف المصروف ده؟",
+  "@expenseDeleteConfirmTitle": { "description": "Delete expense confirmation title." },
+  "expenseDeleteConfirmBody": "هيتشال «{title}» من المصاريف والأرصدة.",
+  "@expenseDeleteConfirmBody": {
+    "description": "Delete expense confirmation body.",
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "expenseDeleted": "اتحذف المصروف.",
+  "@expenseDeleted": { "description": "Snackbar after a delete." },
+  "expenseAlreadyDeleted": "المصروف ده كان اتحذف خلاص.",
+  "@expenseAlreadyDeleted": { "description": "Snackbar when a delete finds the expense already gone." },
+  "expenseGoneTitle": "المصروف ده مبقاش موجود",
+  "@expenseGoneTitle": { "description": "Details: the expense does not exist any more." },
+  "expenseBackToList": "رجوع للمصاريف",
+  "@expenseBackToList": { "description": "Button back to the expenses list." },
+  "expenseHistoryVersion": "النسخة {version}",
+  "@expenseHistoryVersion": {
+    "description": "History row: version number.",
+    "placeholders": { "version": { "type": "String" } }
+  },
+  "expenseChangeCreate": "إنشاء",
+  "@expenseChangeCreate": { "description": "History row: change type create." },
+  "expenseChangeUpdate": "تعديل",
+  "@expenseChangeUpdate": { "description": "History row: change type update." },
+  "expenseChangeDelete": "حذف",
+  "@expenseChangeDelete": { "description": "History row: change type delete." },
+  "expenseHistoryTotal": "الإجمالي: {amount}",
+  "@expenseHistoryTotal": {
+    "description": "History row: total of that version.",
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "expenseConflictTitle": "المصروف اتعدّل",
+  "@expenseConflictTitle": { "description": "Dialog title when deleting hits a version conflict." },
+  "expenseConflictBody": "حد عدّل المصروف ده من آخر مرة فتحته. حمّل آخر نسخة وراجعها قبل ما تحذفه.",
+  "@expenseConflictBody": { "description": "Dialog body when deleting an expense hits a version conflict." },
+  "expensesRefresh": "تحديث القائمة",
+  "@expensesRefresh": { "description": "Screen-reader action that refreshes the expenses list (the alternative to pull to refresh)." },
+  "expenseHistoryEmpty": "مفيش سجل تعديلات للمصروف ده.",
+  "@expenseHistoryEmpty": { "description": "History sheet: the server has no revisions for this expense." },
+  "expenseAssignedTo": "على: {names}",
+  "@expenseAssignedTo": {
+    "description": "Screen-reader label of the people an item is assigned to.",
+    "placeholders": { "names": { "type": "String" } }
+  },
+  "expenseSplitUnknown": "تقسيم",
+  "@expenseSplitUnknown": { "description": "Spoken split type when the app does not know the type." },
+  "expenseSplitAmongTwo": "مقسومة على فردين",
+  "@expenseSplitAmongTwo": { "description": "Participant count of exactly two (Arabic dual)." },
+  "expenseSplitAmongMany": "مقسومة على {count} فردًا",
+  "@expenseSplitAmongMany": {
+    "description": "Participant count of 11 or more (Arabic singular accusative).",
+    "placeholders": { "count": { "type": "String" } }
+  },
+  "expensePayersCountTwo": "دافعين",
+  "@expensePayersCountTwo": { "description": "Details: payers count of exactly two." },
+  "expensePayersCountMany": "{count} دافعًا",
+  "@expensePayersCountMany": {
+    "description": "Details: payers count of 11 or more.",
+    "placeholders": { "count": { "type": "String" } }
+  },
+  "expenseItemsCountTwo": "صنفين",
+  "@expenseItemsCountTwo": { "description": "Details: items count of exactly two." },
+  "expenseItemsCountMany": "{count} صنفًا",
+  "@expenseItemsCountMany": {
+    "description": "Details: items count of 11 or more.",
+    "placeholders": { "count": { "type": "String" } }
+  },
+  "expenseBreakdownCountTwo": "فردين",
+  "@expenseBreakdownCountTwo": { "description": "Details: per-person count of exactly two." },
+  "expenseBreakdownCountMany": "{count} فردًا",
+  "@expenseBreakdownCountMany": {
+    "description": "Details: per-person count of 11 or more.",
+    "placeholders": { "count": { "type": "String" } }
+  },
+  "expenseFormTitleLabel": "اسم المصروف",
+  "@expenseFormTitleLabel": { "description": "Add/edit expense: title field label." },
+  "expenseFormTitleHint": "مثلاً: عشا، بنزين، تذاكر",
+  "@expenseFormTitleHint": { "description": "Add/edit expense: title field hint." },
+  "expenseFormTitleRequired": "اكتب اسم للمصروف.",
+  "@expenseFormTitleRequired": { "description": "Add/edit expense: the title is empty." },
+  "expenseFormAmountLabel": "المبلغ الإجمالي",
+  "@expenseFormAmountLabel": { "description": "Add/edit expense: amount field label." },
+  "expenseFormAmountHint": "مثلاً 250 أو 99.50",
+  "@expenseFormAmountHint": { "description": "Add/edit expense: amount field hint (Western digits)." },
+  "expenseFormAmountInvalid": "اكتب مبلغ صحيح أكبر من صفر.",
+  "@expenseFormAmountInvalid": { "description": "Add/edit expense: the amount cannot be read." },
+  "expenseFormCurrencyNote": "العملة: جنيه مصري (ج.م)",
+  "@expenseFormCurrencyNote": { "description": "Add/edit expense: the fixed currency." },
+  "expenseFormDateLabel": "التاريخ",
+  "@expenseFormDateLabel": { "description": "Add/edit expense: date button label." },
+  "expenseFormPaidByTitle": "مين اللي دفع؟",
+  "@expenseFormPaidByTitle": { "description": "Add/edit expense: paid-by section title." },
+  "expenseFormEditPayers": "تعديل الدافعين",
+  "@expenseFormEditPayers": { "description": "Add/edit expense: opens the payers sheet." },
+  "expenseFormPayersMismatch": "مجموع اللي دفعوه مش مطابق للإجمالي. عدّل الدافعين.",
+  "@expenseFormPayersMismatch": { "description": "Add/edit expense: the payers no longer add up to the total." },
+  "expenseFormSplitTitle": "طريقة التقسيم",
+  "@expenseFormSplitTitle": { "description": "Add/edit expense: split section title." },
+  "expenseFormSplitAll": "الكل",
+  "@expenseFormSplitAll": { "description": "Split tab: equal among all members." },
+  "expenseFormSplitSelected": "محددين",
+  "@expenseFormSplitSelected": { "description": "Split tab: equal among the selected members." },
+  "expenseFormMemberSpoken": "{name}، نصيبه {amount}",
+  "@expenseFormMemberSpoken": {
+    "description": "Screen-reader label of a member row with their share.",
+    "placeholders": { "name": { "type": "String" }, "amount": { "type": "String" } }
+  },
+  "expenseFormMemberUnchecked": "{name}، مش مشارك",
+  "@expenseFormMemberUnchecked": {
+    "description": "Screen-reader label of an unchecked member row.",
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "expenseFormShareLoading": "بنحسب الأنصبة…",
+  "@expenseFormShareLoading": { "description": "Shown instead of the amounts while the server calculates them." },
+  "expenseFormShareFailed": "معرفناش نحسب الأنصبة.",
+  "@expenseFormShareFailed": { "description": "The preview failed." },
+  "expenseFormShareNeedAmount": "اكتب المبلغ الإجمالي عشان تظهر الأنصبة.",
+  "@expenseFormShareNeedAmount": { "description": "Shown while the total is not valid yet." },
+  "expenseFormExactHint": "تقدر تعدّل حصة كل عضو بإيدك، أو توزّع بالتساوي من جديد.",
+  "@expenseFormExactHint": { "description": "Exact tab: hint under the list." },
+  "expenseFormExactAmountLabel": "نصيب {name}",
+  "@expenseFormExactAmountLabel": {
+    "description": "Screen-reader label of the amount box of a member in Exact mode.",
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "expenseFormSpreadEqually": "وزّع بالتساوي",
+  "@expenseFormSpreadEqually": { "description": "Exact tab: ask the server for the equal split again." },
+  "expenseFormExactSummary": "مجموع التقسيم: {sum} من {total}",
+  "@expenseFormExactSummary": {
+    "description": "Exact tab: what was typed against the total.",
+    "placeholders": { "sum": { "type": "String" }, "total": { "type": "String" } }
+  },
+  "expenseFormExactRemaining": "لسه باقي {amount}",
+  "@expenseFormExactRemaining": {
+    "description": "Exact tab: part of the total not yet given to anyone.",
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "expenseFormExactOver": "زيادة {amount} عن الإجمالي",
+  "@expenseFormExactOver": {
+    "description": "Exact tab: the typed amounts exceed the total.",
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "expenseFormExactMatches": "مطابق للإجمالي",
+  "@expenseFormExactMatches": { "description": "Exact tab: the typed amounts equal the total." },
+  "expenseFormSave": "حفظ المصروف",
+  "@expenseFormSave": { "description": "Add/edit expense: save button (add)." },
+  "expenseFormSaveChanges": "حفظ التعديلات",
+  "@expenseFormSaveChanges": { "description": "Add/edit expense: save button (edit)." },
+  "expenseFormLeaveTitle": "تخرج من غير ما تحفظ؟",
+  "@expenseFormLeaveTitle": { "description": "Discard dialog title." },
+  "expenseFormLeaveBody": "اللي كتبته هيضيع.",
+  "@expenseFormLeaveBody": { "description": "Discard dialog body." },
+  "expenseFormLeaveConfirm": "اخرج",
+  "@expenseFormLeaveConfirm": { "description": "Discard dialog: leave." },
+  "expenseFormLeaveKeep": "كمّل كتابة",
+  "@expenseFormLeaveKeep": { "description": "Discard dialog: stay." },
+  "expenseFormConflictTitle": "المصروف اتعدّل",
+  "@expenseFormConflictTitle": { "description": "Edit conflict dialog title." },
+  "expenseFormConflictBody": "حد عدّل المصروف ده من آخر مرة فتحته. حمّل آخر نسخة، اللي كتبته هيفضل زي ما هو، وبعدين احفظ تاني.",
+  "@expenseFormConflictBody": { "description": "Edit conflict dialog body." },
+  "expenseFormConflictNote": "حد عدّل المصروف ده. تعديلاتك لسه موجودة، والحفظ هيبدّل نسخته.",
+  "@expenseFormConflictNote": { "description": "Banner after the latest version was loaded following a conflict." },
+  "expenseFormSaveRetry": "احفظ تاني",
+  "@expenseFormSaveRetry": { "description": "Button after a failed save (same request, no duplicate)." },
+  "expenseFormOutcomeUnknown": "مش متأكدين إن المصروف اتحفظ. لو حفظت تاني مش هيتكرر.",
+  "@expenseFormOutcomeUnknown": { "description": "Message after a save whose reply was lost." },
+  "expensePayersSheetTitle": "مين دفع الفاتورة؟",
+  "@expensePayersSheetTitle": { "description": "Payers sheet title." },
+  "expensePayersSheetSubtitle": "حدد الأعضاء اللي دفعوا والمبلغ اللي دفعه كل واحد.",
+  "@expensePayersSheetSubtitle": { "description": "Payers sheet subtitle." },
+  "expensePayersTotalLabel": "إجمالي الفاتورة المستحق",
+  "@expensePayersTotalLabel": { "description": "Payers sheet: the total." },
+  "expensePayersNeedTotal": "اكتب المبلغ الإجمالي الأول.",
+  "@expensePayersNeedTotal": { "description": "Payers sheet: the total is not valid yet." },
+  "expensePayersRemaining": "المتبقي للتوزيع: {amount}",
+  "@expensePayersRemaining": {
+    "description": "Payers sheet: part of the total nobody has paid yet.",
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "expensePayersOver": "زيادة {amount} عن الفاتورة",
+  "@expensePayersOver": {
+    "description": "Payers sheet: the amounts exceed the total.",
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "expensePayersMatched": "المجموع مظبوط ومطابق للفاتورة",
+  "@expensePayersMatched": { "description": "Payers sheet: typed amounts equal the total and the server agrees." },
+  "expensePayersChecking": "بنراجع المجموع مع الخادم…",
+  "@expensePayersChecking": { "description": "Payers sheet: waiting for the server to confirm the match." },
+  "expensePayersServerMismatch": "الخادم شايف إن المجموع مش مطابق. راجع المبالغ.",
+  "@expensePayersServerMismatch": { "description": "Payers sheet: the server disagrees with the typed sum." },
+  "expensePayersSplitEqually": "قسّم بالتساوي على الدافعين",
+  "@expensePayersSplitEqually": { "description": "Payers sheet: ask the server for the equal split among the selected payers." },
+  "expensePayersClear": "امسح المبالغ",
+  "@expensePayersClear": { "description": "Payers sheet: empty every amount." },
+  "expensePayersEntered": "إجمالي المبالغ المدخلة",
+  "@expensePayersEntered": { "description": "Payers sheet: the typed amounts added up." },
+  "expensePayersConfirm": "تأكيد الدافعين ({amount})",
+  "@expensePayersConfirm": {
+    "description": "Payers sheet: confirm button.",
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "expensePayersAmountLabel": "اللي دفعه {name}",
+  "@expensePayersAmountLabel": {
+    "description": "Screen-reader label of a payer’s amount box.",
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "expensePayersRowSpoken": "{name}، دفع {amount}",
+  "@expensePayersRowSpoken": {
+    "description": "Screen-reader label of a payer row with an amount.",
+    "placeholders": { "name": { "type": "String" }, "amount": { "type": "String" } }
+  },
+  "expensePayersRowUnchecked": "{name}، لم يدفع",
+  "@expensePayersRowUnchecked": {
+    "description": "Screen-reader label of an unchecked payer row.",
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "expensePayersFailed": "معرفناش نحسب التقسيم بالتساوي. جرّب تاني.",
+  "@expensePayersFailed": { "description": "Payers sheet: the equal split could not be calculated." },
+  "expenseFormSaved": "اتحفظ المصروف.",
+  "@expenseFormSaved": { "description": "Snackbar after the expense was saved." }
 }

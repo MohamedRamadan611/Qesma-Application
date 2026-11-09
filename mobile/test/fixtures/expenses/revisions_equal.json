@@ -1,0 +1,102 @@
+[
+  {
+    "version": 1,
+    "changeType": "CREATE",
+    "changedAt": "2026-11-08T23:38:53.273194Z",
+    "changedByUserId": "f52a2bce-80c9-418d-8a86-ade9a1c8dddb",
+    "snapshot": {
+      "id": "91d890aa-7d46-458e-ad4e-e99710109445",
+      "items": null,
+      "title": "Petrol",
+      "payers": [
+        {
+          "memberId": "77e31a5d-f072-4568-9115-0259fb131e9a",
+          "amountMinor": 50000
+        }
+      ],
+      "shares": [
+        {
+          "memberId": "77e31a5d-f072-4568-9115-0259fb131e9a",
+          "taxMinor": null,
+          "owedMinor": 16667,
+          "itemsMinor": null,
+          "serviceMinor": null,
+          "adjustmentMinor": null
+        },
+        {
+          "memberId": "98138ea2-62ee-4b5d-92d0-0ecccb012cfa",
+          "taxMinor": null,
+          "owedMinor": 16667,
+          "itemsMinor": null,
+          "serviceMinor": null,
+          "adjustmentMinor": null
+        },
+        {
+          "memberId": "014bf05a-7ba1-432e-9c17-35881f72d003",
+          "taxMinor": null,
+          "owedMinor": 16666,
+          "itemsMinor": null,
+          "serviceMinor": null,
+          "adjustmentMinor": null
+        }
+      ],
+      "charges": null,
+      "groupId": "2bf36db7-e9e8-4b12-a206-878f0b5c934c",
+      "version": 1,
+      "createdAt": "2026-11-08T23:38:53.273194Z",
+      "splitType": "EQUAL",
+      "totalMinor": 50000,
+      "expenseDate": "2026-10-18"
+    }
+  },
+  {
+    "version": 2,
+    "changeType": "UPDATE",
+    "changedAt": "2026-11-08T23:38:55.077841Z",
+    "changedByUserId": "f52a2bce-80c9-418d-8a86-ade9a1c8dddb",
+    "snapshot": {
+      "id": "91d890aa-7d46-458e-ad4e-e99710109445",
+      "items": null,
+      "title": "Petrol (edited)",
+      "payers": [
+        {
+          "memberId": "77e31a5d-f072-4568-9115-0259fb131e9a",
+          "amountMinor": 52000
+        }
+      ],
+      "shares": [
+        {
+          "memberId": "77e31a5d-f072-4568-9115-0259fb131e9a",
+          "taxMinor": null,
+          "owedMinor": 17334,
+          "itemsMinor": null,
+          "serviceMinor": null,
+          "adjustmentMinor": null
+        },
+        {
+          "memberId": "98138ea2-62ee-4b5d-92d0-0ecccb012cfa",
+          "taxMinor": null,
+          "owedMinor": 17333,
+          "itemsMinor": null,
+          "serviceMinor": null,
+          "adjustmentMinor": null
+        },
+        {
+          "memberId": "014bf05a-7ba1-432e-9c17-35881f72d003",
+          "taxMinor": null,
+          "owedMinor": 17333,
+          "itemsMinor": null,
+          "serviceMinor": null,
+          "adjustmentMinor": null
+        }
+      ],
+      "charges": null,
+      "groupId": "2bf36db7-e9e8-4b12-a206-878f0b5c934c",
+      "version": 2,
+      "createdAt": "2026-11-08T23:38:53.273194Z",
+      "splitType": "EQUAL",
+      "totalMinor": 52000,
+      "expenseDate": "2026-10-18"
+    }
+  }
+]

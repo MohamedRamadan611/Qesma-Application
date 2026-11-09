@@ -1,0 +1,8 @@
+{
+  "title": "Tickets",
+  "expenseDate": "2026-10-17",
+  "splitType": "EXACT",
+  "totalMinor": 30000,
+  "shares": [ { "memberId": "77e31a5d-f072-4568-9115-0259fb131e9a", "amountMinor": 10000 }, { "memberId": "98138ea2-62ee-4b5d-92d0-0ecccb012cfa", "amountMinor": 15000 }, { "memberId": "014bf05a-7ba1-432e-9c17-35881f72d003", "amountMinor": 5000 } ],
+  "payers": [ { "memberId": "98138ea2-62ee-4b5d-92d0-0ecccb012cfa", "amountMinor": 30000 } ]
+}

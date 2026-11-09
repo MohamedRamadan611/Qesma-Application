@@ -119,7 +119,7 @@ class FakeGroupsServer extends FakeBackend {
         if (g.lastExpenseAt != null) 'lastExpenseAt': g.lastExpenseAt!.toUtc().toIso8601String(),
       };
 
-  ResponseBody _ok(int status, Object? body, {String? etag}) => ResponseBody.fromString(
+  ResponseBody jsonOk(int status, Object? body, {String? etag}) => ResponseBody.fromString(
         body == null ? '' : jsonEncode(body),
         status,
         headers: {
@@ -128,7 +128,7 @@ class FakeGroupsServer extends FakeBackend {
         },
       );
 
-  ResponseBody _problem(int status, String code) => ResponseBody.fromString(
+  ResponseBody problemResponse(int status, String code) => ResponseBody.fromString(
         jsonEncode({'type': 'https://qesma.app/problems/x', 'title': 'x', 'status': status, 'code': code, 'requestId': 'req-$status'}),
         status,
         headers: {
@@ -167,32 +167,32 @@ class FakeGroupsServer extends FakeBackend {
         final all = groups.values.toList();
         final pages = all.isEmpty ? 1 : (all.length + size - 1) ~/ size;
         final slice = all.skip(page * size).take(size).toList();
-        return _ok(200, {'items': [for (final g in slice) _summary(g)], 'page': page, 'size': size, 'totalElements': all.length, 'totalPages': pages});
+        return jsonOk(200, {'items': [for (final g in slice) _summary(g)], 'page': page, 'size': size, 'totalElements': all.length, 'totalPages': pages});
       }
       if (method == 'POST') return _create(options, requestStream);
     }
 
     final group = groups[parts.first];
-    if (group == null) return _problem(404, 'NOT_FOUND');
+    if (group == null) return problemResponse(404, 'NOT_FOUND');
 
     // /groups/{gid}
     if (parts.length == 1) {
       switch (method) {
         case 'GET':
-          return _ok(200, _group(group), etag: '${group.version}');
+          return jsonOk(200, _group(group), etag: '${group.version}');
         case 'PATCH':
           final sent = options.headers['If-Match'] as String?;
-          if (sent != '"${group.version}"') return _problem(409, 'VERSION_CONFLICT');
+          if (sent != '"${group.version}"') return problemResponse(409, 'VERSION_CONFLICT');
           final body = await _json(options, requestStream);
           group
             ..name = body['name'] as String
             ..type = body['type'] as String
             ..version += 1;
-          return _ok(200, _group(group), etag: '${group.version}');
+          return jsonOk(200, _group(group), etag: '${group.version}');
         case 'DELETE':
-          if (group.hasExpenses) return _problem(409, 'GROUP_NOT_EMPTY');
+          if (group.hasExpenses) return problemResponse(409, 'GROUP_NOT_EMPTY');
           groups.remove(group.id);
-          return _ok(204, null);
+          return jsonOk(204, null);
       }
     }
 
@@ -200,27 +200,27 @@ class FakeGroupsServer extends FakeBackend {
     if (parts.length >= 2 && parts[1] == 'members') {
       if (parts.length == 2 && method == 'POST') {
         final name = (await _json(options, requestStream))['displayName'] as String;
-        if (group.members.any((m) => m.name == name)) return _problem(409, 'DUPLICATE_MEMBER_NAME');
+        if (group.members.any((m) => m.name == name)) return problemResponse(409, 'DUPLICATE_MEMBER_NAME');
         final member = FakeMember(id: '${group.id}-m${group.members.length + 1}', name: name, sortOrder: group.members.length + 1);
         group.members.add(member);
-        return _ok(201, _member(member));
+        return jsonOk(201, _member(member));
       }
       final member = parts.length == 3 ? group.members.where((m) => m.id == parts[2]).firstOrNull : null;
-      if (member == null) return _problem(404, 'NOT_FOUND');
+      if (member == null) return problemResponse(404, 'NOT_FOUND');
       if (method == 'PATCH') {
         final name = (await _json(options, requestStream))['displayName'] as String;
-        if (group.members.any((m) => m.name == name && m.id != member.id)) return _problem(409, 'DUPLICATE_MEMBER_NAME');
+        if (group.members.any((m) => m.name == name && m.id != member.id)) return problemResponse(409, 'DUPLICATE_MEMBER_NAME');
         member.name = name;
-        return _ok(200, _member(member));
+        return jsonOk(200, _member(member));
       }
       if (method == 'DELETE') {
-        if (member.isYou) return _problem(409, 'OWNER_MEMBER_PROTECTED');
-        if (member.hasTransactions) return _problem(409, 'MEMBER_HAS_TRANSACTIONS');
+        if (member.isYou) return problemResponse(409, 'OWNER_MEMBER_PROTECTED');
+        if (member.hasTransactions) return problemResponse(409, 'MEMBER_HAS_TRANSACTIONS');
         group.members.remove(member);
-        return _ok(204, null);
+        return jsonOk(204, null);
       }
     }
-    return _problem(404, 'NOT_FOUND');
+    return problemResponse(404, 'NOT_FOUND');
   }
 
   Future<ResponseBody> _create(RequestOptions options, Stream<Uint8List>? stream) async {
@@ -229,9 +229,9 @@ class FakeGroupsServer extends FakeBackend {
     final body = await _json(options, stream);
     switch (fault) {
       case CreateFault.validation:
-        return _problem(422, 'VALIDATION_ERROR');
+        return problemResponse(422, 'VALIDATION_ERROR');
       case CreateFault.serverErrorNothingStored:
-        return _problem(500, 'INTERNAL_ERROR');
+        return problemResponse(500, 'INTERNAL_ERROR');
       case CreateFault.none:
       case CreateFault.loseResponseAfterStoring:
         break;
@@ -241,6 +241,6 @@ class FakeGroupsServer extends FakeBackend {
       if (goOfflineAfterFault) offline = true;
       throw DioException.receiveTimeout(requestOptions: options, timeout: const Duration(seconds: 20));
     }
-    return _ok(201, _group(g), etag: '${g.version}');
+    return jsonOk(201, _group(g), etag: '${g.version}');
   }
 }

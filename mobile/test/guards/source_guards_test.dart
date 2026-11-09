@@ -153,6 +153,14 @@ void main() {
     expect(hits, isEmpty, reason: 'Go through a repository in features/*/data.\n${hits.join('\n')}');
   });
 
+  test('the body of an expense is built in ONE place (the command builder), never in widgets or notifiers', () {
+    final hits = _scan(
+      RegExp(r'\bExpenseCommand\('),
+      skip: (p) => p == 'lib/features/expenses/application/expense_command_builder.dart',
+    );
+    expect(hits, isEmpty, reason: 'Build the request with buildExpenseCommand / buildEqualPreview / buildPayersCheck.\n${hits.join('\n')}');
+  });
+
   test('the manifest disables Android backup (restored backups cannot unwrap the Keystore-wrapped token)', () {
     final main = File('android/app/src/main/AndroidManifest.xml').readAsStringSync();
     expect(main, contains('android:allowBackup="false"'));

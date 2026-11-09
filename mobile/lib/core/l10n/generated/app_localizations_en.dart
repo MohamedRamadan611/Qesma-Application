@@ -493,4 +493,559 @@ class AppLocalizationsEn extends AppLocalizations {
   String memberDeleteConfirmBody(String name) {
     return '\"$name\" will be removed from the group.';
   }
+
+  @override
+  String get expensesEmptyTitle => 'No expenses yet';
+
+  @override
+  String get expensesEmptyBody =>
+      'Add the first expense and split it with the group.';
+
+  @override
+  String get expensesAdd => 'Add expense';
+
+  @override
+  String get expensesNoMatchTitle => 'No matching expenses';
+
+  @override
+  String get expensesNoMatchBody => 'Try changing or clearing the filters.';
+
+  @override
+  String get expensesClearFilters => 'Clear filters';
+
+  @override
+  String get expensesLoadMoreFailed => 'Could not load more expenses.';
+
+  @override
+  String get expensesRefreshFailed =>
+      'Could not refresh. Showing the last copy we have.';
+
+  @override
+  String get expenseFilterDate => 'Date';
+
+  @override
+  String get expenseFilterMember => 'Member';
+
+  @override
+  String get expenseFilterAll => 'All';
+
+  @override
+  String expenseFilterRange(String from, String to) {
+    return '$from to $to';
+  }
+
+  @override
+  String expenseFilterFrom(String from) {
+    return 'From $from';
+  }
+
+  @override
+  String expenseFilterUntil(String to) {
+    return 'Until $to';
+  }
+
+  @override
+  String expenseFilterRemove(String label) {
+    return 'Remove filter: $label';
+  }
+
+  @override
+  String get expenseFilterDateTitle => 'Filter by date';
+
+  @override
+  String get expenseFilterFromLabel => 'From date';
+
+  @override
+  String get expenseFilterToLabel => 'To date';
+
+  @override
+  String get expenseFilterPickDate => 'Pick a date';
+
+  @override
+  String get expenseFilterApply => 'Apply';
+
+  @override
+  String get expenseFilterClear => 'Clear';
+
+  @override
+  String get expenseFilterRangeInvalid =>
+      'The start date must be before the end date.';
+
+  @override
+  String get expenseFilterMemberTitle => 'Filter by member';
+
+  @override
+  String get expenseFilterMemberHint =>
+      'Shows the expenses this member paid or shared in.';
+
+  @override
+  String get expenseFilterAllMembers => 'All members';
+
+  @override
+  String expenseDayToday(String date) {
+    return 'Today — $date';
+  }
+
+  @override
+  String expenseDayYesterday(String date) {
+    return 'Yesterday — $date';
+  }
+
+  @override
+  String expensePaidBy(String payers) {
+    return 'Paid by $payers';
+  }
+
+  @override
+  String expensePayerAmount(String name, String amount) {
+    return '$name ($amount)';
+  }
+
+  @override
+  String get expenseListSeparator => ', ';
+
+  @override
+  String get expenseUnknownMember => 'A member';
+
+  @override
+  String get expenseSplitAmongOne => 'For one person';
+
+  @override
+  String expenseSplitAmong(String count) {
+    return 'Split between $count people';
+  }
+
+  @override
+  String expenseYourShare(String amount) {
+    return 'Your share: $amount';
+  }
+
+  @override
+  String expenseCardSpoken(
+    String title,
+    String total,
+    String split,
+    String payers,
+    String participants,
+  ) {
+    return '$title, $total, $split, $payers, $participants';
+  }
+
+  @override
+  String expenseCardSpokenWithShare(
+    String title,
+    String total,
+    String split,
+    String payers,
+    String participants,
+    String share,
+  ) {
+    return '$title, $total, $split, $payers, $participants, $share';
+  }
+
+  @override
+  String get expenseSplitEqual => 'Equal';
+
+  @override
+  String get expenseSplitExact => 'Exact amounts';
+
+  @override
+  String get expenseSplitItemized => 'Itemized bill';
+
+  @override
+  String get expenseDetailsTitle => 'Expense details';
+
+  @override
+  String get expenseDetailsTotal => 'Expense total';
+
+  @override
+  String expenseEditedBadge(String version) {
+    return 'Edited (version $version)';
+  }
+
+  @override
+  String get expensePayersTitle => 'Paid by';
+
+  @override
+  String get expensePayersCountOne => '1 payer';
+
+  @override
+  String expensePayersCount(String count) {
+    return '$count payers';
+  }
+
+  @override
+  String expensePaidTotal(String amount) {
+    return 'Total paid: $amount';
+  }
+
+  @override
+  String get expenseItemsTitle => 'Items and charges';
+
+  @override
+  String get expenseItemsCountOne => '1 item';
+
+  @override
+  String expenseItemsCount(String count) {
+    return '$count items';
+  }
+
+  @override
+  String get expenseSubtotal => 'Items subtotal';
+
+  @override
+  String get expenseServiceLabel => 'Service charge';
+
+  @override
+  String get expenseTaxLabel => 'Tax';
+
+  @override
+  String get expenseTaxBaseSubtotal => 'on the items subtotal';
+
+  @override
+  String get expenseTaxBaseSubtotalPlusService => 'on items + service';
+
+  @override
+  String get expenseAdjustmentLabel => 'Adjustment';
+
+  @override
+  String get expenseBillTotal => 'Bill total';
+
+  @override
+  String expensePercent(String rate) {
+    return '$rate%';
+  }
+
+  @override
+  String get expenseBreakdownTitle => 'Each person’s share';
+
+  @override
+  String get expenseBreakdownCountOne => '1 person';
+
+  @override
+  String expenseBreakdownCount(String count) {
+    return '$count people';
+  }
+
+  @override
+  String expensePartItems(String amount) {
+    return 'items $amount';
+  }
+
+  @override
+  String expensePartService(String amount) {
+    return 'service $amount';
+  }
+
+  @override
+  String expensePartTax(String amount) {
+    return 'tax $amount';
+  }
+
+  @override
+  String expensePartAdjustment(String amount) {
+    return 'adjustment $amount';
+  }
+
+  @override
+  String get expenseEdit => 'Edit expense';
+
+  @override
+  String get expenseEditItemized => 'Edit bill and items';
+
+  @override
+  String get expenseDelete => 'Delete expense';
+
+  @override
+  String get expenseHistory => 'Edit history';
+
+  @override
+  String get expenseDeleteConfirmTitle => 'Delete this expense?';
+
+  @override
+  String expenseDeleteConfirmBody(String title) {
+    return '“$title” will be removed from the expenses and balances.';
+  }
+
+  @override
+  String get expenseDeleted => 'Expense deleted.';
+
+  @override
+  String get expenseAlreadyDeleted => 'This expense was already deleted.';
+
+  @override
+  String get expenseGoneTitle => 'This expense is no longer available';
+
+  @override
+  String get expenseBackToList => 'Back to expenses';
+
+  @override
+  String expenseHistoryVersion(String version) {
+    return 'Version $version';
+  }
+
+  @override
+  String get expenseChangeCreate => 'Created';
+
+  @override
+  String get expenseChangeUpdate => 'Edited';
+
+  @override
+  String get expenseChangeDelete => 'Deleted';
+
+  @override
+  String expenseHistoryTotal(String amount) {
+    return 'Total: $amount';
+  }
+
+  @override
+  String get expenseConflictTitle => 'This expense was edited';
+
+  @override
+  String get expenseConflictBody =>
+      'Someone edited this expense since you opened it. Load the latest version and check it before deleting.';
+
+  @override
+  String get expensesRefresh => 'Refresh the list';
+
+  @override
+  String get expenseHistoryEmpty =>
+      'There is no edit history for this expense.';
+
+  @override
+  String expenseAssignedTo(String names) {
+    return 'Assigned to: $names';
+  }
+
+  @override
+  String get expenseSplitUnknown => 'Split';
+
+  @override
+  String get expenseSplitAmongTwo => 'Split between 2 people';
+
+  @override
+  String expenseSplitAmongMany(String count) {
+    return 'Split between $count people';
+  }
+
+  @override
+  String get expensePayersCountTwo => '2 payers';
+
+  @override
+  String expensePayersCountMany(String count) {
+    return '$count payers';
+  }
+
+  @override
+  String get expenseItemsCountTwo => '2 items';
+
+  @override
+  String expenseItemsCountMany(String count) {
+    return '$count items';
+  }
+
+  @override
+  String get expenseBreakdownCountTwo => '2 people';
+
+  @override
+  String expenseBreakdownCountMany(String count) {
+    return '$count people';
+  }
+
+  @override
+  String get expenseFormTitleLabel => 'Expense name';
+
+  @override
+  String get expenseFormTitleHint => 'For example: dinner, petrol, tickets';
+
+  @override
+  String get expenseFormTitleRequired => 'Enter a name for the expense.';
+
+  @override
+  String get expenseFormAmountLabel => 'Total amount';
+
+  @override
+  String get expenseFormAmountHint => 'For example 250 or 99.50';
+
+  @override
+  String get expenseFormAmountInvalid => 'Enter a valid amount above zero.';
+
+  @override
+  String get expenseFormCurrencyNote => 'Currency: Egyptian pound (EGP)';
+
+  @override
+  String get expenseFormDateLabel => 'Date';
+
+  @override
+  String get expenseFormPaidByTitle => 'Who paid?';
+
+  @override
+  String get expenseFormEditPayers => 'Edit payers';
+
+  @override
+  String get expenseFormPayersMismatch =>
+      'What the payers paid does not match the total. Edit the payers.';
+
+  @override
+  String get expenseFormSplitTitle => 'How to split';
+
+  @override
+  String get expenseFormSplitAll => 'Everyone';
+
+  @override
+  String get expenseFormSplitSelected => 'Selected';
+
+  @override
+  String expenseFormMemberSpoken(String name, String amount) {
+    return '$name, share $amount';
+  }
+
+  @override
+  String expenseFormMemberUnchecked(String name) {
+    return '$name, not included';
+  }
+
+  @override
+  String get expenseFormShareLoading => 'Working out the shares…';
+
+  @override
+  String get expenseFormShareFailed => 'Could not work out the shares.';
+
+  @override
+  String get expenseFormShareNeedAmount => 'Enter the total to see the shares.';
+
+  @override
+  String get expenseFormExactHint =>
+      'You can edit each member’s share, or spread it equally again.';
+
+  @override
+  String expenseFormExactAmountLabel(String name) {
+    return '$name’s share';
+  }
+
+  @override
+  String get expenseFormSpreadEqually => 'Spread equally';
+
+  @override
+  String expenseFormExactSummary(String sum, String total) {
+    return 'Split total: $sum of $total';
+  }
+
+  @override
+  String expenseFormExactRemaining(String amount) {
+    return '$amount left to split';
+  }
+
+  @override
+  String expenseFormExactOver(String amount) {
+    return '$amount over the total';
+  }
+
+  @override
+  String get expenseFormExactMatches => 'Matches the total';
+
+  @override
+  String get expenseFormSave => 'Save expense';
+
+  @override
+  String get expenseFormSaveChanges => 'Save changes';
+
+  @override
+  String get expenseFormLeaveTitle => 'Leave without saving?';
+
+  @override
+  String get expenseFormLeaveBody => 'What you entered will be lost.';
+
+  @override
+  String get expenseFormLeaveConfirm => 'Leave';
+
+  @override
+  String get expenseFormLeaveKeep => 'Keep editing';
+
+  @override
+  String get expenseFormConflictTitle => 'This expense was edited';
+
+  @override
+  String get expenseFormConflictBody =>
+      'Someone edited this expense since you opened it. Load the latest version; what you entered stays as it is. Then save again.';
+
+  @override
+  String get expenseFormConflictNote =>
+      'Someone edited this expense. Your changes are still here, and saving replaces their version.';
+
+  @override
+  String get expenseFormSaveRetry => 'Save again';
+
+  @override
+  String get expenseFormOutcomeUnknown =>
+      'We are not sure the expense was saved. Saving again will not create a duplicate.';
+
+  @override
+  String get expensePayersSheetTitle => 'Who paid the bill?';
+
+  @override
+  String get expensePayersSheetSubtitle =>
+      'Pick who paid and how much each person paid.';
+
+  @override
+  String get expensePayersTotalLabel => 'Bill total due';
+
+  @override
+  String get expensePayersNeedTotal => 'Enter the total amount first.';
+
+  @override
+  String expensePayersRemaining(String amount) {
+    return 'Left to assign: $amount';
+  }
+
+  @override
+  String expensePayersOver(String amount) {
+    return '$amount more than the bill';
+  }
+
+  @override
+  String get expensePayersMatched => 'The total matches the bill';
+
+  @override
+  String get expensePayersChecking => 'Checking the total with the server…';
+
+  @override
+  String get expensePayersServerMismatch =>
+      'The server says the total does not match. Check the amounts.';
+
+  @override
+  String get expensePayersSplitEqually => 'Split equally among the payers';
+
+  @override
+  String get expensePayersClear => 'Clear amounts';
+
+  @override
+  String get expensePayersEntered => 'Total entered';
+
+  @override
+  String expensePayersConfirm(String amount) {
+    return 'Confirm payers ($amount)';
+  }
+
+  @override
+  String expensePayersAmountLabel(String name) {
+    return 'Paid by $name';
+  }
+
+  @override
+  String expensePayersRowSpoken(String name, String amount) {
+    return '$name, paid $amount';
+  }
+
+  @override
+  String expensePayersRowUnchecked(String name) {
+    return '$name, did not pay';
+  }
+
+  @override
+  String get expensePayersFailed =>
+      'Could not work out the equal split. Try again.';
+
+  @override
+  String get expenseFormSaved => 'Expense saved.';
 }

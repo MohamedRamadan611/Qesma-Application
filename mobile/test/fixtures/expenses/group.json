@@ -1,0 +1,36 @@
+{
+  "id": "2bf36db7-e9e8-4b12-a206-878f0b5c934c",
+  "name": "Dahab",
+  "type": "TRIP",
+  "currencyCode": "EGP",
+  "createdAt": "2026-11-08T23:38:52.140023Z",
+  "updatedAt": "2026-11-08T23:38:52.140023Z",
+  "version": 1,
+  "totalSpentMinor": 281619,
+  "lastExpenseAt": "2026-11-08T23:38:54.663960Z",
+  "yourMemberId": "77e31a5d-f072-4568-9115-0259fb131e9a",
+  "yourNetMinor": 149127,
+  "members": [
+    {
+      "id": "77e31a5d-f072-4568-9115-0259fb131e9a",
+      "displayName": "Mohamed",
+      "sortOrder": 1,
+      "createdAt": "2026-11-08T23:38:52.145521Z",
+      "isYou": true
+    },
+    {
+      "id": "98138ea2-62ee-4b5d-92d0-0ecccb012cfa",
+      "displayName": "Asem",
+      "sortOrder": 2,
+      "createdAt": "2026-11-08T23:38:52.209903Z",
+      "isYou": false
+    },
+    {
+      "id": "014bf05a-7ba1-432e-9c17-35881f72d003",
+      "displayName": "Mohsen",
+      "sortOrder": 3,
+      "createdAt": "2026-11-08T23:38:52.335961Z",
+      "isYou": false
+    }
+  ]
+}

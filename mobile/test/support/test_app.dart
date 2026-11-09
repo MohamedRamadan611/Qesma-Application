@@ -89,3 +89,6 @@ String isolated(String s) => '${String.fromCharCode(0x2066)}$s${String.fromCharC
 final String nbspChar = String.fromCharCode(0x00A0);
 
 AppLocalizations l10nOf(WidgetTester tester) => AppLocalizations.of(tester.element(find.byType(Scaffold).first));
+
+/// First-strong isolate around [s] (what the app puts around each payer with an amount).
+String fsIsolated(String s) => '${String.fromCharCode(0x2068)}$s${String.fromCharCode(0x2069)}';

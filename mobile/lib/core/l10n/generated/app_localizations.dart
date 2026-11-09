@@ -913,6 +913,907 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'هيتشال «{name}» من الجروب.'**
   String memberDeleteConfirmBody(String name);
+
+  /// Expenses tab empty state title (the group has no expenses).
+  ///
+  /// In ar, this message translates to:
+  /// **'لسه مفيش مصاريف'**
+  String get expensesEmptyTitle;
+
+  /// Expenses tab empty state body.
+  ///
+  /// In ar, this message translates to:
+  /// **'ضيف أول مصروف وقسّمه على الشلة.'**
+  String get expensesEmptyBody;
+
+  /// Button and floating button: add an expense.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة مصروف'**
+  String get expensesAdd;
+
+  /// Filtered list is empty.
+  ///
+  /// In ar, this message translates to:
+  /// **'مفيش مصاريف مطابقة'**
+  String get expensesNoMatchTitle;
+
+  /// Filtered list is empty: body.
+  ///
+  /// In ar, this message translates to:
+  /// **'جرّب تغيّر الفلاتر أو امسحها.'**
+  String get expensesNoMatchBody;
+
+  /// Button that removes every filter.
+  ///
+  /// In ar, this message translates to:
+  /// **'امسح الفلاتر'**
+  String get expensesClearFilters;
+
+  /// Snackbar when the next page fails.
+  ///
+  /// In ar, this message translates to:
+  /// **'معرفناش نحمّل باقي المصاريف.'**
+  String get expensesLoadMoreFailed;
+
+  /// Snackbar when pull to refresh fails.
+  ///
+  /// In ar, this message translates to:
+  /// **'معرفناش نحدّث المصاريف. المعروض هو آخر نسخة عندنا.'**
+  String get expensesRefreshFailed;
+
+  /// Filter chip: date range.
+  ///
+  /// In ar, this message translates to:
+  /// **'التاريخ'**
+  String get expenseFilterDate;
+
+  /// Filter chip: member.
+  ///
+  /// In ar, this message translates to:
+  /// **'العضو'**
+  String get expenseFilterMember;
+
+  /// Filter chip value when no filter is set.
+  ///
+  /// In ar, this message translates to:
+  /// **'الكل'**
+  String get expenseFilterAll;
+
+  /// Filter chip value: date range.
+  ///
+  /// In ar, this message translates to:
+  /// **'من {from} لحد {to}'**
+  String expenseFilterRange(String from, String to);
+
+  /// Filter chip value: only a start date.
+  ///
+  /// In ar, this message translates to:
+  /// **'من {from}'**
+  String expenseFilterFrom(String from);
+
+  /// Filter chip value: only an end date.
+  ///
+  /// In ar, this message translates to:
+  /// **'لحد {to}'**
+  String expenseFilterUntil(String to);
+
+  /// Screen-reader label of a removable filter chip.
+  ///
+  /// In ar, this message translates to:
+  /// **'شيل الفلتر: {label}'**
+  String expenseFilterRemove(String label);
+
+  /// Date filter sheet title.
+  ///
+  /// In ar, this message translates to:
+  /// **'فلتر التاريخ'**
+  String get expenseFilterDateTitle;
+
+  /// Date filter: start date button label.
+  ///
+  /// In ar, this message translates to:
+  /// **'من تاريخ'**
+  String get expenseFilterFromLabel;
+
+  /// Date filter: end date button label.
+  ///
+  /// In ar, this message translates to:
+  /// **'لحد تاريخ'**
+  String get expenseFilterToLabel;
+
+  /// Date filter: shown before a date is picked.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختار التاريخ'**
+  String get expenseFilterPickDate;
+
+  /// Filter sheet: apply.
+  ///
+  /// In ar, this message translates to:
+  /// **'تطبيق'**
+  String get expenseFilterApply;
+
+  /// Filter sheet: clear this filter.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسح'**
+  String get expenseFilterClear;
+
+  /// Date filter: backwards range.
+  ///
+  /// In ar, this message translates to:
+  /// **'تاريخ البداية لازم يكون قبل تاريخ النهاية.'**
+  String get expenseFilterRangeInvalid;
+
+  /// Member filter sheet title.
+  ///
+  /// In ar, this message translates to:
+  /// **'فلتر العضو'**
+  String get expenseFilterMemberTitle;
+
+  /// Member filter sheet subtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'بنعرض المصاريف اللي العضو ده دفع فيها أو شارك فيها.'**
+  String get expenseFilterMemberHint;
+
+  /// Member filter: no member selected.
+  ///
+  /// In ar, this message translates to:
+  /// **'كل الأعضاء'**
+  String get expenseFilterAllMembers;
+
+  /// Date header of the list: today. Date is yyyy-mm-dd.
+  ///
+  /// In ar, this message translates to:
+  /// **'النهارده — {date}'**
+  String expenseDayToday(String date);
+
+  /// Date header of the list: yesterday.
+  ///
+  /// In ar, this message translates to:
+  /// **'إمبارح — {date}'**
+  String expenseDayYesterday(String date);
+
+  /// Who paid, on an expense row.
+  ///
+  /// In ar, this message translates to:
+  /// **'دفع: {payers}'**
+  String expensePaidBy(String payers);
+
+  /// One payer with the amount they paid, when several people paid.
+  ///
+  /// In ar, this message translates to:
+  /// **'{name} ({amount})'**
+  String expensePayerAmount(String name, String amount);
+
+  /// Separator between names in a list.
+  ///
+  /// In ar, this message translates to:
+  /// **'، '**
+  String get expenseListSeparator;
+
+  /// Name shown when a member id is not in the group.
+  ///
+  /// In ar, this message translates to:
+  /// **'عضو'**
+  String get expenseUnknownMember;
+
+  /// Participant count when it is one.
+  ///
+  /// In ar, this message translates to:
+  /// **'على فرد واحد'**
+  String get expenseSplitAmongOne;
+
+  /// Participant count (2 or more). Count is a string with Western digits.
+  ///
+  /// In ar, this message translates to:
+  /// **'مقسومة على {count} أفراد'**
+  String expenseSplitAmong(String count);
+
+  /// Your share of an expense.
+  ///
+  /// In ar, this message translates to:
+  /// **'نصيبك: {amount}'**
+  String expenseYourShare(String amount);
+
+  /// Screen-reader label of an expense row.
+  ///
+  /// In ar, this message translates to:
+  /// **'{title}، {total}، {split}، {payers}، {participants}'**
+  String expenseCardSpoken(
+    String title,
+    String total,
+    String split,
+    String payers,
+    String participants,
+  );
+
+  /// Screen-reader label of an expense row that has your share.
+  ///
+  /// In ar, this message translates to:
+  /// **'{title}، {total}، {split}، {payers}، {participants}، {share}'**
+  String expenseCardSpokenWithShare(
+    String title,
+    String total,
+    String split,
+    String payers,
+    String participants,
+    String share,
+  );
+
+  /// Split type chip: equal.
+  ///
+  /// In ar, this message translates to:
+  /// **'بالتساوي'**
+  String get expenseSplitEqual;
+
+  /// Split type chip: exact amounts.
+  ///
+  /// In ar, this message translates to:
+  /// **'مبالغ محددة'**
+  String get expenseSplitExact;
+
+  /// Split type chip: itemized.
+  ///
+  /// In ar, this message translates to:
+  /// **'فاتورة مفصلة'**
+  String get expenseSplitItemized;
+
+  /// Title of the expense details screen.
+  ///
+  /// In ar, this message translates to:
+  /// **'تفاصيل المصروف'**
+  String get expenseDetailsTitle;
+
+  /// Label above the expense total.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجمالي المصروف'**
+  String get expenseDetailsTotal;
+
+  /// Badge on an expense that was edited. Version is a string.
+  ///
+  /// In ar, this message translates to:
+  /// **'معدّل (النسخة {version})'**
+  String expenseEditedBadge(String version);
+
+  /// Details: payers block title.
+  ///
+  /// In ar, this message translates to:
+  /// **'الدافعون'**
+  String get expensePayersTitle;
+
+  /// Details: payers count of one.
+  ///
+  /// In ar, this message translates to:
+  /// **'دافع واحد'**
+  String get expensePayersCountOne;
+
+  /// Details: payers count (2 or more).
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} دافعين'**
+  String expensePayersCount(String count);
+
+  /// Details: the payers added up.
+  ///
+  /// In ar, this message translates to:
+  /// **'مجموع المدفوع: {amount}'**
+  String expensePaidTotal(String amount);
+
+  /// Details: items block title.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأصناف والإضافات'**
+  String get expenseItemsTitle;
+
+  /// Details: items count of one.
+  ///
+  /// In ar, this message translates to:
+  /// **'صنف واحد'**
+  String get expenseItemsCountOne;
+
+  /// Details: items count (2 or more).
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} أصناف'**
+  String expenseItemsCount(String count);
+
+  /// Details: subtotal row.
+  ///
+  /// In ar, this message translates to:
+  /// **'مجموع الأصناف'**
+  String get expenseSubtotal;
+
+  /// Details: service row.
+  ///
+  /// In ar, this message translates to:
+  /// **'رسوم الخدمة'**
+  String get expenseServiceLabel;
+
+  /// Details: tax row.
+  ///
+  /// In ar, this message translates to:
+  /// **'الضريبة'**
+  String get expenseTaxLabel;
+
+  /// Details: tax base is the subtotal.
+  ///
+  /// In ar, this message translates to:
+  /// **'على مجموع الأصناف'**
+  String get expenseTaxBaseSubtotal;
+
+  /// Details: tax base is subtotal plus service.
+  ///
+  /// In ar, this message translates to:
+  /// **'على الأصناف + الخدمة'**
+  String get expenseTaxBaseSubtotalPlusService;
+
+  /// Details: adjustment row.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسوية'**
+  String get expenseAdjustmentLabel;
+
+  /// Details: total row of the charges block.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجمالي الفاتورة'**
+  String get expenseBillTotal;
+
+  /// A percentage rate, Western digits.
+  ///
+  /// In ar, this message translates to:
+  /// **'{rate}%'**
+  String expensePercent(String rate);
+
+  /// Details: per-person block title.
+  ///
+  /// In ar, this message translates to:
+  /// **'نصيب كل فرد'**
+  String get expenseBreakdownTitle;
+
+  /// Details: per-person count of one.
+  ///
+  /// In ar, this message translates to:
+  /// **'فرد واحد'**
+  String get expenseBreakdownCountOne;
+
+  /// Details: per-person count (2 or more).
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} أفراد'**
+  String expenseBreakdownCount(String count);
+
+  /// Share breakdown part: items.
+  ///
+  /// In ar, this message translates to:
+  /// **'أصناف {amount}'**
+  String expensePartItems(String amount);
+
+  /// Share breakdown part: service.
+  ///
+  /// In ar, this message translates to:
+  /// **'خدمة {amount}'**
+  String expensePartService(String amount);
+
+  /// Share breakdown part: tax.
+  ///
+  /// In ar, this message translates to:
+  /// **'ضريبة {amount}'**
+  String expensePartTax(String amount);
+
+  /// Share breakdown part: adjustment.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسوية {amount}'**
+  String expensePartAdjustment(String amount);
+
+  /// Details: edit button.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل المصروف'**
+  String get expenseEdit;
+
+  /// Details: edit button of an itemized bill.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل الفاتورة والأصناف'**
+  String get expenseEditItemized;
+
+  /// Details: delete button.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف المصروف'**
+  String get expenseDelete;
+
+  /// Details: history button and sheet title.
+  ///
+  /// In ar, this message translates to:
+  /// **'سجل التعديلات'**
+  String get expenseHistory;
+
+  /// Delete expense confirmation title.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحذف المصروف ده؟'**
+  String get expenseDeleteConfirmTitle;
+
+  /// Delete expense confirmation body.
+  ///
+  /// In ar, this message translates to:
+  /// **'هيتشال «{title}» من المصاريف والأرصدة.'**
+  String expenseDeleteConfirmBody(String title);
+
+  /// Snackbar after a delete.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتحذف المصروف.'**
+  String get expenseDeleted;
+
+  /// Snackbar when a delete finds the expense already gone.
+  ///
+  /// In ar, this message translates to:
+  /// **'المصروف ده كان اتحذف خلاص.'**
+  String get expenseAlreadyDeleted;
+
+  /// Details: the expense does not exist any more.
+  ///
+  /// In ar, this message translates to:
+  /// **'المصروف ده مبقاش موجود'**
+  String get expenseGoneTitle;
+
+  /// Button back to the expenses list.
+  ///
+  /// In ar, this message translates to:
+  /// **'رجوع للمصاريف'**
+  String get expenseBackToList;
+
+  /// History row: version number.
+  ///
+  /// In ar, this message translates to:
+  /// **'النسخة {version}'**
+  String expenseHistoryVersion(String version);
+
+  /// History row: change type create.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنشاء'**
+  String get expenseChangeCreate;
+
+  /// History row: change type update.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل'**
+  String get expenseChangeUpdate;
+
+  /// History row: change type delete.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف'**
+  String get expenseChangeDelete;
+
+  /// History row: total of that version.
+  ///
+  /// In ar, this message translates to:
+  /// **'الإجمالي: {amount}'**
+  String expenseHistoryTotal(String amount);
+
+  /// Dialog title when deleting hits a version conflict.
+  ///
+  /// In ar, this message translates to:
+  /// **'المصروف اتعدّل'**
+  String get expenseConflictTitle;
+
+  /// Dialog body when deleting an expense hits a version conflict.
+  ///
+  /// In ar, this message translates to:
+  /// **'حد عدّل المصروف ده من آخر مرة فتحته. حمّل آخر نسخة وراجعها قبل ما تحذفه.'**
+  String get expenseConflictBody;
+
+  /// Screen-reader action that refreshes the expenses list (the alternative to pull to refresh).
+  ///
+  /// In ar, this message translates to:
+  /// **'تحديث القائمة'**
+  String get expensesRefresh;
+
+  /// History sheet: the server has no revisions for this expense.
+  ///
+  /// In ar, this message translates to:
+  /// **'مفيش سجل تعديلات للمصروف ده.'**
+  String get expenseHistoryEmpty;
+
+  /// Screen-reader label of the people an item is assigned to.
+  ///
+  /// In ar, this message translates to:
+  /// **'على: {names}'**
+  String expenseAssignedTo(String names);
+
+  /// Spoken split type when the app does not know the type.
+  ///
+  /// In ar, this message translates to:
+  /// **'تقسيم'**
+  String get expenseSplitUnknown;
+
+  /// Participant count of exactly two (Arabic dual).
+  ///
+  /// In ar, this message translates to:
+  /// **'مقسومة على فردين'**
+  String get expenseSplitAmongTwo;
+
+  /// Participant count of 11 or more (Arabic singular accusative).
+  ///
+  /// In ar, this message translates to:
+  /// **'مقسومة على {count} فردًا'**
+  String expenseSplitAmongMany(String count);
+
+  /// Details: payers count of exactly two.
+  ///
+  /// In ar, this message translates to:
+  /// **'دافعين'**
+  String get expensePayersCountTwo;
+
+  /// Details: payers count of 11 or more.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} دافعًا'**
+  String expensePayersCountMany(String count);
+
+  /// Details: items count of exactly two.
+  ///
+  /// In ar, this message translates to:
+  /// **'صنفين'**
+  String get expenseItemsCountTwo;
+
+  /// Details: items count of 11 or more.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} صنفًا'**
+  String expenseItemsCountMany(String count);
+
+  /// Details: per-person count of exactly two.
+  ///
+  /// In ar, this message translates to:
+  /// **'فردين'**
+  String get expenseBreakdownCountTwo;
+
+  /// Details: per-person count of 11 or more.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} فردًا'**
+  String expenseBreakdownCountMany(String count);
+
+  /// Add/edit expense: title field label.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسم المصروف'**
+  String get expenseFormTitleLabel;
+
+  /// Add/edit expense: title field hint.
+  ///
+  /// In ar, this message translates to:
+  /// **'مثلاً: عشا، بنزين، تذاكر'**
+  String get expenseFormTitleHint;
+
+  /// Add/edit expense: the title is empty.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب اسم للمصروف.'**
+  String get expenseFormTitleRequired;
+
+  /// Add/edit expense: amount field label.
+  ///
+  /// In ar, this message translates to:
+  /// **'المبلغ الإجمالي'**
+  String get expenseFormAmountLabel;
+
+  /// Add/edit expense: amount field hint (Western digits).
+  ///
+  /// In ar, this message translates to:
+  /// **'مثلاً 250 أو 99.50'**
+  String get expenseFormAmountHint;
+
+  /// Add/edit expense: the amount cannot be read.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب مبلغ صحيح أكبر من صفر.'**
+  String get expenseFormAmountInvalid;
+
+  /// Add/edit expense: the fixed currency.
+  ///
+  /// In ar, this message translates to:
+  /// **'العملة: جنيه مصري (ج.م)'**
+  String get expenseFormCurrencyNote;
+
+  /// Add/edit expense: date button label.
+  ///
+  /// In ar, this message translates to:
+  /// **'التاريخ'**
+  String get expenseFormDateLabel;
+
+  /// Add/edit expense: paid-by section title.
+  ///
+  /// In ar, this message translates to:
+  /// **'مين اللي دفع؟'**
+  String get expenseFormPaidByTitle;
+
+  /// Add/edit expense: opens the payers sheet.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل الدافعين'**
+  String get expenseFormEditPayers;
+
+  /// Add/edit expense: the payers no longer add up to the total.
+  ///
+  /// In ar, this message translates to:
+  /// **'مجموع اللي دفعوه مش مطابق للإجمالي. عدّل الدافعين.'**
+  String get expenseFormPayersMismatch;
+
+  /// Add/edit expense: split section title.
+  ///
+  /// In ar, this message translates to:
+  /// **'طريقة التقسيم'**
+  String get expenseFormSplitTitle;
+
+  /// Split tab: equal among all members.
+  ///
+  /// In ar, this message translates to:
+  /// **'الكل'**
+  String get expenseFormSplitAll;
+
+  /// Split tab: equal among the selected members.
+  ///
+  /// In ar, this message translates to:
+  /// **'محددين'**
+  String get expenseFormSplitSelected;
+
+  /// Screen-reader label of a member row with their share.
+  ///
+  /// In ar, this message translates to:
+  /// **'{name}، نصيبه {amount}'**
+  String expenseFormMemberSpoken(String name, String amount);
+
+  /// Screen-reader label of an unchecked member row.
+  ///
+  /// In ar, this message translates to:
+  /// **'{name}، مش مشارك'**
+  String expenseFormMemberUnchecked(String name);
+
+  /// Shown instead of the amounts while the server calculates them.
+  ///
+  /// In ar, this message translates to:
+  /// **'بنحسب الأنصبة…'**
+  String get expenseFormShareLoading;
+
+  /// The preview failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'معرفناش نحسب الأنصبة.'**
+  String get expenseFormShareFailed;
+
+  /// Shown while the total is not valid yet.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب المبلغ الإجمالي عشان تظهر الأنصبة.'**
+  String get expenseFormShareNeedAmount;
+
+  /// Exact tab: hint under the list.
+  ///
+  /// In ar, this message translates to:
+  /// **'تقدر تعدّل حصة كل عضو بإيدك، أو توزّع بالتساوي من جديد.'**
+  String get expenseFormExactHint;
+
+  /// Screen-reader label of the amount box of a member in Exact mode.
+  ///
+  /// In ar, this message translates to:
+  /// **'نصيب {name}'**
+  String expenseFormExactAmountLabel(String name);
+
+  /// Exact tab: ask the server for the equal split again.
+  ///
+  /// In ar, this message translates to:
+  /// **'وزّع بالتساوي'**
+  String get expenseFormSpreadEqually;
+
+  /// Exact tab: what was typed against the total.
+  ///
+  /// In ar, this message translates to:
+  /// **'مجموع التقسيم: {sum} من {total}'**
+  String expenseFormExactSummary(String sum, String total);
+
+  /// Exact tab: part of the total not yet given to anyone.
+  ///
+  /// In ar, this message translates to:
+  /// **'لسه باقي {amount}'**
+  String expenseFormExactRemaining(String amount);
+
+  /// Exact tab: the typed amounts exceed the total.
+  ///
+  /// In ar, this message translates to:
+  /// **'زيادة {amount} عن الإجمالي'**
+  String expenseFormExactOver(String amount);
+
+  /// Exact tab: the typed amounts equal the total.
+  ///
+  /// In ar, this message translates to:
+  /// **'مطابق للإجمالي'**
+  String get expenseFormExactMatches;
+
+  /// Add/edit expense: save button (add).
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ المصروف'**
+  String get expenseFormSave;
+
+  /// Add/edit expense: save button (edit).
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ التعديلات'**
+  String get expenseFormSaveChanges;
+
+  /// Discard dialog title.
+  ///
+  /// In ar, this message translates to:
+  /// **'تخرج من غير ما تحفظ؟'**
+  String get expenseFormLeaveTitle;
+
+  /// Discard dialog body.
+  ///
+  /// In ar, this message translates to:
+  /// **'اللي كتبته هيضيع.'**
+  String get expenseFormLeaveBody;
+
+  /// Discard dialog: leave.
+  ///
+  /// In ar, this message translates to:
+  /// **'اخرج'**
+  String get expenseFormLeaveConfirm;
+
+  /// Discard dialog: stay.
+  ///
+  /// In ar, this message translates to:
+  /// **'كمّل كتابة'**
+  String get expenseFormLeaveKeep;
+
+  /// Edit conflict dialog title.
+  ///
+  /// In ar, this message translates to:
+  /// **'المصروف اتعدّل'**
+  String get expenseFormConflictTitle;
+
+  /// Edit conflict dialog body.
+  ///
+  /// In ar, this message translates to:
+  /// **'حد عدّل المصروف ده من آخر مرة فتحته. حمّل آخر نسخة، اللي كتبته هيفضل زي ما هو، وبعدين احفظ تاني.'**
+  String get expenseFormConflictBody;
+
+  /// Banner after the latest version was loaded following a conflict.
+  ///
+  /// In ar, this message translates to:
+  /// **'حد عدّل المصروف ده. تعديلاتك لسه موجودة، والحفظ هيبدّل نسخته.'**
+  String get expenseFormConflictNote;
+
+  /// Button after a failed save (same request, no duplicate).
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ تاني'**
+  String get expenseFormSaveRetry;
+
+  /// Message after a save whose reply was lost.
+  ///
+  /// In ar, this message translates to:
+  /// **'مش متأكدين إن المصروف اتحفظ. لو حفظت تاني مش هيتكرر.'**
+  String get expenseFormOutcomeUnknown;
+
+  /// Payers sheet title.
+  ///
+  /// In ar, this message translates to:
+  /// **'مين دفع الفاتورة؟'**
+  String get expensePayersSheetTitle;
+
+  /// Payers sheet subtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدد الأعضاء اللي دفعوا والمبلغ اللي دفعه كل واحد.'**
+  String get expensePayersSheetSubtitle;
+
+  /// Payers sheet: the total.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجمالي الفاتورة المستحق'**
+  String get expensePayersTotalLabel;
+
+  /// Payers sheet: the total is not valid yet.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب المبلغ الإجمالي الأول.'**
+  String get expensePayersNeedTotal;
+
+  /// Payers sheet: part of the total nobody has paid yet.
+  ///
+  /// In ar, this message translates to:
+  /// **'المتبقي للتوزيع: {amount}'**
+  String expensePayersRemaining(String amount);
+
+  /// Payers sheet: the amounts exceed the total.
+  ///
+  /// In ar, this message translates to:
+  /// **'زيادة {amount} عن الفاتورة'**
+  String expensePayersOver(String amount);
+
+  /// Payers sheet: typed amounts equal the total and the server agrees.
+  ///
+  /// In ar, this message translates to:
+  /// **'المجموع مظبوط ومطابق للفاتورة'**
+  String get expensePayersMatched;
+
+  /// Payers sheet: waiting for the server to confirm the match.
+  ///
+  /// In ar, this message translates to:
+  /// **'بنراجع المجموع مع الخادم…'**
+  String get expensePayersChecking;
+
+  /// Payers sheet: the server disagrees with the typed sum.
+  ///
+  /// In ar, this message translates to:
+  /// **'الخادم شايف إن المجموع مش مطابق. راجع المبالغ.'**
+  String get expensePayersServerMismatch;
+
+  /// Payers sheet: ask the server for the equal split among the selected payers.
+  ///
+  /// In ar, this message translates to:
+  /// **'قسّم بالتساوي على الدافعين'**
+  String get expensePayersSplitEqually;
+
+  /// Payers sheet: empty every amount.
+  ///
+  /// In ar, this message translates to:
+  /// **'امسح المبالغ'**
+  String get expensePayersClear;
+
+  /// Payers sheet: the typed amounts added up.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجمالي المبالغ المدخلة'**
+  String get expensePayersEntered;
+
+  /// Payers sheet: confirm button.
+  ///
+  /// In ar, this message translates to:
+  /// **'تأكيد الدافعين ({amount})'**
+  String expensePayersConfirm(String amount);
+
+  /// Screen-reader label of a payer’s amount box.
+  ///
+  /// In ar, this message translates to:
+  /// **'اللي دفعه {name}'**
+  String expensePayersAmountLabel(String name);
+
+  /// Screen-reader label of a payer row with an amount.
+  ///
+  /// In ar, this message translates to:
+  /// **'{name}، دفع {amount}'**
+  String expensePayersRowSpoken(String name, String amount);
+
+  /// Screen-reader label of an unchecked payer row.
+  ///
+  /// In ar, this message translates to:
+  /// **'{name}، لم يدفع'**
+  String expensePayersRowUnchecked(String name);
+
+  /// Payers sheet: the equal split could not be calculated.
+  ///
+  /// In ar, this message translates to:
+  /// **'معرفناش نحسب التقسيم بالتساوي. جرّب تاني.'**
+  String get expensePayersFailed;
+
+  /// Snackbar after the expense was saved.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتحفظ المصروف.'**
+  String get expenseFormSaved;
 }
 
 class _AppLocalizationsDelegate

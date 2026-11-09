@@ -21,6 +21,8 @@ class AppChoiceChip extends StatelessWidget {
       selected: selected,
       enabled: onSelected != null,
       label: label,
+      // Without an explicit tap action a screen reader has nothing to activate (the child is excluded).
+      onTap: onSelected == null ? null : () => onSelected!(!selected),
       child: ExcludeSemantics(
         child: InkWell(
           borderRadius: BorderRadius.circular(QesmaRadii.pill),
@@ -93,6 +95,7 @@ class AppSegmentedTabs extends StatelessWidget {
                   selected: i == selectedIndex,
                   inMutuallyExclusiveGroup: true,
                   label: items[i].label,
+                  onTap: () => onChanged(i),
                   child: ExcludeSemantics(
                     child: InkWell(
                       borderRadius: BorderRadius.circular(QesmaRadii.control),

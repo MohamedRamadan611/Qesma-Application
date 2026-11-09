@@ -1,0 +1,81 @@
+{
+  "id": "2260c74f-c578-4fb5-99bb-dac7ffe8e964",
+  "groupId": "2bf36db7-e9e8-4b12-a206-878f0b5c934c",
+  "title": "Tax only",
+  "splitType": "ITEMIZED",
+  "totalMinor": 50160,
+  "expenseDate": "2026-10-18",
+  "payers": [
+    {
+      "memberId": "77e31a5d-f072-4568-9115-0259fb131e9a",
+      "amountMinor": 50160
+    }
+  ],
+  "shares": [
+    {
+      "memberId": "77e31a5d-f072-4568-9115-0259fb131e9a",
+      "owedMinor": 14820,
+      "itemsMinor": 13000,
+      "serviceMinor": 0,
+      "taxMinor": 1820,
+      "adjustmentMinor": 0
+    },
+    {
+      "memberId": "98138ea2-62ee-4b5d-92d0-0ecccb012cfa",
+      "owedMinor": 14820,
+      "itemsMinor": 13000,
+      "serviceMinor": 0,
+      "taxMinor": 1820,
+      "adjustmentMinor": 0
+    },
+    {
+      "memberId": "014bf05a-7ba1-432e-9c17-35881f72d003",
+      "owedMinor": 20520,
+      "itemsMinor": 18000,
+      "serviceMinor": 0,
+      "taxMinor": 2520,
+      "adjustmentMinor": 0
+    }
+  ],
+  "createdAt": "2026-11-08T23:38:54.555714Z",
+  "version": 1,
+  "items": [
+    {
+      "id": "2eb4dc14-f945-4d78-ab1f-25bcf1f6d515",
+      "name": "Pizza",
+      "amountMinor": 20000,
+      "assigneeMemberIds": [
+        "77e31a5d-f072-4568-9115-0259fb131e9a",
+        "98138ea2-62ee-4b5d-92d0-0ecccb012cfa"
+      ]
+    },
+    {
+      "id": "e0998c2d-e5f7-4cee-9274-06cac430915d",
+      "name": "Pasta",
+      "amountMinor": 15000,
+      "assigneeMemberIds": [
+        "014bf05a-7ba1-432e-9c17-35881f72d003"
+      ]
+    },
+    {
+      "id": "31309b48-cdee-46fe-9331-95eeacc35014",
+      "name": "Drinks",
+      "amountMinor": 9000,
+      "assigneeMemberIds": [
+        "77e31a5d-f072-4568-9115-0259fb131e9a",
+        "98138ea2-62ee-4b5d-92d0-0ecccb012cfa",
+        "014bf05a-7ba1-432e-9c17-35881f72d003"
+      ]
+    }
+  ],
+  "charges": {
+    "subtotalMinor": 44000,
+    "service": null,
+    "tax": {
+      "bps": 1400,
+      "base": "SUBTOTAL",
+      "amountMinor": 6160
+    },
+    "adjustmentMinor": 0
+  }
+}

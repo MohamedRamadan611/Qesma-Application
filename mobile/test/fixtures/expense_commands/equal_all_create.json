@@ -1,0 +1,7 @@
+{
+  "title": "Petrol",
+  "expenseDate": "2026-10-18",
+  "splitType": "EQUAL",
+  "totalMinor": 52000,
+  "payers": [ { "memberId": "77e31a5d-f072-4568-9115-0259fb131e9a", "amountMinor": 52000 } ]
+}

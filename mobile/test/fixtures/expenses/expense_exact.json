@@ -1,0 +1,48 @@
+{
+  "id": "9cf70c24-3d33-41ee-aa07-38a5f1a47cc0",
+  "groupId": "2bf36db7-e9e8-4b12-a206-878f0b5c934c",
+  "title": "Tickets",
+  "splitType": "EXACT",
+  "totalMinor": 30000,
+  "expenseDate": "2026-10-17",
+  "payers": [
+    {
+      "memberId": "77e31a5d-f072-4568-9115-0259fb131e9a",
+      "amountMinor": 10000
+    },
+    {
+      "memberId": "98138ea2-62ee-4b5d-92d0-0ecccb012cfa",
+      "amountMinor": 20000
+    }
+  ],
+  "shares": [
+    {
+      "memberId": "77e31a5d-f072-4568-9115-0259fb131e9a",
+      "owedMinor": 10000,
+      "itemsMinor": null,
+      "serviceMinor": null,
+      "taxMinor": null,
+      "adjustmentMinor": null
+    },
+    {
+      "memberId": "98138ea2-62ee-4b5d-92d0-0ecccb012cfa",
+      "owedMinor": 15000,
+      "itemsMinor": null,
+      "serviceMinor": null,
+      "taxMinor": null,
+      "adjustmentMinor": null
+    },
+    {
+      "memberId": "014bf05a-7ba1-432e-9c17-35881f72d003",
+      "owedMinor": 5000,
+      "itemsMinor": null,
+      "serviceMinor": null,
+      "taxMinor": null,
+      "adjustmentMinor": null
+    }
+  ],
+  "createdAt": "2026-11-08T23:38:53.856345Z",
+  "version": 1,
+  "items": null,
+  "charges": null
+}

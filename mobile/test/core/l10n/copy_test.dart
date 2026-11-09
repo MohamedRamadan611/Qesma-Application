@@ -59,7 +59,7 @@ void main() {
     });
 
     test('key names follow the area-prefix scheme', () {
-      const prefixes = ['app', 'bootstrap', 'common', 'field', 'balance', 'money', 'state', 'error', 'brand', 'welcome', 'legal', 'signIn', 'dev', 'sessionExpired', 'home', 'group', 'member'];
+      const prefixes = ['app', 'bootstrap', 'common', 'field', 'balance', 'money', 'state', 'error', 'brand', 'welcome', 'legal', 'signIn', 'dev', 'sessionExpired', 'home', 'group', 'member', 'expense'];
       for (final key in _keys(ar).where((k) => k != '@@locale')) {
         expect(prefixes.any(key.startsWith), isTrue, reason: '$key has no known area prefix');
       }

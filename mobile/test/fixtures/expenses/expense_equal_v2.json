@@ -1,0 +1,44 @@
+{
+  "id": "91d890aa-7d46-458e-ad4e-e99710109445",
+  "groupId": "2bf36db7-e9e8-4b12-a206-878f0b5c934c",
+  "title": "Petrol (edited)",
+  "splitType": "EQUAL",
+  "totalMinor": 52000,
+  "expenseDate": "2026-10-18",
+  "payers": [
+    {
+      "memberId": "77e31a5d-f072-4568-9115-0259fb131e9a",
+      "amountMinor": 52000
+    }
+  ],
+  "shares": [
+    {
+      "memberId": "77e31a5d-f072-4568-9115-0259fb131e9a",
+      "owedMinor": 17334,
+      "itemsMinor": null,
+      "serviceMinor": null,
+      "taxMinor": null,
+      "adjustmentMinor": null
+    },
+    {
+      "memberId": "98138ea2-62ee-4b5d-92d0-0ecccb012cfa",
+      "owedMinor": 17333,
+      "itemsMinor": null,
+      "serviceMinor": null,
+      "taxMinor": null,
+      "adjustmentMinor": null
+    },
+    {
+      "memberId": "014bf05a-7ba1-432e-9c17-35881f72d003",
+      "owedMinor": 17333,
+      "itemsMinor": null,
+      "serviceMinor": null,
+      "taxMinor": null,
+      "adjustmentMinor": null
+    }
+  ],
+  "createdAt": "2026-11-08T23:38:53.273194Z",
+  "version": 2,
+  "items": null,
+  "charges": null
+}

@@ -50,6 +50,7 @@ class AppCard extends StatelessWidget {
       container: true,
       button: onTap != null,
       label: semanticLabel,
+      onTap: onTap,
       child: ExcludeSemantics(child: card),
     );
   }

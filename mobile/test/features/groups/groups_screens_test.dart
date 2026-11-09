@@ -219,7 +219,7 @@ void main() {
   });
 
   group('group home, edit and delete', () {
-    testWidgets('shell: header, tabs in RTL order, stub tabs are marked, members tab works', (tester) async {
+    testWidgets('shell: header, tabs in RTL order, the Balances stub is marked, members tab works', (tester) async {
       server.seed(name: 'Dahab', type: 'TRIP', total: 106179);
       await pumpGroupsApp(tester, server);
       await tapText(tester, 'Dahab');
@@ -230,6 +230,8 @@ void main() {
       final members = tester.getCenter(find.text('الأعضاء'));
       expect(expenses.dx, greaterThan(balances.dx), reason: 'Arabic: the first tab sits on the right');
       expect(balances.dx, greaterThan(members.dx));
+      expect(find.text('الشاشة دي لسه تحت الإنشاء.'), findsNothing, reason: 'the Expenses tab is the real list since FL4');
+      await tapText(tester, 'الأرصدة');
       expect(find.text('الشاشة دي لسه تحت الإنشاء.'), findsOneWidget);
 
       await tapText(tester, 'الأعضاء');

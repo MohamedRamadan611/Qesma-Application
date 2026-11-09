@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:qesma/core/api/api_providers.dart';
 import 'package:qesma/core/api/etag_store.dart';
 import 'package:qesma/core/auth/auth_log.dart';
 import 'package:qesma/core/auth/auth_providers.dart';

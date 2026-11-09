@@ -1,0 +1,8 @@
+{
+  "title": "Petrol",
+  "expenseDate": "2026-10-18",
+  "splitType": "EQUAL",
+  "totalMinor": 52000,
+  "participantMemberIds": [ "77e31a5d-f072-4568-9115-0259fb131e9a", "98138ea2-62ee-4b5d-92d0-0ecccb012cfa", "014bf05a-7ba1-432e-9c17-35881f72d003" ],
+  "payers": [ { "memberId": "77e31a5d-f072-4568-9115-0259fb131e9a", "amountMinor": 52000 } ]
+}

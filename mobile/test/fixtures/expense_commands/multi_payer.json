@@ -1,0 +1,7 @@
+{
+  "title": "Dinner",
+  "expenseDate": "2026-10-18",
+  "splitType": "EQUAL",
+  "totalMinor": 50000,
+  "payers": [ { "memberId": "77e31a5d-f072-4568-9115-0259fb131e9a", "amountMinor": 30000 }, { "memberId": "98138ea2-62ee-4b5d-92d0-0ecccb012cfa", "amountMinor": 20000 } ]
+}

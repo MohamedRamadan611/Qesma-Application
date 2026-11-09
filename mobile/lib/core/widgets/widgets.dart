@@ -1,6 +1,7 @@
 /// Shared widgets (FL1). Import this file instead of the individual ones.
 library;
 
+export 'amount_box.dart';
 export 'app_button.dart';
 export 'app_card.dart';
 export 'app_chips.dart';

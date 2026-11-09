@@ -1,0 +1,88 @@
+{
+  "id": "7e3b3a23-d844-4889-99ae-5cba254d1173",
+  "groupId": "2bf36db7-e9e8-4b12-a206-878f0b5c934c",
+  "title": "Sea Food",
+  "splitType": "ITEMIZED",
+  "totalMinor": 56179,
+  "expenseDate": "2026-10-18",
+  "payers": [
+    {
+      "memberId": "77e31a5d-f072-4568-9115-0259fb131e9a",
+      "amountMinor": 30000
+    },
+    {
+      "memberId": "98138ea2-62ee-4b5d-92d0-0ecccb012cfa",
+      "amountMinor": 26179
+    }
+  ],
+  "shares": [
+    {
+      "memberId": "77e31a5d-f072-4568-9115-0259fb131e9a",
+      "owedMinor": 16599,
+      "itemsMinor": 13000,
+      "serviceMinor": 1560,
+      "taxMinor": 2039,
+      "adjustmentMinor": 0
+    },
+    {
+      "memberId": "98138ea2-62ee-4b5d-92d0-0ecccb012cfa",
+      "owedMinor": 16598,
+      "itemsMinor": 13000,
+      "serviceMinor": 1560,
+      "taxMinor": 2038,
+      "adjustmentMinor": 0
+    },
+    {
+      "memberId": "014bf05a-7ba1-432e-9c17-35881f72d003",
+      "owedMinor": 22982,
+      "itemsMinor": 18000,
+      "serviceMinor": 2160,
+      "taxMinor": 2822,
+      "adjustmentMinor": 0
+    }
+  ],
+  "createdAt": "2026-11-08T23:38:54.112235Z",
+  "version": 1,
+  "items": [
+    {
+      "id": "482e3969-db9a-490c-8382-1a9c05f8e331",
+      "name": "Pizza",
+      "amountMinor": 20000,
+      "assigneeMemberIds": [
+        "77e31a5d-f072-4568-9115-0259fb131e9a",
+        "98138ea2-62ee-4b5d-92d0-0ecccb012cfa"
+      ]
+    },
+    {
+      "id": "6d020ea2-810a-47c3-a64b-51c3f7b5031c",
+      "name": "Pasta",
+      "amountMinor": 15000,
+      "assigneeMemberIds": [
+        "014bf05a-7ba1-432e-9c17-35881f72d003"
+      ]
+    },
+    {
+      "id": "904cb3b4-139d-4054-bd91-1ae2f51549d7",
+      "name": "Drinks",
+      "amountMinor": 9000,
+      "assigneeMemberIds": [
+        "77e31a5d-f072-4568-9115-0259fb131e9a",
+        "98138ea2-62ee-4b5d-92d0-0ecccb012cfa",
+        "014bf05a-7ba1-432e-9c17-35881f72d003"
+      ]
+    }
+  ],
+  "charges": {
+    "subtotalMinor": 44000,
+    "service": {
+      "bps": 1200,
+      "amountMinor": 5280
+    },
+    "tax": {
+      "bps": 1400,
+      "base": "SUBTOTAL_PLUS_SERVICE",
+      "amountMinor": 6899
+    },
+    "adjustmentMinor": 0
+  }
+}

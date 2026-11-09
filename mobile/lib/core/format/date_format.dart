@@ -5,3 +5,10 @@ String isoDate(DateTime date) {
   String two(int n) => n.toString().padLeft(2, '0');
   return '${d.year.toString().padLeft(4, '0')}-${two(d.month)}-${two(d.day)}';
 }
+
+/// `2026-10-18 14:05` in the device's local time zone (history rows): Western digits.
+String isoDateTime(DateTime moment) {
+  final d = moment.toLocal();
+  String two(int n) => n.toString().padLeft(2, '0');
+  return '${isoDate(d)} ${two(d.hour)}:${two(d.minute)}';
+}

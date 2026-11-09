@@ -7,6 +7,8 @@ import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
+import '../../expenses/application/expenses_list_controller.dart';
+import '../../expenses/presentation/expenses_tab.dart';
 import '../application/group_detail_controller.dart';
 import '../data/group_type.dart';
 import 'group_ui.dart';
@@ -34,6 +36,9 @@ class _GroupHomeScreenState extends ConsumerState<GroupHomeScreen> {
     final l10n = AppLocalizations.of(context);
     final detail = ref.watch(groupDetailControllerProvider(widget.gid));
     final group = detail.group;
+    // Holds the expenses list for as long as this screen lives, so its filters and loaded pages
+    // survive switching tabs and opening an expense (the list is auto-dispose).
+    ref.listen(expensesListControllerProvider(widget.gid), (_, _) {});
 
     if (group == null) {
       final Widget body = detail.failure == null
@@ -61,6 +66,7 @@ class _GroupHomeScreenState extends ConsumerState<GroupHomeScreen> {
     ];
 
     final Widget tabBody = switch (_tab) {
+      0 => ExpensesTab(group: group),
       2 => MembersTab(group: group),
       _ => const _NotBuilt(),
     };
@@ -78,6 +84,13 @@ class _GroupHomeScreenState extends ConsumerState<GroupHomeScreen> {
           onPressed: () => context.push(Routes.editGroup(group.id)),
         ),
       ],
+      floatingActionButton: _tab == 0
+          ? FloatingActionButton.extended(
+              onPressed: () => context.push(Routes.addExpense(group.id)),
+              icon: const Icon(Icons.add),
+              label: Text(l10n.expensesAdd),
+            )
+          : null,
       body: Column(
         children: [
           Padding(
