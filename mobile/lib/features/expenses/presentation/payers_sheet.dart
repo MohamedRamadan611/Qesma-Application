@@ -11,6 +11,7 @@ import '../application/expense_command_builder.dart';
 import '../application/expense_form_controller.dart';
 import '../application/expense_form_state.dart';
 import '../application/expense_preview_controller.dart';
+import 'status_banner.dart';
 
 /// Opens the paid-by editor (P6-01). The user picks who paid and types what each paid; the
 /// sheet keeps a draft and only writes it into the form on "confirm".
@@ -137,17 +138,17 @@ class _PayersSheetState extends ConsumerState<PayersSheet> {
 
     Widget banner;
     if (total == null) {
-      banner = _Banner(icon: Icons.info_outline, text: l10n.expensePayersNeedTotal, tone: _BannerTone.warning);
+      banner = StatusBanner(icon: Icons.info_outline, text: f.splitMode == SplitMode.itemized ? l10n.expensePayersNeedItems : l10n.expensePayersNeedTotal, tone: BannerTone.warning);
     } else if (serverSaysMismatch) {
-      banner = _Banner(icon: Icons.error_outline, text: l10n.expensePayersServerMismatch, tone: _BannerTone.error);
+      banner = StatusBanner(icon: Icons.error_outline, text: l10n.expensePayersServerMismatch, tone: BannerTone.error);
     } else if (remaining == 0 && _texts.isNotEmpty) {
       banner = serverConfirms
-          ? _Banner(icon: Icons.check_circle_outline, text: l10n.expensePayersMatched, tone: _BannerTone.success)
-          : _Banner(icon: Icons.hourglass_empty, text: l10n.expensePayersChecking, tone: _BannerTone.neutral);
+          ? StatusBanner(icon: Icons.check_circle_outline, text: l10n.expensePayersMatched, tone: BannerTone.success)
+          : StatusBanner(icon: Icons.hourglass_empty, text: l10n.expensePayersChecking, tone: BannerTone.neutral);
     } else if (remaining != null && remaining < 0) {
-      banner = _Banner(icon: Icons.warning_amber_rounded, text: l10n.expensePayersOver(moneyDisplay(l10n, -remaining)), tone: _BannerTone.warning);
+      banner = StatusBanner(icon: Icons.warning_amber_rounded, text: l10n.expensePayersOver(moneyDisplay(l10n, -remaining)), tone: BannerTone.warning);
     } else {
-      banner = _Banner(icon: Icons.warning_amber_rounded, text: l10n.expensePayersRemaining(moneyDisplay(l10n, remaining ?? 0)), tone: _BannerTone.warning);
+      banner = StatusBanner(icon: Icons.warning_amber_rounded, text: l10n.expensePayersRemaining(moneyDisplay(l10n, remaining ?? 0)), tone: BannerTone.warning);
     }
 
     return AppBottomSheet(
@@ -227,43 +228,6 @@ class _PayersSheetState extends ConsumerState<PayersSheet> {
             ],
           ),
         ],
-      ),
-    );
-  }
-}
-
-enum _BannerTone { neutral, success, warning, error }
-
-class _Banner extends StatelessWidget {
-  const _Banner({required this.icon, required this.text, required this.tone});
-
-  final IconData icon;
-  final String text;
-  final _BannerTone tone;
-
-  @override
-  Widget build(BuildContext context) {
-    final (fg, bg) = switch (tone) {
-      _BannerTone.success => (QesmaColors.success, QesmaColors.successContainer),
-      _BannerTone.warning => (QesmaColors.warning, QesmaColors.warningContainer),
-      _BannerTone.error => (QesmaColors.error, QesmaColors.errorContainer),
-      _BannerTone.neutral => (QesmaColors.textSecondary, QesmaColors.tint),
-    };
-    // Icon and words carry the meaning; colour only reinforces it. Announced when it changes.
-    return Semantics(
-      liveRegion: true,
-      child: DecoratedBox(
-        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(QesmaRadii.control)),
-        child: Padding(
-          padding: const EdgeInsets.all(QesmaSpacing.sm + 4),
-          child: Row(
-            children: [
-              ExcludeSemantics(child: Icon(icon, color: fg, size: 20)),
-              const SizedBox(width: QesmaSpacing.sm),
-              Expanded(child: Text(text, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: fg))),
-            ],
-          ),
-        ),
       ),
     );
   }

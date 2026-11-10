@@ -446,9 +446,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupTabMembers => 'Members';
 
   @override
-  String get groupNotBuiltYet => 'This screen is not built yet.';
-
-  @override
   String groupHeaderSubtitle(String members, String total) {
     return '$members • $total';
   }
@@ -1048,4 +1045,296 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get expenseFormSaved => 'Expense saved.';
+
+  @override
+  String get expenseItemizedTotalNote =>
+      'Worked out from the items, service and tax.';
+
+  @override
+  String get expenseItemizedItemsTitle => 'Bill items';
+
+  @override
+  String expenseItemizedItemHeading(String n) {
+    return 'Item $n';
+  }
+
+  @override
+  String get expenseItemizedNameLabel => 'Item name';
+
+  @override
+  String get expenseItemizedNameHint => 'For example: pizza';
+
+  @override
+  String get expenseItemizedNameRequired => 'Enter the item name.';
+
+  @override
+  String get expenseItemizedAmountLabel => 'Item price';
+
+  @override
+  String get expenseItemizedAmountInvalid => 'Enter a valid price above zero.';
+
+  @override
+  String get expenseItemizedAssigneesLabel => 'Who shared this item?';
+
+  @override
+  String get expenseItemizedNoAssignee => 'Choose at least one person.';
+
+  @override
+  String get expenseItemizedAdd => 'Add an item';
+
+  @override
+  String get expenseItemizedLimit => 'You reached the limit: 100 items.';
+
+  @override
+  String get expenseItemizedRemove => 'Remove item';
+
+  @override
+  String expenseItemizedRemoveSpoken(String n) {
+    return 'Remove item $n';
+  }
+
+  @override
+  String get expenseItemizedChargesTitle => 'Service and tax';
+
+  @override
+  String get expenseItemizedPercentLabel => 'Rate (%)';
+
+  @override
+  String get expenseItemizedPercentHint => 'For example 12';
+
+  @override
+  String get expenseItemizedPercentInvalid =>
+      'Enter a rate from 0 to 100 with at most two decimals.';
+
+  @override
+  String get expenseItemizedTaxBaseTitle => 'Tax is applied to';
+
+  @override
+  String get expenseItemizedTaxBaseSubtotal => 'Items only';
+
+  @override
+  String get expenseItemizedTaxBaseWithService => 'Items + service';
+
+  @override
+  String get expenseItemizedAdjustmentTitle => 'Rounding / tip';
+
+  @override
+  String get expenseItemizedAdjustmentHint =>
+      'To settle fractions or a tip. It can be negative.';
+
+  @override
+  String get expenseItemizedAdjustmentInvalid =>
+      'Enter a valid amount (it can be negative).';
+
+  @override
+  String get expenseItemizedAdjustmentPlus => 'Add one piaster';
+
+  @override
+  String get expenseItemizedAdjustmentMinus => 'Subtract one piaster';
+
+  @override
+  String get expenseItemizedLoading => 'Working out the bill…';
+
+  @override
+  String get expenseItemizedFailed => 'Could not work out the bill.';
+
+  @override
+  String get expenseItemizedIncomplete =>
+      'Complete the items and rates to see the numbers.';
+
+  @override
+  String get expenseItemizedPayersMatch => 'The payers match the bill';
+
+  @override
+  String get expenseItemizedPayersMismatch =>
+      'The payers do not match the bill. Edit the payers.';
+
+  @override
+  String get expenseItemizedPayersChecking => 'Checking the payers…';
+
+  @override
+  String get expenseItemizedBarTotal => 'Calculated bill total';
+
+  @override
+  String get expensePayersNeedItems => 'Complete the bill items first.';
+
+  @override
+  String get balancesTotalSpent => 'Group total spent';
+
+  @override
+  String get balancesNeedOne => '1 transfer needed to settle up';
+
+  @override
+  String get balancesNeedTwo => '2 transfers needed to settle up';
+
+  @override
+  String balancesNeed(String count) {
+    return '$count transfers needed to settle up';
+  }
+
+  @override
+  String balancesNeedMany(String count) {
+    return '$count transfers needed to settle up';
+  }
+
+  @override
+  String get balancesAllSettledTitle => 'Everyone is settled up';
+
+  @override
+  String get balancesAllSettledBody => 'Nobody owes anyone anything right now.';
+
+  @override
+  String get balancesSuggestedTitle => 'Suggested transfers';
+
+  @override
+  String get balancesPays => 'Pays';
+
+  @override
+  String get balancesReceives => 'Receives';
+
+  @override
+  String balancesTransferSpoken(String from, String to, String amount) {
+    return '$from pays $to $amount';
+  }
+
+  @override
+  String get balancesRecordPayment => 'Record payment';
+
+  @override
+  String balancesRecordPaymentSpoken(String from, String to, String amount) {
+    return 'Record payment from $from to $to, $amount';
+  }
+
+  @override
+  String get balancesRecordAnother => 'Record another payment';
+
+  @override
+  String get balancesNetsTitle => 'Net balance per member';
+
+  @override
+  String balancesMemberSpoken(String name, String status) {
+    return '$name, $status';
+  }
+
+  @override
+  String get balancesHistoryTitle => 'Payment history';
+
+  @override
+  String get balancesHistoryEmpty => 'No payments recorded yet.';
+
+  @override
+  String balancesPaymentTitle(String from, String to) {
+    return '$from paid $to';
+  }
+
+  @override
+  String balancesPaymentSpoken(
+    String from,
+    String to,
+    String amount,
+    String date,
+  ) {
+    return '$from paid $to $amount, $date';
+  }
+
+  @override
+  String balancesPaymentNoteSpoken(String base, String note) {
+    return '$base, $note';
+  }
+
+  @override
+  String get balancesDeletePayment => 'Delete payment';
+
+  @override
+  String balancesDeletePaymentSpoken(String from, String to, String amount) {
+    return 'Delete the payment from $from to $to, $amount';
+  }
+
+  @override
+  String get balancesDeleteTitle => 'Delete this payment?';
+
+  @override
+  String get balancesDeleteBody =>
+      'Balances will be recalculated without this payment. It cannot be restored.';
+
+  @override
+  String get balancesDeleted => 'Payment deleted.';
+
+  @override
+  String get balancesDeleteGone => 'This payment was already removed.';
+
+  @override
+  String get balancesLoadMore => 'Load more';
+
+  @override
+  String get balancesLoadMoreFailed => 'We could not load more payments.';
+
+  @override
+  String get balancesRefresh => 'Refresh balances';
+
+  @override
+  String get balancesRefreshFailed =>
+      'We could not refresh the balances. This is the last copy we have.';
+
+  @override
+  String get paymentSubtitle => 'Settle up between group members';
+
+  @override
+  String get paymentFrom => 'From (payer)';
+
+  @override
+  String get paymentTo => 'To (receiver)';
+
+  @override
+  String get paymentPickMember => 'Choose a member';
+
+  @override
+  String get paymentAmountLabel => 'Amount paid (EGP)';
+
+  @override
+  String get paymentAmountError =>
+      'Enter a valid amount above zero, with up to 2 decimals.';
+
+  @override
+  String paymentFullAmount(String amount) {
+    return 'Full amount: $amount';
+  }
+
+  @override
+  String get paymentDateLabel => 'Payment date';
+
+  @override
+  String get paymentDateError => 'Choose a date between 2000 and 2100.';
+
+  @override
+  String get paymentNoteLabel => 'Note (optional)';
+
+  @override
+  String get paymentNoteHint => 'e.g. cash on the trip';
+
+  @override
+  String get paymentNoteError => 'The note is longer than 200 characters.';
+
+  @override
+  String get paymentSameMember => 'Choose two different members.';
+
+  @override
+  String paymentConfirm(String amount) {
+    return 'Confirm payment ($amount)';
+  }
+
+  @override
+  String get paymentConfirmNoAmount => 'Confirm payment';
+
+  @override
+  String get paymentRecorded => 'Payment recorded.';
+
+  @override
+  String get paymentDiscardTitle => 'Discard this payment?';
+
+  @override
+  String get paymentDiscardBody => 'What you entered will not be saved.';
+
+  @override
+  String get paymentDiscardConfirm => 'Discard';
 }

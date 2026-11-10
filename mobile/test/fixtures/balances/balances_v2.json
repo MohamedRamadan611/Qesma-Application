@@ -1,0 +1,23 @@
+{
+  "nets": [
+    {
+      "memberId": "650a2534-75c8-426e-a607-0924ab985bdc",
+      "netMinor": 2000
+    },
+    {
+      "memberId": "025f85ad-3a0a-4aea-bcba-2a9a120fe678",
+      "netMinor": 0
+    },
+    {
+      "memberId": "f1184040-b439-4f1a-bb7b-46ee1d5cb610",
+      "netMinor": -2000
+    }
+  ],
+  "transfers": [
+    {
+      "fromMemberId": "f1184040-b439-4f1a-bb7b-46ee1d5cb610",
+      "toMemberId": "650a2534-75c8-426e-a607-0924ab985bdc",
+      "amountMinor": 2000
+    }
+  ]
+}

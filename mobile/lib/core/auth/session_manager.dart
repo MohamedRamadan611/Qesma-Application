@@ -49,6 +49,20 @@ bool provablyNotSent(DioException error) =>
     error.type == DioExceptionType.connectionTimeout ||
     (error.type == DioExceptionType.connectionError && error.error is SocketException);
 
+/// Refresh failures that leave the refresh token usable (decision A4, agreed):
+/// * a gateway answered 502, 503 or 504 (the service in front of the backend was unavailable);
+/// * the TLS handshake failed (bad certificate) or the call was cancelled by the app.
+/// The session is kept and the request surfaces as a failure the user can retry. A 500 or a
+/// timeout after the request was sent still ends the session (the token may have been spent).
+bool refreshNotSpent(DioException error) {
+  final status = error.response?.statusCode;
+  return status == 502 ||
+      status == 503 ||
+      status == 504 ||
+      error.type == DioExceptionType.badCertificate ||
+      error.type == DioExceptionType.cancel;
+}
+
 /// Owns the tokens and the refresh protocol (ADR-002).
 ///
 /// The backend rotates the refresh token on every use and treats reuse of an old one as
@@ -136,8 +150,8 @@ class SessionManager {
         _log.event(AuthEvent.refreshFailed, kind: _Failure.rateLimited, status: status);
         rethrow;
       }
-      if (provablyNotSent(e)) {
-        _log.event(AuthEvent.refreshFailed, kind: _Failure.notSent);
+      if (provablyNotSent(e) || refreshNotSpent(e)) {
+        _log.event(AuthEvent.refreshFailed, kind: _Failure.notSent, status: status);
         rethrow;
       }
       _log.event(AuthEvent.refreshFailed, kind: _Failure.ambiguous, status: status);

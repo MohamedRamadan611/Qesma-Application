@@ -431,13 +431,14 @@ void main() {
       expect(find.text('النسخة 2'), findsOneWidget);
     });
 
-    testWidgets('edit leads to the clearly marked stub (itemized bills say so in the button)', (tester) async {
+    testWidgets('edit on an itemized bill (its button says so) opens the bill editor', (tester) async {
       seedAllFixtures(server);
       await pumpExpensesApp(tester, server);
       await openExpense(tester, 'Sea Food');
       await reveal(tester, find.text('تعديل الفاتورة والأصناف'));
       await tapText(tester, 'تعديل الفاتورة والأصناف');
-      expect(find.text('الشاشة دي لسه تحت الإنشاء.'), findsOneWidget);
+      expect(find.text('أصناف الفاتورة'), findsOneWidget);
+      expect(find.text('الشاشة دي لسه تحت الإنشاء.'), findsNothing);
     });
 
     testWidgets('the expense no longer exists: "no longer available" with a way back', (tester) async {

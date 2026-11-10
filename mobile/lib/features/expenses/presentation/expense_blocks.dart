@@ -289,13 +289,13 @@ class _ChargesBox extends StatelessWidget {
   }
 }
 
-/// Everyone's share, straight from `shares[]`. An itemized bill adds the server's own
-/// breakdown line (items, service, tax, adjustment); EQUAL and EXACT show the owed amount only.
-/// There is no "a + b + c = total" footer: that would be a sum computed here.
-class BreakdownBlock extends StatelessWidget {
-  const BreakdownBlock({super.key, required this.expense, required this.nameOf, required this.yourMemberId});
+/// One row per person with what they owe and, for a restaurant bill, the server's own parts
+/// (items, service, tax, adjustment). Used by the details page (saved numbers) and by the bill
+/// editor (the preview's numbers). Nothing is added up here; there is no "a + b + c = total" line.
+class ShareRows extends StatelessWidget {
+  const ShareRows({super.key, required this.shares, required this.nameOf, required this.yourMemberId});
 
-  final ExpenseView expense;
+  final List<ShareView> shares;
   final String Function(String) nameOf;
   final String? yourMemberId;
 
@@ -322,27 +322,42 @@ class BreakdownBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final share in shares) ...[
+          _PersonRow(
+            memberId: share.memberId,
+            name: nameOf(share.memberId),
+            isYou: share.memberId == yourMemberId,
+            amountMinor: share.owedMinor,
+            subline: _subline(l10n, share)?.shown,
+            sublineSpoken: _subline(l10n, share)?.said,
+          ),
+          const SizedBox(height: QesmaSpacing.sm),
+        ],
+      ],
+    );
+  }
+}
+
+/// Everyone's share on the details page, straight from `shares[]`.
+class BreakdownBlock extends StatelessWidget {
+  const BreakdownBlock({super.key, required this.expense, required this.nameOf, required this.yourMemberId});
+
+  final ExpenseView expense;
+  final String Function(String) nameOf;
+  final String? yourMemberId;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final shares = expense.shares.toList();
     return SectionCard(
       title: l10n.expenseBreakdownTitle,
       icon: Icons.groups_outlined,
       count: countPhrase(shares.length, one: l10n.expenseBreakdownCountOne, two: l10n.expenseBreakdownCountTwo, few: l10n.expenseBreakdownCount, many: l10n.expenseBreakdownCountMany),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (final share in shares) ...[
-            _PersonRow(
-              memberId: share.memberId,
-              name: nameOf(share.memberId),
-              isYou: share.memberId == yourMemberId,
-              amountMinor: share.owedMinor,
-              subline: _subline(l10n, share)?.shown,
-              sublineSpoken: _subline(l10n, share)?.said,
-            ),
-            const SizedBox(height: QesmaSpacing.sm),
-          ],
-        ],
-      ),
+      child: ShareRows(shares: shares, nameOf: nameOf, yourMemberId: yourMemberId),
     );
   }
 }

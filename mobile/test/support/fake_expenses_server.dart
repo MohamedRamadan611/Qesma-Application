@@ -114,6 +114,21 @@ class FakeExpensesServer extends FakeGroupsServer {
   /// The next update is applied but its reply is lost.
   bool loseNextUpdateResponse = false;
 
+  /// Real backend preview responses (captured) for a restaurant bill, by the bill's key (see
+  /// [itemizedKey]). A bill with an entry here is answered verbatim from the capture; any other
+  /// restaurant bill is calculated by the engine below.
+  final Map<String, Map<String, dynamic>> cannedPreviews = {};
+
+  /// The inputs of a restaurant bill that decide its numbers (not the title, date or payers).
+  String itemizedKey(Map<String, dynamic> body) => _canonical({
+        'items': body['items'],
+        'service': body['service'],
+        'tax': body['tax'],
+        'adjustmentMinor': body['adjustmentMinor'] ?? 0,
+      });
+
+  _ItemizedCalc? _itemized;
+
   final Map<String, ({String body, Map<String, dynamic> response})> _idempotency = {};
   int _newId = 0;
 
@@ -244,6 +259,8 @@ class FakeExpensesServer extends FakeGroupsServer {
   /// Validates like the backend. Returns the shares per member, or null after setting [_problem].
   Map<String, int>? _validate(Map<String, dynamic> body, {required bool requirePayers, bool checkPayersTotal = true}) {
     _problem = null;
+    _itemized = null;
+    if (body['splitType'] == 'ITEMIZED') return _validateItemized(body, requirePayers: requirePayers, checkPayersTotal: checkPayersTotal);
     final title = (body['title'] as String?)?.trim() ?? '';
     final total = body['totalMinor'] as int?;
     if (title.isEmpty || title.runes.length > 100 || total == null || total <= 0) {
@@ -292,7 +309,28 @@ class FakeExpensesServer extends FakeGroupsServer {
     return shares;
   }
 
-  Map<String, dynamic> _expenseJson(String id, int version, Map<String, dynamic> body, Map<String, int> shares) => {
+  Map<String, dynamic> _expenseJson(String id, int version, Map<String, dynamic> body, Map<String, int> shares) {
+    final calc = _itemized;
+    final json = _plainExpenseJson(id, version, body, shares);
+    if (calc == null) return json;
+    json['items'] = [
+      for (var i = 0; i < calc.items.length; i++)
+        {'id': '$id-item-$i', 'name': calc.items[i]['name'], 'amountMinor': calc.items[i]['amountMinor'], 'assigneeMemberIds': calc.items[i]['assigneeMemberIds']},
+    ];
+    json['charges'] = {
+      'subtotalMinor': calc.subtotal,
+      'service': calc.serviceBps == null ? null : {'bps': calc.serviceBps, 'amountMinor': calc.service},
+      'tax': calc.taxBps == null ? null : {'bps': calc.taxBps, 'base': calc.taxBase, 'amountMinor': calc.tax},
+      'adjustmentMinor': calc.adjustment,
+    };
+    json['shares'] = [
+      for (final m in calc.members)
+        {'memberId': m['memberId'], 'owedMinor': m['owedMinor'], 'itemsMinor': m['itemsMinor'], 'serviceMinor': m['serviceMinor'], 'taxMinor': m['taxMinor'], 'adjustmentMinor': m['adjustmentMinor']},
+    ];
+    return json;
+  }
+
+  Map<String, dynamic> _plainExpenseJson(String id, int version, Map<String, dynamic> body, Map<String, int> shares) => {
         'id': id,
         'groupId': gid,
         'title': (body['title'] as String).trim(),
@@ -334,7 +372,7 @@ class FakeExpensesServer extends FakeGroupsServer {
 
   Future<ResponseBody> _preview(RequestOptions options, Stream<Uint8List>? stream, Future<void>? cancelFuture) async {
     final body = await _body(options, stream);
-    previewBodies.add(body);
+    previewBodies.add(copyJson(body));
     var cancelled = false;
     unawaited(cancelFuture?.then((_) {
       cancelled = true;
@@ -347,10 +385,26 @@ class FakeExpensesServer extends FakeGroupsServer {
       failNextPreview = false;
       return problemResponse(500, 'INTERNAL_ERROR');
     }
+    if (body['splitType'] == 'ITEMIZED' && (body['payers'] == null || (body['payers'] as List).isEmpty)) {
+      final canned = cannedPreviews[itemizedKey(body)];
+      if (canned != null) return jsonOk(200, canned);
+    }
     final shares = _validate(body, requirePayers: false, checkPayersTotal: false);
     if (shares == null) return _problem!;
     final payers = (body['payers'] as List?)?.cast<Map<String, dynamic>>() ?? const [];
     final matches = forcePayersTotalMatches ?? (payers.isNotEmpty && payers.fold<int>(0, (a, p) => a + (p['amountMinor'] as int)) == body['totalMinor']);
+    final calc = _itemized;
+    if (calc != null) {
+      return jsonOk(200, {
+        'totalMinor': body['totalMinor'],
+        'subtotalMinor': calc.subtotal,
+        'serviceMinor': calc.service,
+        'taxMinor': calc.tax,
+        'adjustmentMinor': calc.adjustment,
+        'members': calc.members,
+        'payersTotalMatches': matches,
+      });
+    }
     return jsonOk(200, {
       'totalMinor': body['totalMinor'],
       'members': [
@@ -364,7 +418,7 @@ class FakeExpensesServer extends FakeGroupsServer {
   Future<ResponseBody> _create(RequestOptions options, Stream<Uint8List>? stream) async {
     final body = await _body(options, stream);
     final key = options.headers['Idempotency-Key'] as String?;
-    creates.add((key: key, body: body));
+    creates.add((key: key, body: copyJson(body)));
     final uuid = RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
     if (key == null || !uuid.hasMatch(key)) return problemResponse(422, 'VALIDATION_ERROR');
 
@@ -401,7 +455,7 @@ class FakeExpensesServer extends FakeGroupsServer {
 
   Future<ResponseBody> _update(RequestOptions options, Stream<Uint8List>? stream, Map<String, dynamic>? current) async {
     final body = await _body(options, stream);
-    updates.add(body);
+    updates.add(copyJson(body));
     if (current == null) return problemResponse(404, 'NOT_FOUND');
     if (options.headers['If-Match'] != '"${current['version']}"') return problemResponse(409, 'VERSION_CONFLICT');
     final shares = _validate(body, requirePayers: true);
@@ -417,4 +471,167 @@ class FakeExpensesServer extends FakeGroupsServer {
     }
     return jsonOk(200, updated, etag: '$version');
   }
+
+  // ---- the restaurant-bill engine (spec 7.4), as the backend applies it ----
+
+  /// Largest remainder: everybody gets the integer part of their weighted share, the leftover
+  /// piasters go to the largest remainders, ties to the lowest sort order. A negative [total] is
+  /// spread as its absolute value and negated.
+  Map<String, int> _lrm(int total, Map<String, int> weights) {
+    final order = memberOrder;
+    final ids = [for (final id in order) if ((weights[id] ?? 0) > 0) id];
+    final sum = ids.fold<int>(0, (a, id) => a + weights[id]!);
+    if (ids.isEmpty || sum == 0) return {for (final id in ids) id: 0};
+    final sign = total < 0 ? -1 : 1;
+    final t = total.abs();
+    final base = {for (final id in ids) id: t * weights[id]! ~/ sum};
+    final remainder = {for (final id in ids) id: t * weights[id]! % sum};
+    var left = t - base.values.fold<int>(0, (a, b) => a + b);
+    final byRemainder = [...ids]..sort((a, b) {
+        final byValue = remainder[b]!.compareTo(remainder[a]!);
+        return byValue != 0 ? byValue : order.indexOf(a).compareTo(order.indexOf(b));
+      });
+    for (final id in byRemainder) {
+      if (left == 0) break;
+      base[id] = base[id]! + 1;
+      left--;
+    }
+    return {for (final id in ids) id: sign * base[id]!};
+  }
+
+  Map<String, int>? _validateItemized(Map<String, dynamic> body, {required bool requirePayers, required bool checkPayersTotal}) {
+    ResponseBody? fail(String code) {
+      _problem = problemResponse(422, code);
+      return null;
+    }
+
+    final title = (body['title'] as String?)?.trim() ?? '';
+    if (title.isEmpty || title.runes.length > 100) {
+      fail('VALIDATION_ERROR');
+      return null;
+    }
+    final known = memberOrder.toSet();
+    final items = (body['items'] as List?)?.cast<Map<String, dynamic>>() ?? const [];
+    if (items.isEmpty || items.length > 100) {
+      fail('VALIDATION_ERROR');
+      return null;
+    }
+    final itemsByMember = <String, int>{};
+    var subtotal = 0;
+    for (final item in items) {
+      final name = (item['name'] as String?)?.trim() ?? '';
+      final amount = item['amountMinor'] as int?;
+      final assignees = (item['assigneeMemberIds'] as List?)?.cast<String>() ?? const [];
+      if (name.isEmpty || name.runes.length > 100 || amount == null || amount <= 0 || assignees.isEmpty) {
+        fail('VALIDATION_ERROR');
+        return null;
+      }
+      if (assignees.any((id) => !known.contains(id))) {
+        fail('MEMBER_NOT_IN_GROUP');
+        return null;
+      }
+      subtotal += amount;
+      _lrm(amount, {for (final id in assignees) id: 1}).forEach((id, v) => itemsByMember[id] = (itemsByMember[id] ?? 0) + v);
+    }
+
+    final serviceBps = (body['service'] as Map?)?['bps'] as int?;
+    final taxMap = body['tax'] as Map?;
+    final taxBps = taxMap?['bps'] as int?;
+    final taxBase = (taxMap?['base'] as String?) ?? 'SUBTOTAL_PLUS_SERVICE';
+    if ((serviceBps != null && (serviceBps < 0 || serviceBps > 10000)) || (taxBps != null && (taxBps < 0 || taxBps > 10000))) {
+      fail('VALIDATION_ERROR');
+      return null;
+    }
+    final adjustment = (body['adjustmentMinor'] as int?) ?? 0;
+
+    final service = serviceBps == null ? 0 : (subtotal * serviceBps + 5000) ~/ 10000;
+    final serviceShares = serviceBps == null ? <String, int>{} : _lrm(service, itemsByMember);
+    final withService = {for (final id in itemsByMember.keys) id: itemsByMember[id]! + (serviceShares[id] ?? 0)};
+    final taxBaseTotal = taxBase == 'SUBTOTAL' ? subtotal : subtotal + service;
+    final tax = taxBps == null ? 0 : (taxBaseTotal * taxBps + 5000) ~/ 10000;
+    final taxShares = taxBps == null ? <String, int>{} : _lrm(tax, taxBase == 'SUBTOTAL' ? itemsByMember : withService);
+    final adjustmentShares = adjustment == 0 ? <String, int>{} : _lrm(adjustment, itemsByMember);
+
+    final total = subtotal + service + tax + adjustment;
+    final members = <Map<String, dynamic>>[];
+    final owedByMember = <String, int>{};
+    for (final id in memberOrder) {
+      if (!itemsByMember.containsKey(id)) continue;
+      final owed = itemsByMember[id]! + (serviceShares[id] ?? 0) + (taxShares[id] ?? 0) + (adjustmentShares[id] ?? 0);
+      if (owed < 0) {
+        fail('VALIDATION_ERROR');
+        return null;
+      }
+      if (owed == 0) continue; // a member who owes nothing is not a participant (A34)
+      owedByMember[id] = owed;
+      members.add({
+        'memberId': id,
+        'owedMinor': owed,
+        'itemsMinor': itemsByMember[id],
+        'serviceMinor': serviceShares[id] ?? 0,
+        'taxMinor': taxShares[id] ?? 0,
+        'adjustmentMinor': adjustmentShares[id] ?? 0,
+      });
+    }
+    if (total <= 0) {
+      fail('VALIDATION_ERROR');
+      return null;
+    }
+
+    final payers = (body['payers'] as List?)?.cast<Map<String, dynamic>>() ?? const [];
+    if (requirePayers && payers.isEmpty) {
+      fail('VALIDATION_ERROR');
+      return null;
+    }
+    if (payers.any((p) => !known.contains(p['memberId']))) {
+      fail('MEMBER_NOT_IN_GROUP');
+      return null;
+    }
+    if (body['totalMinor'] != null && body['totalMinor'] != total) {
+      fail('SPLIT_TOTAL_MISMATCH');
+      return null;
+    }
+    body['totalMinor'] = total;
+    if (checkPayersTotal && payers.isNotEmpty && payers.fold<int>(0, (a, p) => a + (p['amountMinor'] as int)) != total) {
+      fail('PAYERS_TOTAL_MISMATCH');
+      return null;
+    }
+    _itemized = _ItemizedCalc(
+      items: items,
+      subtotal: subtotal,
+      service: service,
+      tax: tax,
+      adjustment: adjustment,
+      serviceBps: serviceBps,
+      taxBps: taxBps,
+      taxBase: taxBase,
+      members: members,
+    );
+    return owedByMember;
+  }
+}
+
+/// The numbers of one restaurant bill, as the engine works them out.
+class _ItemizedCalc {
+  _ItemizedCalc({
+    required this.items,
+    required this.subtotal,
+    required this.service,
+    required this.tax,
+    required this.adjustment,
+    required this.serviceBps,
+    required this.taxBps,
+    required this.taxBase,
+    required this.members,
+  });
+
+  final List<Map<String, dynamic>> items;
+  final int subtotal;
+  final int service;
+  final int tax;
+  final int adjustment;
+  final int? serviceBps;
+  final int? taxBps;
+  final String taxBase;
+  final List<Map<String, dynamic>> members;
 }

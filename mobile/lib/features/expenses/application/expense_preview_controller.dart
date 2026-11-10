@@ -13,7 +13,7 @@ final previewDebounceProvider = Provider<Duration>((ref) => const Duration(milli
 
 /// The form asks the server for two independent things: the split shown in the member list,
 /// and whether the payers being edited cover the total.
-enum PreviewSlot { split, payers }
+enum PreviewSlot { split, payers, match }
 
 enum PreviewStatus { idle, loading, ready, failed }
 

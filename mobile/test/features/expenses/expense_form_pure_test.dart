@@ -211,10 +211,10 @@ void main() {
   });
 
   group('opening an expense for edit', () {
-    ExpenseFormState? fill(String fixture, {List<String> members = _members}) => formFromExpense(expenseFixture(fixture), memberIds: members, fallbackPayerId: kYou);
+    ExpenseFormState fill(String fixture, {List<String> members = _members}) => formFromExpense(expenseFixture(fixture), memberIds: members, fallbackPayerId: kYou);
 
     test('EQUAL for everyone: mode All, one payer, the saved numbers', () {
-      final form = fill('expense_equal_v2')!;
+      final form = fill('expense_equal_v2');
       expect(form.splitMode, SplitMode.all);
       expect(form.title, 'Petrol (edited)');
       expect(form.amountText, '520');
@@ -224,7 +224,7 @@ void main() {
     });
 
     test('a member who joined after the expense stays unchecked (never added silently)', () {
-      final form = fill('expense_equal_v2', members: [..._members, 'newcomer'])!;
+      final form = fill('expense_equal_v2', members: [..._members, 'newcomer']);
       expect(form.splitMode, SplitMode.selected);
       expect(form.selectedIds, {kYou, kAsem, kMohsen});
       final command = buildExpenseCommand(form, edit: true, memberIds: [..._members, 'newcomer'])!;
@@ -234,13 +234,13 @@ void main() {
     test('EQUAL for some: mode Selected with exactly those', () {
       final json = copyJson(fixtureMap('expense_equal_v2'));
       (json['shares'] as List).removeWhere((s) => s['memberId'] == kMohsen);
-      final form = formFromExpense(expenseFrom(json), memberIds: _members, fallbackPayerId: kYou)!;
+      final form = formFromExpense(expenseFrom(json), memberIds: _members, fallbackPayerId: kYou);
       expect(form.splitMode, SplitMode.selected);
       expect(form.selectedIds, {kYou, kAsem});
     });
 
     test('EXACT with two payers: Exact mode with the saved amounts and several payers', () {
-      final form = fill('expense_exact')!;
+      final form = fill('expense_exact');
       expect(form.splitMode, SplitMode.exact);
       expect(form.exactTexts, {kYou: '100', kAsem: '150', kMohsen: '50'});
       expect(form.payerMode, PayerMode.multiple);
@@ -248,12 +248,12 @@ void main() {
       expect(form.canSave(_members), isTrue);
     });
 
-    test('an itemized bill is FL6\'s: nothing is filled', () {
-      expect(fill('expense_itemized_v5'), isNull);
+    test('an itemized bill opens as a restaurant bill', () {
+      expect(fill('expense_itemized_v5').splitMode, SplitMode.itemized);
     });
 
     test('the filled form rebuilds the same command the expense would be saved as', () {
-      final form = fill('expense_equal_v2')!;
+      final form = fill('expense_equal_v2');
       expect(_wire(buildExpenseCommand(form, edit: true, memberIds: _members)!), {
         'title': 'Petrol (edited)',
         'expenseDate': '2026-10-18',

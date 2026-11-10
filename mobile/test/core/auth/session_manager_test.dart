@@ -163,6 +163,26 @@ void main() {
       expect((await rig.get()).statusCode, 200);
     });
 
+    // Decision A4 (agreed): these failures do not prove the token was spent, so the session is KEPT
+    // and the request fails with a retryable error; the same token works on the next attempt.
+    for (final fault in [RefreshFault.gateway502, RefreshFault.gateway503, RefreshFault.gateway504, RefreshFault.badCertificate, RefreshFault.cancelled]) {
+      test('${fault.name}: the session is kept and the refresh token is still usable (A4)', () async {
+        final rig = Rig();
+        await rig.signIn();
+        rig.backend.expireAccessTokens();
+        rig.backend.nextRefreshFault = fault;
+
+        await rig.failure(rig.get());
+
+        expect(rig.ended, isEmpty, reason: 'no session end');
+        expect(await rig.store.readRefreshToken(), 'refresh-1', reason: 'the token was not spent');
+
+        // The failed attempt never reached the backend, so only the successful retry is recorded.
+        expect((await rig.get()).statusCode, 200);
+        expect(rig.backend.refreshTokensReceived, ['refresh-1']);
+      });
+    }
+
     for (final fault in [RefreshFault.closedAfterSend, RefreshFault.receiveTimeout, RefreshFault.serverError]) {
       test('${fault.name}: outcome unknown, so the token is treated as spent and NEVER sent again', () async {
         final rig = Rig();

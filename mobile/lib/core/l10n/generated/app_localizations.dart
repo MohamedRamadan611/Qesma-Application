@@ -830,12 +830,6 @@ abstract class AppLocalizations {
   /// **'الأعضاء'**
   String get groupTabMembers;
 
-  /// Placeholder for tabs that later milestones build.
-  ///
-  /// In ar, this message translates to:
-  /// **'الشاشة دي لسه تحت الإنشاء.'**
-  String get groupNotBuiltYet;
-
   /// Group screen subtitle: member count and total spent.
   ///
   /// In ar, this message translates to:
@@ -1814,6 +1808,515 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'اتحفظ المصروف.'**
   String get expenseFormSaved;
+
+  /// Restaurant bill: note under the total (it is not typed).
+  ///
+  /// In ar, this message translates to:
+  /// **'بيتحسب من الأصناف والخدمة والضريبة.'**
+  String get expenseItemizedTotalNote;
+
+  /// Restaurant bill: items section title.
+  ///
+  /// In ar, this message translates to:
+  /// **'أصناف الفاتورة'**
+  String get expenseItemizedItemsTitle;
+
+  /// Restaurant bill: heading of one item card.
+  ///
+  /// In ar, this message translates to:
+  /// **'الصنف {n}'**
+  String expenseItemizedItemHeading(String n);
+
+  /// Restaurant bill: item name field label.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسم الصنف'**
+  String get expenseItemizedNameLabel;
+
+  /// Restaurant bill: item name hint.
+  ///
+  /// In ar, this message translates to:
+  /// **'مثلاً: بيتزا'**
+  String get expenseItemizedNameHint;
+
+  /// Restaurant bill: the item name is empty.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب اسم الصنف.'**
+  String get expenseItemizedNameRequired;
+
+  /// Restaurant bill: item price field label.
+  ///
+  /// In ar, this message translates to:
+  /// **'سعر الصنف'**
+  String get expenseItemizedAmountLabel;
+
+  /// Restaurant bill: the item price cannot be read.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب سعر صحيح أكبر من صفر.'**
+  String get expenseItemizedAmountInvalid;
+
+  /// Restaurant bill: label above the assignee chips.
+  ///
+  /// In ar, this message translates to:
+  /// **'مين شارك في الصنف ده؟'**
+  String get expenseItemizedAssigneesLabel;
+
+  /// Restaurant bill: an item without an assignee.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختار عضو واحد على الأقل.'**
+  String get expenseItemizedNoAssignee;
+
+  /// Restaurant bill: add an item button.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة صنف جديد'**
+  String get expenseItemizedAdd;
+
+  /// Restaurant bill: no more items can be added.
+  ///
+  /// In ar, this message translates to:
+  /// **'وصلت للحد الأقصى: 100 صنف.'**
+  String get expenseItemizedLimit;
+
+  /// Restaurant bill: remove an item (tooltip).
+  ///
+  /// In ar, this message translates to:
+  /// **'امسح الصنف'**
+  String get expenseItemizedRemove;
+
+  /// Restaurant bill: screen-reader label of an item’s remove button.
+  ///
+  /// In ar, this message translates to:
+  /// **'امسح الصنف {n}'**
+  String expenseItemizedRemoveSpoken(String n);
+
+  /// Restaurant bill: service and tax section title.
+  ///
+  /// In ar, this message translates to:
+  /// **'الخدمة والضريبة'**
+  String get expenseItemizedChargesTitle;
+
+  /// Restaurant bill: percentage field label.
+  ///
+  /// In ar, this message translates to:
+  /// **'النسبة (%)'**
+  String get expenseItemizedPercentLabel;
+
+  /// Restaurant bill: percentage field hint.
+  ///
+  /// In ar, this message translates to:
+  /// **'مثلاً 12'**
+  String get expenseItemizedPercentHint;
+
+  /// Restaurant bill: the percentage cannot be read.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب نسبة من 0 لـ 100، بحد أقصى رقمين بعد العلامة.'**
+  String get expenseItemizedPercentInvalid;
+
+  /// Restaurant bill: tax base chips title.
+  ///
+  /// In ar, this message translates to:
+  /// **'الضريبة بتتحسب على'**
+  String get expenseItemizedTaxBaseTitle;
+
+  /// Restaurant bill: tax base chip, the subtotal.
+  ///
+  /// In ar, this message translates to:
+  /// **'المجموع فقط'**
+  String get expenseItemizedTaxBaseSubtotal;
+
+  /// Restaurant bill: tax base chip, the subtotal plus service.
+  ///
+  /// In ar, this message translates to:
+  /// **'المجموع + الخدمة'**
+  String get expenseItemizedTaxBaseWithService;
+
+  /// Restaurant bill: adjustment section title.
+  ///
+  /// In ar, this message translates to:
+  /// **'فرق التقريب / إكرامية'**
+  String get expenseItemizedAdjustmentTitle;
+
+  /// Restaurant bill: adjustment helper text.
+  ///
+  /// In ar, this message translates to:
+  /// **'لتسوية الكسور أو البقشيش. ممكن يكون بالسالب.'**
+  String get expenseItemizedAdjustmentHint;
+
+  /// Restaurant bill: the adjustment cannot be read.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب مبلغ صحيح (ممكن يكون بالسالب).'**
+  String get expenseItemizedAdjustmentInvalid;
+
+  /// Restaurant bill: increase the adjustment by 0.01 (screen-reader label).
+  ///
+  /// In ar, this message translates to:
+  /// **'زوّد قرش'**
+  String get expenseItemizedAdjustmentPlus;
+
+  /// Restaurant bill: decrease the adjustment by 0.01 (screen-reader label).
+  ///
+  /// In ar, this message translates to:
+  /// **'نقّص قرش'**
+  String get expenseItemizedAdjustmentMinus;
+
+  /// Restaurant bill: shown instead of the numbers while the server calculates.
+  ///
+  /// In ar, this message translates to:
+  /// **'بنحسب الفاتورة…'**
+  String get expenseItemizedLoading;
+
+  /// Restaurant bill: the preview failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'معرفناش نحسب الفاتورة.'**
+  String get expenseItemizedFailed;
+
+  /// Restaurant bill: the bill is not complete enough to calculate.
+  ///
+  /// In ar, this message translates to:
+  /// **'كمّل الأصناف والنسب عشان تظهر الحسابات.'**
+  String get expenseItemizedIncomplete;
+
+  /// Restaurant bill: the server says the payers cover the total.
+  ///
+  /// In ar, this message translates to:
+  /// **'الدافعين مطابقين للفاتورة'**
+  String get expenseItemizedPayersMatch;
+
+  /// Restaurant bill: the server says the payers do not cover the total.
+  ///
+  /// In ar, this message translates to:
+  /// **'الدافعين مش مطابقين للفاتورة. عدّل الدافعين.'**
+  String get expenseItemizedPayersMismatch;
+
+  /// Restaurant bill: waiting for the server to confirm the payers.
+  ///
+  /// In ar, this message translates to:
+  /// **'بنراجع الدافعين…'**
+  String get expenseItemizedPayersChecking;
+
+  /// Restaurant bill: label of the total next to the save button.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجمالي الفاتورة المحسوب'**
+  String get expenseItemizedBarTotal;
+
+  /// Payers sheet: a restaurant bill whose total is not known yet.
+  ///
+  /// In ar, this message translates to:
+  /// **'كمّل أصناف الفاتورة الأول.'**
+  String get expensePayersNeedItems;
+
+  /// Balances tab: label above the total spent.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجمالي مصاريف الجروب'**
+  String get balancesTotalSpent;
+
+  /// Balances status when exactly one transfer is suggested.
+  ///
+  /// In ar, this message translates to:
+  /// **'مطلوب تحويل واحد لإنهاء الحسابات'**
+  String get balancesNeedOne;
+
+  /// Balances status for exactly two transfers (Arabic dual).
+  ///
+  /// In ar, this message translates to:
+  /// **'مطلوب تحويلين لإنهاء الحسابات'**
+  String get balancesNeedTwo;
+
+  /// Balances status for 3 to 10 transfers. Count is a string with Western digits.
+  ///
+  /// In ar, this message translates to:
+  /// **'مطلوب {count} تحويلات لإنهاء الحسابات'**
+  String balancesNeed(String count);
+
+  /// Balances status for 11 or more transfers.
+  ///
+  /// In ar, this message translates to:
+  /// **'مطلوب {count} تحويلًا لإنهاء الحسابات'**
+  String balancesNeedMany(String count);
+
+  /// Balances tab: no transfers are needed.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحسابات متصفّية'**
+  String get balancesAllSettledTitle;
+
+  /// Balances tab: explanation under the all-settled title.
+  ///
+  /// In ar, this message translates to:
+  /// **'مفيش حد عليه فلوس لحد دلوقتي.'**
+  String get balancesAllSettledBody;
+
+  /// Section title of the suggested transfers.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحويلات مقترحة'**
+  String get balancesSuggestedTitle;
+
+  /// Transfer row: the one who pays.
+  ///
+  /// In ar, this message translates to:
+  /// **'يدفع'**
+  String get balancesPays;
+
+  /// Transfer row: the one who receives.
+  ///
+  /// In ar, this message translates to:
+  /// **'يستلم'**
+  String get balancesReceives;
+
+  /// Screen-reader text of a suggested transfer.
+  ///
+  /// In ar, this message translates to:
+  /// **'{from} يدفع {amount} لـ {to}'**
+  String balancesTransferSpoken(String from, String to, String amount);
+
+  /// Button and sheet title: record a payment.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجيل سداد'**
+  String get balancesRecordPayment;
+
+  /// Screen-reader label of the Record payment button on a transfer.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجيل سداد من {from} إلى {to}، {amount}'**
+  String balancesRecordPaymentSpoken(String from, String to, String amount);
+
+  /// Button: record a payment that is not one of the suggestions.
+  ///
+  /// In ar, this message translates to:
+  /// **'سجّل سداد تاني'**
+  String get balancesRecordAnother;
+
+  /// Section title of the per-member balances.
+  ///
+  /// In ar, this message translates to:
+  /// **'صافي رصيد كل عضو'**
+  String get balancesNetsTitle;
+
+  /// Screen-reader text of a member balance row.
+  ///
+  /// In ar, this message translates to:
+  /// **'{name}، {status}'**
+  String balancesMemberSpoken(String name, String status);
+
+  /// Section title of the settlement history.
+  ///
+  /// In ar, this message translates to:
+  /// **'سجل السداد'**
+  String get balancesHistoryTitle;
+
+  /// Payment history when it is empty.
+  ///
+  /// In ar, this message translates to:
+  /// **'لسه مفيش سداد متسجّل.'**
+  String get balancesHistoryEmpty;
+
+  /// History row title.
+  ///
+  /// In ar, this message translates to:
+  /// **'{from} سدد لـ {to}'**
+  String balancesPaymentTitle(String from, String to);
+
+  /// Screen-reader text of a history row.
+  ///
+  /// In ar, this message translates to:
+  /// **'{from} سدد {amount} لـ {to}، {date}'**
+  String balancesPaymentSpoken(
+    String from,
+    String to,
+    String amount,
+    String date,
+  );
+
+  /// History row text with its note appended.
+  ///
+  /// In ar, this message translates to:
+  /// **'{base}، {note}'**
+  String balancesPaymentNoteSpoken(String base, String note);
+
+  /// Tooltip of the delete button on a history row.
+  ///
+  /// In ar, this message translates to:
+  /// **'امسح السداد'**
+  String get balancesDeletePayment;
+
+  /// Screen-reader label of the delete button.
+  ///
+  /// In ar, this message translates to:
+  /// **'امسح سداد {from} لـ {to}، {amount}'**
+  String balancesDeletePaymentSpoken(String from, String to, String amount);
+
+  /// Delete payment confirmation title.
+  ///
+  /// In ar, this message translates to:
+  /// **'تمسح السداد ده؟'**
+  String get balancesDeleteTitle;
+
+  /// Delete payment confirmation body (there is no undo).
+  ///
+  /// In ar, this message translates to:
+  /// **'الأرصدة هتتحسب من جديد من غير السداد ده، ومش هينفع نرجّعه بعد كده.'**
+  String get balancesDeleteBody;
+
+  /// Snackbar after a payment was deleted.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتمسح السداد.'**
+  String get balancesDeleted;
+
+  /// Snackbar when the payment to delete no longer exists.
+  ///
+  /// In ar, this message translates to:
+  /// **'السداد ده كان اتمسح قبل كده.'**
+  String get balancesDeleteGone;
+
+  /// Button under the history: next page.
+  ///
+  /// In ar, this message translates to:
+  /// **'حمّل المزيد'**
+  String get balancesLoadMore;
+
+  /// History: the next page failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'معرفناش نحمّل باقي السداد.'**
+  String get balancesLoadMoreFailed;
+
+  /// Screen-reader action that refreshes the tab.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحديث الأرصدة'**
+  String get balancesRefresh;
+
+  /// Snackbar when a refresh fails.
+  ///
+  /// In ar, this message translates to:
+  /// **'معرفناش نحدّث الأرصدة. المعروض هو آخر نسخة عندنا.'**
+  String get balancesRefreshFailed;
+
+  /// Record payment sheet subtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسوية الحسابات بين أعضاء الجروب'**
+  String get paymentSubtitle;
+
+  /// Record payment: who paid.
+  ///
+  /// In ar, this message translates to:
+  /// **'من (الدافع)'**
+  String get paymentFrom;
+
+  /// Record payment: who received.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلى (المستلم)'**
+  String get paymentTo;
+
+  /// Title of the member picker.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختار عضو'**
+  String get paymentPickMember;
+
+  /// Record payment: amount field label.
+  ///
+  /// In ar, this message translates to:
+  /// **'المبلغ المسدد (ج.م)'**
+  String get paymentAmountLabel;
+
+  /// Record payment: amount error.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب مبلغ صحيح أكبر من صفر، لحد خانتين عشرية.'**
+  String get paymentAmountError;
+
+  /// Chip that puts the suggested transfer amount back.
+  ///
+  /// In ar, this message translates to:
+  /// **'كامل المبلغ: {amount}'**
+  String paymentFullAmount(String amount);
+
+  /// Record payment: date field label.
+  ///
+  /// In ar, this message translates to:
+  /// **'تاريخ السداد'**
+  String get paymentDateLabel;
+
+  /// Record payment: date error.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختار تاريخ بين 2000 و2100.'**
+  String get paymentDateError;
+
+  /// Record payment: note field label.
+  ///
+  /// In ar, this message translates to:
+  /// **'ملاحظة (اختياري)'**
+  String get paymentNoteLabel;
+
+  /// Record payment: note hint.
+  ///
+  /// In ar, this message translates to:
+  /// **'مثلًا: كاش في الرحلة'**
+  String get paymentNoteHint;
+
+  /// Record payment: note error.
+  ///
+  /// In ar, this message translates to:
+  /// **'الملاحظة أطول من 200 حرف.'**
+  String get paymentNoteError;
+
+  /// Record payment: from and to are the same.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختار عضوين مختلفين.'**
+  String get paymentSameMember;
+
+  /// Record payment: confirm button with the typed amount.
+  ///
+  /// In ar, this message translates to:
+  /// **'تأكيد تسجيل السداد ({amount})'**
+  String paymentConfirm(String amount);
+
+  /// Record payment: confirm button while the amount is not valid.
+  ///
+  /// In ar, this message translates to:
+  /// **'تأكيد تسجيل السداد'**
+  String get paymentConfirmNoAmount;
+
+  /// Snackbar after a payment was recorded.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتسجّل السداد.'**
+  String get paymentRecorded;
+
+  /// Question when closing the sheet with changes.
+  ///
+  /// In ar, this message translates to:
+  /// **'تتجاهل السداد ده؟'**
+  String get paymentDiscardTitle;
+
+  /// Body of the discard question.
+  ///
+  /// In ar, this message translates to:
+  /// **'اللي كتبته مش هيتحفظ.'**
+  String get paymentDiscardBody;
+
+  /// Confirm button of the discard question.
+  ///
+  /// In ar, this message translates to:
+  /// **'تجاهل'**
+  String get paymentDiscardConfirm;
 }
 
 class _AppLocalizationsDelegate

@@ -165,14 +165,14 @@ void main() {
       expect(find.text('لسه باقي ${money(_ar, 7334)}'), findsOneWidget);
     });
 
-    testWidgets('the Restaurant bill tab opens the marked FL6 screen and the form is unchanged when you come back', (tester) async {
+    testWidgets('the Restaurant bill tab opens the bill editor in the same form (no stub) and keeps the title', (tester) async {
       await openAdd(tester);
       await typeTitleAndAmount(tester);
       await tapText(tester, 'فاتورة مفصلة');
-      expect(find.text('الشاشة دي لسه تحت الإنشاء.'), findsOneWidget);
-      await tester.tap(find.byTooltip('رجوع'));
-      await tester.pumpAndSettle();
-      expect(find.text('حفظ المصروف'), findsOneWidget);
+      await settleForm(tester);
+      expect(find.text('الشاشة دي لسه تحت الإنشاء.'), findsNothing);
+      expect(find.text('أصناف الفاتورة'), findsOneWidget);
+      expect(find.text('المبلغ الإجمالي'), findsNothing, reason: 'the total of a bill is not typed');
       expect(tester.widget<TextField>(field(0)).controller!.text, 'Petrol');
     });
 
@@ -463,12 +463,13 @@ void main() {
       expect(server.updates, hasLength(2));
     });
 
-    testWidgets('editing an itemized bill shows the marked FL6 screen', (tester) async {
+    testWidgets('editing an itemized bill opens the bill editor with the saved items', (tester) async {
       seedAllFixtures(server);
       await pumpExpensesApp(tester, server, route: Routes.editExpense(server.gid, '7e3b3a23-d844-4889-99ae-5cba254d1173'));
       await settleForm(tester);
-      expect(find.text('الشاشة دي لسه تحت الإنشاء.'), findsOneWidget);
-      expect(find.text('اسم المصروف'), findsNothing);
+      expect(find.text('الشاشة دي لسه تحت الإنشاء.'), findsNothing);
+      expect(find.text('أصناف الفاتورة'), findsOneWidget);
+      expect(find.text('Pizza'), findsOneWidget);
     });
 
     testWidgets('an expense that no longer exists: the "no longer available" state', (tester) async {

@@ -10,7 +10,7 @@ import 'package:qesma/core/auth/token_store.dart';
 /// How the next `/auth/google` call should fail.
 enum LoginFault { none, unauthorized, rateLimited, providerUnavailable, connectionRefused }
 
-enum RefreshFault { none, connectionRefused, connectTimeout, closedAfterSend, receiveTimeout, serverError, rateLimited }
+enum RefreshFault { none, connectionRefused, connectTimeout, closedAfterSend, receiveTimeout, serverError, rateLimited, gateway502, gateway503, gateway504, badCertificate, cancelled }
 
 /// A fake of the backend's auth behaviour (ADR-002), good enough to prove the client's
 /// refresh protocol: access tokens that expire, refresh tokens that rotate on every use and
@@ -127,6 +127,17 @@ class FakeBackend implements HttpClientAdapter {
     final sent = body['refreshToken'] as String;
 
     switch (fault) {
+      case RefreshFault.gateway502:
+      case RefreshFault.gateway503:
+      case RefreshFault.gateway504:
+        // A gateway answered; the backend never saw the request (A4).
+        final code = fault == RefreshFault.gateway502 ? 502 : (fault == RefreshFault.gateway503 ? 503 : 504);
+        events.add('refresh-$code');
+        return _json(code, _problem('AUTH_PROVIDER_UNAVAILABLE', code));
+      case RefreshFault.badCertificate:
+        throw DioException(requestOptions: options, type: DioExceptionType.badCertificate, error: 'bad certificate');
+      case RefreshFault.cancelled:
+        throw DioException.requestCancelled(requestOptions: options, reason: 'cancelled');
       case RefreshFault.connectionRefused:
         // Never reached the server: nothing is recorded.
         throw DioException.connectionError(

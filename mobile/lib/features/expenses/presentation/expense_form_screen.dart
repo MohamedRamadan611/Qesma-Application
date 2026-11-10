@@ -18,7 +18,7 @@ import '../application/expense_detail_controller.dart';
 import '../application/expense_form_controller.dart';
 import '../application/expense_form_state.dart';
 import '../application/expense_preview_controller.dart';
-import 'expense_stubs.dart';
+import 'itemized_editor.dart';
 import 'expense_ui.dart';
 import 'payers_sheet.dart';
 import 'split_section.dart';
@@ -171,7 +171,6 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
         return scaffold(const SkeletonList(itemCount: 3));
       }
       return switch (view.phase) {
-        FormPhase.itemized => const ExpenseFormStub(edit: true, itemized: true),
         FormPhase.gone => scaffold(
             EmptyState(icon: Icons.search_off, title: l10n.expenseGoneTitle, actionLabel: l10n.expenseBackToList, onAction: () => goBackOr(context, Routes.group(widget.gid))),
           ),
@@ -201,13 +200,17 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
     // The split shown in the member list: the server's EQUAL split among the participants.
     final total = form.totalMinor;
     final participants = form.participantIds(memberIds);
+    final isItemized = form.splitMode == SplitMode.itemized;
     final splitCommand = (form.splitMode == SplitMode.all || form.splitMode == SplitMode.selected) && total != null && participants.isNotEmpty
         ? buildEqualPreview(title: form.title, date: form.date, totalMinor: total, participantIds: participants)
         : null;
     final previewKey = splitCommand == null ? null : commandKey(splitCommand);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) ref.read(expensePreviewControllerProvider((gid: widget.gid, slot: PreviewSlot.split)).notifier).request(splitCommand);
-    });
+    if (!isItemized) {
+      // A restaurant bill's previews are driven by the controller, which owns that total.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) ref.read(expensePreviewControllerProvider((gid: widget.gid, slot: PreviewSlot.split)).notifier).request(splitCommand);
+      });
+    }
 
     final failure = view.failure;
     final failureCode = failure is ApiHttpFailure ? failure.problem?.code : null;
@@ -250,18 +253,22 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                   },
                 ),
                 const SizedBox(height: QesmaSpacing.md),
-                AppTextField(
-                  controller: _amount,
-                  label: l10n.expenseFormAmountLabel,
-                  hint: l10n.expenseFormAmountHint,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  inputFormatters: [amountInputFormatter],
-                  errorText: form.amountTyped && total == null ? l10n.expenseFormAmountInvalid : null,
-                  showClear: false,
-                  onChanged: _controller.setAmount,
-                ),
-                const SizedBox(height: QesmaSpacing.xs),
-                Text(l10n.expenseFormCurrencyNote, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textSecondary)),
+                if (isItemized)
+                  _BillTotal(totalMinor: total)
+                else ...[
+                  AppTextField(
+                    controller: _amount,
+                    label: l10n.expenseFormAmountLabel,
+                    hint: l10n.expenseFormAmountHint,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [amountInputFormatter],
+                    errorText: form.amountTyped && total == null ? l10n.expenseFormAmountInvalid : null,
+                    showClear: false,
+                    onChanged: _controller.setAmount,
+                  ),
+                  const SizedBox(height: QesmaSpacing.xs),
+                  Text(l10n.expenseFormCurrencyNote, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textSecondary)),
+                ],
                 const SizedBox(height: QesmaSpacing.md),
                 AppButton(
                   label: '${l10n.expenseFormDateLabel}: ${dateText(form.date)}',
@@ -282,6 +289,10 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
           ),
           const SizedBox(height: QesmaSpacing.md),
           SplitSection(formKey: _key, form: form, members: members, previewKey: previewKey),
+          if (isItemized) ...[
+            const SizedBox(height: QesmaSpacing.md),
+            ItemizedEditor(formKey: _key, form: form, members: members, nameOf: nameOf),
+          ],
           if (splitBanner != null) ...[const SizedBox(height: QesmaSpacing.sm), ErrorBanner(splitBanner)],
           if (generalFailure) ...[
             const SizedBox(height: QesmaSpacing.md),
@@ -298,6 +309,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
         form: form,
         memberIds: memberIds,
         canSave: canSave,
+        billTotalMinor: isItemized ? total : null,
         submitting: view.submitting,
         isEdit: _isEdit,
         onSave: _save,
@@ -412,7 +424,7 @@ class _SaveFailure extends StatelessWidget {
 
 /// Exact mode's "typed so far against the total" line and the save button.
 class _BottomBar extends StatelessWidget {
-  const _BottomBar({required this.form, required this.memberIds, required this.canSave, required this.submitting, required this.isEdit, required this.onSave});
+  const _BottomBar({required this.form, required this.memberIds, required this.canSave, required this.submitting, required this.isEdit, required this.onSave, this.billTotalMinor});
 
   final ExpenseFormState form;
   final List<String> memberIds;
@@ -420,6 +432,9 @@ class _BottomBar extends StatelessWidget {
   final bool submitting;
   final bool isEdit;
   final VoidCallback onSave;
+
+  /// A restaurant bill's total (the server's), shown next to the save button.
+  final int? billTotalMinor;
 
   @override
   Widget build(BuildContext context) {
@@ -461,6 +476,21 @@ class _BottomBar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           ?summary,
+          if (form.splitMode == SplitMode.itemized)
+            Padding(
+              padding: const EdgeInsets.only(bottom: QesmaSpacing.sm),
+              // A wrap, not a row: at large text the amount goes under its label instead of squeezing it.
+              child: Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: QesmaSpacing.sm,
+                runSpacing: QesmaSpacing.xs,
+                children: [
+                  Text(l10n.expenseItemizedBarTotal, style: theme.textTheme.bodyMedium?.copyWith(color: QesmaColors.textSecondary)),
+                  if (billTotalMinor != null) MoneyText(billTotalMinor!, size: MoneySize.large) else const SkeletonBlock(width: 96, height: 24),
+                ],
+              ),
+            ),
           AppButton(
             label: isEdit ? l10n.expenseFormSaveChanges : l10n.expenseFormSave,
             icon: Icons.check,
@@ -469,6 +499,33 @@ class _BottomBar extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// A restaurant bill's total is not typed: it is the server's number for the items, service, tax
+/// and adjustment as they are now (a placeholder while it is being worked out).
+class _BillTotal extends StatelessWidget {
+  const _BillTotal({required this.totalMinor});
+
+  final int? totalMinor;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(l10n.expenseBillTotal, style: theme.textTheme.labelLarge),
+        const SizedBox(height: QesmaSpacing.xs),
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: totalMinor == null ? const SkeletonBlock(width: 120, height: 28) : MoneyText(totalMinor!, size: MoneySize.large),
+        ),
+        const SizedBox(height: QesmaSpacing.xs),
+        Text(l10n.expenseItemizedTotalNote, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textSecondary)),
+      ],
     );
   }
 }

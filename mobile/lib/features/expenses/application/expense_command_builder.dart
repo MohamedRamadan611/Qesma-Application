@@ -15,7 +15,7 @@ const String kPreviewTitle = 'x';
 ///   members); an EDIT sends the explicit list of all current members (A39).
 /// - EQUAL "selected": the explicit selected ids.
 /// - EXACT: `shares` for the selected members with the typed amounts.
-/// - ITEMIZED is built in FL6: null here.
+/// - ITEMIZED: [buildItemizedCommand] (items, service, tax, adjustment; no total).
 /// - Payers: single = the payer with the total (a copy, not a division); several = the typed
 ///   amounts. A PREVIEW may go without payers, so it sends them only when they are valid.
 ExpenseCommand? buildExpenseCommand(
@@ -24,9 +24,10 @@ ExpenseCommand? buildExpenseCommand(
   required List<String> memberIds,
   bool preview = false,
 }) {
+  if (form.splitMode == SplitMode.itemized) return buildItemizedCommand(form, memberIds: memberIds);
+
   final total = form.totalMinor;
   if (total == null || !form.dateValid || memberIds.isEmpty) return null;
-  if (form.splitMode == SplitMode.itemized) return null;
 
   var title = form.trimmedTitle;
   if (title.isEmpty && preview) {
@@ -136,3 +137,76 @@ ExpenseCommand buildPayersCheck({
             ..amountMinor = entry.value),
       ]);
     });
+
+/// The restaurant bill as a request (spec 7.4, 8.4, A31). Null while the bill cannot make a valid
+/// request.
+///
+/// - `items`: name (trimmed), amount, assignees (current members, in member order).
+/// - `service {bps}` ONLY when the service switch is on; `tax {bps, base}` ONLY when the tax switch is
+///   on (base always explicit). Off means the field is absent, never 0 bps; a 0% charge that is
+///   switched on is sent as `bps: 0`.
+/// - `adjustmentMinor` only when it is not zero. `totalMinor` is never sent: the server computes it.
+/// - Payers: single = the payer with the server's total (a copy); several = the typed amounts.
+///
+/// [preview] builds the question for the preview endpoint: a placeholder title (the server validates
+/// it, the answer does not depend on it) and payers only when [withPayers] is set and they are valid.
+ExpenseCommand? buildItemizedCommand(
+  ExpenseFormState form, {
+  required List<String> memberIds,
+  bool preview = false,
+  bool withPayers = true,
+}) {
+  final draft = form.itemized;
+  if (!form.dateValid || memberIds.isEmpty || !draft.valid(memberIds)) return null;
+
+  var title = form.trimmedTitle;
+  if (preview) {
+    title = kPreviewTitle;
+  } else if (!form.titleValid) {
+    return null;
+  }
+
+  final canSendPayers = form.payersValid && form.totalMinor != null;
+  if (!preview && !canSendPayers) return null;
+  final payers = withPayers && canSendPayers ? form.payerMinors() : const <String, int>{};
+
+  return ExpenseCommand((b) {
+    b
+      ..title = title
+      ..expenseDate = form.date
+      ..splitType = 'ITEMIZED';
+    b.items.addAll([
+      for (final item in draft.items)
+        ItemInput((i) {
+          final assignees = item.assigneesAmong(memberIds);
+          i
+            ..name = item.trimmedName
+            ..amountMinor = item.amountMinor!
+            ..assigneeMemberIds.addAll([for (final id in memberIds) if (assignees.contains(id)) id]);
+        }),
+    ]);
+    final service = draft.serviceBps;
+    if (service != null) b.service = ServiceInput((s) => s..bps = service).toBuilder();
+    final tax = draft.taxBps;
+    if (tax != null) {
+      b.tax = TaxInput((t) => t
+        ..bps = tax
+        ..base_ = draft.taxBase.wire).toBuilder();
+    }
+    final adjustment = draft.adjustmentMinor ?? 0;
+    if (adjustment != 0) b.adjustmentMinor = adjustment;
+    if (payers.isNotEmpty) {
+      b.payers.addAll([
+        for (final entry in payers.entries)
+          PayerInput((p) => p
+            ..memberId = entry.key
+            ..amountMinor = entry.value),
+      ]);
+    }
+  });
+}
+
+/// The question for the numbers shown in the editor (no payers), or with them for the
+/// "do the payers match" banner.
+ExpenseCommand? buildItemizedPreview(ExpenseFormState form, {required List<String> memberIds, bool withPayers = false}) =>
+    buildItemizedCommand(form, memberIds: memberIds, preview: true, withPayers: withPayers);

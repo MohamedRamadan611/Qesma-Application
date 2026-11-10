@@ -6,6 +6,13 @@ import '../theme/qesma_text.dart';
 import '../theme/tokens.dart';
 import 'money_text.dart';
 
+/// A member's balance as a person would say it ("Owes 80 pounds"): word and amount in words, no digits-only numbers.
+String balanceSpoken(AppLocalizations l10n, int netMinor) => netMinor > 0
+    ? l10n.balanceOwedSpoken(moneySpoken(l10n, netMinor))
+    : netMinor < 0
+        ? l10n.balanceOwesSpoken(moneySpoken(l10n, netMinor, signedSpoken: false))
+        : l10n.balanceSettledSpoken;
+
 /// A member's net balance as a pill: word + signed amount (owed "له +100.00", owes
 /// "عليه −80.00", settled "خالص 0.00"). Colour is never the only signal.
 class BalanceStatusChip extends StatelessWidget {

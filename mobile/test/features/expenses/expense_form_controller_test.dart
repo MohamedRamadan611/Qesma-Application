@@ -490,12 +490,12 @@ void main() {
       expect(server.updates.single['shares'], hasLength(3));
     });
 
-    test('an itemized bill opens the FL6 stub phase, not a form', () async {
+    test('an itemized bill opens as a restaurant bill (FL6)', () async {
       const itemizedId = '7e3b3a23-d844-4889-99ae-5cba254d1173';
       final itemized = formController(container, server, eid: itemizedId);
       await itemized.startEdit();
-      expect(formView(container, server, eid: itemizedId).phase, FormPhase.itemized);
-      expect(formView(container, server, eid: itemizedId).form, isNull);
+      expect(formView(container, server, eid: itemizedId).phase, FormPhase.ready);
+      expect(formView(container, server, eid: itemizedId).form!.splitMode, SplitMode.itemized);
     });
 
     test('an expense that is gone: the gone phase', () async {

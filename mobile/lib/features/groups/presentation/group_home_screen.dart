@@ -7,6 +7,7 @@ import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
+import '../../balances/presentation/balances_tab.dart';
 import '../../expenses/application/expenses_list_controller.dart';
 import '../../expenses/presentation/expenses_tab.dart';
 import '../application/group_detail_controller.dart';
@@ -16,7 +17,7 @@ import 'members_tab.dart';
 
 /// Group home shell (P3-01): header with name, type, member count and total spent, and the
 /// three tabs in the design's order (Expenses, Balances, Members: first on the right in
-/// Arabic). Expenses and Balances bodies are placeholders owned by FL4 and FL7.
+/// Arabic).
 class GroupHomeScreen extends ConsumerStatefulWidget {
   const GroupHomeScreen({super.key, required this.gid, this.initialTab});
 
@@ -68,7 +69,7 @@ class _GroupHomeScreenState extends ConsumerState<GroupHomeScreen> {
     final Widget tabBody = switch (_tab) {
       0 => ExpensesTab(group: group),
       2 => MembersTab(group: group),
-      _ => const _NotBuilt(),
+      _ => BalancesTab(group: group),
     };
 
     return AppScaffold(
@@ -99,27 +100,6 @@ class _GroupHomeScreenState extends ConsumerState<GroupHomeScreen> {
           ),
           Expanded(child: tabBody),
         ],
-      ),
-    );
-  }
-}
-
-/// Placeholder body for tabs a later milestone builds. Clearly marked, no fake data.
-class _NotBuilt extends StatelessWidget {
-  const _NotBuilt();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(QesmaSpacing.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(l10n.groupNotBuiltYet, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: QesmaColors.textSecondary)),
-          ],
-        ),
       ),
     );
   }

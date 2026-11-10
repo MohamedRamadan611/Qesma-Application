@@ -1,0 +1,34 @@
+{
+  "totalMinor": 43500,
+  "subtotalMinor": 44000,
+  "serviceMinor": 0,
+  "taxMinor": 0,
+  "adjustmentMinor": -500,
+  "members": [
+    {
+      "memberId": "77e31a5d-f072-4568-9115-0259fb131e9a",
+      "owedMinor": 12852,
+      "itemsMinor": 13000,
+      "serviceMinor": 0,
+      "taxMinor": 0,
+      "adjustmentMinor": -148
+    },
+    {
+      "memberId": "98138ea2-62ee-4b5d-92d0-0ecccb012cfa",
+      "owedMinor": 12852,
+      "itemsMinor": 13000,
+      "serviceMinor": 0,
+      "taxMinor": 0,
+      "adjustmentMinor": -148
+    },
+    {
+      "memberId": "014bf05a-7ba1-432e-9c17-35881f72d003",
+      "owedMinor": 17796,
+      "itemsMinor": 18000,
+      "serviceMinor": 0,
+      "taxMinor": 0,
+      "adjustmentMinor": -204
+    }
+  ],
+  "payersTotalMatches": false
+}

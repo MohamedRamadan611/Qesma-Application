@@ -436,9 +436,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupTabMembers => 'الأعضاء';
 
   @override
-  String get groupNotBuiltYet => 'الشاشة دي لسه تحت الإنشاء.';
-
-  @override
   String groupHeaderSubtitle(String members, String total) {
     return '$members • $total';
   }
@@ -1036,4 +1033,295 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get expenseFormSaved => 'اتحفظ المصروف.';
+
+  @override
+  String get expenseItemizedTotalNote => 'بيتحسب من الأصناف والخدمة والضريبة.';
+
+  @override
+  String get expenseItemizedItemsTitle => 'أصناف الفاتورة';
+
+  @override
+  String expenseItemizedItemHeading(String n) {
+    return 'الصنف $n';
+  }
+
+  @override
+  String get expenseItemizedNameLabel => 'اسم الصنف';
+
+  @override
+  String get expenseItemizedNameHint => 'مثلاً: بيتزا';
+
+  @override
+  String get expenseItemizedNameRequired => 'اكتب اسم الصنف.';
+
+  @override
+  String get expenseItemizedAmountLabel => 'سعر الصنف';
+
+  @override
+  String get expenseItemizedAmountInvalid => 'اكتب سعر صحيح أكبر من صفر.';
+
+  @override
+  String get expenseItemizedAssigneesLabel => 'مين شارك في الصنف ده؟';
+
+  @override
+  String get expenseItemizedNoAssignee => 'اختار عضو واحد على الأقل.';
+
+  @override
+  String get expenseItemizedAdd => 'إضافة صنف جديد';
+
+  @override
+  String get expenseItemizedLimit => 'وصلت للحد الأقصى: 100 صنف.';
+
+  @override
+  String get expenseItemizedRemove => 'امسح الصنف';
+
+  @override
+  String expenseItemizedRemoveSpoken(String n) {
+    return 'امسح الصنف $n';
+  }
+
+  @override
+  String get expenseItemizedChargesTitle => 'الخدمة والضريبة';
+
+  @override
+  String get expenseItemizedPercentLabel => 'النسبة (%)';
+
+  @override
+  String get expenseItemizedPercentHint => 'مثلاً 12';
+
+  @override
+  String get expenseItemizedPercentInvalid =>
+      'اكتب نسبة من 0 لـ 100، بحد أقصى رقمين بعد العلامة.';
+
+  @override
+  String get expenseItemizedTaxBaseTitle => 'الضريبة بتتحسب على';
+
+  @override
+  String get expenseItemizedTaxBaseSubtotal => 'المجموع فقط';
+
+  @override
+  String get expenseItemizedTaxBaseWithService => 'المجموع + الخدمة';
+
+  @override
+  String get expenseItemizedAdjustmentTitle => 'فرق التقريب / إكرامية';
+
+  @override
+  String get expenseItemizedAdjustmentHint =>
+      'لتسوية الكسور أو البقشيش. ممكن يكون بالسالب.';
+
+  @override
+  String get expenseItemizedAdjustmentInvalid =>
+      'اكتب مبلغ صحيح (ممكن يكون بالسالب).';
+
+  @override
+  String get expenseItemizedAdjustmentPlus => 'زوّد قرش';
+
+  @override
+  String get expenseItemizedAdjustmentMinus => 'نقّص قرش';
+
+  @override
+  String get expenseItemizedLoading => 'بنحسب الفاتورة…';
+
+  @override
+  String get expenseItemizedFailed => 'معرفناش نحسب الفاتورة.';
+
+  @override
+  String get expenseItemizedIncomplete =>
+      'كمّل الأصناف والنسب عشان تظهر الحسابات.';
+
+  @override
+  String get expenseItemizedPayersMatch => 'الدافعين مطابقين للفاتورة';
+
+  @override
+  String get expenseItemizedPayersMismatch =>
+      'الدافعين مش مطابقين للفاتورة. عدّل الدافعين.';
+
+  @override
+  String get expenseItemizedPayersChecking => 'بنراجع الدافعين…';
+
+  @override
+  String get expenseItemizedBarTotal => 'إجمالي الفاتورة المحسوب';
+
+  @override
+  String get expensePayersNeedItems => 'كمّل أصناف الفاتورة الأول.';
+
+  @override
+  String get balancesTotalSpent => 'إجمالي مصاريف الجروب';
+
+  @override
+  String get balancesNeedOne => 'مطلوب تحويل واحد لإنهاء الحسابات';
+
+  @override
+  String get balancesNeedTwo => 'مطلوب تحويلين لإنهاء الحسابات';
+
+  @override
+  String balancesNeed(String count) {
+    return 'مطلوب $count تحويلات لإنهاء الحسابات';
+  }
+
+  @override
+  String balancesNeedMany(String count) {
+    return 'مطلوب $count تحويلًا لإنهاء الحسابات';
+  }
+
+  @override
+  String get balancesAllSettledTitle => 'الحسابات متصفّية';
+
+  @override
+  String get balancesAllSettledBody => 'مفيش حد عليه فلوس لحد دلوقتي.';
+
+  @override
+  String get balancesSuggestedTitle => 'تحويلات مقترحة';
+
+  @override
+  String get balancesPays => 'يدفع';
+
+  @override
+  String get balancesReceives => 'يستلم';
+
+  @override
+  String balancesTransferSpoken(String from, String to, String amount) {
+    return '$from يدفع $amount لـ $to';
+  }
+
+  @override
+  String get balancesRecordPayment => 'تسجيل سداد';
+
+  @override
+  String balancesRecordPaymentSpoken(String from, String to, String amount) {
+    return 'تسجيل سداد من $from إلى $to، $amount';
+  }
+
+  @override
+  String get balancesRecordAnother => 'سجّل سداد تاني';
+
+  @override
+  String get balancesNetsTitle => 'صافي رصيد كل عضو';
+
+  @override
+  String balancesMemberSpoken(String name, String status) {
+    return '$name، $status';
+  }
+
+  @override
+  String get balancesHistoryTitle => 'سجل السداد';
+
+  @override
+  String get balancesHistoryEmpty => 'لسه مفيش سداد متسجّل.';
+
+  @override
+  String balancesPaymentTitle(String from, String to) {
+    return '$from سدد لـ $to';
+  }
+
+  @override
+  String balancesPaymentSpoken(
+    String from,
+    String to,
+    String amount,
+    String date,
+  ) {
+    return '$from سدد $amount لـ $to، $date';
+  }
+
+  @override
+  String balancesPaymentNoteSpoken(String base, String note) {
+    return '$base، $note';
+  }
+
+  @override
+  String get balancesDeletePayment => 'امسح السداد';
+
+  @override
+  String balancesDeletePaymentSpoken(String from, String to, String amount) {
+    return 'امسح سداد $from لـ $to، $amount';
+  }
+
+  @override
+  String get balancesDeleteTitle => 'تمسح السداد ده؟';
+
+  @override
+  String get balancesDeleteBody =>
+      'الأرصدة هتتحسب من جديد من غير السداد ده، ومش هينفع نرجّعه بعد كده.';
+
+  @override
+  String get balancesDeleted => 'اتمسح السداد.';
+
+  @override
+  String get balancesDeleteGone => 'السداد ده كان اتمسح قبل كده.';
+
+  @override
+  String get balancesLoadMore => 'حمّل المزيد';
+
+  @override
+  String get balancesLoadMoreFailed => 'معرفناش نحمّل باقي السداد.';
+
+  @override
+  String get balancesRefresh => 'تحديث الأرصدة';
+
+  @override
+  String get balancesRefreshFailed =>
+      'معرفناش نحدّث الأرصدة. المعروض هو آخر نسخة عندنا.';
+
+  @override
+  String get paymentSubtitle => 'تسوية الحسابات بين أعضاء الجروب';
+
+  @override
+  String get paymentFrom => 'من (الدافع)';
+
+  @override
+  String get paymentTo => 'إلى (المستلم)';
+
+  @override
+  String get paymentPickMember => 'اختار عضو';
+
+  @override
+  String get paymentAmountLabel => 'المبلغ المسدد (ج.م)';
+
+  @override
+  String get paymentAmountError =>
+      'اكتب مبلغ صحيح أكبر من صفر، لحد خانتين عشرية.';
+
+  @override
+  String paymentFullAmount(String amount) {
+    return 'كامل المبلغ: $amount';
+  }
+
+  @override
+  String get paymentDateLabel => 'تاريخ السداد';
+
+  @override
+  String get paymentDateError => 'اختار تاريخ بين 2000 و2100.';
+
+  @override
+  String get paymentNoteLabel => 'ملاحظة (اختياري)';
+
+  @override
+  String get paymentNoteHint => 'مثلًا: كاش في الرحلة';
+
+  @override
+  String get paymentNoteError => 'الملاحظة أطول من 200 حرف.';
+
+  @override
+  String get paymentSameMember => 'اختار عضوين مختلفين.';
+
+  @override
+  String paymentConfirm(String amount) {
+    return 'تأكيد تسجيل السداد ($amount)';
+  }
+
+  @override
+  String get paymentConfirmNoAmount => 'تأكيد تسجيل السداد';
+
+  @override
+  String get paymentRecorded => 'اتسجّل السداد.';
+
+  @override
+  String get paymentDiscardTitle => 'تتجاهل السداد ده؟';
+
+  @override
+  String get paymentDiscardBody => 'اللي كتبته مش هيتحفظ.';
+
+  @override
+  String get paymentDiscardConfirm => 'تجاهل';
 }

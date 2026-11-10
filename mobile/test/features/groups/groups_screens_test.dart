@@ -219,7 +219,7 @@ void main() {
   });
 
   group('group home, edit and delete', () {
-    testWidgets('shell: header, tabs in RTL order, the Balances stub is marked, members tab works', (tester) async {
+    testWidgets('shell: header, tabs in RTL order, the Balances tab is the real one, members tab works', (tester) async {
       server.seed(name: 'Dahab', type: 'TRIP', total: 106179);
       await pumpGroupsApp(tester, server);
       await tapText(tester, 'Dahab');
@@ -232,7 +232,7 @@ void main() {
       expect(balances.dx, greaterThan(members.dx));
       expect(find.text('الشاشة دي لسه تحت الإنشاء.'), findsNothing, reason: 'the Expenses tab is the real list since FL4');
       await tapText(tester, 'الأرصدة');
-      expect(find.text('الشاشة دي لسه تحت الإنشاء.'), findsOneWidget);
+      expect(find.text('الشاشة دي لسه تحت الإنشاء.'), findsNothing, reason: 'the Balances tab is the real one since FL7 (this server has no balances: it shows its error state)');
 
       await tapText(tester, 'الأعضاء');
       expect(find.text('Me'), findsOneWidget);

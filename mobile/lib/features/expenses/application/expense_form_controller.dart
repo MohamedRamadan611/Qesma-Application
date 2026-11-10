@@ -19,7 +19,7 @@ import 'expense_refresh.dart';
 /// `(gid, eid)`: eid is null when adding. Records compare by value, so they work as a family key.
 typedef ExpenseFormKey = ({String gid, String? eid});
 
-enum FormPhase { loading, ready, failed, gone, itemized }
+enum FormPhase { loading, ready, failed, gone }
 
 enum SaveOutcome {
   /// Saved (201 / 200): [ExpenseFormView.savedId] is the expense to open.
@@ -137,6 +137,11 @@ class ExpenseFormController extends Notifier<ExpenseFormView> {
       _prefillTimer?.cancel();
       _action.reset();
     });
+    // The restaurant bill's total is the server's: copy it from the preview once that preview is
+    // the answer for exactly the bill as it is now.
+    ref.listen<PreviewState>(expensePreviewControllerProvider((gid: gid, slot: PreviewSlot.split)), (previous, next) => _onSplitPreview(next));
+    // Held open so the editor's "do the payers match" answer survives rebuilds.
+    ref.listen<PreviewState>(expensePreviewControllerProvider((gid: gid, slot: PreviewSlot.match)), (previous, next) {});
     return const ExpenseFormView();
   }
 
@@ -192,12 +197,9 @@ class ExpenseFormController extends Notifier<ExpenseFormView> {
       final expense = await _repo.get(gid, key.eid!);
       if (!ref.mounted) return;
       final filled = formFromExpense(expense, memberIds: memberIds, fallbackPayerId: _defaultPayerId);
-      if (filled == null) {
-        state = const ExpenseFormView(phase: FormPhase.itemized);
-        return;
-      }
       _initial = filled;
       state = ExpenseFormView(form: filled, phase: FormPhase.ready);
+      _syncItemizedPreviews();
     } on ApiFailure catch (failure) {
       if (!ref.mounted) return;
       final gone = failure is ApiHttpFailure && failure.problem?.code == ApiErrorCode.notFound;
@@ -207,7 +209,135 @@ class ExpenseFormController extends Notifier<ExpenseFormView> {
 
   // ---- editing the form ----
 
-  void _set(ExpenseFormState next) => state = state.copyWith(form: next, clearFailure: true);
+  /// Replaces the form. Any change to a restaurant bill's inputs forgets the server's total for it
+  /// at once (the new total is copied in when the preview for the new inputs arrives), so a total
+  /// that belongs to older inputs can never be saved or paid against.
+  void _set(ExpenseFormState next) {
+    var f = next;
+    final old = state.form;
+    if (f.splitMode == SplitMode.itemized && old != null && _itemizedKey(old) != _itemizedKey(f)) {
+      f = f.copyWith(clearServerTotal: true);
+    }
+    state = state.copyWith(form: f, clearFailure: true);
+    if (f.splitMode == SplitMode.itemized || old?.splitMode == SplitMode.itemized) _syncItemizedPreviews();
+  }
+
+  /// Canonical text of the question the preview would be asked for this bill (null while it is incomplete).
+  String? _itemizedKey(ExpenseFormState f) {
+    final command = buildItemizedPreview(f, memberIds: memberIds);
+    return command == null ? null : commandKey(command);
+  }
+
+  /// In restaurant-bill mode the controller keeps the two previews up to date (the numbers, and
+  /// the one with the payers for the match banner); in other modes the screen drives the split one.
+  void _syncItemizedPreviews() {
+    final f = form;
+    if (f == null) return;
+    final match = ref.read(expensePreviewControllerProvider((gid: gid, slot: PreviewSlot.match)).notifier);
+    if (f.splitMode != SplitMode.itemized) {
+      match.request(null);
+      return;
+    }
+    ref.read(expensePreviewControllerProvider((gid: gid, slot: PreviewSlot.split)).notifier).request(buildItemizedPreview(f, memberIds: memberIds));
+    match.request(buildItemizedPreview(f, memberIds: memberIds, withPayers: true));
+  }
+
+  void _onSplitPreview(PreviewState next) {
+    final f = form;
+    if (f == null || f.splitMode != SplitMode.itemized) return;
+    final key = _itemizedKey(f);
+    if (key == null || !next.isCurrentFor(key)) return;
+    final total = next.preview!.totalMinor;
+    if (f.serverTotalMinor == total) return;
+    state = state.copyWith(form: f.copyWith(serverTotalMinor: total));
+    _syncItemizedPreviews(); // the payers are valid now that the total is known
+  }
+
+  // ---- the restaurant bill ----
+
+  int _itemSeq = 0;
+
+  void _setItemized(ItemizedDraft draft) {
+    final f = form;
+    if (f != null) _set(f.copyWith(itemized: draft));
+  }
+
+  ItemDraft _newItem() => ItemDraft(id: 'new-${_itemSeq++}', assigneeIds: {...memberIds});
+
+  /// A new item starts with everyone selected (the user unchecks).
+  void addItem() {
+    final f = form;
+    if (f == null || f.itemized.items.length >= kMaxItems) return;
+    _setItemized(f.itemized.copyWith(items: [...f.itemized.items, _newItem()]));
+  }
+
+  void removeItem(String id) {
+    final f = form;
+    if (f != null) _setItemized(f.itemized.copyWith(items: [for (final i in f.itemized.items) if (i.id != id) i]));
+  }
+
+  void _changeItem(String id, ItemDraft Function(ItemDraft) change) {
+    final f = form;
+    if (f == null) return;
+    _setItemized(f.itemized.copyWith(items: [for (final i in f.itemized.items) i.id == id ? change(i) : i]));
+  }
+
+  void setItemName(String id, String value) => _changeItem(id, (i) => i.copyWith(name: value, touched: true));
+
+  void setItemAmount(String id, String value) => _changeItem(id, (i) => i.copyWith(amountText: value, touched: true));
+
+  void toggleAssignee(String id, String memberId) => _changeItem(id, (i) {
+        final next = {...i.assigneeIds};
+        if (!next.add(memberId)) next.remove(memberId);
+        return i.copyWith(assigneeIds: next, touched: true);
+      });
+
+  void setServiceOn(bool on) {
+    final f = form;
+    if (f == null) return;
+    // Switching it on offers the usual rate; the field stays editable and keeps whatever the user typed.
+    final empty = f.itemized.servicePercentText.trim().isEmpty;
+    _setItemized(f.itemized.copyWith(serviceOn: on, servicePercentText: on && empty ? kDefaultServicePercent : null));
+  }
+
+  void setServicePercent(String text) {
+    final f = form;
+    if (f != null) _setItemized(f.itemized.copyWith(servicePercentText: text));
+  }
+
+  void setTaxOn(bool on) {
+    final f = form;
+    if (f == null) return;
+    final empty = f.itemized.taxPercentText.trim().isEmpty;
+    _setItemized(f.itemized.copyWith(taxOn: on, taxPercentText: on && empty ? kDefaultTaxPercent : null));
+  }
+
+  void setTaxPercent(String text) {
+    final f = form;
+    if (f != null) _setItemized(f.itemized.copyWith(taxPercentText: text));
+  }
+
+  void setTaxBase(TaxBase base) {
+    final f = form;
+    if (f != null) _setItemized(f.itemized.copyWith(taxBase: base));
+  }
+
+  void setAdjustment(String text) {
+    final f = form;
+    if (f != null) _setItemized(f.itemized.copyWith(adjustmentText: text));
+  }
+
+  /// The +/- buttons of the adjustment: one piaster (0.01 EGP) more or less than what was typed.
+  /// Zero is shown as an empty box (no adjustment).
+  void stepAdjustment(int piasters) {
+    final f = form;
+    if (f == null) return;
+    final current = f.itemized.adjustmentMinor;
+    if (current == null) return; // unreadable text: nothing to step from
+    final next = current + piasters;
+    if (next.abs() > Money.maxMinor) return;
+    _setItemized(f.itemized.copyWith(adjustmentText: next == 0 ? '' : Money.formatPlain(next)));
+  }
 
   void setTitle(String value) {
     final f = form;
@@ -228,11 +358,16 @@ class ExpenseFormController extends Notifier<ExpenseFormView> {
     if (f != null) _set(f.copyWith(date: value));
   }
 
-  /// The Restaurant-bill tab never reaches here (the screen opens the FL6 stub instead).
+  /// Switches the tab. The restaurant bill starts with one empty item so the editor shows something to fill.
   void setSplitMode(SplitMode mode) {
     final f = form;
-    if (f == null || mode == f.splitMode || mode == SplitMode.itemized) return;
+    if (f == null || mode == f.splitMode) return;
     var next = f.copyWith(splitMode: mode);
+    if (mode == SplitMode.itemized) {
+      if (next.itemized.items.isEmpty) next = next.copyWith(itemized: next.itemized.copyWith(items: [_newItem()]));
+      _set(next);
+      return;
+    }
     if (mode != SplitMode.all && (f.splitMode == SplitMode.all || f.selectedIds.isEmpty)) {
       next = next.copyWith(selectedIds: {...memberIds});
     }
@@ -381,7 +516,7 @@ class ExpenseFormController extends Notifier<ExpenseFormView> {
       final sent = _lastSentKey;
       if (_maybeApplied && sent != null) {
         final asForm = formFromExpense(latest, memberIds: memberIds, fallbackPayerId: _defaultPayerId);
-        final asCommand = asForm == null ? null : buildExpenseCommand(asForm, edit: true, memberIds: memberIds);
+        final asCommand = buildExpenseCommand(asForm, edit: true, memberIds: memberIds);
         if (asCommand != null && commandKey(asCommand) == sent) {
           _maybeApplied = false;
           state = state.copyWith(savedId: key.eid, clearFailure: true);

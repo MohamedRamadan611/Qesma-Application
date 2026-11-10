@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:qesma_api/qesma_api.dart';
 
 import '../../../core/l10n/generated/app_localizations.dart';
-import '../../../core/router/app_router.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../application/expense_form_controller.dart';
@@ -60,17 +58,11 @@ class SplitSection extends ConsumerWidget {
               chip(l10n.expenseFormSplitAll, SplitMode.all),
               chip(l10n.expenseFormSplitSelected, SplitMode.selected),
               chip(l10n.expenseSplitExact, SplitMode.exact),
-              // Selecting it never changes the form: it opens the restaurant-bill screen (FL6).
-              AppChoiceChip(
-                label: l10n.expenseSplitItemized,
-                selected: false,
-                icon: Icons.receipt_long,
-                onSelected: (_) => context.push(Routes.addItemized(formKey.gid)),
-              ),
+              chip(l10n.expenseSplitItemized, SplitMode.itemized, icon: Icons.receipt_long),
             ],
           ),
           const SizedBox(height: QesmaSpacing.md),
-          if (mode != SplitMode.exact) _PreviewStatus(form: form, state: preview, current: current != null, previewKey: previewKey, formKey: formKey),
+          if (mode == SplitMode.all || mode == SplitMode.selected) _PreviewStatus(form: form, state: preview, current: current != null, previewKey: previewKey, formKey: formKey),
           if (mode == SplitMode.exact) ...[
             Row(
               children: [
@@ -98,7 +90,8 @@ class SplitSection extends ConsumerWidget {
               ),
             const SizedBox(height: QesmaSpacing.sm),
           ],
-          for (final member in members)
+          if (mode != SplitMode.itemized)
+            for (final member in members)
             Padding(
               padding: const EdgeInsets.only(bottom: QesmaSpacing.sm),
               child: _MemberRow(

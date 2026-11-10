@@ -10,7 +10,6 @@ import '../../features/auth/presentation/splash_screen.dart';
 import '../../features/auth/presentation/welcome_screen.dart';
 import '../../features/expenses/presentation/expense_details_screen.dart';
 import '../../features/expenses/presentation/expense_form_screen.dart';
-import '../../features/expenses/presentation/expense_stubs.dart';
 import '../../features/groups/presentation/create_group_screen.dart';
 import '../../features/groups/presentation/edit_group_screen.dart';
 import '../../features/groups/presentation/group_home_screen.dart';
@@ -24,7 +23,6 @@ abstract final class Routes {
   static String group(String gid) => '/groups/$gid';
   static String editGroup(String gid) => '/groups/$gid/edit';
   static String addExpense(String gid) => '/groups/$gid/expenses/new';
-  static String addItemized(String gid) => '/groups/$gid/expenses/new/itemized';
   static String expense(String gid, String eid) => '/groups/$gid/expenses/$eid';
   static String editExpense(String gid, String eid) => '/groups/$gid/expenses/$eid/edit';
   static const String splash = '/splash';
@@ -111,14 +109,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(path: 'edit', builder: (context, state) => EditGroupScreen(gid: state.pathParameters['gid']!)),
           // 'expenses/new' must stay before 'expenses/:eid' (first match wins).
-          GoRoute(
-            path: 'expenses/new',
-            builder: (context, state) => ExpenseFormScreen(gid: state.pathParameters['gid']!),
-            routes: [
-              // The restaurant bill is FL6: a marked stub until then.
-              GoRoute(path: 'itemized', builder: (context, state) => const ExpenseFormStub(edit: false, itemized: true)),
-            ],
-          ),
+          GoRoute(path: 'expenses/new', builder: (context, state) => ExpenseFormScreen(gid: state.pathParameters['gid']!)),
           GoRoute(
             path: 'expenses/:eid',
             builder: (context, state) => ExpenseDetailsScreen(gid: state.pathParameters['gid']!, eid: state.pathParameters['eid']!),

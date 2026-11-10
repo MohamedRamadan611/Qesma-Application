@@ -161,6 +161,27 @@ void main() {
     expect(hits, isEmpty, reason: 'Build the request with buildExpenseCommand / buildEqualPreview / buildPayersCheck.\n${hits.join('\n')}');
   });
 
+  test('the body of a payment is built in ONE place (record_payment_state), never in widgets or notifiers', () {
+    final hits = _scan(
+      RegExp(r'\bSettlementCommand\('),
+      skip: (p) => p == 'lib/features/balances/application/record_payment_state.dart',
+    );
+    expect(hits, isEmpty, reason: 'Build the request with buildSettlementCommand.\n${hits.join('\n')}');
+  });
+
+  test('no arithmetic on balances: nets, transfers and payment amounts are shown as the server sent them', () {
+    // Sums, differences, products and folds over nets/transfers/amounts would be the client calculating balances.
+    final hits = _scan(
+      RegExp(
+        r'(netMinor|amountMinor|\.nets\b|\.transfers\b)[^;]*(\.fold\(|\.reduce\(|\.sum\b)'
+        r'|(netMinor|amountMinor)\s*[-+*/%]\s*[\w(]'
+        r'|[\w)]\s*[-+*/%]\s*\w*\.?(netMinor|amountMinor)\b',
+      ),
+      skip: (p) => !p.startsWith('lib/features/balances/'),
+    );
+    expect(hits, isEmpty, reason: 'Balances and transfers come only from the endpoint (SCREEN_MAP).\n${hits.join('\n')}');
+  });
+
   test('the manifest disables Android backup (restored backups cannot unwrap the Keystore-wrapped token)', () {
     final main = File('android/app/src/main/AndroidManifest.xml').readAsStringSync();
     expect(main, contains('android:allowBackup="false"'));

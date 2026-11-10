@@ -1,0 +1,13 @@
+{
+  "title": "Sea Food",
+  "expenseDate": "2026-10-18",
+  "splitType": "ITEMIZED",
+  "items": [
+    { "name": "Pizza", "amountMinor": 20000, "assigneeMemberIds": [ "77e31a5d-f072-4568-9115-0259fb131e9a", "98138ea2-62ee-4b5d-92d0-0ecccb012cfa" ] },
+    { "name": "Pasta", "amountMinor": 15000, "assigneeMemberIds": [ "014bf05a-7ba1-432e-9c17-35881f72d003" ] },
+    { "name": "Drinks", "amountMinor": 9000, "assigneeMemberIds": [ "77e31a5d-f072-4568-9115-0259fb131e9a", "98138ea2-62ee-4b5d-92d0-0ecccb012cfa", "014bf05a-7ba1-432e-9c17-35881f72d003" ] }
+  ],
+  "service": { "bps": 1200 },
+  "tax": { "bps": 1400, "base": "SUBTOTAL_PLUS_SERVICE" },
+  "payers": [ { "memberId": "77e31a5d-f072-4568-9115-0259fb131e9a", "amountMinor": 56179 } ]
+}

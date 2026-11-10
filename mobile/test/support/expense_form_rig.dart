@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/misc.dart' show ProviderListenable;
+import 'package:flutter_riverpod/misc.dart' show Override, ProviderListenable;
 import 'package:qesma/core/format/clock.dart';
 import 'package:qesma/features/expenses/application/expense_form_controller.dart';
 import 'package:qesma/features/expenses/application/expense_preview_controller.dart';
@@ -22,12 +22,17 @@ void keepAlive(ProviderContainer container, ProviderListenable<Object?> provider
 
 /// The real form stack (controller, preview, repository, generated client) on the fake server, with
 /// the group already loaded (the form reads its members from it) and a short debounce.
-Future<ProviderContainer> formContainer(FakeExpensesServer server, {Duration debounce = const Duration(milliseconds: 10)}) async {
+Future<ProviderContainer> formContainer(
+  FakeExpensesServer server, {
+  Duration debounce = const Duration(milliseconds: 10),
+  List<Override> extra = const [],
+}) async {
   final container = expensesContainer(
     server,
     extra: [
       clockProvider.overrideWithValue(() => formNow),
       previewDebounceProvider.overrideWithValue(debounce),
+      ...extra,
     ],
   );
   keepAlive(container, groupDetailControllerProvider(server.gid));

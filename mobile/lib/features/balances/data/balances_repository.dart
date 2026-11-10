@@ -1,0 +1,55 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:qesma_api/qesma_api.dart';
+
+import '../../../core/auth/auth_providers.dart';
+import '../../../core/errors/api_failure.dart';
+
+/// One page of the settlement history.
+typedef SettlementsPage = ({List<SettlementView> items, int page, int totalPages, int total});
+
+/// The only code that talks to the generated balances and settlements API. Everything it throws
+/// is an [ApiFailure]; widgets and notifiers never see Dio. It returns what the server said and
+/// calculates nothing.
+class BalancesRepository {
+  BalancesRepository(this._api);
+
+  final QesmaApi _api;
+
+  static const int pageSize = 20;
+
+  Future<T> _run<T>(Future<T> Function() call) async {
+    try {
+      return await call();
+    } catch (error) {
+      throw mapApiError(error);
+    }
+  }
+
+  /// Nets (every member, server order) and the suggested transfers.
+  Future<BalanceView> balances(String gid) => _run(() async {
+        final body = (await _api.getBalanceControllerApi().getBalances(gid: gid)).data;
+        if (body == null) throw const ApiUnexpected();
+        return body;
+      });
+
+  /// Newest first (the server sorts), 20 per page.
+  Future<SettlementsPage> settlements(String gid, {int page = 0}) => _run(() async {
+        final body = (await _api.getSettlementControllerApi().listSettlements(gid: gid, page: page, size: pageSize)).data;
+        if (body == null) throw const ApiUnexpected();
+        return (items: body.items.toList(), page: body.page, totalPages: body.totalPages, total: body.totalElements);
+      });
+
+  /// Records a payment. [key] is the `Idempotency-Key` of this user action.
+  Future<SettlementView> record(String gid, SettlementCommand command, String key) => _run(() async {
+        final body = (await _api.getSettlementControllerApi().createSettlement(gid: gid, idempotencyKey: key, settlementCommand: command)).data;
+        if (body == null) throw const ApiUnexpected();
+        return body;
+      });
+
+  /// Soft delete (204, no `If-Match`: settlements have no version).
+  Future<void> delete(String gid, String sid) => _run(() async {
+        await _api.getSettlementControllerApi().deleteSettlement(gid: gid, sid: sid);
+      });
+}
+
+final balancesRepositoryProvider = Provider<BalancesRepository>((ref) => BalancesRepository(ref.watch(qesmaApiProvider)));
