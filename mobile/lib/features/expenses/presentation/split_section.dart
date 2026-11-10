@@ -8,6 +8,7 @@ import '../../../core/widgets/widgets.dart';
 import '../application/expense_form_controller.dart';
 import '../application/expense_form_state.dart';
 import '../application/expense_preview_controller.dart';
+import '../../../core/theme/palette.dart';
 
 /// The split part of the form (P5-01): the four tabs and the member list.
 ///
@@ -66,7 +67,7 @@ class SplitSection extends ConsumerWidget {
           if (mode == SplitMode.exact) ...[
             Row(
               children: [
-                Expanded(child: Text(l10n.expenseFormExactHint, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textSecondary))),
+                Expanded(child: Text(l10n.expenseFormExactHint, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary))),
                 const SizedBox(width: QesmaSpacing.sm),
                 AppButton(
                   label: l10n.expenseFormSpreadEqually,
@@ -83,7 +84,7 @@ class SplitSection extends ConsumerWidget {
                 padding: const EdgeInsets.only(top: QesmaSpacing.sm),
                 child: Row(
                   children: [
-                    Expanded(child: Semantics(liveRegion: true, child: Text(l10n.expenseFormShareFailed, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.error)))),
+                    Expanded(child: Semantics(liveRegion: true, child: Text(l10n.expenseFormShareFailed, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.error)))),
                     TextButton(onPressed: controller.prefillExact, child: Text(l10n.commonRetry)),
                   ],
                 ),
@@ -127,7 +128,7 @@ class _PreviewStatus extends ConsumerWidget {
     if (form.totalMinor == null) {
       return Padding(
         padding: const EdgeInsets.only(bottom: QesmaSpacing.sm),
-        child: Text(l10n.expenseFormShareNeedAmount, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textSecondary)),
+        child: Text(l10n.expenseFormShareNeedAmount, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
       );
     }
     if (current || previewKey == null) return const SizedBox.shrink();
@@ -136,7 +137,7 @@ class _PreviewStatus extends ConsumerWidget {
         padding: const EdgeInsets.only(bottom: QesmaSpacing.sm),
         child: Row(
           children: [
-            Expanded(child: Semantics(liveRegion: true, child: Text(l10n.expenseFormShareFailed, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.error)))),
+            Expanded(child: Semantics(liveRegion: true, child: Text(l10n.expenseFormShareFailed, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.error)))),
             TextButton(
               onPressed: () => ref.read(expensePreviewControllerProvider((gid: formKey.gid, slot: PreviewSlot.split)).notifier).retry(),
               child: Text(l10n.commonRetry),
@@ -149,7 +150,7 @@ class _PreviewStatus extends ConsumerWidget {
       padding: const EdgeInsets.only(bottom: QesmaSpacing.sm),
       child: Semantics(
         liveRegion: true,
-        child: Text(l10n.expenseFormShareLoading, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textSecondary)),
+        child: Text(l10n.expenseFormShareLoading, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
       ),
     );
   }
@@ -192,7 +193,7 @@ class _MemberRow extends StatelessWidget {
           ? AmountBox(text: exactText, semanticLabel: l10n.expenseFormExactAmountLabel(member.displayName), onChanged: onExactChanged, width: MediaQuery.textScalerOf(context).scale(1) > 1.3 ? 200 : 160)
           : const SizedBox.shrink();
     } else if (!checked) {
-      amount = Text('—', style: theme.textTheme.titleMedium?.copyWith(color: QesmaColors.textHelper));
+      amount = Text('—', style: theme.textTheme.titleMedium?.copyWith(color: context.colors.textHelper));
     } else if (previewCurrent && owedMinor != null) {
       amount = MoneyText(owedMinor!, size: MoneySize.small);
     } else {
@@ -248,7 +249,7 @@ class _MemberRow extends StatelessWidget {
         : top;
 
     final decorated = DecoratedBox(
-      decoration: BoxDecoration(color: checked ? QesmaColors.tint : QesmaColors.card, borderRadius: BorderRadius.circular(QesmaRadii.control), border: Border.all(color: QesmaColors.hairline)),
+      decoration: BoxDecoration(color: checked ? context.colors.tint : context.colors.card, borderRadius: BorderRadius.circular(QesmaRadii.control), border: Border.all(color: context.colors.hairline)),
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: kMinTouch),
         child: Padding(padding: const EdgeInsets.symmetric(horizontal: QesmaSpacing.sm + 4, vertical: QesmaSpacing.sm), child: row),

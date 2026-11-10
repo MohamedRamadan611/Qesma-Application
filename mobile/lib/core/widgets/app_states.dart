@@ -6,22 +6,23 @@ import '../theme/tokens.dart';
 import 'app_button.dart';
 import 'app_overlays.dart';
 import 'bidi.dart';
+import '../theme/palette.dart';
 
 /// Tinted circle with an icon in place of the mock-ups' illustrations (no artwork exists yet).
 class _StateIcon extends StatelessWidget {
-  const _StateIcon(this.icon, {this.background = QesmaColors.primaryContainer, this.foreground = QesmaColors.onPrimaryContainer});
+  const _StateIcon(this.icon, {this.background, this.foreground});
 
   final IconData icon;
-  final Color background;
-  final Color foreground;
+  final Color? background;
+  final Color? foreground;
 
   @override
   Widget build(BuildContext context) => ExcludeSemantics(
         child: Container(
           width: 96,
           height: 96,
-          decoration: BoxDecoration(color: background, shape: BoxShape.circle),
-          child: Icon(icon, size: 48, color: foreground),
+          decoration: BoxDecoration(color: background ?? context.colors.primaryContainer, shape: BoxShape.circle),
+          child: Icon(icon, size: 48, color: foreground ?? context.colors.onPrimaryContainer),
         ),
       );
 }
@@ -64,7 +65,7 @@ class EmptyState extends StatelessWidget {
         Semantics(header: true, child: Text(title, style: theme.textTheme.headlineMedium, textAlign: TextAlign.center)),
         if (message != null) ...[
           const SizedBox(height: QesmaSpacing.sm),
-          Text(message!, style: theme.textTheme.bodyLarge?.copyWith(color: QesmaColors.textSecondary), textAlign: TextAlign.center),
+          Text(message!, style: theme.textTheme.bodyLarge?.copyWith(color: context.colors.textSecondary), textAlign: TextAlign.center),
         ],
         if (actionLabel != null && onAction != null) ...[
           const SizedBox(height: QesmaSpacing.lg),
@@ -91,8 +92,8 @@ class ErrorState extends StatelessWidget {
     final theme = Theme.of(context);
     return _StateLayout(
       children: [
-        const Center(
-          child: _StateIcon(Icons.error_outline, background: QesmaColors.errorContainer, foreground: QesmaColors.error),
+        Center(
+          child: _StateIcon(Icons.error_outline, background: context.colors.errorContainer, foreground: context.colors.error),
         ),
         const SizedBox(height: QesmaSpacing.lg),
         Semantics(
@@ -102,7 +103,7 @@ class ErrorState extends StatelessWidget {
         const SizedBox(height: QesmaSpacing.sm),
         Text(
           message ?? l10n.stateErrorMessage,
-          style: theme.textTheme.bodyLarge?.copyWith(color: QesmaColors.textSecondary),
+          style: theme.textTheme.bodyLarge?.copyWith(color: context.colors.textSecondary),
           textAlign: TextAlign.center,
         ),
         if (requestId != null) ...[
@@ -126,9 +127,9 @@ class _RequestIdRow extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: QesmaColors.tint,
+        color: context.colors.tint,
         borderRadius: BorderRadius.circular(QesmaRadii.control),
-        border: Border.all(color: QesmaColors.tintBorder),
+        border: Border.all(color: context.colors.tintBorder),
       ),
       child: Row(
         children: [
@@ -168,7 +169,7 @@ class NoInternetState extends StatelessWidget {
     final theme = Theme.of(context);
     return _StateLayout(
       children: [
-        const Center(child: _StateIcon(Icons.wifi_off)),
+        Center(child: _StateIcon(Icons.wifi_off)),
         const SizedBox(height: QesmaSpacing.lg),
         Semantics(
           header: true,
@@ -177,7 +178,7 @@ class NoInternetState extends StatelessWidget {
         const SizedBox(height: QesmaSpacing.sm),
         Text(
           l10n.stateNoInternetMessage,
-          style: theme.textTheme.bodyLarge?.copyWith(color: QesmaColors.textSecondary),
+          style: theme.textTheme.bodyLarge?.copyWith(color: context.colors.textSecondary),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: QesmaSpacing.lg),
@@ -185,15 +186,15 @@ class NoInternetState extends StatelessWidget {
         const SizedBox(height: QesmaSpacing.md),
         DecoratedBox(
           decoration: BoxDecoration(
-            color: QesmaColors.tint,
+            color: context.colors.tint,
             borderRadius: BorderRadius.circular(QesmaRadii.card),
-            border: Border.all(color: QesmaColors.tintBorder),
+            border: Border.all(color: context.colors.tintBorder),
           ),
           child: Padding(
             padding: const EdgeInsets.all(QesmaSpacing.md),
             child: Row(
               children: [
-                const ExcludeSemantics(child: Icon(Icons.verified_user_outlined, color: QesmaColors.primary)),
+                ExcludeSemantics(child: Icon(Icons.verified_user_outlined, color: context.colors.primary)),
                 const SizedBox(width: QesmaSpacing.md),
                 Expanded(child: Text(l10n.stateNoInternetReassure, style: theme.textTheme.bodyMedium)),
               ],
@@ -218,17 +219,17 @@ class OfflineBanner extends StatelessWidget {
     return Semantics(
       liveRegion: true,
       child: ColoredBox(
-        color: QesmaColors.errorContainer,
+        color: context.colors.errorContainer,
         child: Padding(
           padding: const EdgeInsetsDirectional.symmetric(horizontal: QesmaSpacing.md, vertical: QesmaSpacing.sm),
           child: Row(
             children: [
-              const ExcludeSemantics(child: Icon(Icons.wifi_off, size: 18, color: QesmaColors.error)),
+              ExcludeSemantics(child: Icon(Icons.wifi_off, size: 18, color: context.colors.error)),
               const SizedBox(width: QesmaSpacing.sm),
               Expanded(
                 child: Text(
                   l10n.stateOfflineBanner,
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(color: QesmaColors.error),
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(color: context.colors.error),
                 ),
               ),
             ],

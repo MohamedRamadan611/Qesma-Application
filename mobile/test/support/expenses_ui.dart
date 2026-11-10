@@ -18,8 +18,11 @@ import 'expenses_rig.dart';
 import 'fake_expenses_server.dart';
 
 final UserDto _user = UserDto((b) => b
+  ..hasPassword = false
+  ..emailVerified = true
   ..id = 'u1'
-  ..displayName = 'Test User');
+  ..displayName = 'Test User'
+  ..email = 'test@example.com');
 
 /// "Today" in the widget tests, so the list headers say "Today" / "Yesterday" predictably.
 final DateTime testNow = DateTime(2026, 10, 18, 12);

@@ -15,7 +15,7 @@ abstract final class QesmaText {
   /// Tabular lining figures so decimals line up in columns (DESIGN.md numeral rules).
   static const List<FontFeature> tabular = [FontFeature.tabularFigures()];
 
-  static TextTheme textTheme() => TextTheme(
+  static TextTheme textTheme([Color color = QesmaColors.textPrimary]) => TextTheme(
         displayLarge: _s(32, 40, FontWeight.w700),
         displayMedium: _s(26, 34, FontWeight.w700),
         displaySmall: _s(24, 32, FontWeight.w700),
@@ -31,7 +31,7 @@ abstract final class QesmaText {
         labelLarge: _s(14, 20, FontWeight.w600),
         labelMedium: _s(12, 16, FontWeight.w600),
         labelSmall: _s(11, 14, FontWeight.w500),
-      ).apply(bodyColor: QesmaColors.textPrimary, displayColor: QesmaColors.textPrimary);
+      ).apply(bodyColor: color, displayColor: color);
 
   /// Amount styles: same scale, tabular figures.
   static TextStyle amountLarge() => _s(32, 40, FontWeight.w700).copyWith(fontFeatures: tabular);

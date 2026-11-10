@@ -16,6 +16,7 @@ import java.util.UUID;
 public class User {
 
     public static final String PROVIDER_GOOGLE = "GOOGLE";
+    public static final String PROVIDER_PASSWORD = "PASSWORD";
 
     @Id
     private UUID id;
@@ -32,6 +33,9 @@ public class User {
     @Column(name = "display_name", nullable = false)
     private String displayName;
 
+    @Column(name = "email_verified_at")
+    private Instant emailVerifiedAt;
+
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private Instant createdAt;
 
@@ -40,6 +44,25 @@ public class User {
 
     public UUID getId() {
         return id;
+    }
+
+    public String getAuthProvider() {
+        return authProvider;
+    }
+
+    /** A password account (it has a password to change); Google accounts have none. */
+    public boolean hasPassword() {
+        return PROVIDER_PASSWORD.equals(authProvider);
+    }
+
+    /** Google verifies the address itself; a password account is verified once its link was used. */
+    public boolean isEmailVerified() {
+        return PROVIDER_GOOGLE.equals(authProvider) || emailVerifiedAt != null;
+    }
+
+    /** The sign-in name of a password account (null for Google accounts). */
+    public String getUsername() {
+        return PROVIDER_PASSWORD.equals(authProvider) ? authSubject : null;
     }
 
     public String getEmail() {

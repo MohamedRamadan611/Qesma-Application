@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'palette.dart';
 import 'tokens.dart';
 
 /// Colours of the three balance states (owed / owes / settled) as a theme extension.
@@ -15,6 +16,9 @@ class BalanceColors extends ThemeExtension<BalanceColors> {
     this.settled = QesmaColors.settled,
     this.settledBg = QesmaColors.settledBg,
   });
+
+  /// The balance colours of a palette (light or dark).
+  factory BalanceColors.of(QesmaPalette p) => BalanceColors(owed: p.owed, owedBg: p.owedBg, owes: p.owes, owesBg: p.owesBg, settled: p.settled, settledBg: p.settledBg);
 
   final Color owed;
   final Color owedBg;

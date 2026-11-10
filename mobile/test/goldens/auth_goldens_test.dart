@@ -54,6 +54,8 @@ void main() {
 
   testWidgets('session-expired dialog (P11-04)', (tester) async {
     final user = UserDto((b) => b
+      ..hasPassword = false
+      ..emailVerified = true
       ..id = 'u1'
       ..displayName = 'Test User');
     await pumpScreen(tester, const Scaffold(body: SizedBox.expand()), AuthSignedIn(user));

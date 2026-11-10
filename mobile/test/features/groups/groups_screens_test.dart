@@ -18,6 +18,8 @@ import '../../support/groups_rig.dart';
 import '../../support/test_app.dart';
 
 final UserDto _user = UserDto((b) => b
+  ..hasPassword = false
+  ..emailVerified = true
   ..id = 'u1'
   ..displayName = 'Test User');
 
@@ -75,7 +77,7 @@ void main() {
         ..seed(name: 'عشا الخميس', type: 'OUTING', total: 56179, net: 0);
       await pumpGroupsApp(tester, server);
 
-      expect(find.text('المجموعات'), findsOneWidget);
+      expect(find.text('المجموعات'), findsNWidgets(2), reason: 'screen title and bottom bar');
       for (final name in ['رحلة دهب', 'شقة المهندسين', 'عشا الخميس']) {
         expect(find.text(name), findsOneWidget);
       }
@@ -129,12 +131,13 @@ void main() {
       expect(find.text('Group 24'), findsOneWidget);
     });
 
-    testWidgets('the temporary overflow menu offers sign out', (tester) async {
+    testWidgets('sign out lives on the Account tab, not in a menu on the list', (tester) async {
       server.seed();
       await pumpGroupsApp(tester, server);
-      await tester.tap(find.byTooltip('المزيد'));
+      expect(find.byTooltip('المزيد'), findsNothing);
+      await tester.tap(find.text('حسابي'));
       await tester.pumpAndSettle();
-      expect(find.text('تسجيل الخروج'), findsOneWidget);
+      expect(find.text('تسجيل الخروج', skipOffstage: false), findsOneWidget);
     });
 
     for (final c in allConfigs) {
@@ -330,7 +333,7 @@ void main() {
       await tester.pumpAndSettle();
       await tapText(tester, 'امسح الجروب');
       await tapText(tester, 'امسح');
-      expect(find.text('المجموعات'), findsOneWidget);
+      expect(find.text('المجموعات'), findsNWidgets(2), reason: 'screen title and bottom bar');
       expect(find.text('Dahab'), findsNothing);
       expect(find.text('Keep'), findsOneWidget);
     });
@@ -345,7 +348,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('الجروب ده مبقاش متاح.'), findsOneWidget);
       await tapText(tester, 'الرجوع للمجموعات');
-      expect(find.text('المجموعات'), findsOneWidget);
+      expect(find.text('المجموعات'), findsNWidgets(2), reason: 'screen title and bottom bar');
     });
 
     for (final c in allConfigs) {

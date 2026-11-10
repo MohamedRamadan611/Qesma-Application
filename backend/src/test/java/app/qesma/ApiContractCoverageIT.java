@@ -5,7 +5,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.springframework.http.HttpMethod.DELETE;
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.PATCH;
@@ -16,8 +18,10 @@ import app.qesma.api.ErrorCode;
 import app.qesma.api.OpenApiConfig;
 import app.qesma.persistence.IdempotencyKeyStore;
 import app.qesma.security.GoogleIdTokenVerifier;
+import app.qesma.service.MailSender;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.ArrayList;
+import org.mockito.ArgumentCaptor;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -50,6 +54,7 @@ class ApiContractCoverageIT extends AbstractApiIT {
 
     @MockitoSpyBean GoogleIdTokenVerifier verifier;
     @MockitoSpyBean IdempotencyKeyStore keyStore;
+    @MockitoSpyBean MailSender mailSender;
 
     /** "METHOD template" of operations that answered 2xx. */
     private final Set<String> succeeded = new TreeSet<>();
@@ -78,6 +83,11 @@ class ApiContractCoverageIT extends AbstractApiIT {
         assertThat(code(r)).isEqualTo(code.name());
     }
 
+    /** The token of an emailed link ("...?token=abc"). */
+    private static String tokenOf(String link) {
+        return link.substring(link.indexOf("token=") + "token=".length());
+    }
+
     private static String key() {
         return UUID.randomUUID().toString();
     }
@@ -96,6 +106,36 @@ class ApiContractCoverageIT extends AbstractApiIT {
         assertThat(status(refreshed)).isEqualTo(200);
         assertThat(status(hit(POST, "/api/v1/auth/logout", null,
                 Map.of("refreshToken", body(refreshed).get("refreshToken").asText())))).isEqualTo(204);
+
+        // ---- email + password accounts (ADR-007) ------------------------------------------------------------------
+        String pwName = "walk-" + UUID.randomUUID().toString().substring(0, 12);
+        String pwEmail = pwName + "@example.com";
+        String pwSecret = "a long walking passphrase";
+        MvcResult registered = hit(POST, "/api/v1/auth/register", null, Map.of("username", pwName, "password", pwSecret));
+        assertThat(status(registered)).isEqualTo(201);
+        Session pw = new Session(body(registered).get("accessToken").asText(), UUID.fromString(body(registered).get("user").get("id").asText()));
+        assertThat(status(hit(POST, "/api/v1/auth/login", null, Map.of("username", pwName, "password", pwSecret)))).isEqualTo(200);
+        jdbc.update("update users set email = ? where auth_provider = 'PASSWORD' and auth_subject = ?", pwEmail, pwName);   // recovery by email is on hold: give the account an address for the emailed-link calls
+        ArgumentCaptor<String> verifyLink = ArgumentCaptor.forClass(String.class);
+        assertThat(status(hit(POST, "/api/v1/auth/email/verify/resend", pw, null))).isEqualTo(204);
+        verify(mailSender, atLeastOnce()).sendVerification(org.mockito.ArgumentMatchers.eq(pwEmail), verifyLink.capture());
+        assertThat(status(hit(POST, "/api/v1/auth/email/verify/resend", pw, null))).isEqualTo(204);
+        assertThat(status(hit(POST, "/api/v1/auth/email/verify", null, Map.of("token", tokenOf(verifyLink.getAllValues().get(0)))))).isEqualTo(422);   // replaced by the resend
+        verify(mailSender, org.mockito.Mockito.atLeast(2)).sendVerification(org.mockito.ArgumentMatchers.eq(pwEmail), verifyLink.capture());
+        String lastVerify = verifyLink.getAllValues().get(verifyLink.getAllValues().size() - 1);
+        assertThat(status(hit(POST, "/api/v1/auth/email/verify", null, Map.of("token", tokenOf(lastVerify))))).isEqualTo(204);
+        assertThat(status(hit(POST, "/api/v1/auth/password/forgot", null, Map.of("email", pwEmail)))).isEqualTo(204);
+        ArgumentCaptor<String> resetLink = ArgumentCaptor.forClass(String.class);
+        verify(mailSender, atLeastOnce()).sendPasswordReset(org.mockito.ArgumentMatchers.eq(pwEmail), resetLink.capture());
+        assertThat(status(hit(POST, "/api/v1/auth/password/reset", null,
+                Map.of("token", tokenOf(resetLink.getValue()), "newPassword", "another walking passphrase")))).isEqualTo(204);
+        MvcResult pwLogin = hit(POST, "/api/v1/auth/login", null, Map.of("username", pwName, "password", "another walking passphrase"));
+        assertThat(status(pwLogin)).isEqualTo(200);
+        Session pw2 = new Session(body(pwLogin).get("accessToken").asText(), pw.userId());
+        assertThat(status(hit(POST, "/api/v1/me/password", pw2,
+                Map.of("currentPassword", "another walking passphrase", "newPassword", "a third walking passphrase")))).isEqualTo(200);
+        expect(hit(POST, "/api/v1/auth/register", null, Map.of("username", pwName, "password", "someone else's passphrase")), 409,
+                ErrorCode.USERNAME_TAKEN);
 
         // ---- groups and members -------------------------------------------------------------------------------
         MvcResult group = hit(POST, "/api/v1/groups", me, Map.of("name", "Walk", "type", "TRIP"));
@@ -215,6 +255,7 @@ class ApiContractCoverageIT extends AbstractApiIT {
             assertThat(errors).as("error code never produced by a real response").containsKey(code.name());
         }
         assertThat(errors.get("VERSION_CONFLICT")).containsExactly(409);
+        assertThat(errors.get("USERNAME_TAKEN")).containsExactly(409);
         assertThat(errors.get("RATE_LIMITED")).containsExactly(429);
         assertThat(errors.get("AUTH_PROVIDER_UNAVAILABLE")).containsExactly(503);
         assertThat(errors.get("INTERNAL_ERROR")).containsExactly(500);

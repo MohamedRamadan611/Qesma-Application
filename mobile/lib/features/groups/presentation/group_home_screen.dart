@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/errors/api_failure.dart';
 import '../../../core/errors/error_copy.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/router/app_router.dart';
@@ -45,24 +46,40 @@ class _GroupHomeScreenState extends ConsumerState<GroupHomeScreen> {
       final Widget body = detail.failure == null
           ? const SkeletonList(itemCount: 3)
           : detail.gone
-              ? EmptyState(
-                  icon: Icons.search_off,
-                  title: l10n.groupOpenFailedGone,
-                  actionLabel: l10n.groupBackToList,
-                  onAction: () => context.go(Routes.home),
-                )
-              : ErrorState(
-                  onRetry: ref.read(groupDetailControllerProvider(widget.gid).notifier).load,
-                  message: errorCopyFor(l10n, detail.failure!).message,
-                  requestId: detail.failure!.problem?.requestId,
-                );
-      return AppScaffold(title: l10n.groupsTitle, showBack: true, onBack: () => context.go(Routes.home), body: body);
+          ? EmptyState(
+              icon: Icons.search_off,
+              title: l10n.groupOpenFailedGone,
+              actionLabel: l10n.groupBackToList,
+              onAction: () => context.go(Routes.home),
+            )
+          : detail.failure is ApiNoConnection || detail.failure is ApiTimeout
+          ? NoInternetState(
+              onRetry: ref
+                  .read(groupDetailControllerProvider(widget.gid).notifier)
+                  .load,
+            )
+          : ErrorState(
+              onRetry: ref
+                  .read(groupDetailControllerProvider(widget.gid).notifier)
+                  .load,
+              message: errorCopyFor(l10n, detail.failure!).message,
+              requestId: detail.failure!.problem?.requestId,
+            );
+      return AppScaffold(
+        title: l10n.groupsTitle,
+        showBack: true,
+        onBack: () => context.go(Routes.home),
+        body: body,
+      );
     }
 
     final type = GroupType.fromWire(group.type);
     final tabs = [
       AppTabItem(label: l10n.groupTabExpenses, icon: Icons.receipt_long),
-      AppTabItem(label: l10n.groupTabBalances, icon: Icons.account_balance_wallet_outlined),
+      AppTabItem(
+        label: l10n.groupTabBalances,
+        icon: Icons.account_balance_wallet_outlined,
+      ),
       AppTabItem(label: l10n.groupTabMembers, icon: Icons.group_outlined),
     ];
 
@@ -74,7 +91,10 @@ class _GroupHomeScreenState extends ConsumerState<GroupHomeScreen> {
 
     return AppScaffold(
       title: group.name,
-      subtitle: l10n.groupHeaderSubtitle(memberCountText(l10n, group.members.length), moneyDisplay(l10n, group.totalSpentMinor)),
+      subtitle: l10n.groupHeaderSubtitle(
+        memberCountText(l10n, group.members.length),
+        moneyDisplay(l10n, group.totalSpentMinor),
+      ),
       titleTag: AppTag(label: type.label(l10n), tone: AppTagTone.info),
       showBack: true,
       onBack: () => context.go(Routes.home),
@@ -95,8 +115,17 @@ class _GroupHomeScreenState extends ConsumerState<GroupHomeScreen> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(QesmaSpacing.margin, 0, QesmaSpacing.margin, QesmaSpacing.sm),
-            child: AppSegmentedTabs(items: tabs, selectedIndex: _tab, onChanged: (i) => setState(() => _tab = i)),
+            padding: const EdgeInsetsDirectional.fromSTEB(
+              QesmaSpacing.margin,
+              0,
+              QesmaSpacing.margin,
+              QesmaSpacing.sm,
+            ),
+            child: AppSegmentedTabs(
+              items: tabs,
+              selectedIndex: _tab,
+              onChanged: (i) => setState(() => _tab = i),
+            ),
           ),
           Expanded(child: tabBody),
         ],

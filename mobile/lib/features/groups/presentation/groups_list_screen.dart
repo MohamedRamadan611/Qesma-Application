@@ -8,12 +8,12 @@ import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
-import '../../auth/application/auth_controller.dart';
 import '../application/groups_list_controller.dart';
 import 'group_card.dart';
+import '../../../core/theme/palette.dart';
 
 /// Home of the signed-in app: the paged list of groups (P2-01).
-/// The overflow menu with "sign out" is TEMPORARY until the profile screen exists (FL8).
+/// Sign out lives on the Account tab.
 class GroupsListScreen extends ConsumerStatefulWidget {
   const GroupsListScreen({super.key});
 
@@ -117,14 +117,6 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
     return AppScaffold(
       title: l10n.groupsTitle,
       showBack: false,
-      actions: [
-        PopupMenuButton<String>(
-          tooltip: l10n.groupsMore,
-          icon: const Icon(Icons.more_vert),
-          onSelected: (_) => ref.read(authControllerProvider.notifier).signOut(),
-          itemBuilder: (_) => [PopupMenuItem<String>(value: 'signout', child: Text(l10n.homeSignOut))],
-        ),
-      ],
       floatingActionButton: state.status == GroupsStatus.ready && state.items.isNotEmpty
           ? FloatingActionButton.extended(
               onPressed: () => context.push(Routes.newGroup),
@@ -150,7 +142,7 @@ class _NetHeader extends StatelessWidget {
     if (total == null) return const SizedBox.shrink();
     final l10n = AppLocalizations.of(context);
     return AppCard(
-      color: QesmaColors.tint,
+      color: context.colors.tint,
       child: Wrap(
         alignment: WrapAlignment.spaceBetween,
         crossAxisAlignment: WrapCrossAlignment.center,

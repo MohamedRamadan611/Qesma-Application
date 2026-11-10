@@ -6,7 +6,7 @@ import java.util.Locale;
 /**
  * Stable machine-readable error codes (spec 8.5). Add codes here as milestones need them.
  * INTERNAL_ERROR, RATE_LIMITED, AUTH_PROVIDER_UNAVAILABLE and OWNER_MEMBER_PROTECTED are additions beyond spec 8.5
- * (see Decision Log A15).
+ * (see Decision Log A15); USERNAME_TAKEN comes with username + password sign-in (ADR-007, ADR-008).
  */
 public enum ErrorCode {
     VALIDATION_ERROR,
@@ -23,7 +23,8 @@ public enum ErrorCode {
     UNAUTHORIZED,
     INTERNAL_ERROR,
     RATE_LIMITED,
-    AUTH_PROVIDER_UNAVAILABLE;
+    AUTH_PROVIDER_UNAVAILABLE,
+    USERNAME_TAKEN;
 
     /** RFC 7807 {@code type} URI for this code. */
     public URI type() {

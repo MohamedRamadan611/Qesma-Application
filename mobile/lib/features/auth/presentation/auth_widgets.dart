@@ -8,6 +8,7 @@ import '../../../core/theme/qesma_text.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../application/auth_state.dart';
+import '../../../core/theme/palette.dart';
 
 /// Terms and privacy pages. PLACEHOLDER URLs until the legal pages exist (open item: the
 /// Play Store needs a real privacy policy before release).
@@ -29,7 +30,7 @@ class ConsentFooter extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final style = Theme.of(context).textTheme.bodySmall?.copyWith(color: QesmaColors.textSecondary);
+    final style = Theme.of(context).textTheme.bodySmall?.copyWith(color: context.colors.textSecondary);
 
     Future<void> open(Uri uri) async {
       var opened = false;
@@ -46,9 +47,9 @@ class ConsentFooter extends ConsumerWidget {
           style: TextButton.styleFrom(
             minimumSize: const Size(0, kMinTouch),
             padding: const EdgeInsetsDirectional.symmetric(horizontal: 4),
-            foregroundColor: QesmaColors.textPrimary,
+            foregroundColor: context.colors.textPrimary,
           ),
-          child: Text(label, style: style?.copyWith(color: QesmaColors.textPrimary, decoration: TextDecoration.underline)),
+          child: Text(label, style: style?.copyWith(color: context.colors.textPrimary, decoration: TextDecoration.underline)),
         );
 
     return Wrap(
@@ -83,11 +84,11 @@ class GoogleSignInButton extends StatelessWidget {
       label: loading ? '$label, ${l10n.commonLoading}' : label,
       excludeSemantics: true,
       child: Material(
-        color: QesmaColors.card,
+        color: context.colors.card,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(QesmaRadii.control),
-          side: const BorderSide(color: QesmaColors.buttonBorder),
+          side: BorderSide(color: context.colors.buttonBorder),
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(QesmaRadii.control),
@@ -109,7 +110,7 @@ class GoogleSignInButton extends StatelessWidget {
                     child: Text(
                       label,
                       textAlign: TextAlign.center,
-                      style: QesmaText.textTheme().labelLarge?.copyWith(color: QesmaColors.textPrimary),
+                      style: QesmaText.textTheme().labelLarge?.copyWith(color: context.colors.textPrimary),
                     ),
                   ),
                 ],
@@ -145,7 +146,7 @@ class SignInErrorBanner extends StatelessWidget {
       liveRegion: true,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: QesmaColors.errorContainer,
+          color: context.colors.errorContainer,
           borderRadius: BorderRadius.circular(QesmaRadii.control),
         ),
         child: Padding(
@@ -153,10 +154,10 @@ class SignInErrorBanner extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const ExcludeSemantics(child: Icon(Icons.error_outline, color: QesmaColors.error, size: 20)),
+              ExcludeSemantics(child: Icon(Icons.error_outline, color: context.colors.error, size: 20)),
               const SizedBox(width: QesmaSpacing.sm),
               Expanded(
-                child: Text(message, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: QesmaColors.error)),
+                child: Text(message, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.colors.error)),
               ),
             ],
           ),

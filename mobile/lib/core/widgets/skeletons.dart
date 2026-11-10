@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../theme/tokens.dart';
 import 'app_card.dart';
+import '../theme/palette.dart';
 
 /// A flat placeholder block (P11-03). No shimmer: a slow fade that stops completely when
 /// the system "remove animations" setting is on.
@@ -17,7 +18,7 @@ class SkeletonBlock extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         width: width,
         height: height,
-        decoration: BoxDecoration(color: QesmaColors.skeleton, borderRadius: BorderRadius.circular(radius)),
+        decoration: BoxDecoration(color: context.colors.skeleton, borderRadius: BorderRadius.circular(radius)),
       );
 }
 

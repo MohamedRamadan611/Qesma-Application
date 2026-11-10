@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/generated/app_localizations.dart';
 import '../theme/tokens.dart';
+import '../theme/palette.dart';
 
 /// Screen frame: header (back arrow, title, optional tag and subtitle, trailing actions),
 /// body, optional floating button and sticky bottom bar.
@@ -74,7 +75,7 @@ class AppScaffold extends StatelessWidget {
                   ),
                 ),
                 if (subtitle != null)
-                  Text(subtitle!, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textHelper)),
+                  Text(subtitle!, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper)),
               ],
             ),
           ),
@@ -84,7 +85,7 @@ class AppScaffold extends StatelessWidget {
     );
 
     return Scaffold(
-      backgroundColor: QesmaColors.canvas,
+      backgroundColor: context.colors.canvas,
       floatingActionButton: floatingActionButton,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       bottomNavigationBar: bottomBar,

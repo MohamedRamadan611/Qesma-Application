@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/qesma_text.dart';
-import '../theme/tokens.dart';
+import '../theme/palette.dart';
 
 /// Deterministic tint for a member: the same id always gets the same colour. Integer
 /// hash only (no money, no randomness) so it is stable across launches and devices.
@@ -10,7 +10,7 @@ int avatarTintIndex(String memberId) {
   for (final unit in memberId.codeUnits) {
     hash = (hash * 31 + unit) & 0x7fffffff;
   }
-  return hash % QesmaColors.avatarTints.length;
+  return hash % QesmaPalette.light.avatarTints.length; // both palettes have the same number of tints
 }
 
 /// First letter of a name, upper-cased for Latin scripts; '?' for an empty name.
@@ -35,7 +35,7 @@ class MemberAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (bg, fg) = QesmaColors.avatarTints[avatarTintIndex(memberId)];
+    final (bg, fg) = context.colors.avatarTints[avatarTintIndex(memberId)];
     final avatar = Container(
       width: size,
       height: size,

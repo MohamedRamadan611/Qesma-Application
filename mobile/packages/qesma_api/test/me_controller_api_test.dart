@@ -7,6 +7,11 @@ void main() {
   final instance = QesmaApi().getMeControllerApi();
 
   group(MeControllerApi, () {
+    //Future<TokenResponse> changePassword(ChangePasswordRequest changePasswordRequest) async
+    test('test changePassword', () async {
+      // TODO
+    });
+
     //Future<UserDto> getMe() async
     test('test getMe', () async {
       // TODO

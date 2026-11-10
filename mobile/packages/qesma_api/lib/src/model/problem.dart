@@ -24,7 +24,7 @@ abstract class Problem implements Built<Problem, ProblemBuilder> {
   /// Stable machine-readable error code.
   @BuiltValueField(wireName: r'code')
   ProblemCodeEnum get code;
-  // enum codeEnum {  VALIDATION_ERROR,  PAYERS_TOTAL_MISMATCH,  SPLIT_TOTAL_MISMATCH,  MEMBER_NOT_IN_GROUP,  IDEMPOTENCY_KEY_REUSED,  DUPLICATE_MEMBER_NAME,  MEMBER_HAS_TRANSACTIONS,  OWNER_MEMBER_PROTECTED,  VERSION_CONFLICT,  GROUP_NOT_EMPTY,  NOT_FOUND,  UNAUTHORIZED,  INTERNAL_ERROR,  RATE_LIMITED,  AUTH_PROVIDER_UNAVAILABLE,  };
+  // enum codeEnum {  VALIDATION_ERROR,  PAYERS_TOTAL_MISMATCH,  SPLIT_TOTAL_MISMATCH,  MEMBER_NOT_IN_GROUP,  IDEMPOTENCY_KEY_REUSED,  DUPLICATE_MEMBER_NAME,  MEMBER_HAS_TRANSACTIONS,  OWNER_MEMBER_PROTECTED,  VERSION_CONFLICT,  GROUP_NOT_EMPTY,  NOT_FOUND,  UNAUTHORIZED,  INTERNAL_ERROR,  RATE_LIMITED,  AUTH_PROVIDER_UNAVAILABLE,  USERNAME_TAKEN,  };
 
   @BuiltValueField(wireName: r'detail')
   String? get detail;
@@ -258,6 +258,9 @@ class ProblemCodeEnum extends EnumClass {
   /// Stable machine-readable error code.
   @BuiltValueEnumConst(wireName: r'AUTH_PROVIDER_UNAVAILABLE')
   static const ProblemCodeEnum AUTH_PROVIDER_UNAVAILABLE = _$problemCodeEnum_AUTH_PROVIDER_UNAVAILABLE;
+  /// Stable machine-readable error code.
+  @BuiltValueEnumConst(wireName: r'USERNAME_TAKEN')
+  static const ProblemCodeEnum USERNAME_TAKEN = _$problemCodeEnum_USERNAME_TAKEN;
 
   static Serializer<ProblemCodeEnum> get serializer => _$problemCodeEnumSerializer;
 

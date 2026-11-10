@@ -259,7 +259,7 @@ void main() {
       await pumpApp(tester, const OfflineBanner(visible: false));
       expect(find.byType(Text), findsNothing);
       await pumpApp(tester, const OfflineBanner(visible: true));
-      expect(find.text('مفيش اتصال بالإنترنت'), findsOneWidget);
+      expect(find.text('الاتصال مقطوع حاليًا'), findsOneWidget);
       expect(tester.getSemantics(find.byType(OfflineBanner)), isSemantics(isLiveRegion: true));
       handle.dispose();
     });

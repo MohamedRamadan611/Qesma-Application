@@ -6,6 +6,7 @@ import '../../../core/router/app_router.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import 'auth_widgets.dart';
+import '../../../core/theme/palette.dart';
 
 /// Static value propositions and the start button. No guest mode: "start" leads to sign-in.
 /// [from] is the location the user wanted before being asked to sign in; it travels on to
@@ -40,7 +41,7 @@ class WelcomeScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(title, style: theme.textTheme.titleMedium),
-                      Text(body, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textSecondary)),
+                      Text(body, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
                     ],
                   ),
                 ),
@@ -50,7 +51,7 @@ class WelcomeScreen extends StatelessWidget {
         );
 
     return Scaffold(
-      backgroundColor: QesmaColors.canvas,
+      backgroundColor: context.colors.canvas,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -62,9 +63,9 @@ class WelcomeScreen extends StatelessWidget {
                   const SizedBox(height: QesmaSpacing.md),
                   Center(child: BrandHeader(tagline: l10n.welcomeTitle, logoSize: 80)),
                   const SizedBox(height: QesmaSpacing.lg),
-                  value(Icons.verified, QesmaColors.primaryContainer, QesmaColors.onPrimaryContainer, l10n.welcomeValue1Title, l10n.welcomeValue1Body),
-                  value(Icons.receipt_long, QesmaColors.infoContainer, QesmaColors.info, l10n.welcomeValue2Title, l10n.welcomeValue2Body),
-                  value(Icons.bolt, QesmaColors.warningContainer, QesmaColors.warning, l10n.welcomeValue3Title, l10n.welcomeValue3Body),
+                  value(Icons.verified, context.colors.primaryContainer, context.colors.onPrimaryContainer, l10n.welcomeValue1Title, l10n.welcomeValue1Body),
+                  value(Icons.receipt_long, context.colors.infoContainer, context.colors.info, l10n.welcomeValue2Title, l10n.welcomeValue2Body),
+                  value(Icons.bolt, context.colors.warningContainer, context.colors.warning, l10n.welcomeValue3Title, l10n.welcomeValue3Body),
                 ],
               ),
             ),

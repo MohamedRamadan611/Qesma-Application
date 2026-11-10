@@ -8,6 +8,7 @@ import '../../../core/widgets/widgets.dart';
 import '../application/auth_controller.dart';
 import '../application/auth_state.dart';
 import 'auth_widgets.dart';
+import '../../../core/theme/palette.dart';
 
 /// Shows [SessionExpiredDialog] over whatever screen is open when the session ends, once,
 /// and removes it when the user signs in again or goes back to the start.
@@ -81,8 +82,8 @@ class SessionExpiredDialog extends ConsumerWidget {
         child: Container(
           width: 72,
           height: 72,
-          decoration: const BoxDecoration(color: QesmaColors.primaryContainer, shape: BoxShape.circle),
-          child: const Icon(Icons.lock_clock, size: 36, color: QesmaColors.onPrimaryContainer),
+          decoration: BoxDecoration(color: context.colors.primaryContainer, shape: BoxShape.circle),
+          child: Icon(Icons.lock_clock, size: 36, color: context.colors.onPrimaryContainer),
         ),
       ),
       title: Text(l10n.sessionExpiredTitle, textAlign: TextAlign.center),
@@ -93,14 +94,14 @@ class SessionExpiredDialog extends ConsumerWidget {
           Text(
             l10n.sessionExpiredBody,
             textAlign: TextAlign.center,
-            style: theme.textTheme.bodyMedium?.copyWith(color: QesmaColors.textSecondary),
+            style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary),
           ),
           const SizedBox(height: QesmaSpacing.md),
           DecoratedBox(
             decoration: BoxDecoration(
-              color: QesmaColors.tint,
+              color: context.colors.tint,
               borderRadius: BorderRadius.circular(QesmaRadii.control),
-              border: Border.all(color: QesmaColors.tintBorder),
+              border: Border.all(color: context.colors.tintBorder),
             ),
             child: Padding(
               padding: const EdgeInsets.all(QesmaSpacing.sm + 4),

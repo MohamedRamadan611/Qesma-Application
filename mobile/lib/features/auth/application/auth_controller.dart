@@ -122,6 +122,22 @@ class AuthController extends Notifier<AuthState> {
     state = wasExpired ? AuthSessionExpired(error: error) : AuthSignedOut(error: error);
   }
 
+  /// Starts the session of an email sign-in or registration that the repository already completed.
+  Future<void> startPasswordSession(AuthResponse auth) async {
+    await _session.startSession(accessToken: auth.accessToken, refreshToken: auth.refreshToken);
+    _log.event(AuthEvent.signInOk);
+    state = AuthSignedIn(auth.user);
+  }
+
+  /// After a password change the server ended every other session and issued this one new tokens.
+  Future<void> replaceTokens(TokenResponse tokens) =>
+      _session.startSession(accessToken: tokens.accessToken, refreshToken: tokens.refreshToken);
+
+  /// Replaces the signed-in user (after the profile was edited) so every screen shows the new name at once.
+  void updateUser(UserDto user) {
+    if (state is AuthSignedIn) state = AuthSignedIn(user);
+  }
+
   /// Signs out: local wipe first (the UI moves on immediately), then best-effort server
   /// logout and Google sign-out. Never fails.
   Future<void> signOut() async {

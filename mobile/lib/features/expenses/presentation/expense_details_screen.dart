@@ -19,6 +19,7 @@ import '../data/split_type.dart';
 import 'expense_blocks.dart';
 import 'expense_ui.dart';
 import 'revisions_sheet.dart';
+import '../../../core/theme/palette.dart';
 
 /// Expense details (P7-01): header, payers, items and charges (itemized), everyone's share,
 /// edit, history and delete. Every number is what the server sent; nothing is recomputed.
@@ -160,8 +161,8 @@ class _Content extends StatelessWidget {
                   Container(
                     width: 48,
                     height: 48,
-                    decoration: BoxDecoration(color: QesmaColors.primaryContainer, borderRadius: BorderRadius.circular(QesmaRadii.control)),
-                    child: Icon(split?.icon ?? Icons.receipt_long, color: QesmaColors.onPrimaryContainer),
+                    decoration: BoxDecoration(color: context.colors.primaryContainer, borderRadius: BorderRadius.circular(QesmaRadii.control)),
+                    child: Icon(split?.icon ?? Icons.receipt_long, color: context.colors.onPrimaryContainer),
                   ),
                   const SizedBox(width: QesmaSpacing.md),
                   Expanded(
@@ -169,14 +170,14 @@ class _Content extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Semantics(header: true, child: Text(expense.title, style: theme.textTheme.titleLarge)),
-                        if (group != null) Text(group!.name, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textSecondary)),
+                        if (group != null) Text(group!.name, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
                       ],
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: QesmaSpacing.md),
-              Text(l10n.expenseDetailsTotal, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textSecondary)),
+              Text(l10n.expenseDetailsTotal, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
               MoneyText(expense.totalMinor, size: MoneySize.large),
               const SizedBox(height: QesmaSpacing.sm),
               Wrap(

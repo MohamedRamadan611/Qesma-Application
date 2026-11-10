@@ -7,6 +7,7 @@ import '../../../core/widgets/widgets.dart';
 import '../application/expense_view_model.dart';
 import '../data/split_type.dart';
 import 'expense_ui.dart';
+import '../../../core/theme/palette.dart';
 
 /// One row of the expenses list (P3-01): title, split-type chip, who paid, how many people
 /// share it, the total and, when the server has an entry for you, your share.
@@ -49,7 +50,7 @@ class ExpenseCard extends StatelessWidget {
       children: [
         MoneyText(expense.totalMinor, size: MoneySize.medium),
         if (shareText != null)
-          Text(shareText, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.owed, fontWeight: FontWeight.w600)),
+          Text(shareText, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.owed, fontWeight: FontWeight.w600)),
       ],
     );
 
@@ -65,8 +66,8 @@ class ExpenseCard extends StatelessWidget {
               Container(
                 width: 44,
                 height: 44,
-                decoration: BoxDecoration(color: QesmaColors.primaryContainer, borderRadius: BorderRadius.circular(QesmaRadii.control)),
-                child: Icon(split?.icon ?? Icons.receipt_long, color: QesmaColors.onPrimaryContainer),
+                decoration: BoxDecoration(color: context.colors.primaryContainer, borderRadius: BorderRadius.circular(QesmaRadii.control)),
+                child: Icon(split?.icon ?? Icons.receipt_long, color: context.colors.onPrimaryContainer),
               ),
               const SizedBox(width: QesmaSpacing.md),
               Expanded(
@@ -92,13 +93,13 @@ class ExpenseCard extends StatelessWidget {
             Align(alignment: AlignmentDirectional.centerStart, child: amounts),
           ],
           const SizedBox(height: QesmaSpacing.sm),
-          Text(payers, style: theme.textTheme.bodyMedium?.copyWith(color: QesmaColors.textSecondary)),
+          Text(payers, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
           const SizedBox(height: QesmaSpacing.xs),
           Row(
             children: [
-              const ExcludeSemantics(child: Icon(Icons.group_outlined, size: 16, color: QesmaColors.textHelper)),
+              ExcludeSemantics(child: Icon(Icons.group_outlined, size: 16, color: context.colors.textHelper)),
               const SizedBox(width: QesmaSpacing.xs),
-              Expanded(child: Text(participants, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textHelper))),
+              Expanded(child: Text(participants, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper))),
             ],
           ),
         ],

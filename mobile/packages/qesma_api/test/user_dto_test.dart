@@ -17,8 +17,23 @@ void main() {
       // TODO
     });
 
+    // bool emailVerified
+    test('to test the property `emailVerified`', () async {
+      // TODO
+    });
+
+    // bool hasPassword
+    test('to test the property `hasPassword`', () async {
+      // TODO
+    });
+
     // String id
     test('to test the property `id`', () async {
+      // TODO
+    });
+
+    // String username
+    test('to test the property `username`', () async {
       // TODO
     });
 

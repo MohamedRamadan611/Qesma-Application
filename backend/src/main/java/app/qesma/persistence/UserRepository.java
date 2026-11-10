@@ -12,6 +12,17 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     Optional<User> findByAuthProviderAndAuthSubject(String authProvider, String authSubject);
 
+    /** Password accounts that have this address on file (for the emailed links; none exist for username-only accounts). */
+    java.util.List<User> findAllByAuthProviderAndEmailIgnoreCase(String authProvider, String email);
+
+    /** Is this address already used by an account of that provider (case-insensitive)? */
+    boolean existsByAuthProviderAndEmailIgnoreCase(String authProvider, String email);
+
+    /** Records that the address was proven (keeps the first time). */
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("update User u set u.emailVerifiedAt = coalesce(u.emailVerifiedAt, :now) where u.id = :id")
+    int markEmailVerified(@Param("id") UUID id, @Param("now") java.time.Instant now);
+
     /**
      * Race-safe create: the UNIQUE (auth_provider, auth_subject) constraint is the arbiter. A concurrent
      * second insert blocks until the first commits, then does nothing; the caller re-reads the row.

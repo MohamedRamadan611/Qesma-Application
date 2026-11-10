@@ -36,6 +36,8 @@ const ProblemCodeEnum _$problemCodeEnum_RATE_LIMITED =
     const ProblemCodeEnum._('RATE_LIMITED');
 const ProblemCodeEnum _$problemCodeEnum_AUTH_PROVIDER_UNAVAILABLE =
     const ProblemCodeEnum._('AUTH_PROVIDER_UNAVAILABLE');
+const ProblemCodeEnum _$problemCodeEnum_USERNAME_TAKEN =
+    const ProblemCodeEnum._('USERNAME_TAKEN');
 
 ProblemCodeEnum _$problemCodeEnumValueOf(String name) {
   switch (name) {
@@ -69,6 +71,8 @@ ProblemCodeEnum _$problemCodeEnumValueOf(String name) {
       return _$problemCodeEnum_RATE_LIMITED;
     case 'AUTH_PROVIDER_UNAVAILABLE':
       return _$problemCodeEnum_AUTH_PROVIDER_UNAVAILABLE;
+    case 'USERNAME_TAKEN':
+      return _$problemCodeEnum_USERNAME_TAKEN;
     default:
       throw ArgumentError(name);
   }
@@ -91,6 +95,7 @@ final BuiltSet<ProblemCodeEnum> _$problemCodeEnumValues =
   _$problemCodeEnum_INTERNAL_ERROR,
   _$problemCodeEnum_RATE_LIMITED,
   _$problemCodeEnum_AUTH_PROVIDER_UNAVAILABLE,
+  _$problemCodeEnum_USERNAME_TAKEN,
 ]);
 
 Serializer<ProblemCodeEnum> _$problemCodeEnumSerializer =
@@ -114,6 +119,7 @@ class _$ProblemCodeEnumSerializer
     'INTERNAL_ERROR': 'INTERNAL_ERROR',
     'RATE_LIMITED': 'RATE_LIMITED',
     'AUTH_PROVIDER_UNAVAILABLE': 'AUTH_PROVIDER_UNAVAILABLE',
+    'USERNAME_TAKEN': 'USERNAME_TAKEN',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
     'VALIDATION_ERROR': 'VALIDATION_ERROR',
@@ -131,6 +137,7 @@ class _$ProblemCodeEnumSerializer
     'INTERNAL_ERROR': 'INTERNAL_ERROR',
     'RATE_LIMITED': 'RATE_LIMITED',
     'AUTH_PROVIDER_UNAVAILABLE': 'AUTH_PROVIDER_UNAVAILABLE',
+    'USERNAME_TAKEN': 'USERNAME_TAKEN',
   };
 
   @override

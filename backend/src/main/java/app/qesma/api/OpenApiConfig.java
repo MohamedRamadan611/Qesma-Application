@@ -65,7 +65,7 @@ public class OpenApiConfig {
             Map<String, PathItem> paths = openApi.getPaths();
             if (paths != null) {
                 paths.forEach((path, item) -> item.readOperationsMap().forEach((method, op) -> {
-                    if (path.startsWith("/api/v1/auth/")) {
+                    if (isPublicAuth(path)) {
                         op.setSecurity(List.of());            // sign-in, refresh and logout carry no access token
                     }
                     op.setOperationId(operationId(path, method));
@@ -84,6 +84,13 @@ public class OpenApiConfig {
             Map.entry("POST /api/v1/auth/google", "signInWithGoogle"),
             Map.entry("POST /api/v1/auth/refresh", "refreshSession"),
             Map.entry("POST /api/v1/auth/logout", "signOut"),
+            Map.entry("POST /api/v1/auth/register", "registerWithPassword"),
+            Map.entry("POST /api/v1/auth/login", "signInWithPassword"),
+            Map.entry("POST /api/v1/auth/password/forgot", "forgotPassword"),
+            Map.entry("POST /api/v1/auth/password/reset", "resetPassword"),
+            Map.entry("POST /api/v1/auth/email/verify", "verifyEmail"),
+            Map.entry("POST /api/v1/auth/email/verify/resend", "resendEmailVerification"),
+            Map.entry("POST /api/v1/me/password", "changePassword"),
             Map.entry("GET /api/v1/me", "getMe"),
             Map.entry("PATCH /api/v1/me", "updateMe"),
             Map.entry("GET /api/v1/groups", "listGroups"),
@@ -119,7 +126,7 @@ public class OpenApiConfig {
     /** The error codes an operation can return, grouped by HTTP status. Derived from the operation's shape. */
     static Map<Integer, List<ErrorCode>> errorsFor(String path, PathItem.HttpMethod method, Operation op) {
         Map<Integer, List<ErrorCode>> errors = new TreeMap<>();
-        boolean auth = path.startsWith("/api/v1/auth/");
+        boolean auth = isPublicAuth(path);
         boolean hasBody = op.getRequestBody() != null;
         boolean ifMatch = hasHeader(op, "If-Match");
         boolean idempotent = hasHeader(op, "Idempotency-Key");
@@ -169,11 +176,19 @@ public class OpenApiConfig {
             add(errors, 401, ErrorCode.UNAUTHORIZED);
             add(errors, 429, ErrorCode.RATE_LIMITED);
         }
+        if (path.equals("/api/v1/auth/register")) {
+            add(errors, 409, ErrorCode.USERNAME_TAKEN);
+        }
         if (path.equals("/api/v1/auth/google")) {
             add(errors, 503, ErrorCode.AUTH_PROVIDER_UNAVAILABLE);
         }
         add(errors, 500, ErrorCode.INTERNAL_ERROR);
         return errors;
+    }
+
+    /** Auth endpoints that carry no access token. Resending the verification link needs one, like the rest of the API. */
+    private static boolean isPublicAuth(String path) {
+        return path.startsWith("/api/v1/auth/") && !path.equals("/api/v1/auth/email/verify/resend");
     }
 
     private static void add(Map<Integer, List<ErrorCode>> errors, int status, ErrorCode code) {
@@ -271,7 +286,7 @@ public class OpenApiConfig {
             "SettlementView", java.util.Set.of("note"),
             "GroupDto", java.util.Set.of("lastExpenseAt"),
             "GroupSummaryDto", java.util.Set.of("lastExpenseAt"),
-            "UserDto", java.util.Set.of("email"));
+            "UserDto", java.util.Set.of("email", "username"));
 
     /** Request fields a caller must send. Other request fields are optional (the server defaults or ignores them). */
     static final Map<String, List<String>> REQUIRED_REQUEST = Map.ofEntries(
@@ -279,6 +294,12 @@ public class OpenApiConfig {
             Map.entry("CreateMemberRequest", List.of("displayName")),
             Map.entry("UpdateMemberRequest", List.of("displayName")),
             Map.entry("UpdateMeRequest", List.of("displayName")),
+            Map.entry("RegisterRequest", List.of("username", "password")),
+            Map.entry("LoginRequest", List.of("username", "password")),
+            Map.entry("ForgotPasswordRequest", List.of("email")),
+            Map.entry("ResetPasswordRequest", List.of("token", "newPassword")),
+            Map.entry("VerifyEmailRequest", List.of("token")),
+            Map.entry("ChangePasswordRequest", List.of("currentPassword", "newPassword")),
             Map.entry("SettlementCommand", List.of("fromMemberId", "toMemberId", "amountMinor", "settledOn")),
             Map.entry("ExpenseCommand", List.of("title", "expenseDate", "splitType")),
             Map.entry("PayerInput", List.of("memberId", "amountMinor")),

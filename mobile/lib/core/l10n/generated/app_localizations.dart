@@ -287,7 +287,7 @@ abstract class AppLocalizations {
   /// Short banner shown at the top of a screen while offline.
   ///
   /// In ar, this message translates to:
-  /// **'مفيش اتصال بالإنترنت'**
+  /// **'الاتصال مقطوع حاليًا'**
   String get stateOfflineBanner;
 
   /// Request timed out.
@@ -2317,6 +2317,378 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تجاهل'**
   String get paymentDiscardConfirm;
+
+  /// Title of the Account tab (profile hub).
+  ///
+  /// In ar, this message translates to:
+  /// **'حسابي'**
+  String get profileTitle;
+
+  /// Button on the profile hub.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل الملف الشخصي'**
+  String get profileEdit;
+
+  /// Group count on the hub when it is one.
+  ///
+  /// In ar, this message translates to:
+  /// **'مجموعة واحدة'**
+  String get profileGroupsOne;
+
+  /// Group count on the hub when it is two (Arabic dual).
+  ///
+  /// In ar, this message translates to:
+  /// **'مجموعتين'**
+  String get profileGroupsTwo;
+
+  /// Group count 3 to 10. Count is a string with Western digits.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} مجموعات'**
+  String profileGroups(String count);
+
+  /// Group count 11 or more.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} مجموعة'**
+  String profileGroupsMany(String count);
+
+  /// Hub section title.
+  ///
+  /// In ar, this message translates to:
+  /// **'التفضيلات'**
+  String get profileSectionPrefs;
+
+  /// Hub section title.
+  ///
+  /// In ar, this message translates to:
+  /// **'عن التطبيق'**
+  String get profileSectionAbout;
+
+  /// Hub row: language.
+  ///
+  /// In ar, this message translates to:
+  /// **'لغة التطبيق'**
+  String get profileLanguage;
+
+  /// Language name (shown in its own language).
+  ///
+  /// In ar, this message translates to:
+  /// **'العربية'**
+  String get languageArabic;
+
+  /// Language name (shown in its own language).
+  ///
+  /// In ar, this message translates to:
+  /// **'English'**
+  String get languageEnglish;
+
+  /// Title of the language sheet.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختار اللغة'**
+  String get languageSheetTitle;
+
+  /// Hub row: opens the account settings page.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعدادات الحساب'**
+  String get profileAccountSettings;
+
+  /// Hub row: version.
+  ///
+  /// In ar, this message translates to:
+  /// **'إصدار التطبيق'**
+  String get profileVersion;
+
+  /// Sign-out confirmation title.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجّل خروج؟'**
+  String get profileSignOutTitle;
+
+  /// Sign-out confirmation body.
+  ///
+  /// In ar, this message translates to:
+  /// **'هتحتاج تسجّل دخول بجوجل تاني عشان ترجع.'**
+  String get profileSignOutBody;
+
+  /// Edit profile screen title.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل الملف الشخصي'**
+  String get profileEditTitle;
+
+  /// Edit profile: name label.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاسم المعروض'**
+  String get profileNameLabel;
+
+  /// Edit profile: helper under the name.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاسم ده هيظهر لأصحابك في المجموعات والمصاريف.'**
+  String get profileNameHint;
+
+  /// Edit profile: name is empty.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب اسمك عشان أصحابك يعرفوك.'**
+  String get profileNameRequired;
+
+  /// Edit profile: name too long.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاسم أطول من 60 حرف.'**
+  String get profileNameTooLong;
+
+  /// Edit profile: email label.
+  ///
+  /// In ar, this message translates to:
+  /// **'البريد الإلكتروني'**
+  String get profileEmailLabel;
+
+  /// Edit profile: why the email is read only.
+  ///
+  /// In ar, this message translates to:
+  /// **'مرتبط بحساب جوجل ومش بيتعدّل يدويًا.'**
+  String get profileEmailLocked;
+
+  /// Edit profile: save button.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ التعديلات'**
+  String get profileSave;
+
+  /// Snackbar after the name was saved.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتحفظ الاسم.'**
+  String get profileSaved;
+
+  /// Question when leaving edit profile with changes.
+  ///
+  /// In ar, this message translates to:
+  /// **'تتجاهل التعديلات؟'**
+  String get profileDiscardTitle;
+
+  /// Body of the discard question.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاسم الجديد مش هيتحفظ.'**
+  String get profileDiscardBody;
+
+  /// Confirm of the discard question.
+  ///
+  /// In ar, this message translates to:
+  /// **'تجاهل'**
+  String get profileDiscardConfirm;
+
+  /// Account settings and hub: the Google account.
+  ///
+  /// In ar, this message translates to:
+  /// **'حساب جوجل المرتبط'**
+  String get accountGoogleTitle;
+
+  /// Tag: the Google account is connected.
+  ///
+  /// In ar, this message translates to:
+  /// **'متصل'**
+  String get accountConnected;
+
+  /// Hub row: light or dark appearance.
+  ///
+  /// In ar, this message translates to:
+  /// **'المظهر'**
+  String get profileAppearance;
+
+  /// Title of the appearance sheet.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختار المظهر'**
+  String get appearanceSheetTitle;
+
+  /// Appearance: follow the phone setting (default).
+  ///
+  /// In ar, this message translates to:
+  /// **'زي الموبايل'**
+  String get appearanceSystem;
+
+  /// Appearance: light.
+  ///
+  /// In ar, this message translates to:
+  /// **'فاتح'**
+  String get appearanceLight;
+
+  /// Appearance: dark.
+  ///
+  /// In ar, this message translates to:
+  /// **'داكن'**
+  String get appearanceDark;
+
+  /// Button on the sign-in screen: sign in with email and password.
+  ///
+  /// In ar, this message translates to:
+  /// **'المتابعة باسم المستخدم'**
+  String get authUsernameContinue;
+
+  /// Title of the email sign-in screen.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجيل الدخول باسم المستخدم'**
+  String get authUsernameSignInTitle;
+
+  /// Button: sign in with email and password.
+  ///
+  /// In ar, this message translates to:
+  /// **'دخول'**
+  String get authUsernameSignInButton;
+
+  /// Title of the registration screen.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنشاء حساب'**
+  String get authRegisterTitle;
+
+  /// Button: register with email and password.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنشاء الحساب'**
+  String get authRegisterButton;
+
+  /// Link from sign-in to registration.
+  ///
+  /// In ar, this message translates to:
+  /// **'معندكش حساب؟ أنشئ حساب جديد'**
+  String get authGoRegister;
+
+  /// Link from registration to sign-in.
+  ///
+  /// In ar, this message translates to:
+  /// **'عندك حساب؟ سجّل دخول'**
+  String get authGoSignIn;
+
+  /// Field label: email address.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسم المستخدم'**
+  String get fieldUsername;
+
+  /// Field label: password.
+  ///
+  /// In ar, this message translates to:
+  /// **'كلمة السر'**
+  String get fieldPassword;
+
+  /// Button: show the password text.
+  ///
+  /// In ar, this message translates to:
+  /// **'إظهار كلمة السر'**
+  String get fieldPasswordShow;
+
+  /// Button: hide the password text.
+  ///
+  /// In ar, this message translates to:
+  /// **'إخفاء كلمة السر'**
+  String get fieldPasswordHide;
+
+  /// Registration: display name label.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاسم (اختياري)'**
+  String get fieldDisplayNameOptional;
+
+  /// Helper under the new-password field.
+  ///
+  /// In ar, this message translates to:
+  /// **'كلمة السر 8 حروف على الأقل، ومش من الكلمات الشائعة.'**
+  String get authPasswordRules;
+
+  /// Email field error.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسم المستخدم من 3 لـ 30 حرف: حروف وأرقام ونقطة وشرطة، من غير مسافات أو @.'**
+  String get authErrorUsernameInvalid;
+
+  /// Password too short.
+  ///
+  /// In ar, this message translates to:
+  /// **'كلمة السر لازم تكون 8 حروف على الأقل.'**
+  String get authErrorPasswordShort;
+
+  /// Password too long.
+  ///
+  /// In ar, this message translates to:
+  /// **'كلمة السر طويلة قوي. الحد الأقصى 72 بايت (حوالي 36 حرف عربي).'**
+  String get authErrorPasswordLong;
+
+  /// Email sign-in refused (wrong credentials, locked account, or no password account: never says which).
+  ///
+  /// In ar, this message translates to:
+  /// **'اسم المستخدم أو كلمة السر مش صح. جرّب تاني.'**
+  String get authErrorWrongCredentials;
+
+  /// Registration refused: the address is taken.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسم المستخدم ده مأخوذ. اختار اسم تاني أو سجّل دخول.'**
+  String get authErrorUsernameTaken;
+
+  /// The server refused the password.
+  ///
+  /// In ar, this message translates to:
+  /// **'كلمة السر دي مش مقبولة. اختار كلمة أقوى وأقل شيوعًا.'**
+  String get authErrorPasswordRejected;
+
+  /// Hub row: change the password.
+  ///
+  /// In ar, this message translates to:
+  /// **'تغيير كلمة السر'**
+  String get profileChangePassword;
+
+  /// Title of the change-password screen.
+  ///
+  /// In ar, this message translates to:
+  /// **'تغيير كلمة السر'**
+  String get passwordChangeTitle;
+
+  /// Change password: current password field.
+  ///
+  /// In ar, this message translates to:
+  /// **'كلمة السر الحالية'**
+  String get passwordCurrentLabel;
+
+  /// Change password: new password field.
+  ///
+  /// In ar, this message translates to:
+  /// **'كلمة السر الجديدة'**
+  String get passwordNewLabel;
+
+  /// Change password: save button.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ كلمة السر'**
+  String get passwordChangeButton;
+
+  /// Snackbar after a password change.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتغيرت كلمة السر. باقي الأجهزة اتسجّل خروجها.'**
+  String get passwordChanged;
+
+  /// Change password: the current password was refused.
+  ///
+  /// In ar, this message translates to:
+  /// **'كلمة السر الحالية مش صح، أو الجديدة مش مقبولة (شائعة قوي).'**
+  String get passwordCurrentWrong;
+
+  /// Account settings: the sign-in method is email.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسجّل دخول باسم المستخدم وكلمة السر'**
+  String get accountSignedInWithPassword;
 }
 
 class _AppLocalizationsDelegate

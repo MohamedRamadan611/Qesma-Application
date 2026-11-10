@@ -16,6 +16,8 @@ import '../../support/test_app.dart';
 String _t(Config c, String ar, String en) => c.locale.languageCode == 'ar' ? ar : en;
 
 final UserDto _user = UserDto((b) => b
+  ..hasPassword = false
+  ..emailVerified = true
   ..id = 'u1'
   ..displayName = 'Test User');
 

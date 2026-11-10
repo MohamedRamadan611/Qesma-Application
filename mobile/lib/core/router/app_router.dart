@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/application/auth_controller.dart';
 import '../../features/auth/application/auth_state.dart';
+import '../../features/auth/presentation/change_password_screen.dart';
+import '../../features/auth/presentation/username_auth_screens.dart';
 import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/auth/presentation/splash_screen.dart';
 import '../../features/auth/presentation/welcome_screen.dart';
@@ -14,12 +16,19 @@ import '../../features/groups/presentation/create_group_screen.dart';
 import '../../features/groups/presentation/edit_group_screen.dart';
 import '../../features/groups/presentation/group_home_screen.dart';
 import '../../features/groups/presentation/groups_list_screen.dart';
+import '../../features/profile/presentation/account_settings_screen.dart';
+import '../../features/profile/presentation/edit_profile_screen.dart';
+import '../../features/profile/presentation/profile_hub_screen.dart';
+import '../widgets/main_shell.dart';
 import '../widgets/catalogue/component_catalogue.dart';
 
 /// Route paths in one place.
 abstract final class Routes {
   static const String home = '/';
   static const String newGroup = '/groups/new';
+  static const String account = '/account';
+  static const String editProfile = '/account/edit';
+  static const String accountSettings = '/account/settings';
   static String group(String gid) => '/groups/$gid';
   static String editGroup(String gid) => '/groups/$gid/edit';
   static String addExpense(String gid) => '/groups/$gid/expenses/new';
@@ -28,6 +37,9 @@ abstract final class Routes {
   static const String splash = '/splash';
   static const String welcome = '/welcome';
   static const String signIn = '/sign-in';
+  static const String usernameSignIn = '/sign-in/username';
+  static const String register = '/sign-in/register';
+  static const String changePassword = '/account/password';
 
   /// Debug-only component catalogue. Declared only when [kDebugMode] is true, so it does
   /// not exist in release builds (a guard test checks this).
@@ -41,7 +53,7 @@ final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>(deb
 /// Ignored in release builds.
 const String _initialRouteDefine = String.fromEnvironment('INITIAL_ROUTE');
 
-const Set<String> _authPaths = {Routes.splash, Routes.welcome, Routes.signIn};
+const Set<String> _authPaths = {Routes.splash, Routes.welcome, Routes.signIn, Routes.usernameSignIn, Routes.register};
 
 /// Where to go after signing in. Only an in-app absolute path is accepted, so a crafted
 /// `from` value can never redirect to another site (open redirect) or back into the auth screens.
@@ -101,7 +113,16 @@ final routerProvider = Provider<GoRouter>((ref) {
     refreshListenable: refresh,
     redirect: (context, state) => authRedirect(ref.read(authControllerProvider), state.uri),
     routes: [
-      GoRoute(path: Routes.home, builder: (context, state) => const GroupsListScreen()),
+      // The two top-level tabs share the bottom bar; everything pushed from them covers it.
+      ShellRoute(
+        builder: (context, state, child) => MainShell(location: state.uri.path, child: child),
+        routes: [
+          GoRoute(path: Routes.home, builder: (context, state) => const GroupsListScreen()),
+          GoRoute(path: Routes.account, builder: (context, state) => const ProfileHubScreen()),
+        ],
+      ),
+      GoRoute(path: Routes.editProfile, builder: (context, state) => const EditProfileScreen()),
+      GoRoute(path: Routes.accountSettings, builder: (context, state) => const AccountSettingsScreen()),
       GoRoute(path: Routes.newGroup, builder: (context, state) => const CreateGroupScreen()),
       GoRoute(
         path: '/groups/:gid',
@@ -125,6 +146,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: Routes.splash, builder: (context, state) => const SplashScreen()),
       GoRoute(path: Routes.welcome, builder: (context, state) => WelcomeScreen(from: state.uri.queryParameters['from'])),
       GoRoute(path: Routes.signIn, builder: (context, state) => const SignInScreen()),
+      GoRoute(path: Routes.usernameSignIn, builder: (context, state) => const UsernameSignInScreen()),
+      GoRoute(path: Routes.register, builder: (context, state) => const RegisterScreen()),
+      GoRoute(path: Routes.changePassword, builder: (context, state) => const ChangePasswordScreen()),
       if (kDebugMode) GoRoute(path: Routes.catalogue, builder: (context, state) => const ComponentCatalogue()),
     ],
   );

@@ -123,7 +123,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'اللي سجلته قبل كده محفوظ، وهيظهر أول ما النت يرجع.';
 
   @override
-  String get stateOfflineBanner => 'مفيش اتصال بالإنترنت';
+  String get stateOfflineBanner => 'الاتصال مقطوع حاليًا';
 
   @override
   String get errorTimeout =>
@@ -1324,4 +1324,203 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get paymentDiscardConfirm => 'تجاهل';
+
+  @override
+  String get profileTitle => 'حسابي';
+
+  @override
+  String get profileEdit => 'تعديل الملف الشخصي';
+
+  @override
+  String get profileGroupsOne => 'مجموعة واحدة';
+
+  @override
+  String get profileGroupsTwo => 'مجموعتين';
+
+  @override
+  String profileGroups(String count) {
+    return '$count مجموعات';
+  }
+
+  @override
+  String profileGroupsMany(String count) {
+    return '$count مجموعة';
+  }
+
+  @override
+  String get profileSectionPrefs => 'التفضيلات';
+
+  @override
+  String get profileSectionAbout => 'عن التطبيق';
+
+  @override
+  String get profileLanguage => 'لغة التطبيق';
+
+  @override
+  String get languageArabic => 'العربية';
+
+  @override
+  String get languageEnglish => 'English';
+
+  @override
+  String get languageSheetTitle => 'اختار اللغة';
+
+  @override
+  String get profileAccountSettings => 'إعدادات الحساب';
+
+  @override
+  String get profileVersion => 'إصدار التطبيق';
+
+  @override
+  String get profileSignOutTitle => 'تسجّل خروج؟';
+
+  @override
+  String get profileSignOutBody => 'هتحتاج تسجّل دخول بجوجل تاني عشان ترجع.';
+
+  @override
+  String get profileEditTitle => 'تعديل الملف الشخصي';
+
+  @override
+  String get profileNameLabel => 'الاسم المعروض';
+
+  @override
+  String get profileNameHint =>
+      'الاسم ده هيظهر لأصحابك في المجموعات والمصاريف.';
+
+  @override
+  String get profileNameRequired => 'اكتب اسمك عشان أصحابك يعرفوك.';
+
+  @override
+  String get profileNameTooLong => 'الاسم أطول من 60 حرف.';
+
+  @override
+  String get profileEmailLabel => 'البريد الإلكتروني';
+
+  @override
+  String get profileEmailLocked => 'مرتبط بحساب جوجل ومش بيتعدّل يدويًا.';
+
+  @override
+  String get profileSave => 'حفظ التعديلات';
+
+  @override
+  String get profileSaved => 'اتحفظ الاسم.';
+
+  @override
+  String get profileDiscardTitle => 'تتجاهل التعديلات؟';
+
+  @override
+  String get profileDiscardBody => 'الاسم الجديد مش هيتحفظ.';
+
+  @override
+  String get profileDiscardConfirm => 'تجاهل';
+
+  @override
+  String get accountGoogleTitle => 'حساب جوجل المرتبط';
+
+  @override
+  String get accountConnected => 'متصل';
+
+  @override
+  String get profileAppearance => 'المظهر';
+
+  @override
+  String get appearanceSheetTitle => 'اختار المظهر';
+
+  @override
+  String get appearanceSystem => 'زي الموبايل';
+
+  @override
+  String get appearanceLight => 'فاتح';
+
+  @override
+  String get appearanceDark => 'داكن';
+
+  @override
+  String get authUsernameContinue => 'المتابعة باسم المستخدم';
+
+  @override
+  String get authUsernameSignInTitle => 'تسجيل الدخول باسم المستخدم';
+
+  @override
+  String get authUsernameSignInButton => 'دخول';
+
+  @override
+  String get authRegisterTitle => 'إنشاء حساب';
+
+  @override
+  String get authRegisterButton => 'إنشاء الحساب';
+
+  @override
+  String get authGoRegister => 'معندكش حساب؟ أنشئ حساب جديد';
+
+  @override
+  String get authGoSignIn => 'عندك حساب؟ سجّل دخول';
+
+  @override
+  String get fieldUsername => 'اسم المستخدم';
+
+  @override
+  String get fieldPassword => 'كلمة السر';
+
+  @override
+  String get fieldPasswordShow => 'إظهار كلمة السر';
+
+  @override
+  String get fieldPasswordHide => 'إخفاء كلمة السر';
+
+  @override
+  String get fieldDisplayNameOptional => 'الاسم (اختياري)';
+
+  @override
+  String get authPasswordRules =>
+      'كلمة السر 8 حروف على الأقل، ومش من الكلمات الشائعة.';
+
+  @override
+  String get authErrorUsernameInvalid =>
+      'اسم المستخدم من 3 لـ 30 حرف: حروف وأرقام ونقطة وشرطة، من غير مسافات أو @.';
+
+  @override
+  String get authErrorPasswordShort => 'كلمة السر لازم تكون 8 حروف على الأقل.';
+
+  @override
+  String get authErrorPasswordLong =>
+      'كلمة السر طويلة قوي. الحد الأقصى 72 بايت (حوالي 36 حرف عربي).';
+
+  @override
+  String get authErrorWrongCredentials =>
+      'اسم المستخدم أو كلمة السر مش صح. جرّب تاني.';
+
+  @override
+  String get authErrorUsernameTaken =>
+      'اسم المستخدم ده مأخوذ. اختار اسم تاني أو سجّل دخول.';
+
+  @override
+  String get authErrorPasswordRejected =>
+      'كلمة السر دي مش مقبولة. اختار كلمة أقوى وأقل شيوعًا.';
+
+  @override
+  String get profileChangePassword => 'تغيير كلمة السر';
+
+  @override
+  String get passwordChangeTitle => 'تغيير كلمة السر';
+
+  @override
+  String get passwordCurrentLabel => 'كلمة السر الحالية';
+
+  @override
+  String get passwordNewLabel => 'كلمة السر الجديدة';
+
+  @override
+  String get passwordChangeButton => 'حفظ كلمة السر';
+
+  @override
+  String get passwordChanged => 'اتغيرت كلمة السر. باقي الأجهزة اتسجّل خروجها.';
+
+  @override
+  String get passwordCurrentWrong =>
+      'كلمة السر الحالية مش صح، أو الجديدة مش مقبولة (شائعة قوي).';
+
+  @override
+  String get accountSignedInWithPassword =>
+      'مسجّل دخول باسم المستخدم وكلمة السر';
 }

@@ -4,6 +4,7 @@ import 'package:qesma_api/qesma_api.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
+import '../../../core/theme/palette.dart';
 
 /// Picks one member for the "from" or "to" side of a payment. [excludeId] (the member on the other
 /// side) is not offered, so the two can never be the same. Returns the chosen id, or null when dismissed.
@@ -65,7 +66,7 @@ class _PickerRow extends StatelessWidget {
             MemberAvatar(memberId: member.id, name: member.displayName, size: 36),
             const SizedBox(width: QesmaSpacing.sm + 4),
             Expanded(child: Text(name, style: theme.textTheme.titleSmall)),
-            if (selected) const Icon(Icons.check_circle, color: QesmaColors.primary),
+            if (selected) Icon(Icons.check_circle, color: context.colors.primary),
           ],
         ),
       ),

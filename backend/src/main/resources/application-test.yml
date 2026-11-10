@@ -6,6 +6,8 @@ qesma:
     google-client-ids: test-client-id
     rate-limit:
       max-requests: 1000
+    password:
+      bcrypt-cost: 4          # the minimum: tests hash hundreds of times (production uses 12)
 
 logging:
   structured:

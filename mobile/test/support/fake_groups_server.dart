@@ -145,9 +145,39 @@ class FakeGroupsServer extends FakeBackend {
     return bytes.isEmpty ? {} : jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
   }
 
+  /// The signed-in user as `/me` answers (a `PATCH` changes it).
+  String meName = 'Test User';
+
+  /// Every `PATCH /me` body, in arrival order.
+  final List<Map<String, dynamic>> meUpdates = [];
+
+  /// The next `PATCH /me` is refused with this 422 code.
+  String? forceMeCode;
+
+  Future<ResponseBody> _me(RequestOptions options, Stream<Uint8List>? stream) async {
+    requests.add('${options.method} ${options.uri.path}');
+    if (offline) {
+      throw DioException.connectionError(requestOptions: options, reason: 'offline', error: const HttpException('offline'));
+    }
+    if (options.method == 'PATCH') {
+      final body = await _json(options, stream);
+      meUpdates.add(body);
+      final forced = forceMeCode;
+      if (forced != null) {
+        forceMeCode = null;
+        return problemResponse(422, forced);
+      }
+      final name = '${body['displayName']}'.trim();
+      if (name.isEmpty || name.runes.length > 60) return problemResponse(422, 'VALIDATION_ERROR');
+      meName = name;
+    }
+    return jsonOk(200, {'id': 'u1', 'displayName': meName, 'email': 'test@example.com', 'hasPassword': false, 'emailVerified': true});
+  }
+
   @override
   Future<ResponseBody> fetch(RequestOptions options, Stream<Uint8List>? requestStream, Future<void>? cancelFuture) async {
     final path = options.uri.path;
+    if (path.endsWith('/api/v1/me')) return _me(options, requestStream);
     if (!path.contains('/api/v1/groups')) return super.fetch(options, requestStream, cancelFuture);
 
     requests.add('${options.method} ${options.uri.path}${options.uri.hasQuery ? '?${options.uri.query}' : ''}'

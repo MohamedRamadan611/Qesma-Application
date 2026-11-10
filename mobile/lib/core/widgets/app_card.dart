@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/tokens.dart';
+import '../theme/palette.dart';
 
 /// White card: 16 px radius, hairline border, level-1 shadow. Tappable cards get an ink
 /// ripple and a 48 px minimum height.
@@ -10,14 +11,15 @@ class AppCard extends StatelessWidget {
     required this.child,
     this.onTap,
     this.padding = const EdgeInsets.all(QesmaSpacing.md),
-    this.color = QesmaColors.card,
+    this.color,
     this.semanticLabel,
   });
 
   final Widget child;
   final VoidCallback? onTap;
   final EdgeInsetsGeometry padding;
-  final Color color;
+  /// Fill; the theme's card colour when null.
+  final Color? color;
 
   /// Replaces the combined text of the children for screen readers (e.g. a full sentence
   /// describing a group row).
@@ -29,9 +31,9 @@ class AppCard extends StatelessWidget {
     final body = Padding(padding: padding, child: child);
     final card = DecoratedBox(
       decoration: BoxDecoration(
-        color: color,
+        color: color ?? context.colors.card,
         borderRadius: radius,
-        border: Border.all(color: QesmaColors.hairline),
+        border: Border.all(color: context.colors.hairline),
         boxShadow: QesmaShadows.card,
       ),
       child: Material(

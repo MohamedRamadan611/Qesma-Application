@@ -10,6 +10,7 @@ import '../../../core/widgets/widgets.dart';
 import '../application/create_group_controller.dart';
 import '../data/group_type.dart';
 import 'group_ui.dart';
+import '../../../core/theme/palette.dart';
 
 /// Create group (P2-02): name (max 60), type chips, fixed EGP. No photo, no contacts.
 class CreateGroupScreen extends ConsumerStatefulWidget {
@@ -54,7 +55,7 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
       body: ListView(
         padding: const EdgeInsets.all(QesmaSpacing.margin),
         children: [
-          Text(l10n.groupCreateSubtitle, style: theme.textTheme.bodyMedium?.copyWith(color: QesmaColors.textSecondary)),
+          Text(l10n.groupCreateSubtitle, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
           const SizedBox(height: QesmaSpacing.lg),
           ListenableBuilder(
             listenable: _name,
@@ -88,17 +89,17 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
           Text(l10n.groupCurrencyLabel, style: theme.textTheme.labelLarge),
           const SizedBox(height: QesmaSpacing.sm),
           AppCard(
-            color: QesmaColors.tint,
+            color: context.colors.tint,
             child: Row(
               children: [
-                const ExcludeSemantics(child: Icon(Icons.lock_outline, color: QesmaColors.textSecondary)),
+                ExcludeSemantics(child: Icon(Icons.lock_outline, color: context.colors.textSecondary)),
                 const SizedBox(width: QesmaSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(l10n.groupCurrencyValue, style: theme.textTheme.titleMedium),
-                      Text(l10n.groupCurrencyNote, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textHelper)),
+                      Text(l10n.groupCurrencyNote, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper)),
                     ],
                   ),
                 ),

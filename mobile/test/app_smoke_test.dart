@@ -58,7 +58,7 @@ void main() {
 
     await tester.tap(find.text('المتابعة باستخدام Google'));
     await tester.pumpAndSettle();
-    expect(find.text('المجموعات'), findsOneWidget, reason: 'the groups list is the signed-in home');
+    expect(find.text('المجموعات'), findsNWidgets(2), reason: 'the groups list is the signed-in home (screen title and bottom bar)');
     expect(find.text('المتابعة باستخدام Google'), findsNothing);
   });
 
@@ -75,7 +75,7 @@ void main() {
     addTearDown(container.dispose);
     await tester.pumpWidget(UncontrolledProviderScope(container: container, child: const QesmaApp()));
     await tester.pumpAndSettle();
-    expect(find.text('المجموعات'), findsOneWidget);
+    expect(find.text('المجموعات'), findsNWidgets(2));
     expect(find.text('ابدأ الآن'), findsNothing);
   });
 
@@ -86,9 +86,14 @@ void main() {
     await tester.tap(find.text('المتابعة باستخدام Google'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('المزيد'));
+    await tester.tap(find.text('حسابي'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('تسجيل الخروج'), 200);
+    await tester.ensureVisible(find.text('تسجيل الخروج'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('تسجيل الخروج'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('تسجيل الخروج').last); // the confirmation
     await tester.pumpAndSettle();
     expect(find.text('ابدأ الآن'), findsOneWidget);
   });

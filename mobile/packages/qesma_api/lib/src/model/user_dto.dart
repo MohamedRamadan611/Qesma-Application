@@ -13,7 +13,10 @@ part 'user_dto.g.dart';
 /// Properties:
 /// * [displayName] 
 /// * [email] 
+/// * [emailVerified] 
+/// * [hasPassword] 
 /// * [id] 
+/// * [username] 
 @BuiltValue()
 abstract class UserDto implements Built<UserDto, UserDtoBuilder> {
   @BuiltValueField(wireName: r'displayName')
@@ -22,8 +25,17 @@ abstract class UserDto implements Built<UserDto, UserDtoBuilder> {
   @BuiltValueField(wireName: r'email')
   String? get email;
 
+  @BuiltValueField(wireName: r'emailVerified')
+  bool get emailVerified;
+
+  @BuiltValueField(wireName: r'hasPassword')
+  bool get hasPassword;
+
   @BuiltValueField(wireName: r'id')
   String get id;
+
+  @BuiltValueField(wireName: r'username')
+  String? get username;
 
   UserDto._();
 
@@ -60,11 +72,28 @@ class _$UserDtoSerializer implements PrimitiveSerializer<UserDto> {
         specifiedType: const FullType.nullable(String),
       );
     }
+    yield r'emailVerified';
+    yield serializers.serialize(
+      object.emailVerified,
+      specifiedType: const FullType(bool),
+    );
+    yield r'hasPassword';
+    yield serializers.serialize(
+      object.hasPassword,
+      specifiedType: const FullType(bool),
+    );
     yield r'id';
     yield serializers.serialize(
       object.id,
       specifiedType: const FullType(String),
     );
+    if (object.username != null) {
+      yield r'username';
+      yield serializers.serialize(
+        object.username,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
   }
 
   @override
@@ -103,12 +132,34 @@ class _$UserDtoSerializer implements PrimitiveSerializer<UserDto> {
           if (valueDes == null) continue;
           result.email = valueDes;
           break;
+        case r'emailVerified':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(bool),
+          ) as bool;
+          result.emailVerified = valueDes;
+          break;
+        case r'hasPassword':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(bool),
+          ) as bool;
+          result.hasPassword = valueDes;
+          break;
         case r'id':
           final valueDes = serializers.deserialize(
             value,
             specifiedType: const FullType(String),
           ) as String;
           result.id = valueDes;
+          break;
+        case r'username':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.username = valueDes;
           break;
         default:
           unhandled.add(key);

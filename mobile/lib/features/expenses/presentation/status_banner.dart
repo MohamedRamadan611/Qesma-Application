@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/tokens.dart';
+import '../../../core/theme/palette.dart';
 
 enum BannerTone { neutral, success, warning, error }
 
@@ -16,10 +17,10 @@ class StatusBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (fg, bg) = switch (tone) {
-      BannerTone.success => (QesmaColors.success, QesmaColors.successContainer),
-      BannerTone.warning => (QesmaColors.warning, QesmaColors.warningContainer),
-      BannerTone.error => (QesmaColors.error, QesmaColors.errorContainer),
-      BannerTone.neutral => (QesmaColors.textSecondary, QesmaColors.tint),
+      BannerTone.success => (context.colors.success, context.colors.successContainer),
+      BannerTone.warning => (context.colors.warning, context.colors.warningContainer),
+      BannerTone.error => (context.colors.error, context.colors.errorContainer),
+      BannerTone.neutral => (context.colors.textSecondary, context.colors.tint),
     };
     return Semantics(
       liveRegion: true,

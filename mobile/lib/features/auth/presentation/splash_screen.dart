@@ -8,6 +8,7 @@ import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../application/auth_controller.dart';
 import '../application/auth_state.dart';
+import '../../../core/theme/palette.dart';
 
 /// First screen: looks for a stored session. If the server cannot be reached the session is
 /// kept and the shared offline/error state offers a retry; the router moves on by itself
@@ -44,6 +45,6 @@ class SplashScreen extends ConsumerWidget {
         ),
       );
     }
-    return Scaffold(backgroundColor: QesmaColors.canvas, body: SafeArea(child: body));
+    return Scaffold(backgroundColor: context.colors.canvas, body: SafeArea(child: body));
   }
 }

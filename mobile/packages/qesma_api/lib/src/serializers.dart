@@ -16,6 +16,7 @@ import 'package:qesma_api/src/model/date.dart';
 
 import 'package:qesma_api/src/model/auth_response.dart';
 import 'package:qesma_api/src/model/balance_view.dart';
+import 'package:qesma_api/src/model/change_password_request.dart';
 import 'package:qesma_api/src/model/charges.dart';
 import 'package:qesma_api/src/model/create_group_request.dart';
 import 'package:qesma_api/src/model/create_member_request.dart';
@@ -23,11 +24,13 @@ import 'package:qesma_api/src/model/expense_command.dart';
 import 'package:qesma_api/src/model/expense_preview.dart';
 import 'package:qesma_api/src/model/expense_revision_view.dart';
 import 'package:qesma_api/src/model/expense_view.dart';
+import 'package:qesma_api/src/model/forgot_password_request.dart';
 import 'package:qesma_api/src/model/google_login_request.dart';
 import 'package:qesma_api/src/model/group_dto.dart';
 import 'package:qesma_api/src/model/group_summary_dto.dart';
 import 'package:qesma_api/src/model/item_input.dart';
 import 'package:qesma_api/src/model/item_view.dart';
+import 'package:qesma_api/src/model/login_request.dart';
 import 'package:qesma_api/src/model/member_dto.dart';
 import 'package:qesma_api/src/model/net.dart';
 import 'package:qesma_api/src/model/page_response_expense_view.dart';
@@ -37,6 +40,8 @@ import 'package:qesma_api/src/model/payer_input.dart';
 import 'package:qesma_api/src/model/payer_view.dart';
 import 'package:qesma_api/src/model/problem.dart';
 import 'package:qesma_api/src/model/refresh_request.dart';
+import 'package:qesma_api/src/model/register_request.dart';
+import 'package:qesma_api/src/model/reset_password_request.dart';
 import 'package:qesma_api/src/model/service_charge.dart';
 import 'package:qesma_api/src/model/service_input.dart';
 import 'package:qesma_api/src/model/settlement_command.dart';
@@ -51,12 +56,14 @@ import 'package:qesma_api/src/model/update_group_request.dart';
 import 'package:qesma_api/src/model/update_me_request.dart';
 import 'package:qesma_api/src/model/update_member_request.dart';
 import 'package:qesma_api/src/model/user_dto.dart';
+import 'package:qesma_api/src/model/verify_email_request.dart';
 
 part 'serializers.g.dart';
 
 @SerializersFor([
   AuthResponse,
   BalanceView,
+  ChangePasswordRequest,
   Charges,
   CreateGroupRequest,
   CreateMemberRequest,
@@ -64,11 +71,13 @@ part 'serializers.g.dart';
   ExpensePreview,
   ExpenseRevisionView,
   ExpenseView,
+  ForgotPasswordRequest,
   GoogleLoginRequest,
   GroupDto,
   GroupSummaryDto,
   ItemInput,
   ItemView,
+  LoginRequest,
   MemberDto,
   Net,
   PageResponseExpenseView,
@@ -78,6 +87,8 @@ part 'serializers.g.dart';
   PayerView,
   Problem,
   RefreshRequest,
+  RegisterRequest,
+  ResetPasswordRequest,
   ServiceCharge,
   ServiceInput,
   SettlementCommand,
@@ -92,6 +103,7 @@ part 'serializers.g.dart';
   UpdateMeRequest,
   UpdateMemberRequest,
   UserDto,
+  VerifyEmailRequest,
 ])
 Serializers serializers = (_$serializers.toBuilder()
       ..addBuilderFactory(

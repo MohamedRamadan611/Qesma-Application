@@ -59,7 +59,7 @@ void main() {
     test('getMe goes to <origin>/api/v1/me with Accept: application/json and no auth header', () async {
       final adapter = _FakeAdapter(
         200,
-        jsonEncode({'id': '11111111-1111-1111-1111-111111111111', 'displayName': 'Ali', 'email': 'a@example.com'}),
+        jsonEncode({'id': '11111111-1111-1111-1111-111111111111', 'displayName': 'Ali', 'email': 'a@example.com', 'hasPassword': false, 'emailVerified': false}),
         contentType: 'application/json',
       );
       final dio = createDio(baseUrl: 'http://10.0.2.2:8080', adapter: adapter);

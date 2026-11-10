@@ -37,7 +37,9 @@ public class SecurityConfig {
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(a -> a
                 .requestMatchers(HttpMethod.POST,
-                        "/api/v1/auth/google", "/api/v1/auth/refresh", "/api/v1/auth/logout").permitAll()
+                        "/api/v1/auth/google", "/api/v1/auth/refresh", "/api/v1/auth/logout",
+                        "/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/password/forgot",
+                        "/api/v1/auth/password/reset", "/api/v1/auth/email/verify").permitAll()
                 // Actuator endpoints that are exposed (see management.endpoints.web.exposure): health and info locally;
                 // health, info and metrics on the internal management port in prod. The matcher does not match on the
                 // public port when the management port differs, so the API port never serves them.

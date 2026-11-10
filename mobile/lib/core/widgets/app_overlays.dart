@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../theme/tokens.dart';
 import 'app_button.dart';
+import '../theme/palette.dart';
 
 /// Content of a bottom sheet: drag handle, close button, title, optional subtitle, scrolling
 /// body and a sticky action area. Use [showAppBottomSheet] to open one.
@@ -36,7 +37,7 @@ class AppBottomSheet extends StatelessWidget {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: QesmaColors.buttonBorder,
+                  color: context.colors.buttonBorder,
                   borderRadius: BorderRadius.circular(QesmaRadii.pill),
                 ),
               ),
@@ -60,7 +61,7 @@ class AppBottomSheet extends StatelessWidget {
                       children: [
                         Semantics(header: true, child: Text(title, style: theme.textTheme.headlineMedium)),
                         if (subtitle != null)
-                          Text(subtitle!, style: theme.textTheme.bodyMedium?.copyWith(color: QesmaColors.textSecondary)),
+                          Text(subtitle!, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
                       ],
                     ),
                   ),
@@ -76,9 +77,9 @@ class AppBottomSheet extends StatelessWidget {
           ),
           if (action != null)
             DecoratedBox(
-              decoration: const BoxDecoration(
-                color: QesmaColors.card,
-                border: Border(top: BorderSide(color: QesmaColors.hairline)),
+              decoration: BoxDecoration(
+                color: context.colors.card,
+                border: Border(top: BorderSide(color: context.colors.hairline)),
               ),
               child: Padding(
                 padding: const EdgeInsetsDirectional.fromSTEB(QesmaSpacing.md, QesmaSpacing.sm, QesmaSpacing.md, QesmaSpacing.md),
@@ -98,9 +99,11 @@ Future<T?> showAppBottomSheet<T>(
   required Widget child,
   String? subtitle,
   Widget? action,
+  bool useRootNavigator = false,
 }) {
   return showModalBottomSheet<T>(
     context: context,
+    useRootNavigator: useRootNavigator,
     isScrollControlled: true,
     useSafeArea: true,
     constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.9),
@@ -158,7 +161,7 @@ Future<void> showBlockedDialog(
   return showDialog<void>(
     context: context,
     builder: (dialogContext) => AlertDialog(
-      icon: const ExcludeSemantics(child: Icon(Icons.info_outline, color: QesmaColors.warning, size: 32)),
+      icon: ExcludeSemantics(child: Icon(Icons.info_outline, color: context.colors.warning, size: 32)),
       title: Text(title, textAlign: TextAlign.center),
       content: Text(message, textAlign: TextAlign.center),
       actions: [

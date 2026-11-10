@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/generated/app_localizations.dart';
 import '../theme/tokens.dart';
+import '../theme/palette.dart';
 
 enum AppButtonVariant { primary, secondary, destructive, text }
 
@@ -36,8 +37,9 @@ class AppButton extends StatelessWidget {
     final callback = loading ? () {} : onPressed;
 
     final foreground = switch (variant) {
-      AppButtonVariant.primary || AppButtonVariant.destructive => QesmaColors.onPrimary,
-      AppButtonVariant.secondary => QesmaColors.textPrimary,
+      AppButtonVariant.primary => context.colors.onPrimary,
+      AppButtonVariant.destructive => context.colors.onError,
+      AppButtonVariant.secondary => context.colors.textPrimary,
       AppButtonVariant.text => scheme.primary,
     };
 
@@ -68,8 +70,8 @@ class AppButton extends StatelessWidget {
           onPressed: callback,
           style: FilledButton.styleFrom(
             backgroundColor: scheme.error,
-            foregroundColor: QesmaColors.onPrimary,
-            disabledBackgroundColor: loading ? scheme.error : QesmaColors.hairline,
+            foregroundColor: context.colors.onError,
+            disabledBackgroundColor: loading ? scheme.error : context.colors.hairline,
           ),
           child: content,
         ),

@@ -1,49 +1,53 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'balance_colors.dart';
+import 'palette.dart';
 import 'qesma_text.dart';
 import 'tokens.dart';
 
-/// The one light theme (Phase 1 has no dark theme). The [ColorScheme] is explicit, not
-/// `fromSeed`, so no generated tonal colour can appear that the design does not define.
-ThemeData buildAppTheme() {
-  const scheme = ColorScheme(
-    brightness: Brightness.light,
-    primary: QesmaColors.primary,
-    onPrimary: Colors.white,
-    primaryContainer: QesmaColors.primaryContainer,
-    onPrimaryContainer: QesmaColors.onPrimaryContainer,
-    secondary: QesmaColors.textSecondary,
-    onSecondary: Colors.white,
-    secondaryContainer: QesmaColors.surfaceLow,
-    onSecondaryContainer: QesmaColors.textPrimary,
-    tertiary: QesmaColors.warning,
-    onTertiary: Colors.white,
-    tertiaryContainer: QesmaColors.warningContainer,
-    onTertiaryContainer: QesmaColors.warning,
-    error: QesmaColors.error,
-    onError: Colors.white,
-    errorContainer: QesmaColors.errorContainer,
-    onErrorContainer: QesmaColors.error,
-    surface: QesmaColors.canvas,
-    onSurface: QesmaColors.textPrimary,
-    onSurfaceVariant: QesmaColors.textSecondary,
-    surfaceContainerLowest: QesmaColors.card,
-    surfaceContainerLow: QesmaColors.surfaceLow,
-    surfaceContainer: QesmaColors.surfaceLow,
-    surfaceContainerHigh: QesmaColors.hairline,
-    surfaceContainerHighest: QesmaColors.hairline,
-    outline: QesmaColors.outline,
-    outlineVariant: QesmaColors.hairline,
-    inverseSurface: QesmaColors.inverseSurface,
-    onInverseSurface: QesmaColors.onInverseSurface,
-    inversePrimary: QesmaColors.primaryLight,
+/// The light or the dark theme. The [ColorScheme] is explicit, not `fromSeed`, so no generated
+/// tonal colour can appear that the design does not define; every colour comes from the
+/// [QesmaPalette] of the brightness, which every widget also reads with `context.colors`.
+ThemeData buildAppTheme([Brightness brightness = Brightness.light]) {
+  final p = brightness == Brightness.dark ? QesmaPalette.dark : QesmaPalette.light;
+  final scheme = ColorScheme(
+    brightness: brightness,
+    primary: p.primary,
+    onPrimary: p.onPrimary,
+    primaryContainer: p.primaryContainer,
+    onPrimaryContainer: p.onPrimaryContainer,
+    secondary: p.textSecondary,
+    onSecondary: p.card,
+    secondaryContainer: p.surfaceLow,
+    onSecondaryContainer: p.textPrimary,
+    tertiary: p.warning,
+    onTertiary: p.card,
+    tertiaryContainer: p.warningContainer,
+    onTertiaryContainer: p.warning,
+    error: p.errorFill,
+    onError: p.onError,
+    errorContainer: p.errorContainer,
+    onErrorContainer: p.error,
+    surface: p.canvas,
+    onSurface: p.textPrimary,
+    onSurfaceVariant: p.textSecondary,
+    surfaceContainerLowest: p.card,
+    surfaceContainerLow: p.surfaceLow,
+    surfaceContainer: p.surfaceLow,
+    surfaceContainerHigh: p.hairline,
+    surfaceContainerHighest: p.hairline,
+    outline: p.outline,
+    outlineVariant: p.hairline,
+    inverseSurface: p.inverseSurface,
+    onInverseSurface: p.onInverseSurface,
+    inversePrimary: p.primaryLight,
     surfaceTint: Colors.transparent,
-    shadow: QesmaColors.textPrimary,
-    scrim: QesmaColors.textPrimary,
+    shadow: p.textPrimary,
+    scrim: p.textPrimary,
   );
 
-  final text = QesmaText.textTheme();
+  final text = QesmaText.textTheme(p.textPrimary);
   final controlShape = RoundedRectangleBorder(borderRadius: BorderRadius.circular(QesmaRadii.control));
   const minSize = Size(0, kMinTouch);
 
@@ -55,22 +59,24 @@ ThemeData buildAppTheme() {
   return ThemeData(
     useMaterial3: true,
     colorScheme: scheme,
-    scaffoldBackgroundColor: QesmaColors.canvas,
-    canvasColor: QesmaColors.canvas,
+    scaffoldBackgroundColor: p.canvas,
+    canvasColor: p.canvas,
     fontFamily: kFontFamily,
     textTheme: text,
     primaryTextTheme: text,
     visualDensity: VisualDensity.standard,
     materialTapTargetSize: MaterialTapTargetSize.padded,
     splashFactory: InkRipple.splashFactory,
-    extensions: const [BalanceColors()],
-    dividerTheme: const DividerThemeData(color: QesmaColors.hairline, thickness: 1, space: 1),
-    appBarTheme: const AppBarTheme(
-      backgroundColor: QesmaColors.canvas,
-      foregroundColor: QesmaColors.textPrimary,
+    extensions: [p, BalanceColors.of(p)],
+    dividerTheme: DividerThemeData(color: p.hairline, thickness: 1, space: 1),
+    appBarTheme: AppBarTheme(
+      backgroundColor: p.canvas,
+      foregroundColor: p.textPrimary,
       elevation: 0,
       scrolledUnderElevation: 0,
       centerTitle: false,
+      // Status-bar icons follow the theme: dark icons on the light canvas, light icons on the dark one.
+      systemOverlayStyle: brightness == Brightness.dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
@@ -81,13 +87,13 @@ ThemeData buildAppTheme() {
       ).copyWith(
         backgroundColor: WidgetStateProperty.resolveWith(
           (s) => s.contains(WidgetState.disabled)
-              ? QesmaColors.hairline
+              ? p.hairline
               : s.contains(WidgetState.pressed)
-                  ? QesmaColors.primaryPressed
-                  : QesmaColors.primary,
+                  ? p.primaryPressed
+                  : p.primary,
         ),
         foregroundColor: WidgetStateProperty.resolveWith(
-          (s) => s.contains(WidgetState.disabled) ? QesmaColors.textHelper : Colors.white,
+          (s) => s.contains(WidgetState.disabled) ? p.textHelper : p.onPrimary,
         ),
       ),
     ),
@@ -96,8 +102,8 @@ ThemeData buildAppTheme() {
         minimumSize: minSize,
         shape: controlShape,
         textStyle: text.labelLarge,
-        foregroundColor: QesmaColors.textPrimary,
-        side: const BorderSide(color: QesmaColors.buttonBorder, width: 1.5),
+        foregroundColor: p.textPrimary,
+        side: BorderSide(color: p.buttonBorder, width: 1.5),
         padding: const EdgeInsetsDirectional.symmetric(horizontal: 20, vertical: 12),
       ),
     ),
@@ -106,46 +112,46 @@ ThemeData buildAppTheme() {
         minimumSize: minSize,
         shape: controlShape,
         textStyle: text.labelLarge,
-        foregroundColor: QesmaColors.primary,
+        foregroundColor: p.primary,
       ),
     ),
     iconButtonTheme: IconButtonThemeData(
-      style: IconButton.styleFrom(minimumSize: const Size(kMinTouch, kMinTouch), foregroundColor: QesmaColors.textPrimary),
+      style: IconButton.styleFrom(minimumSize: const Size(kMinTouch, kMinTouch), foregroundColor: p.textPrimary),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: QesmaColors.card,
+      fillColor: p.card,
       isDense: false,
       constraints: const BoxConstraints(minHeight: 52),
       contentPadding: const EdgeInsetsDirectional.symmetric(horizontal: 16, vertical: 14),
-      hintStyle: text.bodyLarge?.copyWith(color: QesmaColors.textHelper),
-      errorStyle: text.bodySmall?.copyWith(color: QesmaColors.error),
-      border: border(QesmaColors.outline, 1),
-      enabledBorder: border(QesmaColors.outline, 1),
-      focusedBorder: border(QesmaColors.primary, 2),
-      errorBorder: border(QesmaColors.error, 1.5),
-      focusedErrorBorder: border(QesmaColors.error, 2),
-      disabledBorder: border(QesmaColors.hairline, 1),
+      hintStyle: text.bodyLarge?.copyWith(color: p.textHelper),
+      errorStyle: text.bodySmall?.copyWith(color: p.error),
+      border: border(p.outline, 1),
+      enabledBorder: border(p.outline, 1),
+      focusedBorder: border(p.primary, 2),
+      errorBorder: border(p.error, 1.5),
+      focusedErrorBorder: border(p.error, 2),
+      disabledBorder: border(p.hairline, 1),
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
-      backgroundColor: QesmaColors.primary,
-      foregroundColor: Colors.white,
+      backgroundColor: p.primary,
+      foregroundColor: p.onPrimary,
       elevation: 4,
       extendedTextStyle: text.labelLarge,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(QesmaRadii.card)),
     ),
     cardTheme: CardThemeData(
-      color: QesmaColors.card,
+      color: p.card,
       elevation: 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(QesmaRadii.card),
-        side: const BorderSide(color: QesmaColors.hairline),
+        side: BorderSide(color: p.hairline),
       ),
     ),
-    bottomSheetTheme: const BottomSheetThemeData(
-      backgroundColor: QesmaColors.card,
-      modalBackgroundColor: QesmaColors.card,
+    bottomSheetTheme: BottomSheetThemeData(
+      backgroundColor: p.card,
+      modalBackgroundColor: p.card,
       showDragHandle: false,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
@@ -153,19 +159,19 @@ ThemeData buildAppTheme() {
       ),
     ),
     dialogTheme: DialogThemeData(
-      backgroundColor: QesmaColors.card,
+      backgroundColor: p.card,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(QesmaRadii.card)),
       titleTextStyle: text.titleLarge,
-      contentTextStyle: text.bodyMedium?.copyWith(color: QesmaColors.textSecondary),
+      contentTextStyle: text.bodyMedium?.copyWith(color: p.textSecondary),
     ),
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
-      backgroundColor: QesmaColors.inverseSurface,
-      contentTextStyle: text.bodyMedium?.copyWith(color: QesmaColors.onInverseSurface),
-      actionTextColor: QesmaColors.primaryContainer,
+      backgroundColor: p.inverseSurface,
+      contentTextStyle: text.bodyMedium?.copyWith(color: p.onInverseSurface),
+      actionTextColor: p.snackbarAction,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(QesmaRadii.control)),
     ),
-    focusColor: QesmaColors.primary.withValues(alpha: 0.12),
+    focusColor: p.primary.withValues(alpha: 0.12),
   );
 }

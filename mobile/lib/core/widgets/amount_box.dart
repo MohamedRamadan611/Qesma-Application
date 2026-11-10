@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../theme/tokens.dart';
+import '../theme/palette.dart';
 
 /// Digits (Western or Arabic-Indic) and the separators `Money.parse` understands. Anything else
 /// the user types or pastes is dropped.
@@ -70,7 +71,7 @@ class _AmountBoxState extends State<AmountBox> {
   @override
   Widget build(BuildContext context) {
     final errorBorder = widget.hasError
-        ? OutlineInputBorder(borderRadius: BorderRadius.circular(QesmaRadii.control), borderSide: const BorderSide(color: QesmaColors.error, width: 1.5))
+        ? OutlineInputBorder(borderRadius: BorderRadius.circular(QesmaRadii.control), borderSide: BorderSide(color: context.colors.error, width: 1.5))
         : null;
     return SizedBox(
       width: widget.expand ? double.infinity : widget.width,

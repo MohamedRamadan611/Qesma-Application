@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/locale_controller.dart';
 import '../../theme/tokens.dart';
 import '../widgets.dart';
+import '../../theme/palette.dart';
 
 /// DEBUG-ONLY component catalogue (`/_catalog`, see app_router.dart). Shows every shared
 /// component with sample data, with switches for language/direction and text scale, so a
@@ -150,7 +151,7 @@ class _ComponentCatalogueState extends ConsumerState<ComponentCatalogue> {
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(isAr ? 'محمد مصطفى' : 'Mohamed Mostafa', style: theme.textTheme.titleMedium),
-                  Text(isAr ? 'دفع الفندق' : 'Paid the hotel', style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textHelper)),
+                  Text(isAr ? 'دفع الفندق' : 'Paid the hotel', style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper)),
                 ]),
               ),
               const BalanceStatusChip(10000),

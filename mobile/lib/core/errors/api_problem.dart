@@ -19,6 +19,7 @@ enum ApiErrorCode {
   internalError('INTERNAL_ERROR'),
   rateLimited('RATE_LIMITED'),
   authProviderUnavailable('AUTH_PROVIDER_UNAVAILABLE'),
+  usernameTaken('USERNAME_TAKEN'),
   unknown('');
 
   const ApiErrorCode(this.wire);

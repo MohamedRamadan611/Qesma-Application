@@ -57,6 +57,7 @@ ErrorCopy _forCode(AppLocalizations l10n, ApiErrorCode code, String? memberName)
     ApiErrorCode.internalError => ErrorCopy(message: l10n.errorInternal),
     ApiErrorCode.rateLimited => ErrorCopy(message: l10n.errorRateLimited),
     ApiErrorCode.authProviderUnavailable => ErrorCopy(message: l10n.errorAuthProviderUnavailable),
+    ApiErrorCode.usernameTaken => ErrorCopy(message: l10n.authErrorUsernameTaken),
     ApiErrorCode.unknown => ErrorCopy(message: l10n.errorUnexpected),
   };
 }

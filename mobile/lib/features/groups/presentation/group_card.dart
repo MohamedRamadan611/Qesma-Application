@@ -7,6 +7,7 @@ import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../data/group_type.dart';
 import 'group_ui.dart';
+import '../../../core/theme/palette.dart';
 
 /// One row of the groups list (P2-01): type icon, name, type tag, last activity, total spent,
 /// member count and the "you are owed / you owe / settled" chip from the server's `yourNetMinor`.
@@ -42,8 +43,8 @@ class GroupCard extends StatelessWidget {
               Container(
                 width: 48,
                 height: 48,
-                decoration: BoxDecoration(color: QesmaColors.primaryContainer, borderRadius: BorderRadius.circular(QesmaRadii.control)),
-                child: Icon(type.icon, color: QesmaColors.onPrimaryContainer),
+                decoration: BoxDecoration(color: context.colors.primaryContainer, borderRadius: BorderRadius.circular(QesmaRadii.control)),
+                child: Icon(type.icon, color: context.colors.onPrimaryContainer),
               ),
               const SizedBox(width: QesmaSpacing.md),
               Expanded(
@@ -58,7 +59,7 @@ class GroupCard extends StatelessWidget {
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         AppTag(label: type.label(l10n), tone: AppTagTone.info),
-                        Text(activity, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textHelper)),
+                        Text(activity, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper)),
                       ],
                     ),
                   ],
@@ -68,7 +69,7 @@ class GroupCard extends StatelessWidget {
           ),
           const SizedBox(height: QesmaSpacing.md - 4),
           DecoratedBox(
-            decoration: BoxDecoration(color: QesmaColors.tint, borderRadius: BorderRadius.circular(QesmaRadii.control)),
+            decoration: BoxDecoration(color: context.colors.tint, borderRadius: BorderRadius.circular(QesmaRadii.control)),
             child: Padding(
               padding: const EdgeInsets.all(QesmaSpacing.sm + 4),
               child: Row(
@@ -78,7 +79,7 @@ class GroupCard extends StatelessWidget {
                       crossAxisAlignment: WrapCrossAlignment.center,
                       spacing: QesmaSpacing.sm,
                       children: [
-                        Text('${l10n.groupTotalSpent}:', style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textSecondary)),
+                        Text('${l10n.groupTotalSpent}:', style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
                         MoneyText(group.totalSpentMinor, size: MoneySize.small),
                       ],
                     ),
@@ -95,9 +96,9 @@ class GroupCard extends StatelessWidget {
             spacing: QesmaSpacing.sm,
             children: [
               Row(mainAxisSize: MainAxisSize.min, children: [
-                const ExcludeSemantics(child: Icon(Icons.group_outlined, size: 18, color: QesmaColors.textSecondary)),
+                ExcludeSemantics(child: Icon(Icons.group_outlined, size: 18, color: context.colors.textSecondary)),
                 const SizedBox(width: QesmaSpacing.xs),
-                Text(members, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textSecondary)),
+                Text(members, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
               ]),
               BalanceStatusChip(group.yourNetMinor),
             ],

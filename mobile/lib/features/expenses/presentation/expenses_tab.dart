@@ -17,6 +17,7 @@ import '../application/expenses_list_controller.dart';
 import 'expense_card.dart';
 import 'expense_filters.dart';
 import 'expense_ui.dart';
+import '../../../core/theme/palette.dart';
 
 /// The Expenses tab of the group home (P3-01): filters, then the list grouped by date,
 /// newest first, 20 per page with infinite scroll and pull to refresh.
@@ -197,7 +198,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
               child: ExcludeSemantics(
                 child: Padding(
                   padding: const EdgeInsetsDirectional.only(top: QesmaSpacing.md, bottom: QesmaSpacing.sm),
-                  child: Text(dayHeaderText(l10n, row, now), style: theme.textTheme.labelLarge?.copyWith(color: QesmaColors.textSecondary)),
+                  child: Text(dayHeaderText(l10n, row, now), style: theme.textTheme.labelLarge?.copyWith(color: context.colors.textSecondary)),
                 ),
               ),
             );

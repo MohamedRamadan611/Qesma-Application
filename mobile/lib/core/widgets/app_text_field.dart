@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../theme/tokens.dart';
 import 'code_point_limit.dart';
+import '../theme/palette.dart';
 
 /// Text field with the label above it (as in the mock-ups), an error line, an optional
 /// counter ("8/60", Western digits, counted in code points like the backend) and a clear button.
@@ -25,6 +26,10 @@ class AppTextField extends StatelessWidget {
     this.autofocus = false,
     this.showClear = true,
     this.focusNode,
+    this.obscureText = false,
+    this.autocorrect = true,
+    this.autofillHints,
+    this.suffix,
   });
 
   final TextEditingController controller;
@@ -47,6 +52,18 @@ class AppTextField extends StatelessWidget {
   final bool showClear;
   final FocusNode? focusNode;
 
+  /// Turn off for identifiers (usernames): the keyboard must not add a space after a dot or "fix" the spelling.
+  final bool autocorrect;
+
+  /// Hide the text (passwords): no suggestions, no clear button, and the field is not remembered by the keyboard.
+  final bool obscureText;
+
+  /// Lets the phone's password manager fill the field (`AutofillHints.email`, `.password`, `.newPassword`).
+  final Iterable<String>? autofillHints;
+
+  /// Replaces the clear button (the show/hide button of a password).
+  final Widget? suffix;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -68,6 +85,10 @@ class AppTextField extends StatelessWidget {
               autofocus: autofocus,
               keyboardType: keyboardType,
               textInputAction: textInputAction,
+              obscureText: obscureText,
+              enableSuggestions: autocorrect && !obscureText,
+              autocorrect: autocorrect && !obscureText,
+              autofillHints: autofillHints,
               onChanged: onChanged,
               onSubmitted: onSubmitted,
               style: theme.textTheme.bodyLarge,
@@ -76,8 +97,9 @@ class AppTextField extends StatelessWidget {
                 hintText: hint,
                 errorText: errorText,
                 errorMaxLines: 3,
-                prefixIcon: prefixIcon == null ? null : Icon(prefixIcon, color: QesmaColors.textHelper),
-                suffixIcon: showClear && enabled && length > 0
+                prefixIcon: prefixIcon == null ? null : Icon(prefixIcon, color: context.colors.textHelper),
+                suffixIcon: suffix ??
+                    (showClear && enabled && length > 0 && !obscureText
                     ? IconButton(
                         icon: const Icon(Icons.close, size: 20),
                         tooltip: l10n.fieldClear,
@@ -86,12 +108,12 @@ class AppTextField extends StatelessWidget {
                           onChanged?.call('');
                         },
                       )
-                    : null,
+                    : null),
                 counter: maxLength == null
                     ? null
                     : Text(
                         l10n.fieldCounter('$length', '$maxLength'),
-                        style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textHelper),
+                        style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper),
                       ),
               ),
             );

@@ -60,7 +60,7 @@ Core promise: record who paid what and for whom, and always show correct balance
 
 ### 3.1 Phase 1 — IN scope ("Organizer Mode")
 **Account**
-- Sign in with Google. Basic profile (display name). Sign out. Arabic RTL UI.
+- Sign in with Google **or with a username + password** (A59, A64, ADR-007, ADR-008). Basic profile (display name). Sign out. Arabic RTL UI.
 
 **Groups & members**
 - Create group (name, type: TRIP/HOUSING/OUTING/OTHER, currency code, default EGP). List groups. Edit name. Delete group only if it has no expenses/settlements.
@@ -355,7 +355,7 @@ A settlement `from → to, amount` is a recorded real-world payment. Amount may 
 ## 8. API (REST, JSON, `/api/v1`)
 
 ### 8.1 Conventions
-- Auth: `Authorization: Bearer <access JWT>`. All endpoints except `/auth/*` require it.
+- Auth: `Authorization: Bearer <access JWT>`. All endpoints except the public `/auth/*` ones require it (public: `google`, `refresh`, `logout`, `register`, `login`, `password/forgot`, `password/reset`, `email/verify`; `/auth/email/verify/resend` needs a token like the rest).
 - Authorization (Phase 1): a user can only access groups they own. Accessing another user's group returns **404** (not 403).
 - Money: integer minor units + group `currencyCode`. Dates: ISO-8601.
 - Errors: RFC 7807 `application/problem+json` with a stable `code` field.
@@ -367,6 +367,13 @@ A settlement `from → to, amount` is a recorded real-world payment. Amount may 
 POST   /auth/google                 { idToken } -> { accessToken, refreshToken, user }
 POST   /auth/refresh                { refreshToken } -> { accessToken, refreshToken }
 POST   /auth/logout                 { refreshToken }
+POST   /auth/register               { username, password, displayName? } -> { accessToken, refreshToken, user }  (201)
+POST   /auth/login                  { username, password } -> { accessToken, refreshToken, user }
+POST   /auth/password/forgot        { email } -> 204 (always; never says whether the address has an account)
+POST   /auth/password/reset         { token, newPassword } -> 204 (one-time link; ends every session)
+POST   /auth/email/verify           { token } -> 204
+POST   /auth/email/verify/resend    -> 204 (signed in)
+POST   /me/password                 { currentPassword, newPassword } -> { accessToken, refreshToken }
 GET    /me
 PATCH  /me                          { displayName }
 
@@ -418,7 +425,7 @@ For `EQUAL`: `{ "splitType": "EQUAL", "participantMemberIds": [...] }`. For `EXA
 `preview` response includes: `totalMinor`, `subtotalMinor`, `serviceMinor`, `taxMinor`, per-member breakdown `{ memberId, itemsMinor, serviceMinor, taxMinor, adjustmentMinor, owedMinor }`, and `payersTotalMatches` (boolean) so the UI can show a live mismatch warning.
 
 ### 8.5 Error codes
-`VALIDATION_ERROR`, `PAYERS_TOTAL_MISMATCH`, `SPLIT_TOTAL_MISMATCH`, `MEMBER_NOT_IN_GROUP`, `MEMBER_HAS_TRANSACTIONS`, `DUPLICATE_MEMBER_NAME`, `OWNER_MEMBER_PROTECTED`, `VERSION_CONFLICT`, `IDEMPOTENCY_KEY_REUSED`, `GROUP_NOT_EMPTY`, `NOT_FOUND`, `UNAUTHORIZED`.
+`VALIDATION_ERROR`, `PAYERS_TOTAL_MISMATCH`, `SPLIT_TOTAL_MISMATCH`, `MEMBER_NOT_IN_GROUP`, `MEMBER_HAS_TRANSACTIONS`, `DUPLICATE_MEMBER_NAME`, `OWNER_MEMBER_PROTECTED`, `VERSION_CONFLICT`, `IDEMPOTENCY_KEY_REUSED`, `GROUP_NOT_EMPTY`, `NOT_FOUND`, `UNAUTHORIZED`, `USERNAME_TAKEN` (A64).
 
 ---
 
@@ -533,7 +540,7 @@ Code compiles; unit + integration tests pass; OpenAPI updated; migrations includ
 | A1 | In itemized bills, tax defaults to being computed on **subtotal + service** (configurable per bill). Real Egyptian receipts may differ. **Verify against real receipts before relying on the default.** | To verify |
 | A2 | The UI may prefill common values (service 12%, tax 14%) but they are always editable and optional. They are suggestions, not legal references. | To verify |
 | A3 | Western digits (0–9) are used for amounts in the Arabic UI. | Assumption |
-| A4 | Phase 1 supports **Google Sign-In only**. Email/password (which needs password reset emails) is deferred to Phase 2. | Decided |
+| A4 | ~~Phase 1 supports Google Sign-In only; email/password deferred to Phase 2.~~ **Superseded by A59 / ADR-007**: email + password sign-in is added next to Google. | Superseded |
 | A5 | Debt simplification uses a deterministic greedy algorithm, not a guaranteed-minimum solver. | Decided |
 | A6 | Phase 1 is online-only; offline queue is Phase 4. | Decided |
 | A7 | Backend is authoritative for all calculations; the app uses the `preview` endpoint. | Decided |
@@ -587,4 +594,10 @@ Code compiles; unit + integration tests pass; OpenAPI updated; migrations includ
 | A56 | `yourNetMinor` on `GET /groups` items and `GET /groups/{gid}`: the caller's own balance in that group (`paid - owed + sent - received`, positive = owed to them), in integer piasters of the group's currency, null without a linked member. Computed in ONE SQL statement per request (page) that only adds sums; the rule is the engine's `BalanceCalculator.memberNet`. Clients must not add amounts of groups with different currencies. | Decided (B9) |
 | A57 | `MemberDto.isYou` (boolean) is computed by the server; `GroupDto.yourMemberId` is the caller's member id. No account id is ever exposed and no request body can set any of these (tested). `POST /groups` now answers with the full group including the owner member. | Decided (B9) |
 | A58 | OpenAPI fidelity: the generated document must declare the real success status of every operation (201 for creates, 204 for deletes) and document `Location`, `ETag` and `Idempotency-Replayed` headers; `ApiContractCoverageIT` fails if the real 2xx statuses differ from the declared ones. Found in review: B8 had declared 200 for four operations that answer 201/204. | Decided (B9) |
+| A59 | Email + password sign-in is added next to Google (reverses A4; ADR-007). The normalized email is the account subject (`auth_provider = 'PASSWORD'`); BCrypt through Spring Security (no new dependency); password 8 characters to 72 UTF-8 bytes, common passwords refused. Google and password accounts are never merged: registering an address used by a Google account is `409 EMAIL_ALREADY_USED`. | Decided (BA1); **identifier amended by A64** (username, not email) |
+| A60 | Every sign-in failure (unknown email, wrong password, locked, Google-only account) is the same `401 UNAUTHORIZED`; an unknown email still spends one hash comparison. 5 consecutive failures lock the account 15 minutes (still 401). Registration reveals whether an email is registered (accepted risk until verification gates sign-up). A retry of `/auth/register` with the same email and password signs the user in (201). | Decided (BA1); **identifier amended by A64** (username, not email) |
+| A61 | `POST /me/password`: a wrong current password is `422 VALIDATION_ERROR` (not 401); success ends every other login session and returns fresh tokens for this one. Google accounts have no password (`UserDto.hasPassword` false) and get 422. | Decided (BA1); **identifier amended by A64** (username, not email) |
+| A62 | Password reset and email verification use one-time opaque tokens (only the SHA-256 is stored; reset 30 minutes, verify 24 hours; a new link replaces the old one; consumption is one atomic UPDATE). Reset ends every session and also verifies the address. Sending goes through the `MailSender` interface: the default sends nothing, so **forgot-password cannot deliver in production until an SMTP implementation is added with its own ADR**. | Decided (BA1); **identifier amended by A64** (username, not email) |
+| A63 | `UserDto` gains `hasPassword` and `emailVerified` (Google accounts are verified). Request objects carrying credentials redact themselves in `toString` (A51). `EMAIL_ALREADY_USED` (409) is a new error code beyond spec 8.5. | Decided (BA1); **identifier amended by A64** (username, not email) |
+| A64 | Password accounts are identified by a **username** (3 to 30 characters: letters of any script, digits, dots, hyphens, underscores; case-insensitive; no `@`; a few reserved names), not an email (ADR-008; amends A59-A63). A taken name is `409 USERNAME_TAKEN` (replaces `EMAIL_ALREADY_USED`). No email is collected; a forgotten password cannot be recovered until optional email + a mail provider exist. The emailed-link endpoints stay, dormant, for accounts that have an address on file. `UserDto.username` is new. | Decided (BA2) |
 | A52 | Deployment is one VPS with Docker Compose and Caddy (ADR-005); backups are a daily `pg_dump` with a tested restore (`scripts/test-restore.sh`). Dependency scanning is Trivy + Dependabot in CI (ADR-003). Backups live on the same host until copied off by the operator. | Decided (B8) |

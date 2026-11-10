@@ -6,6 +6,7 @@ import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../application/expense_filters.dart';
 import 'expense_ui.dart';
+import '../../../core/theme/palette.dart';
 
 /// The two filter chips (date range, member) with a remove button next to an active one.
 class ExpenseFilterBar extends StatelessWidget {
@@ -142,7 +143,7 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
         dateRow(l10n.expenseFilterToLabel, _to, false),
         if (!_valid) ...[
           const SizedBox(height: QesmaSpacing.sm),
-          Semantics(liveRegion: true, child: Text(l10n.expenseFilterRangeInvalid, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.error))),
+          Semantics(liveRegion: true, child: Text(l10n.expenseFilterRangeInvalid, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.error))),
         ],
         const SizedBox(height: QesmaSpacing.md),
         AppButton(
@@ -233,7 +234,7 @@ class _MemberChoiceRow extends StatelessWidget {
                 ],
               ),
             ),
-            if (selected) const Icon(Icons.check, color: QesmaColors.primary),
+            if (selected) Icon(Icons.check, color: context.colors.primary),
           ],
         ),
       ),

@@ -12,6 +12,7 @@ import '../application/expense_preview_controller.dart';
 import 'expense_blocks.dart';
 import 'expense_ui.dart';
 import 'status_banner.dart';
+import '../../../core/theme/palette.dart';
 
 /// The restaurant-bill editor (P8-01), shown inside the add/edit form when the "Restaurant bill"
 /// tab is selected: items with assignees, service and tax (each its own switch, rate and amount),
@@ -89,12 +90,12 @@ class _ItemsCard extends ConsumerWidget {
         children: [
           Row(
             children: [
-              ExcludeSemantics(child: const Icon(Icons.receipt_long_outlined, color: QesmaColors.primary)),
+              ExcludeSemantics(child: Icon(Icons.receipt_long_outlined, color: context.colors.primary)),
               const SizedBox(width: QesmaSpacing.sm),
               Expanded(child: Semantics(header: true, child: Text(l10n.expenseItemizedItemsTitle, style: theme.textTheme.titleMedium))),
               Text(
                 countPhrase(items.length, one: l10n.expenseItemsCountOne, two: l10n.expenseItemsCountTwo, few: l10n.expenseItemsCount, many: l10n.expenseItemsCountMany),
-                style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textHelper),
+                style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper),
               ),
             ],
           ),
@@ -121,17 +122,17 @@ class _ItemsCard extends ConsumerWidget {
           if (atLimit)
             Padding(
               padding: const EdgeInsets.only(top: QesmaSpacing.sm),
-              child: Semantics(liveRegion: true, child: Text(l10n.expenseItemizedLimit, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textSecondary))),
+              child: Semantics(liveRegion: true, child: Text(l10n.expenseItemizedLimit, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary))),
             ),
           if (subtotalMinor != null) ...[
             const SizedBox(height: QesmaSpacing.md),
             DecoratedBox(
-              decoration: BoxDecoration(color: QesmaColors.tint, borderRadius: BorderRadius.circular(QesmaRadii.control)),
+              decoration: BoxDecoration(color: context.colors.tint, borderRadius: BorderRadius.circular(QesmaRadii.control)),
               child: Padding(
                 padding: const EdgeInsets.all(QesmaSpacing.sm + 4),
                 child: Row(
                   children: [
-                    Expanded(child: Text(l10n.expenseSubtotal, style: theme.textTheme.bodyMedium?.copyWith(color: QesmaColors.textSecondary))),
+                    Expanded(child: Text(l10n.expenseSubtotal, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary))),
                     MoneyText(subtotalMinor!, size: MoneySize.medium),
                   ],
                 ),
@@ -192,9 +193,9 @@ class _ItemCardState extends State<_ItemCard> {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: QesmaColors.tint,
+        color: context.colors.tint,
         borderRadius: BorderRadius.circular(QesmaRadii.control),
-        border: Border.all(color: QesmaColors.hairline),
+        border: Border.all(color: context.colors.hairline),
       ),
       child: Padding(
         padding: const EdgeInsets.all(QesmaSpacing.sm + 4),
@@ -254,9 +255,9 @@ class _ItemCardState extends State<_ItemCard> {
                   liveRegion: true,
                   child: Row(
                     children: [
-                      const ExcludeSemantics(child: Icon(Icons.error_outline, color: QesmaColors.error, size: 18)),
+                      ExcludeSemantics(child: Icon(Icons.error_outline, color: context.colors.error, size: 18)),
                       const SizedBox(width: QesmaSpacing.xs),
-                      Expanded(child: Text(l10n.expenseItemizedNoAssignee, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.error))),
+                      Expanded(child: Text(l10n.expenseItemizedNoAssignee, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.error))),
                     ],
                   ),
                 ),
@@ -390,7 +391,7 @@ class _ChargeRow extends StatelessWidget {
               constraints: const BoxConstraints(minHeight: kMinTouch),
               child: Row(
                 children: [
-                  ExcludeSemantics(child: Icon(icon, color: QesmaColors.primary)),
+                  ExcludeSemantics(child: Icon(icon, color: context.colors.primary)),
                   const SizedBox(width: QesmaSpacing.sm),
                   Expanded(child: Text(title, style: theme.textTheme.titleMedium)),
                   Switch(value: on, onChanged: onToggle),
@@ -419,7 +420,7 @@ class _ChargeRow extends StatelessWidget {
           if (!valid)
             Padding(
               padding: const EdgeInsets.only(top: QesmaSpacing.xs),
-              child: Semantics(liveRegion: true, child: Text(l10n.expenseItemizedPercentInvalid, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.error))),
+              child: Semantics(liveRegion: true, child: Text(l10n.expenseItemizedPercentInvalid, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.error))),
             ),
         ],
       ],
@@ -442,7 +443,7 @@ class _AdjustmentRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Semantics(header: true, child: Text(l10n.expenseItemizedAdjustmentTitle, style: theme.textTheme.titleMedium)),
-        Text(l10n.expenseItemizedAdjustmentHint, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textSecondary)),
+        Text(l10n.expenseItemizedAdjustmentHint, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
         const SizedBox(height: QesmaSpacing.sm),
         Row(
           children: [
@@ -473,7 +474,7 @@ class _AdjustmentRow extends StatelessWidget {
         if (!d.adjustmentValid)
           Padding(
             padding: const EdgeInsets.only(top: QesmaSpacing.xs),
-            child: Semantics(liveRegion: true, child: Text(l10n.expenseItemizedAdjustmentInvalid, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.error))),
+            child: Semantics(liveRegion: true, child: Text(l10n.expenseItemizedAdjustmentInvalid, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.error))),
           ),
       ],
     );
@@ -514,7 +515,7 @@ class _BreakdownCard extends ConsumerWidget {
 
     Widget body;
     if (splitKey == null) {
-      body = Text(l10n.expenseItemizedIncomplete, style: theme.textTheme.bodyMedium?.copyWith(color: QesmaColors.textSecondary));
+      body = Text(l10n.expenseItemizedIncomplete, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary));
     } else if (current != null) {
       final shares = current!.members.toList();
       body = Column(
@@ -522,7 +523,7 @@ class _BreakdownCard extends ConsumerWidget {
         children: [
           ShareRows(shares: shares, nameOf: nameOf, yourMemberId: yourMemberId),
           DecoratedBox(
-            decoration: BoxDecoration(color: QesmaColors.tint, borderRadius: BorderRadius.circular(QesmaRadii.control)),
+            decoration: BoxDecoration(color: context.colors.tint, borderRadius: BorderRadius.circular(QesmaRadii.control)),
             child: Padding(
               padding: const EdgeInsets.all(QesmaSpacing.sm + 4),
               child: Row(
@@ -539,7 +540,7 @@ class _BreakdownCard extends ConsumerWidget {
     } else if (preview.status == PreviewStatus.failed && preview.key == splitKey) {
       body = Row(
         children: [
-          Expanded(child: Semantics(liveRegion: true, child: Text(l10n.expenseItemizedFailed, style: theme.textTheme.bodyMedium?.copyWith(color: QesmaColors.error)))),
+          Expanded(child: Semantics(liveRegion: true, child: Text(l10n.expenseItemizedFailed, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.error)))),
           TextButton(
             onPressed: () => ref.read(expensePreviewControllerProvider((gid: formKey.gid, slot: PreviewSlot.split)).notifier).retry(),
             child: Text(l10n.commonRetry),
@@ -553,7 +554,7 @@ class _BreakdownCard extends ConsumerWidget {
           children: [
             const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
             const SizedBox(width: QesmaSpacing.sm),
-            Expanded(child: Text(l10n.expenseItemizedLoading, style: theme.textTheme.bodyMedium?.copyWith(color: QesmaColors.textSecondary))),
+            Expanded(child: Text(l10n.expenseItemizedLoading, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary))),
           ],
         ),
       );

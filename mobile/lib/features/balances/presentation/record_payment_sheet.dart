@@ -12,6 +12,7 @@ import '../../groups/application/group_detail_controller.dart';
 import '../application/record_payment_controller.dart';
 import '../application/record_payment_state.dart';
 import 'member_picker_sheet.dart';
+import '../../../core/theme/palette.dart';
 
 /// Opens the Record payment sheet (P9-02). [seed] is a tapped transfer (from, to, the server's
 /// amount) or empty for a payment the user describes. Returns true when a payment was recorded.
@@ -119,7 +120,7 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
         if (stacked) ...[from, const SizedBox(height: QesmaSpacing.sm), to] else Row(children: [Expanded(child: from), const SizedBox(width: QesmaSpacing.sm), Expanded(child: to)]),
         if (form.firstError == PaymentFieldError.sameMember) ...[
           const SizedBox(height: QesmaSpacing.sm),
-          Semantics(liveRegion: true, child: Text(l10n.paymentSameMember, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.error))),
+          Semantics(liveRegion: true, child: Text(l10n.paymentSameMember, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.error))),
         ],
         const SizedBox(height: QesmaSpacing.md),
         Text(l10n.paymentAmountLabel, style: theme.textTheme.labelLarge),
@@ -137,7 +138,7 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
         ),
         if (amountError) ...[
           const SizedBox(height: QesmaSpacing.xs),
-          Semantics(liveRegion: true, child: Text(l10n.paymentAmountError, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.error))),
+          Semantics(liveRegion: true, child: Text(l10n.paymentAmountError, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.error))),
         ],
         if (suggested != null) ...[
           const SizedBox(height: QesmaSpacing.sm),
@@ -163,7 +164,7 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
         ),
         if (dateError) ...[
           const SizedBox(height: QesmaSpacing.xs),
-          Semantics(liveRegion: true, child: Text(l10n.paymentDateError, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.error))),
+          Semantics(liveRegion: true, child: Text(l10n.paymentDateError, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.error))),
         ],
         const SizedBox(height: QesmaSpacing.md),
         AppTextField(
@@ -240,12 +241,12 @@ class _MemberField extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textHelper)),
+                  Text(label, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper)),
                   Text(name, style: theme.textTheme.titleSmall),
                 ],
               ),
             ),
-            const Icon(Icons.expand_more, color: QesmaColors.textHelper),
+            Icon(Icons.expand_more, color: context.colors.textHelper),
           ],
         ),
       ),

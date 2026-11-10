@@ -10,6 +10,7 @@ import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../application/expense_detail_controller.dart';
 import 'expense_ui.dart';
+import '../../../core/theme/palette.dart';
 
 /// The edit history of one expense (newest first). Read-only: each row is the saved
 /// snapshot's total and payers, with its version, kind of change and time.
@@ -64,7 +65,7 @@ class _RevisionsBody extends ConsumerWidget {
         );
       },
       data: (list) => list.isEmpty
-          ? Text(l10n.expenseHistoryEmpty, style: theme.textTheme.bodyMedium?.copyWith(color: QesmaColors.textSecondary))
+          ? Text(l10n.expenseHistoryEmpty, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary))
           : Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -98,7 +99,7 @@ class _RevisionRow extends StatelessWidget {
     final nameOfPayers = payersText(l10n, snapshot, nameOf);
     return MergeSemantics(
       child: AppCard(
-      color: QesmaColors.tint,
+      color: context.colors.tint,
       padding: const EdgeInsets.all(QesmaSpacing.sm + 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -110,7 +111,7 @@ class _RevisionRow extends StatelessWidget {
             children: [
               Text(l10n.expenseHistoryVersion('${revision.version}'), style: theme.textTheme.titleMedium),
               if (kind != null) AppTag(label: kind, tone: tone),
-              Text(ltrIsolate(isoDateTime(revision.changedAt)), style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textHelper)),
+              Text(ltrIsolate(isoDateTime(revision.changedAt)), style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper)),
             ],
           ),
           const SizedBox(height: QesmaSpacing.xs),
@@ -120,7 +121,7 @@ class _RevisionRow extends StatelessWidget {
           ),
           Semantics(
             label: payersSpoken(l10n, snapshot, nameOf),
-            child: ExcludeSemantics(child: Text(nameOfPayers, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textSecondary))),
+            child: ExcludeSemantics(child: Text(nameOfPayers, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary))),
           ),
         ],
       ),

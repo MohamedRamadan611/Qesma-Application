@@ -19,6 +19,7 @@ import 'member_net_row.dart';
 import 'record_payment_sheet.dart';
 import 'settlement_history.dart';
 import 'transfer_card.dart';
+import '../../../core/theme/palette.dart';
 
 /// The Balances tab of the group home (P9-01): the group's total, how many transfers settle it up,
 /// the server's suggested transfers, each member's net balance and the payment history.
@@ -188,21 +189,21 @@ class _StatusCard extends StatelessWidget {
       child: Semantics(
         liveRegion: true,
         child: DecoratedBox(
-          decoration: BoxDecoration(color: QesmaColors.primary, borderRadius: BorderRadius.circular(QesmaRadii.hero), boxShadow: QesmaShadows.card),
+          decoration: BoxDecoration(color: context.colors.primary, borderRadius: BorderRadius.circular(QesmaRadii.hero), boxShadow: QesmaShadows.card),
           child: Padding(
             padding: const EdgeInsets.all(QesmaSpacing.md),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(l10n.balancesTotalSpent, style: theme.textTheme.bodyMedium?.copyWith(color: QesmaColors.onPrimary)),
+                Text(l10n.balancesTotalSpent, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.onPrimary)),
                 const SizedBox(height: QesmaSpacing.xs),
-                Text(moneyDisplay(l10n, totalSpentMinor), style: QesmaText.amountLarge().copyWith(color: QesmaColors.onPrimary)),
+                Text(moneyDisplay(l10n, totalSpentMinor), style: QesmaText.amountLarge().copyWith(color: context.colors.onPrimary)),
                 const SizedBox(height: QesmaSpacing.sm + 4),
                 Row(
                   children: [
-                    const ExcludeSemantics(child: Icon(Icons.swap_horiz, color: QesmaColors.onPrimary, size: 20)),
+                    ExcludeSemantics(child: Icon(Icons.swap_horiz, color: context.colors.onPrimary, size: 20)),
                     const SizedBox(width: QesmaSpacing.sm),
-                    Expanded(child: Text(status, style: theme.textTheme.titleSmall?.copyWith(color: QesmaColors.onPrimary))),
+                    Expanded(child: Text(status, style: theme.textTheme.titleSmall?.copyWith(color: context.colors.onPrimary))),
                   ],
                 ),
               ],
@@ -221,19 +222,19 @@ class _AllSettled extends StatelessWidget {
     final theme = Theme.of(context);
     return MergeSemantics(
       child: DecoratedBox(
-        decoration: BoxDecoration(color: QesmaColors.successContainer, borderRadius: BorderRadius.circular(QesmaRadii.card)),
+        decoration: BoxDecoration(color: context.colors.successContainer, borderRadius: BorderRadius.circular(QesmaRadii.card)),
         child: Padding(
           padding: const EdgeInsets.all(QesmaSpacing.md),
           child: Row(
             children: [
-              const ExcludeSemantics(child: Icon(Icons.check_circle, color: QesmaColors.success)),
+              ExcludeSemantics(child: Icon(Icons.check_circle, color: context.colors.success)),
               const SizedBox(width: QesmaSpacing.sm + 4),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(l10n.balancesAllSettledTitle, style: theme.textTheme.titleSmall?.copyWith(color: QesmaColors.success)),
-                    Text(l10n.balancesAllSettledBody, style: theme.textTheme.bodyMedium?.copyWith(color: QesmaColors.success)),
+                    Text(l10n.balancesAllSettledTitle, style: theme.textTheme.titleSmall?.copyWith(color: context.colors.success)),
+                    Text(l10n.balancesAllSettledBody, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.success)),
                   ],
                 ),
               ),

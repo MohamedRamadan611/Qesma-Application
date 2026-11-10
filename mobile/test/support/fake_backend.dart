@@ -40,6 +40,13 @@ class FakeBackend implements HttpClientAdapter {
   Duration apiDelay = Duration.zero;
   bool alwaysRejectApi = false; // simulates a server that rejects even fresh access tokens
 
+  /// Email + password accounts: normalized email -> password (the real backend stores only a hash).
+  final Map<String, String> passwordAccounts = {};
+  String? _signedInEmail;
+
+  /// Bodies of the last email sign-in / register / change-password requests (to prove what is sent).
+  final List<Map<String, dynamic>> emailRequests = [];
+
   final Set<String> _validAccess = {};
   final Set<String> _usedRefresh = {};
   String? _currentRefresh;
@@ -98,7 +105,45 @@ class FakeBackend implements HttpClientAdapter {
         jsonEncode({
           'accessToken': session.access,
           'refreshToken': session.refresh,
-          'user': {'id': 'u1', 'displayName': 'Test User', 'email': 'test@example.com'},
+          'user': {'id': 'u1', 'displayName': 'Test User', 'email': 'test@example.com', 'hasPassword': false, 'emailVerified': true},
+        }),
+      );
+    }
+
+    if (path.endsWith('/auth/register') || path.endsWith('/auth/login')) {
+      final body = jsonDecode(await _body(options, requestStream)) as Map<String, dynamic>;
+      emailRequests.add(body);
+      final fault = nextLoginFault;
+      nextLoginFault = LoginFault.none;
+      switch (fault) {
+        case LoginFault.rateLimited:
+          return _json(429, _problem('RATE_LIMITED', 429));
+        case LoginFault.connectionRefused:
+          throw DioException.connectionError(requestOptions: options, reason: 'refused', error: const SocketException('refused'));
+        case LoginFault.unauthorized || LoginFault.providerUnavailable || LoginFault.none:
+          break;
+      }
+      final email = (body['username'] as String).trim().toLowerCase();
+      final password = body['password'] as String;
+      final register = path.endsWith('/auth/register');
+      if (register) {
+        if (password.runes.length < 8 || password == 'password1') return _json(422, _problem('VALIDATION_ERROR', 422));
+        final existing = passwordAccounts[email];
+        if (existing != null && existing != password) return _json(409, _problem('USERNAME_TAKEN', 409));
+        passwordAccounts[email] = password;
+      } else if (passwordAccounts[email] != password) {
+        return _json(401, _problem('UNAUTHORIZED', 401));
+      }
+      _signedInEmail = email;
+      final session = issueSession();
+      events.add(register ? 'register' : 'password-login');
+      final name = (body['displayName'] as String?) ?? email;
+      return _json(
+        register ? 201 : 200,
+        jsonEncode({
+          'accessToken': session.access,
+          'refreshToken': session.refresh,
+          'user': {'id': 'u2', 'displayName': name, 'email': null, 'username': email, 'hasPassword': true, 'emailVerified': false},
         }),
       );
     }
@@ -114,8 +159,18 @@ class FakeBackend implements HttpClientAdapter {
       return _json(401, _problem('UNAUTHORIZED', 401));
     }
     events.add('api-200 $path');
+    if (path.endsWith('/me/password')) {
+      final body = jsonDecode(await _body(options, requestStream)) as Map<String, dynamic>;
+      emailRequests.add(body);
+      final email = _signedInEmail;
+      if (email == null || passwordAccounts[email] != body['currentPassword']) return _json(422, _problem('VALIDATION_ERROR', 422));
+      passwordAccounts[email] = body['newPassword'] as String;
+      final session = _rotate();
+      events.add('password-changed');
+      return _json(200, jsonEncode({'accessToken': session.access, 'refreshToken': session.refresh}));
+    }
     if (path.endsWith('/me')) {
-      return _json(200, jsonEncode({'id': 'u1', 'displayName': 'Test User', 'email': 'test@example.com'}));
+      return _json(200, jsonEncode({'id': 'u1', 'displayName': 'Test User', 'email': 'test@example.com', 'hasPassword': false, 'emailVerified': true}));
     }
     return _json(200, jsonEncode({'ok': true}));
   }

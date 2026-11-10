@@ -123,7 +123,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Everything you recorded before is saved and will show up when you are back online.';
 
   @override
-  String get stateOfflineBanner => 'No internet connection';
+  String get stateOfflineBanner => 'You are offline';
 
   @override
   String get errorTimeout =>
@@ -1337,4 +1337,208 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paymentDiscardConfirm => 'Discard';
+
+  @override
+  String get profileTitle => 'Account';
+
+  @override
+  String get profileEdit => 'Edit profile';
+
+  @override
+  String get profileGroupsOne => '1 group';
+
+  @override
+  String get profileGroupsTwo => '2 groups';
+
+  @override
+  String profileGroups(String count) {
+    return '$count groups';
+  }
+
+  @override
+  String profileGroupsMany(String count) {
+    return '$count groups';
+  }
+
+  @override
+  String get profileSectionPrefs => 'Preferences';
+
+  @override
+  String get profileSectionAbout => 'About the app';
+
+  @override
+  String get profileLanguage => 'App language';
+
+  @override
+  String get languageArabic => 'العربية';
+
+  @override
+  String get languageEnglish => 'English';
+
+  @override
+  String get languageSheetTitle => 'Choose a language';
+
+  @override
+  String get profileAccountSettings => 'Account settings';
+
+  @override
+  String get profileVersion => 'App version';
+
+  @override
+  String get profileSignOutTitle => 'Sign out?';
+
+  @override
+  String get profileSignOutBody =>
+      'You will need to sign in with Google again to come back.';
+
+  @override
+  String get profileEditTitle => 'Edit profile';
+
+  @override
+  String get profileNameLabel => 'Display name';
+
+  @override
+  String get profileNameHint =>
+      'Your friends see this name in groups and expenses.';
+
+  @override
+  String get profileNameRequired =>
+      'Enter your name so your friends recognise you.';
+
+  @override
+  String get profileNameTooLong => 'The name is longer than 60 characters.';
+
+  @override
+  String get profileEmailLabel => 'Email';
+
+  @override
+  String get profileEmailLocked =>
+      'Linked to your Google account and cannot be edited by hand.';
+
+  @override
+  String get profileSave => 'Save changes';
+
+  @override
+  String get profileSaved => 'Name saved.';
+
+  @override
+  String get profileDiscardTitle => 'Discard changes?';
+
+  @override
+  String get profileDiscardBody => 'The new name will not be saved.';
+
+  @override
+  String get profileDiscardConfirm => 'Discard';
+
+  @override
+  String get accountGoogleTitle => 'Connected Google account';
+
+  @override
+  String get accountConnected => 'Connected';
+
+  @override
+  String get profileAppearance => 'Appearance';
+
+  @override
+  String get appearanceSheetTitle => 'Choose appearance';
+
+  @override
+  String get appearanceSystem => 'Follow phone';
+
+  @override
+  String get appearanceLight => 'Light';
+
+  @override
+  String get appearanceDark => 'Dark';
+
+  @override
+  String get authUsernameContinue => 'Continue with username';
+
+  @override
+  String get authUsernameSignInTitle => 'Sign in with username';
+
+  @override
+  String get authUsernameSignInButton => 'Sign in';
+
+  @override
+  String get authRegisterTitle => 'Create an account';
+
+  @override
+  String get authRegisterButton => 'Create account';
+
+  @override
+  String get authGoRegister => 'No account yet? Create one';
+
+  @override
+  String get authGoSignIn => 'Already have an account? Sign in';
+
+  @override
+  String get fieldUsername => 'Username';
+
+  @override
+  String get fieldPassword => 'Password';
+
+  @override
+  String get fieldPasswordShow => 'Show password';
+
+  @override
+  String get fieldPasswordHide => 'Hide password';
+
+  @override
+  String get fieldDisplayNameOptional => 'Name (optional)';
+
+  @override
+  String get authPasswordRules =>
+      'At least 8 characters, and not a common password.';
+
+  @override
+  String get authErrorUsernameInvalid =>
+      'A username is 3 to 30 characters: letters, digits, dots and hyphens, with no spaces or @.';
+
+  @override
+  String get authErrorPasswordShort =>
+      'The password must be at least 8 characters.';
+
+  @override
+  String get authErrorPasswordLong =>
+      'The password is too long. The limit is 72 bytes (about 36 Arabic letters).';
+
+  @override
+  String get authErrorWrongCredentials =>
+      'The username or password is not right. Try again.';
+
+  @override
+  String get authErrorUsernameTaken =>
+      'This username is taken. Choose another one or sign in.';
+
+  @override
+  String get authErrorPasswordRejected =>
+      'This password is not accepted. Choose a stronger, less common one.';
+
+  @override
+  String get profileChangePassword => 'Change password';
+
+  @override
+  String get passwordChangeTitle => 'Change password';
+
+  @override
+  String get passwordCurrentLabel => 'Current password';
+
+  @override
+  String get passwordNewLabel => 'New password';
+
+  @override
+  String get passwordChangeButton => 'Save password';
+
+  @override
+  String get passwordChanged =>
+      'Password changed. Your other devices were signed out.';
+
+  @override
+  String get passwordCurrentWrong =>
+      'The current password is wrong, or the new one is not accepted (too common).';
+
+  @override
+  String get accountSignedInWithPassword =>
+      'Signed in with username and password';
 }

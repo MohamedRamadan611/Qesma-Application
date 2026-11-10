@@ -12,6 +12,7 @@ import '../application/expense_form_controller.dart';
 import '../application/expense_form_state.dart';
 import '../application/expense_preview_controller.dart';
 import 'status_banner.dart';
+import '../../../core/theme/palette.dart';
 
 /// Opens the paid-by editor (P6-01). The user picks who paid and types what each paid; the
 /// sheet keeps a draft and only writes it into the form on "confirm".
@@ -164,7 +165,7 @@ class _PayersSheetState extends ConsumerState<PayersSheet> {
         children: [
           if (total != null)
             AppCard(
-              color: QesmaColors.tint,
+              color: context.colors.tint,
               child: Row(
                 children: [
                   Expanded(child: Text(l10n.expensePayersTotalLabel, style: theme.textTheme.bodyMedium)),
@@ -199,7 +200,7 @@ class _PayersSheetState extends ConsumerState<PayersSheet> {
           if (_splitFailed)
             Padding(
               padding: const EdgeInsets.only(top: QesmaSpacing.sm),
-              child: Semantics(liveRegion: true, child: Text(l10n.expensePayersFailed, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.error))),
+              child: Semantics(liveRegion: true, child: Text(l10n.expensePayersFailed, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.error))),
             ),
           const SizedBox(height: QesmaSpacing.md),
           for (final member in members)
@@ -223,7 +224,7 @@ class _PayersSheetState extends ConsumerState<PayersSheet> {
           const SizedBox(height: QesmaSpacing.sm),
           Row(
             children: [
-              Expanded(child: Text(l10n.expensePayersEntered, style: theme.textTheme.bodyMedium?.copyWith(color: QesmaColors.textSecondary))),
+              Expanded(child: Text(l10n.expensePayersEntered, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary))),
               MoneyText(sum, size: MoneySize.medium),
             ],
           ),
@@ -264,7 +265,7 @@ class _PayerRow extends StatelessWidget {
         Semantics(
           label: spoken,
           checked: checked,
-          child: SizedBox(width: kMinTouch - 8, height: kMinTouch - 8, child: Checkbox(value: checked, onChanged: (_) => onToggle())),
+          child: SizedBox(width: kMinTouch, height: kMinTouch, child: Checkbox(value: checked, onChanged: (_) => onToggle())),
         ),
         MemberAvatar(memberId: member.id, name: member.displayName, size: 36),
         const SizedBox(width: QesmaSpacing.sm + 4),
@@ -283,9 +284,9 @@ class _PayerRow extends StatelessWidget {
     );
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: checked ? QesmaColors.tint : QesmaColors.card,
+        color: checked ? context.colors.tint : context.colors.card,
         borderRadius: BorderRadius.circular(QesmaRadii.control),
-        border: Border.all(color: QesmaColors.hairline),
+        border: Border.all(color: context.colors.hairline),
       ),
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: kMinTouch),

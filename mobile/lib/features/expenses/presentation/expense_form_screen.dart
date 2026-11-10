@@ -22,6 +22,7 @@ import 'itemized_editor.dart';
 import 'expense_ui.dart';
 import 'payers_sheet.dart';
 import 'split_section.dart';
+import '../../../core/theme/palette.dart';
 
 /// Add expense (P5-01) and edit expense. Title, total, date, who paid, and how it is split
 /// (everyone / selected / exact amounts; the restaurant bill is FL6). Every per-member number
@@ -149,12 +150,11 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
       final groupState = ref.watch(groupDetailControllerProvider(widget.gid));
       if (groupState.failure == null) return scaffold(const SkeletonList(itemCount: 3));
       final failure = groupState.failure!;
+      final retry = ref.read(groupDetailControllerProvider(widget.gid).notifier).load;
       return scaffold(
-        ErrorState(
-          onRetry: ref.read(groupDetailControllerProvider(widget.gid).notifier).load,
-          message: errorCopyFor(l10n, failure).message,
-          requestId: failure.problem?.requestId,
-        ),
+        failure is ApiNoConnection || failure is ApiTimeout
+            ? NoInternetState(onRetry: retry)
+            : ErrorState(onRetry: retry, message: errorCopyFor(l10n, failure).message, requestId: failure.problem?.requestId),
       );
     }
 
@@ -267,7 +267,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                     onChanged: _controller.setAmount,
                   ),
                   const SizedBox(height: QesmaSpacing.xs),
-                  Text(l10n.expenseFormCurrencyNote, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textSecondary)),
+                  Text(l10n.expenseFormCurrencyNote, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
                 ],
                 const SizedBox(height: QesmaSpacing.md),
                 AppButton(
@@ -327,13 +327,13 @@ class _Note extends StatelessWidget {
   Widget build(BuildContext context) => Semantics(
         liveRegion: true,
         child: DecoratedBox(
-          decoration: BoxDecoration(color: QesmaColors.tint, borderRadius: BorderRadius.circular(QesmaRadii.control)),
+          decoration: BoxDecoration(color: context.colors.tint, borderRadius: BorderRadius.circular(QesmaRadii.control)),
           child: Padding(
             padding: const EdgeInsets.all(QesmaSpacing.md),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const ExcludeSemantics(child: Icon(Icons.info_outline, color: QesmaColors.primary, size: 20)),
+                ExcludeSemantics(child: Icon(Icons.info_outline, color: context.colors.primary, size: 20)),
                 const SizedBox(width: QesmaSpacing.sm),
                 Expanded(child: Text(text, style: Theme.of(context).textTheme.bodyMedium)),
               ],
@@ -379,7 +379,7 @@ class _PaidByCard extends StatelessWidget {
               if (count > 0)
                 Text(
                   countPhrase(count, one: l10n.expensePayersCountOne, two: l10n.expensePayersCountTwo, few: l10n.expensePayersCount, many: l10n.expensePayersCountMany),
-                  style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textHelper),
+                  style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper),
                 ),
             ],
           ),
@@ -411,7 +411,7 @@ class _SaveFailure extends StatelessWidget {
         ErrorBanner(errorCopyFor(l10n, failure).message),
         if (unknown) ...[
           const SizedBox(height: QesmaSpacing.sm),
-          Text(l10n.expenseFormOutcomeUnknown, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: QesmaColors.textSecondary)),
+          Text(l10n.expenseFormOutcomeUnknown, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
         ],
         if (failure.retryable) ...[
           const SizedBox(height: QesmaSpacing.sm),
@@ -446,10 +446,10 @@ class _BottomBar extends StatelessWidget {
       final sum = form.exactSum(memberIds);
       final remaining = total - sum;
       final (icon, text, color) = remaining == 0
-          ? (Icons.check_circle_outline, l10n.expenseFormExactMatches, QesmaColors.success)
+          ? (Icons.check_circle_outline, l10n.expenseFormExactMatches, context.colors.success)
           : remaining > 0
-              ? (Icons.warning_amber_rounded, l10n.expenseFormExactRemaining(moneyDisplay(l10n, remaining)), QesmaColors.warning)
-              : (Icons.warning_amber_rounded, l10n.expenseFormExactOver(moneyDisplay(l10n, -remaining)), QesmaColors.error);
+              ? (Icons.warning_amber_rounded, l10n.expenseFormExactRemaining(moneyDisplay(l10n, remaining)), context.colors.warning)
+              : (Icons.warning_amber_rounded, l10n.expenseFormExactOver(moneyDisplay(l10n, -remaining)), context.colors.error);
       summary = Semantics(
         liveRegion: true,
         label: '${l10n.expenseFormExactSummary(moneySpoken(l10n, sum), moneySpoken(l10n, total))}. $text',
@@ -486,7 +486,7 @@ class _BottomBar extends StatelessWidget {
                 spacing: QesmaSpacing.sm,
                 runSpacing: QesmaSpacing.xs,
                 children: [
-                  Text(l10n.expenseItemizedBarTotal, style: theme.textTheme.bodyMedium?.copyWith(color: QesmaColors.textSecondary)),
+                  Text(l10n.expenseItemizedBarTotal, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
                   if (billTotalMinor != null) MoneyText(billTotalMinor!, size: MoneySize.large) else const SkeletonBlock(width: 96, height: 24),
                 ],
               ),
@@ -524,7 +524,7 @@ class _BillTotal extends StatelessWidget {
           child: totalMinor == null ? const SkeletonBlock(width: 120, height: 28) : MoneyText(totalMinor!, size: MoneySize.large),
         ),
         const SizedBox(height: QesmaSpacing.xs),
-        Text(l10n.expenseItemizedTotalNote, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textSecondary)),
+        Text(l10n.expenseItemizedTotalNote, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
       ],
     );
   }

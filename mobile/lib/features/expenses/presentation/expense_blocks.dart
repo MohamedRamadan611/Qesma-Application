@@ -7,6 +7,7 @@ import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../application/expense_view_model.dart';
 import 'expense_ui.dart';
+import '../../../core/theme/palette.dart';
 
 /// A white section of the details page with a title, an optional count and a body.
 class SectionCard extends StatelessWidget {
@@ -27,11 +28,11 @@ class SectionCard extends StatelessWidget {
           Row(
             children: [
               if (icon != null) ...[
-                ExcludeSemantics(child: Icon(icon, color: QesmaColors.primary)),
+                ExcludeSemantics(child: Icon(icon, color: context.colors.primary)),
                 const SizedBox(width: QesmaSpacing.sm),
               ],
               Expanded(child: Semantics(header: true, child: Text(title, style: theme.textTheme.titleMedium))),
-              if (count != null) Text(count!, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textHelper)),
+              if (count != null) Text(count!, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper)),
             ],
           ),
           const SizedBox(height: QesmaSpacing.md),
@@ -68,12 +69,12 @@ class PayersBlock extends StatelessWidget {
             const SizedBox(height: QesmaSpacing.sm),
           ],
           DecoratedBox(
-            decoration: BoxDecoration(color: QesmaColors.tint, borderRadius: BorderRadius.circular(QesmaRadii.control)),
+            decoration: BoxDecoration(color: context.colors.tint, borderRadius: BorderRadius.circular(QesmaRadii.control)),
             child: Padding(
               padding: const EdgeInsets.all(QesmaSpacing.sm + 4),
               child: Text(
                 l10n.expensePaidTotal(moneyDisplay(l10n, paidTotalMinor(expense))),
-                style: theme.textTheme.bodyMedium?.copyWith(color: QesmaColors.textSecondary),
+                style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary),
               ),
             ),
           ),
@@ -104,7 +105,7 @@ class _PersonRow extends StatelessWidget {
     final amount = MoneyText(amountMinor, size: MoneySize.medium);
     return MergeSemantics(
       child: DecoratedBox(
-      decoration: BoxDecoration(color: QesmaColors.tint, borderRadius: BorderRadius.circular(QesmaRadii.control)),
+      decoration: BoxDecoration(color: context.colors.tint, borderRadius: BorderRadius.circular(QesmaRadii.control)),
       child: Padding(
         padding: const EdgeInsets.all(QesmaSpacing.sm + 4),
         child: Column(
@@ -135,7 +136,7 @@ class _PersonRow extends StatelessWidget {
               const SizedBox(height: QesmaSpacing.sm),
               Semantics(
                 label: sublineSpoken ?? subline,
-                child: ExcludeSemantics(child: Text(subline!, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textSecondary))),
+                child: ExcludeSemantics(child: Text(subline!, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary))),
               ),
             ],
           ],
@@ -248,9 +249,9 @@ class _ChargesBox extends StatelessWidget {
           spacing: QesmaSpacing.sm,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            Text(text, style: theme.textTheme.bodyMedium?.copyWith(color: QesmaColors.textSecondary)),
+            Text(text, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
             AppTag(label: l10n.expensePercent(ltrIsolate(Bps.format(bps)))),
-            if (caption != null) Text(caption, style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textHelper)),
+            if (caption != null) Text(caption, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper)),
           ],
         );
 
@@ -263,17 +264,17 @@ class _ChargesBox extends StatelessWidget {
           };
 
     return DecoratedBox(
-      decoration: BoxDecoration(color: QesmaColors.tint, borderRadius: BorderRadius.circular(QesmaRadii.control)),
+      decoration: BoxDecoration(color: context.colors.tint, borderRadius: BorderRadius.circular(QesmaRadii.control)),
       child: Padding(
         padding: const EdgeInsets.all(QesmaSpacing.sm + 4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            row(Text(l10n.expenseSubtotal, style: theme.textTheme.bodyMedium?.copyWith(color: QesmaColors.textSecondary)), charges.subtotalMinor),
+            row(Text(l10n.expenseSubtotal, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)), charges.subtotalMinor),
             if (service != null) row(labelWithRate(l10n.expenseServiceLabel, service.bps), service.amountMinor, signed: true),
             if (tax != null) row(labelWithRate(l10n.expenseTaxLabel, tax.bps, caption: taxBase), tax.amountMinor, signed: true),
             if (adjustment != 0)
-              row(Text(l10n.expenseAdjustmentLabel, style: theme.textTheme.bodyMedium?.copyWith(color: QesmaColors.textSecondary)), adjustment, signed: true),
+              row(Text(l10n.expenseAdjustmentLabel, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)), adjustment, signed: true),
             const Divider(height: QesmaSpacing.md),
             Row(
               children: [

@@ -9,6 +9,7 @@ import '../../../core/widgets/widgets.dart';
 import '../../expenses/presentation/expense_blocks.dart';
 import '../../expenses/presentation/expense_ui.dart';
 import '../application/settlements_controller.dart';
+import '../../../core/theme/palette.dart';
 
 /// The recorded payments, newest first (the server's order), each with its own delete button.
 class SettlementHistory extends StatelessWidget {
@@ -48,7 +49,7 @@ class SettlementHistory extends StatelessWidget {
         );
       case SettlementsStatus.ready:
         body = state.items.isEmpty
-            ? Text(l10n.balancesHistoryEmpty, style: theme.textTheme.bodyMedium?.copyWith(color: QesmaColors.textSecondary))
+            ? Text(l10n.balancesHistoryEmpty, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary))
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -123,11 +124,11 @@ class _PaymentRow extends StatelessWidget {
                   children: [
                     Text(l10n.balancesPaymentTitle(fsIsolate(from), fsIsolate(to)), style: theme.textTheme.titleSmall),
                     const SizedBox(height: 2),
-                    Text(moneyDisplay(l10n, payment.amountMinor), style: QesmaText.amountSmall().copyWith(color: QesmaColors.primary)),
+                    Text(moneyDisplay(l10n, payment.amountMinor), style: QesmaText.amountSmall().copyWith(color: context.colors.primary)),
                     const SizedBox(height: 2),
                     Text(
                       hasNote ? '${dateText(payment.settledOn)} · $note' : dateText(payment.settledOn),
-                      style: theme.textTheme.bodySmall?.copyWith(color: QesmaColors.textHelper),
+                      style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper),
                     ),
                   ],
                 ),
@@ -144,7 +145,7 @@ class _PaymentRow extends StatelessWidget {
                 : IconButton(
                     icon: const Icon(Icons.delete_outline),
                     tooltip: l10n.balancesDeletePayment,
-                    color: QesmaColors.error,
+                    color: context.colors.error,
                     constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                     onPressed: busy ? null : onDelete,
                   ),

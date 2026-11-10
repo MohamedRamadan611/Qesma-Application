@@ -34,6 +34,22 @@
         "required" : [ "nets", "transfers" ],
         "type" : "object"
       },
+      "ChangePasswordRequest" : {
+        "properties" : {
+          "currentPassword" : {
+            "maxLength" : 256,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "newPassword" : {
+            "maxLength" : 256,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "currentPassword", "newPassword" ],
+        "type" : "object"
+      },
       "Charges" : {
         "properties" : {
           "adjustmentMinor" : {
@@ -264,6 +280,17 @@
         "required" : [ "createdAt", "expenseDate", "groupId", "id", "payers", "shares", "splitType", "title", "totalMinor", "version" ],
         "type" : "object"
       },
+      "ForgotPasswordRequest" : {
+        "properties" : {
+          "email" : {
+            "maxLength" : 254,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "email" ],
+        "type" : "object"
+      },
       "GoogleLoginRequest" : {
         "properties" : {
           "idToken" : {
@@ -413,6 +440,22 @@
           }
         },
         "required" : [ "amountMinor", "assigneeMemberIds", "id", "name" ],
+        "type" : "object"
+      },
+      "LoginRequest" : {
+        "properties" : {
+          "password" : {
+            "maxLength" : 256,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "username" : {
+            "maxLength" : 254,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "password", "username" ],
         "type" : "object"
       },
       "MemberDto" : {
@@ -573,7 +616,7 @@
         "properties" : {
           "code" : {
             "description" : "Stable machine-readable error code.",
-            "enum" : [ "VALIDATION_ERROR", "PAYERS_TOTAL_MISMATCH", "SPLIT_TOTAL_MISMATCH", "MEMBER_NOT_IN_GROUP", "IDEMPOTENCY_KEY_REUSED", "DUPLICATE_MEMBER_NAME", "MEMBER_HAS_TRANSACTIONS", "OWNER_MEMBER_PROTECTED", "VERSION_CONFLICT", "GROUP_NOT_EMPTY", "NOT_FOUND", "UNAUTHORIZED", "INTERNAL_ERROR", "RATE_LIMITED", "AUTH_PROVIDER_UNAVAILABLE" ],
+            "enum" : [ "VALIDATION_ERROR", "PAYERS_TOTAL_MISMATCH", "SPLIT_TOTAL_MISMATCH", "MEMBER_NOT_IN_GROUP", "IDEMPOTENCY_KEY_REUSED", "DUPLICATE_MEMBER_NAME", "MEMBER_HAS_TRANSACTIONS", "OWNER_MEMBER_PROTECTED", "VERSION_CONFLICT", "GROUP_NOT_EMPTY", "NOT_FOUND", "UNAUTHORIZED", "INTERNAL_ERROR", "RATE_LIMITED", "AUTH_PROVIDER_UNAVAILABLE", "USERNAME_TAKEN" ],
             "type" : "string"
           },
           "detail" : {
@@ -612,6 +655,43 @@
           }
         },
         "required" : [ "refreshToken" ],
+        "type" : "object"
+      },
+      "RegisterRequest" : {
+        "properties" : {
+          "displayName" : {
+            "maxLength" : 200,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "password" : {
+            "maxLength" : 256,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "username" : {
+            "maxLength" : 254,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "password", "username" ],
+        "type" : "object"
+      },
+      "ResetPasswordRequest" : {
+        "properties" : {
+          "newPassword" : {
+            "maxLength" : 256,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "token" : {
+            "maxLength" : 256,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "newPassword", "token" ],
         "type" : "object"
       },
       "ServiceCharge" : {
@@ -862,12 +942,33 @@
             "nullable" : true,
             "type" : "string"
           },
+          "emailVerified" : {
+            "type" : "boolean"
+          },
+          "hasPassword" : {
+            "type" : "boolean"
+          },
           "id" : {
             "format" : "uuid",
             "type" : "string"
+          },
+          "username" : {
+            "nullable" : true,
+            "type" : "string"
           }
         },
-        "required" : [ "displayName", "id" ],
+        "required" : [ "displayName", "emailVerified", "hasPassword", "id" ],
+        "type" : "object"
+      },
+      "VerifyEmailRequest" : {
+        "properties" : {
+          "token" : {
+            "maxLength" : 256,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "token" ],
         "type" : "object"
       }
     },
@@ -887,6 +988,129 @@
   },
   "openapi" : "3.0.1",
   "paths" : {
+    "/api/v1/auth/email/verify" : {
+      "post" : {
+        "operationId" : "verifyEmail",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VerifyEmailRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Malformed request (code: VALIDATION_ERROR)"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "413" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Request body too large (code: VALIDATION_ERROR)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR)"
+          },
+          "429" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Too many requests (code: RATE_LIMITED)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "security" : [ ],
+        "tags" : [ "password-auth-controller" ]
+      }
+    },
+    "/api/v1/auth/email/verify/resend" : {
+      "post" : {
+        "operationId" : "resendEmailVerification",
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "tags" : [ "password-auth-controller" ]
+      }
+    },
     "/api/v1/auth/google" : {
       "post" : {
         "operationId" : "signInWithGoogle",
@@ -986,6 +1210,95 @@
         "tags" : [ "auth-controller" ]
       }
     },
+    "/api/v1/auth/login" : {
+      "post" : {
+        "operationId" : "signInWithPassword",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AuthResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Malformed request (code: VALIDATION_ERROR)"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "413" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Request body too large (code: VALIDATION_ERROR)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR)"
+          },
+          "429" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Too many requests (code: RATE_LIMITED)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "security" : [ ],
+        "tags" : [ "password-auth-controller" ]
+      }
+    },
     "/api/v1/auth/logout" : {
       "post" : {
         "operationId" : "signOut",
@@ -1066,6 +1379,170 @@
         },
         "security" : [ ],
         "tags" : [ "auth-controller" ]
+      }
+    },
+    "/api/v1/auth/password/forgot" : {
+      "post" : {
+        "operationId" : "forgotPassword",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ForgotPasswordRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Malformed request (code: VALIDATION_ERROR)"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "413" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Request body too large (code: VALIDATION_ERROR)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR)"
+          },
+          "429" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Too many requests (code: RATE_LIMITED)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "security" : [ ],
+        "tags" : [ "password-auth-controller" ]
+      }
+    },
+    "/api/v1/auth/password/reset" : {
+      "post" : {
+        "operationId" : "resetPassword",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Malformed request (code: VALIDATION_ERROR)"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "413" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Request body too large (code: VALIDATION_ERROR)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR)"
+          },
+          "429" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Too many requests (code: RATE_LIMITED)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "security" : [ ],
+        "tags" : [ "password-auth-controller" ]
       }
     },
     "/api/v1/auth/refresh" : {
@@ -1155,6 +1632,105 @@
         },
         "security" : [ ],
         "tags" : [ "auth-controller" ]
+      }
+    },
+    "/api/v1/auth/register" : {
+      "post" : {
+        "operationId" : "registerWithPassword",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RegisterRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AuthResponse"
+                }
+              }
+            },
+            "description" : "Created"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Malformed request (code: VALIDATION_ERROR)"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "409" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Conflict (code: USERNAME_TAKEN)"
+          },
+          "413" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Request body too large (code: VALIDATION_ERROR)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR)"
+          },
+          "429" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Too many requests (code: RATE_LIMITED)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "security" : [ ],
+        "tags" : [ "password-auth-controller" ]
       }
     },
     "/api/v1/groups" : {
@@ -3295,6 +3871,84 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/UserDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Malformed request (code: VALIDATION_ERROR)"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "413" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Request body too large (code: VALIDATION_ERROR)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "tags" : [ "me-controller" ]
+      }
+    },
+    "/api/v1/me/password" : {
+      "post" : {
+        "operationId" : "changePassword",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TokenResponse"
                 }
               }
             },

@@ -85,11 +85,18 @@ Class | Method | HTTP request | Description
 [*GroupControllerApi*](doc/GroupControllerApi.md) | [**getGroup**](doc/GroupControllerApi.md#getgroup) | **GET** /api/v1/groups/{gid} | 
 [*GroupControllerApi*](doc/GroupControllerApi.md) | [**listGroups**](doc/GroupControllerApi.md#listgroups) | **GET** /api/v1/groups | 
 [*GroupControllerApi*](doc/GroupControllerApi.md) | [**updateGroup**](doc/GroupControllerApi.md#updategroup) | **PATCH** /api/v1/groups/{gid} | 
+[*MeControllerApi*](doc/MeControllerApi.md) | [**changePassword**](doc/MeControllerApi.md#changepassword) | **POST** /api/v1/me/password | 
 [*MeControllerApi*](doc/MeControllerApi.md) | [**getMe**](doc/MeControllerApi.md#getme) | **GET** /api/v1/me | 
 [*MeControllerApi*](doc/MeControllerApi.md) | [**updateMe**](doc/MeControllerApi.md#updateme) | **PATCH** /api/v1/me | 
 [*MemberControllerApi*](doc/MemberControllerApi.md) | [**addMember**](doc/MemberControllerApi.md#addmember) | **POST** /api/v1/groups/{gid}/members | 
 [*MemberControllerApi*](doc/MemberControllerApi.md) | [**deleteMember**](doc/MemberControllerApi.md#deletemember) | **DELETE** /api/v1/groups/{gid}/members/{mid} | 
 [*MemberControllerApi*](doc/MemberControllerApi.md) | [**renameMember**](doc/MemberControllerApi.md#renamemember) | **PATCH** /api/v1/groups/{gid}/members/{mid} | 
+[*PasswordAuthControllerApi*](doc/PasswordAuthControllerApi.md) | [**forgotPassword**](doc/PasswordAuthControllerApi.md#forgotpassword) | **POST** /api/v1/auth/password/forgot | 
+[*PasswordAuthControllerApi*](doc/PasswordAuthControllerApi.md) | [**registerWithPassword**](doc/PasswordAuthControllerApi.md#registerwithpassword) | **POST** /api/v1/auth/register | 
+[*PasswordAuthControllerApi*](doc/PasswordAuthControllerApi.md) | [**resendEmailVerification**](doc/PasswordAuthControllerApi.md#resendemailverification) | **POST** /api/v1/auth/email/verify/resend | 
+[*PasswordAuthControllerApi*](doc/PasswordAuthControllerApi.md) | [**resetPassword**](doc/PasswordAuthControllerApi.md#resetpassword) | **POST** /api/v1/auth/password/reset | 
+[*PasswordAuthControllerApi*](doc/PasswordAuthControllerApi.md) | [**signInWithPassword**](doc/PasswordAuthControllerApi.md#signinwithpassword) | **POST** /api/v1/auth/login | 
+[*PasswordAuthControllerApi*](doc/PasswordAuthControllerApi.md) | [**verifyEmail**](doc/PasswordAuthControllerApi.md#verifyemail) | **POST** /api/v1/auth/email/verify | 
 [*SettlementControllerApi*](doc/SettlementControllerApi.md) | [**createSettlement**](doc/SettlementControllerApi.md#createsettlement) | **POST** /api/v1/groups/{gid}/settlements | Record a settlement (a real-world payment between two members)
 [*SettlementControllerApi*](doc/SettlementControllerApi.md) | [**deleteSettlement**](doc/SettlementControllerApi.md#deletesettlement) | **DELETE** /api/v1/groups/{gid}/settlements/{sid} | Delete a settlement (soft delete; its effect on balances is reversed)
 [*SettlementControllerApi*](doc/SettlementControllerApi.md) | [**listSettlements**](doc/SettlementControllerApi.md#listsettlements) | **GET** /api/v1/groups/{gid}/settlements | List settlements, newest first (deleted ones are not listed)
@@ -99,6 +106,7 @@ Class | Method | HTTP request | Description
 
  - [AuthResponse](doc/AuthResponse.md)
  - [BalanceView](doc/BalanceView.md)
+ - [ChangePasswordRequest](doc/ChangePasswordRequest.md)
  - [Charges](doc/Charges.md)
  - [CreateGroupRequest](doc/CreateGroupRequest.md)
  - [CreateMemberRequest](doc/CreateMemberRequest.md)
@@ -106,11 +114,13 @@ Class | Method | HTTP request | Description
  - [ExpensePreview](doc/ExpensePreview.md)
  - [ExpenseRevisionView](doc/ExpenseRevisionView.md)
  - [ExpenseView](doc/ExpenseView.md)
+ - [ForgotPasswordRequest](doc/ForgotPasswordRequest.md)
  - [GoogleLoginRequest](doc/GoogleLoginRequest.md)
  - [GroupDto](doc/GroupDto.md)
  - [GroupSummaryDto](doc/GroupSummaryDto.md)
  - [ItemInput](doc/ItemInput.md)
  - [ItemView](doc/ItemView.md)
+ - [LoginRequest](doc/LoginRequest.md)
  - [MemberDto](doc/MemberDto.md)
  - [Net](doc/Net.md)
  - [PageResponseExpenseView](doc/PageResponseExpenseView.md)
@@ -120,6 +130,8 @@ Class | Method | HTTP request | Description
  - [PayerView](doc/PayerView.md)
  - [Problem](doc/Problem.md)
  - [RefreshRequest](doc/RefreshRequest.md)
+ - [RegisterRequest](doc/RegisterRequest.md)
+ - [ResetPasswordRequest](doc/ResetPasswordRequest.md)
  - [ServiceCharge](doc/ServiceCharge.md)
  - [ServiceInput](doc/ServiceInput.md)
  - [SettlementCommand](doc/SettlementCommand.md)
@@ -134,6 +146,7 @@ Class | Method | HTTP request | Description
  - [UpdateMeRequest](doc/UpdateMeRequest.md)
  - [UpdateMemberRequest](doc/UpdateMemberRequest.md)
  - [UserDto](doc/UserDto.md)
+ - [VerifyEmailRequest](doc/VerifyEmailRequest.md)
 
 
 ## Documentation For Authorization

@@ -104,6 +104,11 @@ void main() {
     );
   });
 
+  test('colours come from the theme palette (context.colors), never from QesmaColors, so dark mode reaches every widget', () {
+    final hits = _scan(RegExp(r'\bQesmaColors\b'), skip: (p) => p.startsWith('lib/core/theme/'));
+    expect(hits, isEmpty, reason: 'Use context.colors.x (lib/core/theme/palette.dart); QesmaColors is the light palette only.\n${hits.join('\n')}');
+  });
+
   test('layout is direction-aware: no physical left/right (RTL must mirror automatically)', () {
     final hits = _scan(
       RegExp(
@@ -180,6 +185,14 @@ void main() {
       skip: (p) => !p.startsWith('lib/features/balances/'),
     );
     expect(hits, isEmpty, reason: 'Balances and transfers come only from the endpoint (SCREEN_MAP).\n${hits.join('\n')}');
+  });
+
+  test('no analytics, tracking or crash SDKs and no extra preference/connectivity/version packages (FL8 constraint)', () {
+    final pubspec = File('pubspec.yaml').readAsStringSync();
+    final deps = pubspec.split('dev_dependencies:').first;
+    for (final banned in ['firebase', 'analytics', 'sentry', 'crashlytics', 'amplitude', 'mixpanel', 'shared_preferences', 'connectivity_plus', 'package_info_plus']) {
+      expect(deps.contains(banned), isFalse, reason: 'pubspec depends on $banned');
+    }
   });
 
   test('the manifest disables Android backup (restored backups cannot unwrap the Keystore-wrapped token)', () {

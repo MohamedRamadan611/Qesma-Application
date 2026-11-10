@@ -18,6 +18,11 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID
     @Query("select t from RefreshToken t where t.tokenHash = :hash")
     Optional<RefreshToken> findByTokenHashForUpdate(@Param("hash") byte[] hash);
 
+    /** Ends every login session of a user (password changed or reset). */
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("update RefreshToken t set t.revokedAt = :now where t.userId = :userId and t.revokedAt is null")
+    int revokeAllOfUser(@Param("userId") UUID userId, @Param("now") Instant now);
+
     /** Revokes every still-active token of a login session. */
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("update RefreshToken t set t.revokedAt = :now where t.familyId = :familyId and t.revokedAt is null")

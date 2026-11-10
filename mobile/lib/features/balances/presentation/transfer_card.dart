@@ -6,6 +6,7 @@ import '../../../core/theme/balance_colors.dart';
 import '../../../core/theme/qesma_text.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
+import '../../../core/theme/palette.dart';
 
 /// One of the server's suggested transfers: who pays whom, how much, and the button that opens the
 /// Record payment sheet for exactly this transfer. Every value is the server's; nothing is derived.
@@ -51,9 +52,9 @@ class TransferCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       person(transfer.fromMemberId, from, l10n.balancesPays, colors.owes),
-                      const Padding(
+                      Padding(
                         padding: EdgeInsets.only(top: QesmaSpacing.sm + 4),
-                        child: Icon(Icons.arrow_forward, color: QesmaColors.textHelper),
+                        child: Icon(Icons.arrow_forward, color: context.colors.textHelper),
                       ),
                       person(transfer.toMemberId, to, l10n.balancesReceives, colors.owed),
                     ],

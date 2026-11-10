@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/tokens.dart';
+import '../theme/palette.dart';
 
 /// Selectable pill (type chips, filters). A check mark accompanies the selected state so
 /// selection is never shown by colour alone. 48 px touch height.
@@ -15,7 +16,7 @@ class AppChoiceChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final fg = selected ? QesmaColors.onPrimaryContainer : QesmaColors.textPrimary;
+    final fg = selected ? context.colors.onPrimaryContainer : context.colors.textPrimary;
     return Semantics(
       button: true,
       selected: selected,
@@ -34,10 +35,10 @@ class AppChoiceChip extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsetsDirectional.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
-                  color: selected ? QesmaColors.primaryContainer : QesmaColors.card,
+                  color: selected ? context.colors.primaryContainer : context.colors.card,
                   borderRadius: BorderRadius.circular(QesmaRadii.pill),
                   border: Border.all(
-                    color: selected ? QesmaColors.primary : QesmaColors.buttonBorder,
+                    color: selected ? context.colors.primary : context.colors.buttonBorder,
                     width: selected ? 1.5 : 1,
                   ),
                 ),
@@ -80,9 +81,9 @@ class AppSegmentedTabs extends StatelessWidget {
     final theme = Theme.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: QesmaColors.tint,
+        color: context.colors.tint,
         borderRadius: BorderRadius.circular(QesmaRadii.control + 4),
-        border: Border.all(color: QesmaColors.tintBorder),
+        border: Border.all(color: context.colors.tintBorder),
       ),
       child: Padding(
         padding: const EdgeInsets.all(4),
@@ -105,7 +106,7 @@ class AppSegmentedTabs extends StatelessWidget {
                         padding: const EdgeInsetsDirectional.symmetric(horizontal: 8, vertical: 8),
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: i == selectedIndex ? QesmaColors.primary : Colors.transparent,
+                          color: i == selectedIndex ? context.colors.primary : Colors.transparent,
                           borderRadius: BorderRadius.circular(QesmaRadii.control),
                         ),
                         child: Row(
@@ -116,7 +117,7 @@ class AppSegmentedTabs extends StatelessWidget {
                               Icon(
                                 items[i].icon,
                                 size: 18,
-                                color: i == selectedIndex ? QesmaColors.onPrimary : QesmaColors.textSecondary,
+                                color: i == selectedIndex ? context.colors.onPrimary : context.colors.textSecondary,
                               ),
                               const SizedBox(width: 6),
                             ],
@@ -127,7 +128,7 @@ class AppSegmentedTabs extends StatelessWidget {
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: theme.textTheme.labelLarge?.copyWith(
-                                  color: i == selectedIndex ? QesmaColors.onPrimary : QesmaColors.textSecondary,
+                                  color: i == selectedIndex ? context.colors.onPrimary : context.colors.textSecondary,
                                 ),
                               ),
                             ),
@@ -158,11 +159,11 @@ class AppTag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (fg, bg) = switch (tone) {
-      AppTagTone.neutral => (QesmaColors.textSecondary, QesmaColors.surfaceLow),
-      AppTagTone.primary => (QesmaColors.onPrimaryContainer, QesmaColors.primaryContainer),
-      AppTagTone.info => (QesmaColors.info, QesmaColors.infoContainer),
-      AppTagTone.success => (QesmaColors.success, QesmaColors.successContainer),
-      AppTagTone.warning => (QesmaColors.warning, QesmaColors.warningContainer),
+      AppTagTone.neutral => (context.colors.textSecondary, context.colors.surfaceLow),
+      AppTagTone.primary => (context.colors.onPrimaryContainer, context.colors.primaryContainer),
+      AppTagTone.info => (context.colors.info, context.colors.infoContainer),
+      AppTagTone.success => (context.colors.success, context.colors.successContainer),
+      AppTagTone.warning => (context.colors.warning, context.colors.warningContainer),
     };
     return DecoratedBox(
       decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(QesmaRadii.pill)),
