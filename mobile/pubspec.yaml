@@ -27,6 +27,8 @@ dependencies:
   url_launcher: 6.3.3
 
 dev_dependencies:
+  integration_test:
+    sdk: flutter
   flutter_test:
     sdk: flutter
   crypto: 3.0.8

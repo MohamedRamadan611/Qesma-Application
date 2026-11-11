@@ -1,0 +1,15 @@
+---
+description: "FL14 — Payment handles in the profile and the rate-limited Remind button"
+---
+
+Read AGENTS.md, mobile/AGENTS.md, `.claude/mobile/SCREEN_MAP.md` (Phase 2 table), docs/PHASE2_SPEC.md sections 7, 8 (Remind), 10, docs/design/STITCH_PROMPTS.md Prompt 12 parts 4-5, the FL8 profile code (`mobile/lib/features/profile`) and open `P13-05-Profile-Payment.png`, `P13-04-Remind.png`, `P10-03-Account-Settings.png`. Prerequisite: FL13, B14 and B16 merged. Skills (max 4): think-before-coding, ui-ux-pro-max, ux-copy, accessibility-review.
+
+Step 0 (plan, wait for approval): the design; where the "بيانات الدفع" section lives (profile hub or account settings, following the existing FL8 structure); input handling (wallet: accept Arabic-Indic digits and separators, normalise by string logic to `01XXXXXXXXX`, validate length and prefix client-side only as a convenience; the server validation is authoritative and its field errors are shown inline); InstaPay address rules (as B14); the privacy note "بتظهر لأعضاء مجموعاتك بس" always visible; removal flow (clear a field and save, or an explicit remove with confirm); the Remind state machine on the transfer row (visible only to the creditor or Admin/Owner when a transfer exists; enabled when `canRemindAt` is null or in the past by **server data** (compare to the server's `nextAllowedAt`/`canRemindAt` timestamp, not to a locally derived rule); disabled with "اتبعت تذكير النهاردة" after a send or on `REMIND_RATE_LIMITED`; ghost debtor: hide the button and say why in a caption); what the user sees after sending; missing designs list.
+
+Implement:
+1. **Payment handles section**: shows current values (from `GET /me/payment-handles`), add/edit/remove InstaPay and wallet, save with `PUT` (field errors inline, success snackbar), loading/error/offline states; values never logged, never shown in screenshots/goldens with real data, excluded from analytics/crash payloads.
+2. **Remind button** on transfers where the user is owed: calls `POST .../transfers/remind` with `IdempotentAction`; success -> button becomes disabled with the "sent today" label and the next-allowed time from the server; `REMIND_RATE_LIMITED` -> same disabled state; `VALIDATION_ERROR` (transfer no longer exists) -> refetch balances; offline -> retry message.
+3. ARB strings; extend the scope-guard allow-list (`instapay`, `wallet`, `remind*`) for this feature.
+
+Tests: validation and normalisation (Arabic digits, spaces, dashes, wrong prefix); save/replace/remove flows with real-shaped fixtures; server field errors inline; the Remind matrix (creditor, admin, debtor, member without rights x enabled/disabled/hidden); key lifecycle (reuse on retry, one reminder per tap); 429 handling shows server time; widget tests ar/en/2.0; goldens for the payment section and the remind states; log-capture test (handles never logged); guard: no arithmetic.
+Constraints: SCREEN_MAP rules; the app only displays handles and never initiates transfers; no phone/contacts access. Done when analyze and tests pass. Then Stop protocol; do NOT start FL15.

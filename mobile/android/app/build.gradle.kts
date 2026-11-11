@@ -1,8 +1,21 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+// Release signing: read from android/key.properties (git-ignored) or, for CI, from the QESMA_KEYSTORE_* environment
+// variables. With neither present the release build is signed with the DEBUG key so `flutter run --release` still
+// works locally; docs/mobile-release.md and tool/check_release_artifact.sh refuse such an artifact for upload.
+val keyProps = Properties().apply {
+    val f = rootProject.file("key.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+fun signingValue(prop: String, env: String): String? = keyProps.getProperty(prop) ?: System.getenv(env)
+val storePath = signingValue("storeFile", "QESMA_KEYSTORE_FILE")
+
 
 android {
     namespace = "app.qesma.app"
@@ -28,11 +41,23 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (storePath != null) {
+            create("release") {
+                storeFile = file(storePath)
+                storePassword = signingValue("storePassword", "QESMA_KEYSTORE_PASSWORD")
+                keyAlias = signingValue("keyAlias", "QESMA_KEY_ALIAS")
+                keyPassword = signingValue("keyPassword", "QESMA_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 }

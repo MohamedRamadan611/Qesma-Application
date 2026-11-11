@@ -50,7 +50,7 @@ class SignInScreen extends ConsumerWidget {
                       const SizedBox(height: QesmaSpacing.sm),
                       AppButton(
                         label: l10n.authUsernameContinue,
-                        icon: Icons.mail_outline,
+                        icon: Icons.person_outline,
                         variant: AppButtonVariant.secondary,
                         onPressed: loading ? null : () => context.go(Routes.usernameSignIn),
                       ),

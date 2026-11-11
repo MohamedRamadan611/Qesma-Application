@@ -1,0 +1,15 @@
+---
+description: "B14 — Phase 2: payment handles (InstaPay address, mobile wallet) with strict visibility"
+---
+
+Read AGENTS.md, **docs/PHASE2_SPEC.md sections 3 (payment_handles), 7, 10, 11**, docs/PROJECT_PHASES.md 2.6, docs/PROJECT_SPEC.md privacy section (PDPL) and A51 (redaction), `MeController`, `UserDto`, `MemberDto`, `BalanceView`, `GroupAccessService`/B10 component. Prerequisite: B13 merged (transfers view exists with Phase 2 fields). Skills (max 4): think-before-coding, security-discipline, auth-and-authorization, data-modeling-discipline.
+
+Step 0 (plan, wait for approval): the six-step design, and settle (Decision Log):
+1. **Validation.** Wallet: Egyptian mobile, normalised to digits (accept Arabic-Indic digits and spaces/dashes on input, store `01XXXXXXXXX`); InstaPay: `local@bank` style, 3..60 characters, exactly one `@`, no whitespace, case rule. Reject everything else with `VALIDATION_ERROR` and a field name. Max one value per type per user; `PUT` replaces both (null removes).
+2. **Visibility (the main risk).** Define the single query/function that decides "viewer may see user U's handles": viewer is an ACTIVE member of at least one group where U is an ACTIVE linked member. Choose where handles are delivered: recommended **only** on the transfer entries of `GET /groups/{gid}/balances` (the receiver's handles on transfers where the viewer is the payer, and Admin/Owner for disputes) and on `MemberDto` for the group's members, never in `GroupDto`, lists, activity, notifications, errors or logs. State the exact DTO fields and justify minimal exposure (recommended: only the receiver's handles on transfers where the viewer is the payer or an admin).
+3. **Storage.** Plain text vs encrypted at rest: recommend plain with column-level minimal exposure and document the PDPL/lawyer-review item; no logging; `toString` redaction on the request record (A51 style); handles deleted on account deletion (B17 depends on it).
+4. **Endpoints.** `GET /me/payment-handles`, `PUT /me/payment-handles`; rate-limit writes lightly if the plan justifies it.
+
+Implement: migration V15 (`payment_handles`, unique (user_id, type), CHECK on type), entity/repository/service, `/me` controller routes, DTOs, the visibility function used by the balances mapper (no N+1: one batched query for all receivers in the transfers), OpenAPI + ids, Decision Log, README.
+Tests (Testcontainers): validation matrix (good/bad wallet and InstaPay forms incl. Arabic digits); set, replace, remove; a co-member sees the receiver's handles on the right transfer, a member of another group never, a LEFT member never, an unlinked ex-member never, a stranger gets 404; JSON field-set test: handles appear only where allowed; capture-appender test: the values never reach the logs; batched query count constant for 1 vs 20 transfers; B10 matrix extended.
+Constraints: follow AGENTS.md; the app only displays handles, never initiates transfers or calls banks; no new dependency. Done when `./mvnw clean verify` passes. Then Stop protocol; tell the owner `mobile` must regenerate the client.

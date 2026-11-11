@@ -15,7 +15,7 @@
 8. Errors: RFC 7807 problem+json with a stable `code` from the spec's list (8.5). No swallowed exceptions. No stack traces to clients.
 9. Schema invariants live in the database (CHECK, UNIQUE, FK, NOT NULL). Flyway migrations are forward-only and reviewed.
 10. No secrets in code, logs, or git. Never log tokens, Authorization headers, or personal data beyond ids.
-11. Do not build anything outside the Phase 1 scope (spec 3.2). Do not add libraries or infrastructure (Redis, Kafka, microservices) without an ADR and my approval.
+11. Do not build anything outside the Phase 1 scope (spec 3.2), except while running a Phase 2 prompt (`/b10`-`/b19`, `/fl10`-`/fl18`): then the scope is `docs/PHASE2_SPEC.md` and that prompt only. Do not add libraries or infrastructure (Redis, Kafka, microservices) without an ADR and my approval.
 
 ## Working method
 - Before writing code for a component: do the 6-step design (context/load, data & invariants, failure modes, authorization, replay/concurrency, observability) and summarize it in 10–20 lines. Wait for approval if I asked for plan mode.

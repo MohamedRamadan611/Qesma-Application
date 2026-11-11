@@ -118,12 +118,12 @@ Auth endpoints are limited to 10 requests/minute per IP (in memory, per instance
 Copy `../.env.example` to `../.env` (git-ignored) to override compose defaults.
 
 ## Smoke test (end to end, against a running backend)
-`scripts/smoke.sh` (bash + curl + jq) signs in two fake users, then walks the Phase 1 flow and asserts exact minor-unit values: group + 5 members, equal expense (V3), idempotent replay, user B gets 404, multi-payer (V4), itemized V5-V8 with preview parity, edit/ETag/stale ETag/delete/revisions, V1 balances and transfers, `yourNetMinor`, settlement and V2 balances. It prints one `PASS`/`FAIL` line per check and exits non-zero on the first failure. Each run creates fresh users and groups, so it can be repeated.
+`scripts/smoke.sh` (bash + curl + jq) signs in two fake users, then walks the Phase 1 flow and asserts exact minor-unit values: group + 5 members, equal expense (V3), idempotent replay, user B gets 404, multi-payer (V4), itemized V5-V8 with preview parity, edit/ETag/stale ETag/delete/revisions, V1 balances and transfers, `yourNetMinor`, settlement and V2 balances, then the username + password accounts of ADR-008 (register with a lower-cased username, login, the identical 401 for a wrong password and an unknown name, `USERNAME_TAKEN`, a refused common password, owner-only 404 for a password user's group, change password with fresh tokens, the old password refused). `SMOKE_DAHAB=1` adds the seeded Dahab trip (profile `seed`): the documented nets and four transfers. It prints one `PASS`/`FAIL` line per check and exits non-zero on the first failure. Each run creates fresh users and groups, so it can be repeated.
 ```bash
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=local,fake-auth     # in backend/
 BASE_URL=http://localhost:8080 ../scripts/smoke.sh                       # default BASE_URL is http://localhost:8080
 ```
-Only for local/staging with the fake verifier; never against production. Auth endpoints are rate limited (10/min per IP): the script uses 2 logins.
+Only for local/staging with the fake verifier; never against production. Auth endpoints are rate limited (10/min per IP): a default run uses 9 auth requests and `SMOKE_DAHAB=1` one more, so wait a minute between runs (or start the backend with `--qesma.auth.rate-limit.max-requests=1000` locally). Needs `jq` (on Windows: `winget install jqlang.jq`, then Git Bash).
 
 ## Docker image
 ```bash

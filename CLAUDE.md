@@ -101,6 +101,7 @@ B0 (Bootstrap) → B3 (Split Engine) → B1 (Auth) → B2 (Groups/Members) → B
 - `/b6-edit-delete-revisions`: Soft delete, expense revisions history, optimistic concurrency (`version`).
 - `/b7-balances-settlements`: Balance aggregation, simplified transfer calculation, settlement recording.
 - `/b8-hardening-handoff`: Production configuration, security hardening, OpenAPI export handoff.
+- **Phase 2 (Collaboration)** — spec: `docs/PHASE2_SPEC.md`, run order and coverage: `docs/prompts/PHASE2_PROMPTS.md`. Backend: `/b10-roles-authz`, `/b11-invites-join`, `/b12-member-lifecycle`, `/b13-settlement-v2`, `/b14-payment-handles`, `/b15-activity-notifications`, `/b16-prefs-remind`, `/b17-conflict-account-deletion`, `/b18-push-fcm` (optional, needs ADR-010), `/b19-phase2-hardening`. Flutter: `/fl10-phase2-foundation` … `/fl16-conflict-account-deletion`, `/fl17-push` (optional), `/fl18-phase2-integration`. Skill routing per Phase 2 prompt is stated inside each command (max 4). Phase 2 prompts are the only place invariant 7 (owner-only, 404) is replaced by roles (B10 amends it and records the decision).
 - `/r-review <milestone>`: Run in a fresh session to audit completed milestone against senior discipline.
 - `/f-bugfix <description>`: Targeted bug fix template with root-cause analysis and regression tests.
 - `/s-spec-change`: Record an architectural decision or resolve spec ambiguity in the Decision Log.

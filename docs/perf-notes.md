@@ -48,6 +48,27 @@ Evidence from `EXPLAIN (ANALYZE, BUFFERS)` on PostgreSQL 16 (Testcontainers), pr
 
 **Statements per request do not grow with the data** (`ExpenseListQueryCountIT`): expense list 6 (8 when the page has itemized bills), settlement list 3, revisions ≤ 3, group detail ≤ 4, group list 2, balances 2 JPA statements plus the one totals statement.
 
+## HTTP-edge measurement (FL9, 2026-11-11)
+
+**Tool:** `scripts/perf-seed.sh` (bash + curl + jq, fake-auth only). It seeds through the public API and times the read endpoints with curl (`time_total`, so the network stack is included; 25 calls each). **Dataset:** 100 small groups (3 members, 5 expenses each) plus one group with 15 members, 500 expenses (a third EQUAL, a third multi-payer, a third EXACT) and 200 settlements; the database then held 151 groups, 1 174 expenses, 3 499 splits and 221 settlements. Backend: local jar, dev profile, PostgreSQL 16 in Docker on the same machine; one client, no concurrency.
+
+| Endpoint | p50 ms | p95 ms | max ms |
+|:--|--:|--:|--:|
+| GET /groups (list) | 14.4 | 16.9 | 20.2 |
+| GET /groups/{gid} | 14.6 | 19.1 | 32.7 |
+| GET expenses page 0 (20) | 19.3 | 22.5 | 22.9 |
+| GET expenses last page (page 24) | 18.3 | 21.7 | 28.4 |
+| GET expense detail | 12.4 | 15.2 | 21.2 |
+| GET expense revisions | 8.8 | 11.1 | 84.0 |
+| GET balances | 16.5 | 18.6 | 20.0 |
+| GET settlements (page 0) | 9.9 | 11.7 | 13.6 |
+
+**Reading**
+- Every p95 is far below the spec target of 500 ms. The last expense page costs the same as the first: the list is served by `ix_expenses_group_list`.
+- The multi-group case (open point below) is now **partly** measured: 100 other groups in the database did not change any endpoint. `EXPLAIN (ANALYZE, BUFFERS)` of the expense list query for the 500-expense group: `Index Only Scan using ix_expenses_group_list`, 13 buffer hits, 0.15 ms execution (planning 1.7 ms). The balances statement was **not** re-explained on this data.
+- Not measured: concurrent clients (the sizing section above rests on the in-process tests), a database with about 1 000 groups, a remote client on a mobile network.
+- **Re-run:** `BASE_URL=http://localhost:18080 OTHER_GROUPS=100 bash scripts/perf-seed.sh` (about 4 minutes; `EXPENSES`, `MEMBERS`, `SETTLEMENTS`, `CALLS` are variables).
+
 ## Open points
-- Repeat the measurement with many groups in the same database (e.g. 1 000 groups of the same size) before relying on the index behaviour at scale.
+- Repeat the measurement with many groups in the same database: 100 extra groups were measured at the HTTP edge (no effect); 1 000 groups of the same size are still not measured.
 - `count(*)` for list pagination and the group totals are O(group size); fine at ~500 rows per group.

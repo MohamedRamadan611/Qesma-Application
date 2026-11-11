@@ -44,7 +44,7 @@ Do not rename the files without telling the owner; the prompts below use the rea
 | `P10-03-Account-Settings.png` | Account settings | fl8 | - | connected Google email (read only), sign out | InstaPay/wallet handles (Phase 2), export (out of scope), active devices, sign out everywhere, **delete account** (required before public release, not in the Phase 1 backend: record as an open item) |
 | `P11-01-No-Internet.png`, `P11-02-Generic-Error.png`, `P11-03-Loading-pattern.png` | Offline, generic error, skeleton | fl1, fl8 | - | shared widgets used everywhere | - |
 | `P11-05-Coach-Marks.png` | 3-step first-run tour | fl8 (optional, last) | - | only if time allows | - |
-| `P12-*`, `P13-*`, `P14-*` | Invites, transfer status/disputes/remind, activity, notifications | **none** | - | **Phase 2: do not build** | everything |
+| `P12-*`, `P13-*`, `P14-*` | Invites, transfer status/disputes/remind, activity, notifications | fl11-fl16 (Phase 2 only) | see `docs/PHASE2_SPEC.md` section 11 | **Not in FL0-FL9: do not build there.** Built later by `fl11`-`fl16`; `fl10` rewrites this row into a full Phase 2 table (index: `docs/prompts/PHASE2_PROMPTS.md`) | everything until then |
 
 ## 4. Missing designs (derive from `docs/design/DESIGN.md`, the nearest screen and the ux-copy skill; list them in each plan)
 Empty states, loading skeletons per screen, delete-group confirm/blocked, delete-member confirm/blocked, delete-expense confirm, edit-conflict dialog, expense history sheet, members tab, all-settled balances, dark theme (light only in Phase 1).

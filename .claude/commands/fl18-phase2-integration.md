@@ -1,0 +1,17 @@
+---
+description: "FL18 — Phase 2 integration against the real backend, accessibility/performance pass, release gate"
+---
+
+Read AGENTS.md, mobile/AGENTS.md, `.claude/mobile/SCREEN_MAP.md`, docs/PHASE2_SPEC.md section 12 (acceptance), docs/PROJECT_PHASES.md 2.13-2.14, docs/gates/gate-fl9.md, docs/gates/gate-fl9-verify.md, docs/gates/mobile-device-checklist.md, docs/mobile-perf.md, docs/mobile-release.md, `mobile/test/integration/fl9_scenarios_test.dart`, `mobile/test/a11y/all_screens_test.dart`, `scripts/smoke.sh`. Prerequisite: B19 and FL10-FL16 merged (FL17 optional). Skills (max 4): think-before-coding, accessibility-review, design-critique, ux-copy.
+
+Step 0 (plan, wait for approval): the scenario list and how a second account is simulated in tests (two `ProviderContainer`s with two sessions against the fake-auth backend profile, or two device emulators for manual steps); the screen inventory for a11y (every Phase 2 screen and state); performance targets with numbers taken from `docs/mobile-perf.md` (list/feed scroll with 500 events, join screen cold start, notification center with 200 items); the device checklist additions; the release steps.
+
+Implement:
+1. **Scenario tests** (against the real backend started with Testcontainers or the compose stack, like `fl9_scenarios_test.dart`): A creates a group and an invite, B opens the code, claims a ghost, B adds an expense, A sees it after refresh, A edits it (B sees the notification and the activity entry), B declares a payment (PENDING, balances unchanged, pending badge shown), A confirms (balances move), a second payment is disputed then cancelled, A reminds B (second remind shows the disabled state), B leaves, an Admin promotion changes visible actions, an expense edit conflict shows the conflict screen, B deletes their account and A's balances are unchanged. Also: expired invite, revoked invite, approval-required join, rate-limited remind.
+2. **Accessibility pass** over all Phase 2 screens and states: semantics labels, focus order, 48dp targets, contrast of the chips (amber/green/red) with text, status never by colour alone, RTL mirroring of icons (share, copy, arrows), 2.0 text scale, screen-reader announcement of role/status changes and unread items; extend `all_screens_test.dart`.
+3. **Scope guard final**: Phase 2 allow-list complete, permanently forbidden words still forbidden (guest, receipt/scan, export, contacts, premium, ads, coming soon, cover photo, pay now); nothing Phase 3 (percent, shares, refunds, categories, summary image).
+4. **Performance**: measure and record in `docs/mobile-perf.md`; fix regressions found (e.g. unbounded lists, rebuild storms on resume refetch).
+5. **Release**: version bump, release build and `check_release_artifact.sh`, ProGuard check if FL17 shipped; `docs/gates/gate-fl18.md` (evidence with real output) and additions to `docs/gates/mobile-device-checklist.md` (two real phones for acceptance 2.13 #1, deep link from a real messaging app, share sheet, push if built).
+
+Tests: everything above; `flutter analyze` clean; the whole suite green; goldens updated only deliberately (list each changed golden with the reason).
+Constraints: no new features; findings that need backend changes become documented open items for the backend (not workarounds); no weakening of an existing test. Done when analyze, the full test suite and the release build pass and the gate document holds real output. Then Stop protocol; Phase 2 is then ready for the closed beta (Gate 2 -> 3 criteria in PROJECT_PHASES.md).

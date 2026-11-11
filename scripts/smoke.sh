@@ -5,6 +5,8 @@
 #   BASE_URL=http://localhost:8080 ./scripts/smoke.sh
 #
 # The backend must run with the fake verifier (local,fake-auth profiles, see backend/README.md). Never point this at production.
+# Auth endpoints are rate limited (default 10 requests per minute per IP): a default run uses 9. Wait a minute between runs.
+# SMOKE_DAHAB=1 adds the seeded Dahab trip check (profile "seed"; one more auth request, so wait a minute before it).
 set -uo pipefail
 
 BASE_URL="${BASE_URL:-http://localhost:8080}"
@@ -43,10 +45,8 @@ uuid() { # RFC 4122 v4 UUID: uuidgen, else the kernel source, else random bytes 
   if command -v uuidgen >/dev/null 2>&1; then uuidgen
   elif [ -r /proc/sys/kernel/random/uuid ]; then cat /proc/sys/kernel/random/uuid
   else
-    local h; h="$(od -An -N16 -tx1 /dev/urandom | tr -d ' 
-')"
-    printf '%s-%s-4%s-%x%s-%s
-' "${h:0:8}" "${h:8:4}" "${h:13:3}" "$(( 0x${h:16:1} & 3 | 8 ))" "${h:17:3}" "${h:20:12}"
+    local h; h="$(od -An -N16 -tx1 /dev/urandom | tr -d ' \n')"
+    printf '%s-%s-4%s-%x%s-%s\n' "${h:0:8}" "${h:8:4}" "${h:13:3}" "$(( 0x${h:16:1} & 3 | 8 ))" "${h:17:3}" "${h:20:12}"
   fi
 }
 
@@ -209,5 +209,56 @@ expect "V2 settlement A>M 8000 recorded (201)" "201" "$STATUS"
 req GET "/groups/$G4/balances" "$TA"
 expect "V2 nets M/S/A = +2000/-2000/0" "2000,-2000,0" "$(net_of "$M"),$(net_of "$S"),$(net_of "$A")"
 expect "V2 transfers S>M 2000" "$(jq -cn --arg m "$M" --arg s "$S" '[[$s,$m,2000]] | sort')" "$(transfers)"
+
+# ---- 9. password accounts (ADR-008): username + password, no email -----------------------------------------------------
+PW_NAME="Smoke.$RUN"; PW_LOWER="$(printf '%s' "$PW_NAME" | tr 'A-Z' 'a-z')"
+PW1="correct horse battery"; PW2="a brand new passphrase"
+req POST /auth/register "" "{\"username\":\"$PW_NAME\",\"password\":\"$PW1\",\"displayName\":\"Smoke Pw\"}"
+expect "register: 201, username lower-cased, hasPassword, no email" "201 $PW_LOWER true null" "$STATUS $(j .user.username) $(j .user.hasPassword) $(j .user.email)"
+PW_ID="$(j .user.id)"; TP="$(j .accessToken)"
+[ -n "$TP" ] && [ "$TP" != null ] && pass "register returns an access token" || fail "register returns an access token"
+req POST /auth/login "" "{\"username\":\"$PW_NAME\",\"password\":\"$PW1\"}"
+expect "login with the same username (any case) and password: 200, same user" "200 $PW_ID" "$STATUS $(j .user.id)"
+req POST /auth/login "" "{\"username\":\"$PW_LOWER\",\"password\":\"not the password\"}"
+WRONG="$STATUS $(j .code)"
+req POST /auth/login "" "{\"username\":\"nobody.$RUN\",\"password\":\"$PW1\"}"
+expect "wrong password and unknown username give the same 401 answer" "$WRONG" "$STATUS $(j .code)"
+expect "that answer is 401 UNAUTHORIZED" "401 UNAUTHORIZED" "$WRONG"
+req POST /auth/register "" "{\"username\":\"$PW_LOWER\",\"password\":\"another passphrase\"}"
+expect "a taken username with another password: 409 USERNAME_TAKEN" "409 USERNAME_TAKEN" "$STATUS $(j .code)"
+req POST /auth/register "" "{\"username\":\"weak.$RUN\",\"password\":\"password1\"}"
+expect "a common password is refused: 422 VALIDATION_ERROR" "422 VALIDATION_ERROR" "$STATUS $(j .code)"
+req GET /me "$TP"
+expect "GET /me for the password user" "200 $PW_LOWER" "$STATUS $(j .username)"
+new_group "$TP" "Smoke password"; GP="$GID"
+req GET "/groups/$GP" "$TA"
+expect "the password user's group is 404 for user A (owner-only)" "404" "$STATUS"
+req POST /me/password "$TP" "{\"currentPassword\":\"wrong current\",\"newPassword\":\"$PW2\"}"
+expect "change password with a wrong current password: 422 (the session is not ended)" "422" "$STATUS"
+req GET /me "$TP"
+expect "the session still works after the refused change" "200" "$STATUS"
+req POST /me/password "$TP" "{\"currentPassword\":\"$PW1\",\"newPassword\":\"$PW2\"}"
+expect "change password: 200 with fresh tokens" "200 true" "$STATUS $(j '(.accessToken | length) > 20')"
+TP2="$(j .accessToken)"
+req GET /me "$TP2"
+expect "the fresh access token works" "200 $PW_ID" "$STATUS $(j .id)"
+req POST /auth/login "" "{\"username\":\"$PW_LOWER\",\"password\":\"$PW1\"}"
+expect "the old password no longer works: 401" "401" "$STATUS"
+
+# ---- 10. optional: the seeded Dahab trip (profile seed): the documented balances ---------------------------------------
+if [ "${SMOKE_DAHAB:-0}" = 1 ]; then
+  req POST /auth/google "" '{"idToken":"fake:dahab:mohamed@example.com:Mohamed"}'
+  [ "$STATUS" = 200 ] || fail "login as the seeded Dahab owner" "is the backend running with the seed profile?"
+  TD="$(j .accessToken)"
+  req GET "/groups?page=0&size=20" "$TD"
+  DG="$(printf '%s' "$BODY" | jq -r '[.items[] | select(.memberCount == 5)][0].id // empty')"
+  [ -n "$DG" ] && pass "the seeded Dahab group is listed (5 members)" || fail "the seeded Dahab group is listed (5 members)"
+  req GET "/groups/$DG/balances" "$TD"
+  expect "Dahab nets (sorted) -72000,-72000,-68803,101401,111402" "-72000,-72000,-68803,101401,111402" "$(j '[.nets[].netMinor] | sort | join(",")')"
+  expect "Dahab: the documented four transfers" "4" "$(j '.transfers | length')"
+  expect "Dahab: transfers move exactly what the creditors are owed (212803)" "212803" "$(j '[.transfers[].amountMinor] | add')"
+else
+  printf 'SKIP    Dahab seed check (set SMOKE_DAHAB=1 with the seed profile)\n'
+fi
 
 echo "== all $STEP checks passed"

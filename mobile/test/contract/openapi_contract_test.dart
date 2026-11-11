@@ -53,4 +53,24 @@ void main() {
     });
     expect(missing, isEmpty, reason: 'operations without a generated method');
   });
+
+  test('every API operation the app calls is in docs/openapi.json', () {
+    final paths = (jsonDecode(_normalizedContract()) as Map<String, dynamic>)['paths'] as Map<String, dynamic>;
+    final contractIds = <String>{};
+    paths.forEach((_, item) {
+      (item as Map<String, dynamic>).forEach((_, op) => contractIds.add((op as Map<String, dynamic>)['operationId'] as String));
+    });
+
+    // The app reaches the generated client only as `api.getXxxApi().operation(` or `...Api().operation(`.
+    final call = RegExp(r'get\w+Api\(\)\s*\.(\w+)\(');
+    final used = <String, String>{}; // operationId -> first file
+    for (final file in Directory('lib').listSync(recursive: true).whereType<File>().where((f) => f.path.endsWith('.dart'))) {
+      for (final m in call.allMatches(file.readAsStringSync())) {
+        used.putIfAbsent(m.group(1)!, () => file.path);
+      }
+    }
+    expect(used, isNotEmpty, reason: 'the pattern found no API call: the check itself is broken');
+    final unknown = used.entries.where((e) => !contractIds.contains(e.key)).map((e) => '${e.key} (${e.value})').toList();
+    expect(unknown, isEmpty, reason: 'the app calls operations that are not in the contract');
+  });
 }
