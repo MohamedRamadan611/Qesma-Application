@@ -26,7 +26,14 @@ public final class GroupDtos {
     public record CreateMemberRequest(String displayName) {
     }
 
-    public record UpdateMemberRequest(String displayName) {
+    /**
+     * Every field is optional but at least one must be sent. {@code role} (ADMIN or MEMBER) is the Owner's;
+     * {@code status} (ACTIVE or LEFT) is the Owner's and Admin's. Nothing else can be set (B12, A80).
+     */
+    public record UpdateMemberRequest(String displayName, String role, String status) {
+    }
+
+    public record TransferOwnershipRequest(UUID toMemberId) {
     }
 
     /**

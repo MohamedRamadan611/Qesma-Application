@@ -861,7 +861,7 @@
         "properties" : {
           "code" : {
             "description" : "Stable machine-readable error code.",
-            "enum" : [ "VALIDATION_ERROR", "PAYERS_TOTAL_MISMATCH", "SPLIT_TOTAL_MISMATCH", "MEMBER_NOT_IN_GROUP", "IDEMPOTENCY_KEY_REUSED", "DUPLICATE_MEMBER_NAME", "MEMBER_HAS_TRANSACTIONS", "OWNER_MEMBER_PROTECTED", "VERSION_CONFLICT", "INVITE_EXPIRED", "INVITE_REVOKED", "ALREADY_MEMBER", "MEMBER_ALREADY_CLAIMED", "GROUP_NOT_EMPTY", "NOT_FOUND", "FORBIDDEN", "UNAUTHORIZED", "INTERNAL_ERROR", "RATE_LIMITED", "AUTH_PROVIDER_UNAVAILABLE", "USERNAME_TAKEN" ],
+            "enum" : [ "VALIDATION_ERROR", "PAYERS_TOTAL_MISMATCH", "SPLIT_TOTAL_MISMATCH", "MEMBER_NOT_IN_GROUP", "IDEMPOTENCY_KEY_REUSED", "DUPLICATE_MEMBER_NAME", "MEMBER_HAS_TRANSACTIONS", "OWNER_MEMBER_PROTECTED", "VERSION_CONFLICT", "INVITE_EXPIRED", "INVITE_REVOKED", "ALREADY_MEMBER", "MEMBER_ALREADY_CLAIMED", "MEMBER_INACTIVE", "OWNER_MUST_TRANSFER", "GROUP_NOT_EMPTY", "NOT_FOUND", "FORBIDDEN", "UNAUTHORIZED", "INTERNAL_ERROR", "RATE_LIMITED", "AUTH_PROVIDER_UNAVAILABLE", "USERNAME_TAKEN" ],
             "type" : "string"
           },
           "detail" : {
@@ -1130,6 +1130,15 @@
         "required" : [ "accessToken", "refreshToken" ],
         "type" : "object"
       },
+      "TransferOwnershipRequest" : {
+        "properties" : {
+          "toMemberId" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "TransferView" : {
         "properties" : {
           "amountMinor" : {
@@ -1185,9 +1194,14 @@
         "properties" : {
           "displayName" : {
             "type" : "string"
+          },
+          "role" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
           }
         },
-        "required" : [ "displayName" ],
         "type" : "object"
       },
       "UserDto" : {
@@ -2820,7 +2834,7 @@
                 }
               }
             },
-            "description" : "Rejected (code: VALIDATION_ERROR, IDEMPOTENCY_KEY_REUSED, PAYERS_TOTAL_MISMATCH, SPLIT_TOTAL_MISMATCH, MEMBER_NOT_IN_GROUP)"
+            "description" : "Rejected (code: VALIDATION_ERROR, IDEMPOTENCY_KEY_REUSED, PAYERS_TOTAL_MISMATCH, SPLIT_TOTAL_MISMATCH, MEMBER_NOT_IN_GROUP, MEMBER_INACTIVE)"
           },
           "500" : {
             "content" : {
@@ -2983,7 +2997,7 @@
                 }
               }
             },
-            "description" : "Rejected (code: VALIDATION_ERROR, PAYERS_TOTAL_MISMATCH, SPLIT_TOTAL_MISMATCH, MEMBER_NOT_IN_GROUP)"
+            "description" : "Rejected (code: VALIDATION_ERROR, PAYERS_TOTAL_MISMATCH, SPLIT_TOTAL_MISMATCH, MEMBER_NOT_IN_GROUP, MEMBER_INACTIVE)"
           },
           "500" : {
             "content" : {
@@ -3390,7 +3404,7 @@
                 }
               }
             },
-            "description" : "Rejected (code: VALIDATION_ERROR, PAYERS_TOTAL_MISMATCH, SPLIT_TOTAL_MISMATCH, MEMBER_NOT_IN_GROUP)"
+            "description" : "Rejected (code: VALIDATION_ERROR, PAYERS_TOTAL_MISMATCH, SPLIT_TOTAL_MISMATCH, MEMBER_NOT_IN_GROUP, MEMBER_INACTIVE)"
           },
           "428" : {
             "content" : {
@@ -4122,6 +4136,78 @@
         "tags" : [ "join-request-controller" ]
       }
     },
+    "/api/v1/groups/{gid}/leave" : {
+      "post" : {
+        "description" : "The member row, its history and its balance stay; the group disappears from the caller's list and becomes 404 for them. The owner gets 409 OWNER_MUST_TRANSFER.",
+        "operationId" : "leaveGroup",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "gid",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
+          },
+          "409" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Conflict (code: OWNER_MUST_TRANSFER)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "summary" : "Leave the group",
+        "tags" : [ "membership-controller" ]
+      }
+    },
     "/api/v1/groups/{gid}/members" : {
       "post" : {
         "operationId" : "addMember",
@@ -4336,6 +4422,7 @@
         "tags" : [ "member-controller" ]
       },
       "patch" : {
+        "description" : "Send at least one of displayName, role, status. displayName: Owner/Admin. role (ADMIN or MEMBER): Owner only. status (LEFT removes a linked member, ACTIVE reactivates): Owner, and Admin for members (not admins). The owner's member is protected (409 OWNER_MEMBER_PROTECTED). A member without an account has no role or status.",
         "operationId" : "renameMember",
         "parameters" : [ {
           "in" : "path",
@@ -4423,7 +4510,7 @@
                 }
               }
             },
-            "description" : "Conflict (code: DUPLICATE_MEMBER_NAME)"
+            "description" : "Conflict (code: DUPLICATE_MEMBER_NAME, OWNER_MEMBER_PROTECTED)"
           },
           "413" : {
             "content" : {
@@ -4456,6 +4543,7 @@
             "description" : "Unexpected error (code: INTERNAL_ERROR)"
           }
         },
+        "summary" : "Rename a member, change its role, or remove/reactivate it",
         "tags" : [ "member-controller" ]
       }
     },
@@ -4762,7 +4850,7 @@
                 }
               }
             },
-            "description" : "Rejected (code: VALIDATION_ERROR, IDEMPOTENCY_KEY_REUSED, MEMBER_NOT_IN_GROUP)"
+            "description" : "Rejected (code: VALIDATION_ERROR, IDEMPOTENCY_KEY_REUSED, MEMBER_NOT_IN_GROUP, MEMBER_INACTIVE)"
           },
           "500" : {
             "content" : {
@@ -4856,6 +4944,108 @@
         },
         "summary" : "Delete a settlement (soft delete; its effect on balances is reversed)",
         "tags" : [ "settlement-controller" ]
+      }
+    },
+    "/api/v1/groups/{gid}/transfer-ownership" : {
+      "post" : {
+        "description" : "Owner only. The target must be an ACTIVE member with an account (a member who left is 422 MEMBER_INACTIVE). One transaction.",
+        "operationId" : "transferOwnership",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "gid",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TransferOwnershipRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Malformed request (code: VALIDATION_ERROR)"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "You are a member of the group but your role does not allow this (code: FORBIDDEN)"
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
+          },
+          "413" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Request body too large (code: VALIDATION_ERROR)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR, MEMBER_INACTIVE)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "summary" : "Make another member the owner (the old owner becomes ADMIN)",
+        "tags" : [ "membership-controller" ]
       }
     },
     "/api/v1/invites/{code}" : {

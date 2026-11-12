@@ -26,6 +26,10 @@ public enum ErrorCode {
     ALREADY_MEMBER,
     /** The member was claimed by somebody else meanwhile (409). */
     MEMBER_ALREADY_CLAIMED,
+    /** A LEFT member cannot be used in a new expense or settlement (422, Phase 2 B12). */
+    MEMBER_INACTIVE,
+    /** The owner cannot leave; ownership must be transferred first (409, B12). */
+    OWNER_MUST_TRANSFER,
     GROUP_NOT_EMPTY,
     NOT_FOUND,
     /** A member of the group lacks the role permission for this action (Phase 2, Decision A65). */

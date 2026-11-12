@@ -80,6 +80,9 @@ class RoleMatrixIT extends AbstractApiIT {
         MATRIX.put("POST /api/v1/groups/{gid}/join-requests/{rid}/approve", new Row(200, 200, 403));
         MATRIX.put("POST /api/v1/groups/{gid}/join-requests/{rid}/reject", new Row(200, 200, 403));
         MATRIX.put("POST /api/v1/groups/{gid}/members/{mid}/unlink", new Row(204, 204, 403));
+        // B12: leaving (everyone but the owner, who must transfer first: 409) and ownership transfer (Owner only)
+        MATRIX.put("POST /api/v1/groups/{gid}/leave", new Row(409, 204, 204));
+        MATRIX.put("POST /api/v1/groups/{gid}/transfer-ownership", new Row(204, 403, 403));
     }
 
     /** One group with one caller per role, an expense and a settlement created by the owner. */
@@ -99,6 +102,7 @@ class RoleMatrixIT extends AbstractApiIT {
         final String gid;
         final String m1;
         final String m2;
+        final String adminMember;
         final String eid;
         final String sid;
         final String iid;
@@ -113,7 +117,7 @@ class RoleMatrixIT extends AbstractApiIT {
             gid = createGroup(owner, "Matrix " + UUID.randomUUID()).get("id").asText();
             m1 = member(owner, gid, "A").get("id").asText();
             m2 = member(owner, gid, "B").get("id").asText();
-            linkUser(gid, admin, "ADMIN", "ACTIVE", "Admin");
+            adminMember = linkUser(gid, admin, "ADMIN", "ACTIVE", "Admin");
             linkUser(gid, member, "MEMBER", "ACTIVE", "Member");
             linkUser(gid, left, "MEMBER", "LEFT", "Gone");
             eid = createExpense(owner, gid, equalBody("Dinner", 3000, null, m1, 3000L)).get("id").asText();
@@ -154,6 +158,7 @@ class RoleMatrixIT extends AbstractApiIT {
                 case "PATCH /api/v1/groups/{gid}" -> Map.of("name", "Renamed " + UUID.randomUUID());
                 case "POST /api/v1/groups/{gid}/members" -> Map.of("displayName", "Newcomer");
                 case "POST /api/v1/groups/{gid}/invites" -> Map.of("requiresApproval", false);
+                case "POST /api/v1/groups/{gid}/transfer-ownership" -> Map.of("toMemberId", adminMember);
                 case "PATCH /api/v1/groups/{gid}/members/{mid}" -> Map.of("displayName", "Renamed B");
                 case "POST /api/v1/groups/{gid}/expenses", "POST /api/v1/groups/{gid}/expenses/preview",
                      "PUT /api/v1/groups/{gid}/expenses/{eid}" -> expense;

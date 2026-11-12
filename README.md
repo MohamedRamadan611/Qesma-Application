@@ -21,6 +21,13 @@ Group expense splitting for trips, shared housing and outings. **Arabic first** 
 - **Exact money**: integer piasters and basis points only, largest-remainder rounding, an amount cap of 10^12 piasters, all rules in a pure-Java engine verified by shared vectors V1 to V8 (`fixtures/`) and property tests.
 - **Errors** as RFC 7807 `application/problem+json` with stable `code`s; request ids on every response.
 
+### Member lifecycle (Phase 2, B12)
+- **Roles**: one `OWNER`, any number of `ADMIN`s, and `MEMBER`s. Only the Owner changes roles (`PATCH /groups/{gid}/members/{mid}` with `role`: `ADMIN` or `MEMBER`). An Admin may remove (`status: LEFT`) or reactivate (`status: ACTIVE`) members, never another Admin or the Owner.
+- **Leave and rejoin**: `POST /groups/{gid}/leave`. The member row, history and balance stay; the group disappears from the person's list and answers `404` for them. The Owner gets `409 OWNER_MUST_TRANSFER`. A person who left comes back through a new invite (their old member row is reactivated) or an Admin reactivates them.
+- **Members who left** stay in history, balances and suggested transfers, but cannot be used in new expenses, previews or settlements (`422 MEMBER_INACTIVE`). An existing expense that already includes them can still be edited.
+- **Transfer ownership**: `POST /groups/{gid}/transfer-ownership {toMemberId}` (Owner only; the target must be an active member with an account; the old owner becomes Admin; one transaction).
+- Details and the full transition table: Decision Log A77 to A82 in `docs/PROJECT_SPEC.md`.
+
 ## Repository layout
 | Path | Contents |
 |:--|:--|

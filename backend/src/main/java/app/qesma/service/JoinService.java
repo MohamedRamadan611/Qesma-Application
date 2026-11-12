@@ -187,6 +187,13 @@ public class JoinService {
         if (existing.isPresent()) {
             return existing.get().id();                                  // asking twice is the same request
         }
+        Optional<Member> left = members.findLeft(invite.groupId(), userId);
+        if (left.isPresent()) {                                          // a returning member: the request points at their own row
+            UUID id = UUID.randomUUID();
+            requests.insert(new JoinRequestStore.Request(id, invite.id(), invite.groupId(), userId,
+                    left.get().getId(), null, JoinRequestStore.PENDING, now, null));
+            return id;
+        }
         String name = target.claimMemberId() != null ? null : members.requireFreeName(invite.groupId(), target.newName());
         if (target.claimMemberId() != null) {
             members.requireUnclaimed(invite.groupId(), target.claimMemberId());
@@ -198,6 +205,10 @@ public class JoinService {
     }
 
     private Member perform(UUID groupId, UUID accountId, Target target, Instant now) {
+        Optional<Member> returning = members.reactivateIfLeft(groupId, accountId, now);   // B12: rejoin = own row back
+        if (returning.isPresent()) {
+            return returning.get();
+        }
         return target.claimMemberId() != null
                 ? members.claimGhost(groupId, target.claimMemberId(), accountId, now)
                 : members.createJoined(groupId, target.newName(), accountId, now);

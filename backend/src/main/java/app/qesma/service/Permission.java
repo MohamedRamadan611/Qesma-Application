@@ -21,5 +21,13 @@ public enum Permission {
     /** Read and decide join requests (B11). */
     APPROVE_JOINS,
     /** Detach an account from a member, keeping the member and its history (B11). */
-    UNLINK_MEMBER
+    UNLINK_MEMBER,
+    /** Change a member's role between ADMIN and MEMBER (B12, Owner only). */
+    CHANGE_ROLE,
+    /** Make another member the owner (B12, Owner only). */
+    TRANSFER_OWNERSHIP,
+    /** Leave the group yourself (B12). The Owner holds it too, but gets 409 OWNER_MUST_TRANSFER. */
+    LEAVE_GROUP,
+    /** Remove a linked member from the group (status LEFT) or reactivate one (B12, Owner and Admin). */
+    MANAGE_MEMBER_STATUS
 }

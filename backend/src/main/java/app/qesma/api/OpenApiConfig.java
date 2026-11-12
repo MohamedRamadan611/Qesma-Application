@@ -120,7 +120,9 @@ public class OpenApiConfig {
             Map.entry("GET /api/v1/groups/{gid}/join-requests", "listJoinRequests"),
             Map.entry("POST /api/v1/groups/{gid}/join-requests/{rid}/approve", "approveJoinRequest"),
             Map.entry("POST /api/v1/groups/{gid}/join-requests/{rid}/reject", "rejectJoinRequest"),
-            Map.entry("POST /api/v1/groups/{gid}/members/{mid}/unlink", "unlinkMember"));
+            Map.entry("POST /api/v1/groups/{gid}/members/{mid}/unlink", "unlinkMember"),
+            Map.entry("POST /api/v1/groups/{gid}/leave", "leaveGroup"),
+            Map.entry("POST /api/v1/groups/{gid}/transfer-ownership", "transferOwnership"));
 
     static String operationId(String path, PathItem.HttpMethod method) {
         String id = OPERATION_IDS.get(method + " " + path);
@@ -138,7 +140,8 @@ public class OpenApiConfig {
             "GET /api/v1/groups/{gid}", "GET /api/v1/groups/{gid}/expenses", "POST /api/v1/groups/{gid}/expenses",
             "POST /api/v1/groups/{gid}/expenses/preview", "GET /api/v1/groups/{gid}/expenses/{eid}",
             "GET /api/v1/groups/{gid}/expenses/{eid}/revisions", "GET /api/v1/groups/{gid}/balances",
-            "GET /api/v1/groups/{gid}/settlements", "POST /api/v1/groups/{gid}/settlements");
+            "GET /api/v1/groups/{gid}/settlements", "POST /api/v1/groups/{gid}/settlements",
+            "POST /api/v1/groups/{gid}/leave");
 
     static Map<Integer, List<ErrorCode>> errorsFor(String path, PathItem.HttpMethod method, Operation op) {
         Map<Integer, List<ErrorCode>> errors = new TreeMap<>();
@@ -200,8 +203,18 @@ public class OpenApiConfig {
         if (path.endsWith("/groups/{gid}") && method == PathItem.HttpMethod.DELETE) {
             add(errors, 409, ErrorCode.GROUP_NOT_EMPTY);
         }
-        if (path.endsWith("/members/{mid}/unlink")) {
+        if (path.endsWith("/members/{mid}/unlink")
+                || path.endsWith("/members/{mid}") && method == PathItem.HttpMethod.PATCH) {
             add(errors, 409, ErrorCode.OWNER_MEMBER_PROTECTED);
+        }
+        if (path.endsWith("/leave")) {
+            add(errors, 409, ErrorCode.OWNER_MUST_TRANSFER);
+        }
+        if (path.endsWith("/transfer-ownership")) {
+            add(errors, 422, ErrorCode.MEMBER_INACTIVE);
+        }
+        if (expenseWrite || path.endsWith("/settlements") && method == PathItem.HttpMethod.POST) {
+            add(errors, 422, ErrorCode.MEMBER_INACTIVE);                   // B12: a member who left is not usable
         }
         if (path.endsWith("/join") || path.endsWith("/approve")) {          // B11: the three ways joining can collide
             add(errors, 409, ErrorCode.ALREADY_MEMBER);
@@ -337,7 +350,6 @@ public class OpenApiConfig {
     static final Map<String, List<String>> REQUIRED_REQUEST = Map.ofEntries(
             Map.entry("CreateGroupRequest", List.of("name", "type")),
             Map.entry("CreateMemberRequest", List.of("displayName")),
-            Map.entry("UpdateMemberRequest", List.of("displayName")),
             Map.entry("UpdateMeRequest", List.of("displayName")),
             Map.entry("RegisterRequest", List.of("username", "password")),
             Map.entry("LoginRequest", List.of("username", "password")),

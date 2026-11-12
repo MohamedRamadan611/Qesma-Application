@@ -137,6 +137,33 @@ public class Member implements Persistable<UUID> {
         this.displayName = newName;
     }
 
+    /** Leaves the group: the row, its link and its history stay; the role drops to MEMBER (least privilege on return). */
+    public void markLeft(Instant now) {
+        this.status = STATUS_LEFT;
+        this.leftAt = now;
+        this.role = ROLE_MEMBER;
+    }
+
+    /** Back to ACTIVE (an admin reactivated the member). */
+    public void reactivate() {
+        this.status = STATUS_ACTIVE;
+        this.leftAt = null;
+    }
+
+    /** Back to ACTIVE through a new invite: counts as a new join. */
+    public void rejoin(Instant now) {
+        reactivate();
+        this.joinedAt = now;
+    }
+
+    /** ADMIN or MEMBER only; ownership moves through the transfer queries, never through this method. */
+    public void changeRole(String newRole) {
+        if (!ROLE_ADMIN.equals(newRole) && !ROLE_MEMBER.equals(newRole)) {
+            throw new IllegalArgumentException("Role must be ADMIN or MEMBER");
+        }
+        this.role = newRole;
+    }
+
     public int getSortOrder() {
         return sortOrder;
     }

@@ -75,6 +75,23 @@ class RoleQueryCountIT extends AbstractApiIT {
         assertThat(many).as("statements for a 50-member group").isEqualTo(few);
     }
 
+    /** B12: roles and LEFT members in the member list add no statements (the list is one query, whatever the mix). */
+    @Test
+    void groupDetailCostsTheSameStatementsWithManyAdminsAndLeftMembers() throws Exception {
+        Session owner = newUser();
+        Session guest = newUser();
+        String small = createGroup(owner, "Small " + UUID.randomUUID()).get("id").asText();
+        linkUser(small, guest, "MEMBER", "ACTIVE", "Guest");
+        String mixed = createGroup(owner, "Mixed " + UUID.randomUUID()).get("id").asText();
+        linkUser(mixed, guest, "MEMBER", "ACTIVE", "Guest");
+        for (int i = 0; i < 30; i++) {
+            linkUser(mixed, newUser(), i % 2 == 0 ? "ADMIN" : "MEMBER", i % 3 == 0 ? "LEFT" : "ACTIVE", "P" + i);
+        }
+        long few = statementsFor(guest, "/api/v1/groups/" + small);
+        long many = statementsFor(guest, "/api/v1/groups/" + mixed);
+        assertThat(many).as("statements for a group with admins and LEFT members").isEqualTo(few);
+    }
+
     @Test
     void expenseListForAMemberCostsTheSameStatementsForOneExpenseAsForFifty() throws Exception {
         Session owner = newUser();

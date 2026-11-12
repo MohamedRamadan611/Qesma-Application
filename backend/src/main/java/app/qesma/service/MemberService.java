@@ -8,6 +8,8 @@ import app.qesma.persistence.ExpenseGroupRepository;
 import app.qesma.persistence.MemberRepository;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Clock;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -128,24 +130,162 @@ public class MemberService {
         if (member.getUserId() == null) {
             return;
         }
-        if (Member.ROLE_ADMIN.equals(member.getRole()) && ctx.role() != Role.OWNER) {
-            throw ApiException.forbidden();
-        }
+        access.requireMayManage(ctx, userId, member, Permission.UNLINK_MEMBER);   // only the owner may unlink an admin
         members.unlink(memberId, groupId);
         record("unlinked", userId, groupId, memberId);
     }
 
+    /** The fields of {@code PATCH /members/{mid}}; null means "not sent". Nothing else can be set (B12, A80). */
+    public record MemberPatch(String displayName, String role, String status) {
+    }
+
+    /**
+     * Changes a member's name, role and/or status (B12). Every present field is authorized on its own (name:
+     * MANAGE_MEMBERS, role: CHANGE_ROLE, status: MANAGE_MEMBER_STATUS), all checks run before the first write, so a
+     * rejected field means nothing is applied. Precedence: 404, 403, then 409/422.
+     */
     @Transactional
-    public Member rename(UUID userId, UUID groupId, UUID memberId, String rawName) {
-        GroupContext ctx = access.requireForUpdate(userId, groupId, Permission.MANAGE_MEMBERS);
+    public Member update(UUID userId, UUID groupId, UUID memberId, MemberPatch patch) {
+        GroupContext ctx = access.requireForUpdate(userId, groupId, Permission.READ_GROUP);
         Member member = access.requireMemberInGroup(ctx, memberId);
-        String name = FieldRules.name(rawName, FieldRules.MEMBER_NAME_MAX, "displayName");
-        requireNameFree(groupId, name, memberId);
-        if (!name.equals(member.getDisplayName())) {
+        if (patch == null || patch.displayName() == null && patch.role() == null && patch.status() == null) {
+            throw ApiException.validation("Send at least one of displayName, role or status");
+        }
+        if (patch.displayName() != null) {
+            access.requireAlso(ctx, userId, Permission.MANAGE_MEMBERS);
+        }
+        if (patch.role() != null) {
+            access.requireAlso(ctx, userId, Permission.CHANGE_ROLE);
+        }
+        if (patch.status() != null) {
+            access.requireAlso(ctx, userId, Permission.MANAGE_MEMBER_STATUS);
+        }
+
+        String newRole = patch.role() == null ? null : parseRole(patch.role());
+        String newStatus = patch.status() == null ? null : parseStatus(patch.status());
+        if (newRole != null || newStatus != null) {
+            if (!member.getId().equals(ctx.me().getId())) {                  // the hierarchy rule is about OTHER members
+                access.requireMayManage(ctx, userId, member, newRole != null ? Permission.CHANGE_ROLE
+                        : Permission.MANAGE_MEMBER_STATUS);
+            }
+            if (Member.ROLE_OWNER.equals(member.getRole())) {
+                throw ApiException.conflict(ErrorCode.OWNER_MEMBER_PROTECTED,
+                        "The owner's role and status cannot be changed (use transfer-ownership)");
+            }
+            if (member.getUserId() == null) {
+                throw ApiException.validation("A member without an account has no role or status; rename or delete it");
+            }
+            if (Member.STATUS_LEFT.equals(newStatus) && member.getId().equals(ctx.me().getId())) {
+                throw ApiException.validation("Use POST /leave to leave a group");
+            }
+            String resulting = newStatus != null ? newStatus : member.getStatus();
+            if (newRole != null && !Member.STATUS_ACTIVE.equals(resulting)) {
+                throw ApiException.validation("Only an active member can get a role");
+            }
+        }
+        String name = null;
+        if (patch.displayName() != null) {
+            name = FieldRules.name(patch.displayName(), FieldRules.MEMBER_NAME_MAX, "displayName");
+            requireNameFree(groupId, name, memberId);
+        }
+
+        Instant now = clock.instant().truncatedTo(ChronoUnit.MICROS);
+        if (name != null && !name.equals(member.getDisplayName())) {
             member.rename(name);
             record("renamed", userId, groupId, memberId);
         }
+        if (Member.STATUS_LEFT.equals(newStatus) && !Member.STATUS_LEFT.equals(member.getStatus())) {
+            member.markLeft(now);
+            record("removed", userId, groupId, memberId);
+        } else if (Member.STATUS_ACTIVE.equals(newStatus) && Member.STATUS_LEFT.equals(member.getStatus())) {
+            member.reactivate();
+            record("reactivated", userId, groupId, memberId);
+        }
+        if (newRole != null && !newRole.equals(member.getRole())) {
+            member.changeRole(newRole);
+            record("role_changed", userId, groupId, memberId);
+        }
         return member;
+    }
+
+    /** The caller leaves the group. The row, history and balance stay; the Owner must transfer ownership first. */
+    @Transactional
+    public void leave(UUID userId, UUID groupId) {
+        GroupContext ctx = access.requireForUpdate(userId, groupId, Permission.LEAVE_GROUP);
+        if (ctx.role() == Role.OWNER) {
+            throw ApiException.conflict(ErrorCode.OWNER_MUST_TRANSFER, "Transfer ownership before leaving the group");
+        }
+        ctx.me().markLeft(clock.instant().truncatedTo(ChronoUnit.MICROS));
+        record("left", userId, groupId, ctx.me().getId());
+    }
+
+    /**
+     * Makes another ACTIVE linked member the owner and the old owner an ADMIN, in one transaction. The group row lock
+     * serializes parallel transfers (the second caller is an Admin by then: 403). The old owner is demoted first so
+     * the one-OWNER unique index is never violated between the two statements.
+     */
+    @Transactional
+    public void transferOwnership(UUID userId, UUID groupId, UUID toMemberId) {
+        GroupContext ctx = access.requireForUpdate(userId, groupId, Permission.TRANSFER_OWNERSHIP);
+        if (toMemberId == null) {
+            throw ApiException.validation("toMemberId is required");
+        }
+        Member target = access.requireMemberInGroup(ctx, toMemberId);
+        if (target.getId().equals(ctx.me().getId())) {
+            throw ApiException.validation("You already own this group");
+        }
+        if (Member.STATUS_LEFT.equals(target.getStatus())) {
+            throw inactive();
+        }
+        if (target.getUserId() == null) {
+            throw ApiException.validation("Ownership can only go to a member with an account");
+        }
+        UUID oldOwner = ctx.me().getId();
+        if (members.demoteOwner(oldOwner, groupId) != 1 || members.promoteOwner(toMemberId, groupId) != 1) {
+            throw ApiException.conflict(ErrorCode.VERSION_CONFLICT, "The members changed; try again"); // rolls back
+        }
+        record("ownership_transferred", userId, groupId, toMemberId);
+    }
+
+    static ApiException inactive() {
+        return new ApiException(ErrorCode.MEMBER_INACTIVE, org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY,
+                "A member who left the group cannot be used in new records");
+    }
+
+    private static String parseRole(String raw) {
+        if (Member.ROLE_ADMIN.equals(raw) || Member.ROLE_MEMBER.equals(raw)) {
+            return raw;
+        }
+        throw ApiException.validation(Member.ROLE_OWNER.equals(raw)
+                ? "Ownership moves only through transfer-ownership" : "role must be ADMIN or MEMBER");
+    }
+
+    private static String parseStatus(String raw) {
+        if (Member.STATUS_ACTIVE.equals(raw) || Member.STATUS_LEFT.equals(raw)) {
+            return raw;
+        }
+        throw ApiException.validation("status must be ACTIVE or LEFT");
+    }
+
+    /**
+     * A person who left comes back through a new invite: their own LEFT member is reactivated (role MEMBER), no second
+     * row is created. Empty when the account has no LEFT member in the group.
+     */
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
+    public java.util.Optional<Member> reactivateIfLeft(UUID groupId, UUID accountId, Instant now) {
+        groups.findByIdForUpdate(groupId).orElseThrow(ApiException::notFound);
+        java.util.Optional<Member> left = members.findLeftLink(groupId, accountId);
+        left.ifPresent(m -> {
+            m.rejoin(now);
+            record("rejoined", accountId, groupId, m.getId());
+        });
+        return left;
+    }
+
+    /** The account's own LEFT member in the group, if any. */
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
+    public java.util.Optional<Member> findLeft(UUID groupId, UUID accountId) {
+        return members.findLeftLink(groupId, accountId);
     }
 
     @Transactional

@@ -303,7 +303,7 @@ class GroupApiSliceTest {
     void renameAndDeleteMemberGoThroughTheServiceWithTheTokenUser() throws Exception {
         UUID mid = UUID.randomUUID();
         Member renamed = member(mid, "Sara", 2);
-        when(members.rename(me, gid, mid, "Sara")).thenReturn(renamed);
+        when(members.update(me, gid, mid, new app.qesma.service.MemberService.MemberPatch("Sara", null, null))).thenReturn(renamed);
 
         MvcResult r = mvc.perform(authed(patch("/api/v1/groups/" + gid + "/members/" + mid))
                 .content("{\"displayName\":\"Sara\"}")).andReturn();

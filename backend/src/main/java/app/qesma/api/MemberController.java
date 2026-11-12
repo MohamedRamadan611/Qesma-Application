@@ -45,9 +45,15 @@ public class MemberController {
     }
 
     @PatchMapping("/{mid}")
-    public MemberDto rename(@PathVariable UUID gid, @PathVariable UUID mid,
+    @io.swagger.v3.oas.annotations.Operation(summary = "Rename a member, change its role, or remove/reactivate it",
+            description = "Send at least one of displayName, role, status. displayName: Owner/Admin. role (ADMIN or "
+                    + "MEMBER): Owner only. status (LEFT removes a linked member, ACTIVE reactivates): Owner, and Admin "
+                    + "for members (not admins). The owner's member is protected (409 OWNER_MEMBER_PROTECTED). A member "
+                    + "without an account has no role or status.")
+    public MemberDto update(@PathVariable UUID gid, @PathVariable UUID mid,
                             @RequestBody UpdateMemberRequest request) {
-        return MemberDto.from(members.rename(currentUser.id(), gid, mid, request.displayName()), currentUser.id());
+        return MemberDto.from(members.update(currentUser.id(), gid, mid, new MemberService.MemberPatch(
+                request.displayName(), request.role(), request.status())), currentUser.id());
     }
 
     /** Detaches the person's account from a member; the member and its history stay (Owner/Admin). */

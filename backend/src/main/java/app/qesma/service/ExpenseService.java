@@ -161,7 +161,8 @@ public class ExpenseService {
 
         ExpenseValidator.Valid request = ExpenseValidator.validate(command);
         List<Member> members = access.listMembers(ctx);
-        ExpenseCalculator.Computation calc = ExpenseCalculator.compute(request, members);
+        // A member who left may stay in an expense that already has them, but cannot be added (B12, A79).
+        ExpenseCalculator.Computation calc = ExpenseCalculator.compute(request, members, memberIdsOf(expenseId));
         ExpenseCalculator.requirePayersMatch(calc);
 
         Instant now = clock.instant().truncatedTo(ChronoUnit.MICROS);
@@ -259,6 +260,19 @@ public class ExpenseService {
     }
 
     // ---- helpers ------------------------------------------------------------------------------------------
+
+    /** Every member the stored expense references: payers, shares and item assignees (called under the group lock). */
+    private java.util.Set<UUID> memberIdsOf(UUID expenseId) {
+        List<UUID> one = List.of(expenseId);
+        java.util.Set<UUID> ids = new java.util.HashSet<>();
+        payers.findByExpenseIdIn(one).forEach(p -> ids.add(p.getMemberId()));
+        splits.findByExpenseIdIn(one).forEach(s -> ids.add(s.getMemberId()));
+        List<UUID> itemIds = items.findByExpenseIdIn(one).stream().map(ExpenseItem::getId).toList();
+        if (!itemIds.isEmpty()) {
+            assignees.findByItemIdIn(itemIds).forEach(a -> ids.add(a.getMemberId()));
+        }
+        return ids;
+    }
 
     private static Expense newExpense(UUID id, UUID groupId, UUID userId, ExpenseValidator.Valid request,
                                       ExpenseCalculator.Computation calc, Instant now) {

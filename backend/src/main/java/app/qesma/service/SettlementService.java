@@ -124,9 +124,11 @@ public class SettlementService {
 
     /** Spec 6 notes: both members must belong to the settlement's group. */
     private static void requireMember(List<Member> members, UUID memberId) {
-        if (members.stream().noneMatch(m -> m.getId().equals(memberId))) {
-            throw new ApiException(ErrorCode.MEMBER_NOT_IN_GROUP, HttpStatus.UNPROCESSABLE_ENTITY,
-                    "A referenced member is not part of this group");
+        Member found = members.stream().filter(m -> m.getId().equals(memberId)).findFirst().orElseThrow(
+                () -> new ApiException(ErrorCode.MEMBER_NOT_IN_GROUP, HttpStatus.UNPROCESSABLE_ENTITY,
+                        "A referenced member is not part of this group"));
+        if (Member.STATUS_LEFT.equals(found.getStatus())) {
+            throw MemberService.inactive();                       // B12: a member who left is no party of a new settlement
         }
     }
 

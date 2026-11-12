@@ -74,6 +74,26 @@ public class GroupAccessService {
         return new GroupContext(group, me, role);
     }
 
+    /**
+     * An additional permission for a caller who already passed {@code require*}: used by operations whose fields need
+     * different permissions (PATCH member). 403 {@code FORBIDDEN} when the role lacks it.
+     */
+    public void requireAlso(GroupContext ctx, UUID userId, Permission permission) {
+        if (!ctx.can(permission)) {
+            throw denied(userId, ctx.groupId(), "forbidden", permission, true);
+        }
+    }
+
+    /**
+     * Hierarchy rule for acting on another member (B12): only the Owner may act on an Admin. Admins and Members get
+     * 403 {@code FORBIDDEN}. The Owner's own member is protected separately (409 {@code OWNER_MEMBER_PROTECTED}).
+     */
+    public void requireMayManage(GroupContext ctx, UUID userId, Member target, Permission permission) {
+        if (Member.ROLE_ADMIN.equals(target.getRole()) && ctx.role() != Role.OWNER) {
+            throw denied(userId, ctx.groupId(), "forbidden", permission, true);
+        }
+    }
+
     /** All members of a group the caller may reach, in {@code sort_order}. */
     @Transactional(propagation = Propagation.MANDATORY)
     public List<Member> listMembers(GroupContext ctx) {

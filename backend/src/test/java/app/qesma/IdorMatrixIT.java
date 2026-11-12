@@ -84,6 +84,7 @@ class IdorMatrixIT extends AbstractApiIT {
             case "POST /api/v1/groups/{gid}/members" -> Map.of("displayName", "Intruder");
             case "PATCH /api/v1/groups/{gid}/members/{mid}" -> Map.of("displayName", "Renamed");
             case "PATCH /api/v1/groups/{gid}" -> Map.of("name", "Hijacked");
+            case "POST /api/v1/groups/{gid}/transfer-ownership" -> Map.of("toMemberId", ids.get("mid"));
             case "POST /api/v1/groups/{gid}/expenses", "POST /api/v1/groups/{gid}/expenses/preview",
                  "PUT /api/v1/groups/{gid}/expenses/{eid}" -> expense;
             case "POST /api/v1/groups/{gid}/settlements" -> Map.of("fromMemberId", ids.get("mid"),
@@ -108,7 +109,7 @@ class IdorMatrixIT extends AbstractApiIT {
     private Map<String, Object> snapshot(String gid) {
         Map<String, Object> s = new LinkedHashMap<>();
         s.put("group", jdbc.queryForMap("select name, type, version, updated_at from expense_groups where id = ?::uuid", gid));
-        s.put("members", jdbc.queryForList("select id, display_name, sort_order from members where group_id = ?::uuid "
+        s.put("members", jdbc.queryForList("select id, display_name, sort_order, role, status, left_at from members where group_id = ?::uuid "
                 + "order by sort_order", gid));
         s.put("expenses", jdbc.queryForList("select id, title, total_minor, version, deleted_at from expenses "
                 + "where group_id = ?::uuid order by id", gid));
@@ -148,7 +149,7 @@ class IdorMatrixIT extends AbstractApiIT {
         List<Op> ops = groupScopedOperations();
         Set<String> labels = new TreeSet<>();
         ops.forEach(o -> labels.add(o.label()));
-        assertThat(ops).as("group-scoped operations found in the OpenAPI document").hasSize(24);
+        assertThat(ops).as("group-scoped operations found in the OpenAPI document").hasSize(26);
 
         Map<String, Object> before = snapshot(gid);
         for (Op op : ops) {

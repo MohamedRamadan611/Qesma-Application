@@ -134,6 +134,9 @@ public class GroupService {
         if (usage.hasLedgerData(groupId)) {
             throw ApiException.conflict(ErrorCode.GROUP_NOT_EMPTY, "The group has expenses or settlements");
         }
+        if (members.hasLinkedNonOwner(groupId)) {                // B12 (A23): people who joined, even if they left, keep it
+            throw ApiException.conflict(ErrorCode.GROUP_NOT_EMPTY, "The group has other members with an account");
+        }
         members.deleteAllByGroup(groupId);
         groups.delete(group);
         record("deleted", userId, groupId);

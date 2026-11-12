@@ -44,12 +44,35 @@ final class ExpenseCalculator {
     private ExpenseCalculator() {
     }
 
-    /** Resolves the roster, runs the engine for the split type and returns the shares in member sort order. */
+    /**
+     * The members a new record may use: ACTIVE ones, plus LEFT ones the expense already contains ("kept", B12 A79).
+     * {@code inactive} are the other LEFT members: known to the group but not usable, so {@code MEMBER_INACTIVE}.
+     */
+    private record Roster(Map<String, MemberRef> usable, java.util.Set<String> inactive) {
+    }
+
+    /** Create and preview: only ACTIVE members are usable. */
     static Computation compute(ExpenseValidator.Valid request, List<Member> members) {
-        Map<String, MemberRef> roster = new LinkedHashMap<>();
+        return compute(request, members, java.util.Set.of());
+    }
+
+    /**
+     * Resolves the roster, runs the engine for the split type and returns the shares in member sort order. On update,
+     * {@code keptMemberIds} are the members the stored expense already references: a LEFT one among them may stay,
+     * but no LEFT member can be added.
+     */
+    static Computation compute(ExpenseValidator.Valid request, List<Member> members, java.util.Set<UUID> keptMemberIds) {
+        Map<String, MemberRef> usable = new LinkedHashMap<>();
+        java.util.Set<String> inactive = new java.util.HashSet<>();
         for (Member m : members) {
-            roster.put(m.getId().toString(), new MemberRef(m.getId().toString(), m.getSortOrder()));
+            boolean left = Member.STATUS_LEFT.equals(m.getStatus());
+            if (left && !keptMemberIds.contains(m.getId())) {
+                inactive.add(m.getId().toString());
+            } else {
+                usable.put(m.getId().toString(), new MemberRef(m.getId().toString(), m.getSortOrder()));
+            }
         }
+        Roster roster = new Roster(usable, inactive);
         List<Payer> payers = new ArrayList<>();
         for (ExpenseCommand.PayerInput p : request.payers()) {
             payers.add(new Payer(requireMember(roster, p.memberId()), p.amountMinor()));
@@ -95,22 +118,20 @@ final class ExpenseCalculator {
         }
     }
 
-    private static Computation equal(ExpenseValidator.Valid request, Map<String, MemberRef> roster,
-                                     List<Payer> payers) {
+    private static Computation equal(ExpenseValidator.Valid request, Roster roster, List<Payer> payers) {
         List<MemberRef> participants = new ArrayList<>();
         if (request.participantMemberIds() == null) {
-            participants.addAll(roster.values());                                // "All": explicit snapshot
+            participants.addAll(roster.usable().values());                       // "All": the usable members, a snapshot
         } else {
             for (UUID id : request.participantMemberIds()) {
-                participants.add(roster.get(requireMember(roster, id)));
+                participants.add(roster.usable().get(requireMember(roster, id)));
             }
         }
         Map<String, Long> owed = SplitCalculator.equal(request.totalMinor(), participants);
         return plain(request, roster, owed, payers);
     }
 
-    private static Computation exact(ExpenseValidator.Valid request, Map<String, MemberRef> roster,
-                                     List<Payer> payers) {
+    private static Computation exact(ExpenseValidator.Valid request, Roster roster, List<Payer> payers) {
         List<Share> shares = new ArrayList<>();
         for (ExpenseCommand.ShareInput s : request.shares()) {
             shares.add(new Share(requireMember(roster, s.memberId()), s.amountMinor()));
@@ -118,18 +139,17 @@ final class ExpenseCalculator {
         return plain(request, roster, SplitCalculator.exact(request.totalMinor(), shares), payers);
     }
 
-    private static Computation plain(ExpenseValidator.Valid request, Map<String, MemberRef> roster,
-                                     Map<String, Long> owed, List<Payer> payers) {
+    private static Computation plain(ExpenseValidator.Valid request, Roster roster, Map<String, Long> owed,
+                                     List<Payer> payers) {
         List<ExpenseView.ShareView> shares = owed.entrySet().stream()
-                .sorted(Comparator.comparingInt(e -> roster.get(e.getKey()).sortOrder()))
+                .sorted(Comparator.comparingInt(e -> roster.usable().get(e.getKey()).sortOrder()))
                 .map(e -> new ExpenseView.ShareView(UUID.fromString(e.getKey()), e.getValue()))
                 .toList();
         return new Computation(request.splitType(), request.totalMinor(), null, null, 0, null, null, 0, 0, shares,
                 payers);
     }
 
-    private static Computation itemized(ExpenseValidator.Valid request, Map<String, MemberRef> roster,
-                                        List<Payer> payers) {
+    private static Computation itemized(ExpenseValidator.Valid request, Roster roster, List<Payer> payers) {
         List<ItemizedCalculator.Item> items = new ArrayList<>();
         for (ExpenseCommand.ItemInput item : request.items()) {
             List<String> assignees = new ArrayList<>();
@@ -141,7 +161,7 @@ final class ExpenseCalculator {
         ItemizedCalculator.TaxSpec tax = request.taxBps() == null ? null
                 : new ItemizedCalculator.TaxSpec(request.taxBps(), ItemizedCalculator.TaxBase.valueOf(request.taxBase()));
         ItemizedCalculator.ItemizedResult r = ItemizedCalculator.calculate(new ItemizedCalculator.ItemizedInput(
-                new ArrayList<>(roster.values()), items, request.serviceBps(), tax, request.adjustmentMinor()));
+                new ArrayList<>(roster.usable().values()), items, request.serviceBps(), tax, request.adjustmentMinor()));
 
         if (request.totalMinor() != 0 && request.totalMinor() != r.totalMinor()) {
             throw new ApiException(ErrorCode.SPLIT_TOTAL_MISMATCH, HttpStatus.UNPROCESSABLE_ENTITY,
@@ -157,9 +177,12 @@ final class ExpenseCalculator {
     }
 
     /** Spec 6 notes: every referenced member must belong to the expense's group. */
-    private static String requireMember(Map<String, MemberRef> roster, UUID memberId) {
+    private static String requireMember(Roster roster, UUID memberId) {
         String id = memberId.toString();
-        if (!roster.containsKey(id)) {
+        if (roster.inactive().contains(id)) {
+            throw MemberService.inactive();                                       // LEFT and not already in this expense
+        }
+        if (!roster.usable().containsKey(id)) {
             throw new ApiException(ErrorCode.MEMBER_NOT_IN_GROUP, HttpStatus.UNPROCESSABLE_ENTITY,
                     "A referenced member is not part of this group");
         }

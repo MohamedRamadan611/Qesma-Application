@@ -112,9 +112,16 @@ class MassAssignmentIT extends AbstractApiIT {
                 .as("still exactly one owner").isEqualTo(1L);
         assertThat(body(g).get("yourRole").asText()).isEqualTo("OWNER");
         assertThat(jdbc.queryForObject("select sort_order from members where id = ?::uuid", Integer.class, b)).isEqualTo(3);
-        assertThat(status(call(PATCH, "/api/v1/groups/" + gid + "/members/" + a, me,
-                withForbidden(Map.of("displayName", "A2"), other, foreignGroup)))).isEqualTo(200);
+        // B12: role and status ARE fields of the member PATCH now, so they are not "ignored" any more: a forbidden value
+        // is refused (422) and nothing of the request is applied; everything else in the evil body is still ignored.
+        Map<String, Object> patchBody = withForbidden(Map.of("displayName", "A2"), other, foreignGroup);
+        assertThat(status(call(PATCH, "/api/v1/groups/" + gid + "/members/" + a, me, patchBody))).isEqualTo(422);
+        assertThat(jdbc.queryForObject("select display_name from members where id = ?::uuid", String.class, a)).isEqualTo("A");
+        patchBody.remove("role");
+        patchBody.remove("status");
+        assertThat(status(call(PATCH, "/api/v1/groups/" + gid + "/members/" + a, me, patchBody))).isEqualTo(200);
         assertThat(jdbc.queryForObject("select sort_order from members where id = ?::uuid", Integer.class, a)).isEqualTo(2);
+        assertThat(jdbc.queryForObject("select role from members where id = ?::uuid", String.class, a)).isEqualTo("MEMBER");
 
         // profile
         String emailBefore = jdbc.queryForObject("select email from users where id = ?::uuid", String.class, me.userId());

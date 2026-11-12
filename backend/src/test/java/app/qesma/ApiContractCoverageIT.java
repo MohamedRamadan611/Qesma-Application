@@ -238,6 +238,23 @@ class ApiContractCoverageIT extends AbstractApiIT {
         assertThat(status(hit(POST, g + "/members/" + joinerMember + "/unlink", me, null))).isEqualTo(204);
         assertThat(invId).isNotBlank();
 
+        // ---- member lifecycle (B12): leave, MEMBER_INACTIVE, OWNER_MUST_TRANSFER, transfer-ownership ---------------------
+        String g2 = body(hit(POST, "/api/v1/groups", me, Map.of("name", "Lifecycle", "type", "TRIP"))).get("id").asText();
+        String g2Path = "/api/v1/groups/" + g2;
+        String g2Ghost = body(hit(POST, g2Path + "/members", me, Map.of("displayName", "Ghost"))).get("id").asText();
+        Session leaver = newUser();
+        linkUser(g2, leaver, "MEMBER", "ACTIVE", "Leaver");
+        expect(hit(POST, g2Path + "/leave", me, null), 409, ErrorCode.OWNER_MUST_TRANSFER);
+        assertThat(status(hit(POST, g2Path + "/leave", leaver, null))).isEqualTo(204);
+        String leaverMember = jdbc.queryForObject("select id::text from members where group_id = ?::uuid and user_id = ?",
+                String.class, g2, leaver.userId());
+        expect(hit(POST, g2Path + "/expenses", me, equalBody("Late", 100, null, leaverMember, 100L),
+                "Idempotency-Key", key()), 422, ErrorCode.MEMBER_INACTIVE);
+        Session heir = newUser();
+        String heirMember = linkUser(g2, heir, "ADMIN", "ACTIVE", "Heir");
+        assertThat(status(hit(POST, g2Path + "/transfer-ownership", me, Map.of("toMemberId", heirMember)))).isEqualTo(204);
+        assertThat(g2Ghost).isNotBlank();
+
         expect(hit(GET, "/api/v1/me", null, null), 401, ErrorCode.UNAUTHORIZED);
 
         doThrow(new GoogleIdTokenVerifier.AuthProviderUnavailableException(new RuntimeException("jwks down")))
