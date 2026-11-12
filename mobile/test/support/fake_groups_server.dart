@@ -31,15 +31,33 @@ class FakeGroup {
   bool hasExpenses;
   DateTime? lastExpenseAt;
   final DateTime createdAt;
+
+  /// The signed-in person's role in this group (B10 `yourRole`).
+  String yourRole = 'OWNER';
   final List<FakeMember> members = [];
 }
 
 class FakeMember {
-  FakeMember({required this.id, required this.name, this.isYou = false, this.hasTransactions = false, required this.sortOrder});
+  FakeMember({
+    required this.id,
+    required this.name,
+    this.isYou = false,
+    this.hasTransactions = false,
+    required this.sortOrder,
+    String? role,
+    this.status = 'ACTIVE',
+  }) : role = role ?? (isYou ? 'OWNER' : 'MEMBER');
 
   final String id;
   String name;
   final bool isYou;
+
+  /// OWNER, ADMIN or MEMBER (B10).
+  String role;
+  String status;
+
+  /// A member with an account behind it (the signed-in person; B10 `hasAccount`).
+  bool get hasAccount => isYou;
   bool hasTransactions;
   final int sortOrder;
 }
@@ -89,6 +107,9 @@ class FakeGroupsServer extends FakeBackend {
         'id': m.id,
         'displayName': m.name,
         'isYou': m.isYou,
+        'role': m.role,
+        'status': m.status,
+        'hasAccount': m.hasAccount,
         'sortOrder': m.sortOrder,
         'createdAt': '2026-10-01T09:00:00Z',
       };
@@ -101,6 +122,7 @@ class FakeGroupsServer extends FakeBackend {
         'version': g.version,
         'totalSpentMinor': g.totalSpentMinor,
         'yourNetMinor': g.yourNetMinor,
+        'yourRole': g.yourRole,
         'yourMemberId': g.members.firstWhere((m) => m.isYou).id,
         if (g.lastExpenseAt != null) 'lastExpenseAt': g.lastExpenseAt!.toUtc().toIso8601String(),
         'members': [for (final m in g.members) _member(m)],
@@ -116,6 +138,7 @@ class FakeGroupsServer extends FakeBackend {
         'memberCount': g.members.length,
         'totalSpentMinor': g.totalSpentMinor,
         'yourNetMinor': g.yourNetMinor,
+        'yourRole': g.yourRole,
         if (g.lastExpenseAt != null) 'lastExpenseAt': g.lastExpenseAt!.toUtc().toIso8601String(),
       };
 

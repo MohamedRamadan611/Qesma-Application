@@ -19,6 +19,7 @@ part 'group_summary_dto.g.dart';
 /// * [totalSpentMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
 /// * [type] 
 /// * [yourNetMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
+/// * [yourRole] 
 @BuiltValue()
 abstract class GroupSummaryDto implements Built<GroupSummaryDto, GroupSummaryDtoBuilder> {
   @BuiltValueField(wireName: r'currencyCode')
@@ -46,6 +47,9 @@ abstract class GroupSummaryDto implements Built<GroupSummaryDto, GroupSummaryDto
   /// Integer minor units (piasters: 1 EGP = 100). Never a decimal.
   @BuiltValueField(wireName: r'yourNetMinor')
   int get yourNetMinor;
+
+  @BuiltValueField(wireName: r'yourRole')
+  String get yourRole;
 
   GroupSummaryDto._();
 
@@ -111,6 +115,11 @@ class _$GroupSummaryDtoSerializer implements PrimitiveSerializer<GroupSummaryDto
     yield serializers.serialize(
       object.yourNetMinor,
       specifiedType: const FullType(int),
+    );
+    yield r'yourRole';
+    yield serializers.serialize(
+      object.yourRole,
+      specifiedType: const FullType(String),
     );
   }
 
@@ -191,6 +200,13 @@ class _$GroupSummaryDtoSerializer implements PrimitiveSerializer<GroupSummaryDto
             specifiedType: const FullType(int),
           ) as int;
           result.yourNetMinor = valueDes;
+          break;
+        case r'yourRole':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.yourRole = valueDes;
           break;
         default:
           unhandled.add(key);

@@ -20,6 +20,13 @@ enum ApiErrorCode {
   rateLimited('RATE_LIMITED'),
   authProviderUnavailable('AUTH_PROVIDER_UNAVAILABLE'),
   usernameTaken('USERNAME_TAKEN'),
+
+  // Phase 2 (B10, B11). FL11 gives the invite codes their own copy.
+  forbidden('FORBIDDEN'),
+  inviteExpired('INVITE_EXPIRED'),
+  inviteRevoked('INVITE_REVOKED'),
+  alreadyMember('ALREADY_MEMBER'),
+  memberAlreadyClaimed('MEMBER_ALREADY_CLAIMED'),
   unknown('');
 
   const ApiErrorCode(this.wire);

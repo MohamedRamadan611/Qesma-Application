@@ -168,21 +168,17 @@ class OwnerMemberIT extends AbstractApiIT {
     }
 
     @Test
-    void aGroupWithoutALinkedMemberHasNullYourNet() throws Exception {
+    void aGroupWithoutAMemberLinkedToTheCallerIsNotReachableAnyMore() throws Exception {
+        // B10 (A65, A68): access needs an ACTIVE linked member, so a pre-B9 group (no member linked to its creator, which
+        // V12 refuses to migrate) is invisible, even to its creator. Before B10 this answered 200 with null yourNetMinor.
         Session ali = newUser();
         String gid = UUID.randomUUID().toString();
-        // a group as it existed before B9: no member is linked to the owner
         jdbc.update("insert into expense_groups (id, owner_user_id, name, type, currency_code) "
                 + "values (?::uuid, ?::uuid, 'Legacy', 'TRIP', 'EGP')", gid, ali.userId().toString());
 
-        JsonNode detail = body(call(GET, GROUPS + "/" + gid, ali, null));
-        assertThat(detail.get("yourMemberId").isNull()).isTrue();
-        assertThat(detail.get("yourNetMinor").isNull()).isTrue();
-        assertThat(detail.get("members")).isEmpty();
+        assertThat(status(call(GET, GROUPS + "/" + gid, ali, null))).isEqualTo(404);
         for (JsonNode item : body(call(GET, GROUPS + "?size=100", ali, null)).get("items")) {
-            if (item.get("id").asText().equals(gid)) {
-                assertThat(item.get("yourNetMinor").isNull()).isTrue();
-            }
+            assertThat(item.get("id").asText()).isNotEqualTo(gid);
         }
     }
 

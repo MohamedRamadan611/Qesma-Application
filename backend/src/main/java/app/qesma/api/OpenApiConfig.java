@@ -111,7 +111,16 @@ public class OpenApiConfig {
             Map.entry("GET /api/v1/groups/{gid}/balances", "getBalances"),
             Map.entry("GET /api/v1/groups/{gid}/settlements", "listSettlements"),
             Map.entry("POST /api/v1/groups/{gid}/settlements", "createSettlement"),
-            Map.entry("DELETE /api/v1/groups/{gid}/settlements/{sid}", "deleteSettlement"));
+            Map.entry("DELETE /api/v1/groups/{gid}/settlements/{sid}", "deleteSettlement"),
+            Map.entry("POST /api/v1/groups/{gid}/invites", "createInvite"),
+            Map.entry("GET /api/v1/groups/{gid}/invites", "listInvites"),
+            Map.entry("DELETE /api/v1/groups/{gid}/invites/{iid}", "revokeInvite"),
+            Map.entry("GET /api/v1/invites/{code}", "getInvitePreview"),
+            Map.entry("POST /api/v1/invites/{code}/join", "joinGroup"),
+            Map.entry("GET /api/v1/groups/{gid}/join-requests", "listJoinRequests"),
+            Map.entry("POST /api/v1/groups/{gid}/join-requests/{rid}/approve", "approveJoinRequest"),
+            Map.entry("POST /api/v1/groups/{gid}/join-requests/{rid}/reject", "rejectJoinRequest"),
+            Map.entry("POST /api/v1/groups/{gid}/members/{mid}/unlink", "unlinkMember"));
 
     static String operationId(String path, PathItem.HttpMethod method) {
         String id = OPERATION_IDS.get(method + " " + path);
@@ -124,6 +133,13 @@ public class OpenApiConfig {
     // ---- error responses ---------------------------------------------------------------------------------------
 
     /** The error codes an operation can return, grouped by HTTP status. Derived from the operation's shape. */
+    /** Group-scoped operations every active member may call; all others need a role (403 FORBIDDEN otherwise). */
+    private static final java.util.Set<String> OPEN_TO_EVERY_MEMBER = java.util.Set.of(
+            "GET /api/v1/groups/{gid}", "GET /api/v1/groups/{gid}/expenses", "POST /api/v1/groups/{gid}/expenses",
+            "POST /api/v1/groups/{gid}/expenses/preview", "GET /api/v1/groups/{gid}/expenses/{eid}",
+            "GET /api/v1/groups/{gid}/expenses/{eid}/revisions", "GET /api/v1/groups/{gid}/balances",
+            "GET /api/v1/groups/{gid}/settlements", "POST /api/v1/groups/{gid}/settlements");
+
     static Map<Integer, List<ErrorCode>> errorsFor(String path, PathItem.HttpMethod method, Operation op) {
         Map<Integer, List<ErrorCode>> errors = new TreeMap<>();
         boolean auth = isPublicAuth(path);
@@ -141,6 +157,18 @@ public class OpenApiConfig {
         }
         if (path.contains("{gid}")) {
             add(errors, 404, ErrorCode.NOT_FOUND);
+            // Roles (Phase 2, A65/A67): reads, expense/settlement creation and the preview are open to every member;
+            // everything else depends on the role (and, for expenses/settlements, on who created it).
+            if (!OPEN_TO_EVERY_MEMBER.contains(method + " " + path)) {
+                add(errors, 403, ErrorCode.FORBIDDEN);
+            }
+        }
+        if (path.startsWith("/api/v1/invites/")) {
+            // the code is the capability: no group authorization, but guessing is limited (B11)
+            add(errors, 404, ErrorCode.NOT_FOUND);
+            add(errors, 410, ErrorCode.INVITE_EXPIRED);
+            add(errors, 410, ErrorCode.INVITE_REVOKED);
+            add(errors, 429, ErrorCode.RATE_LIMITED);
         }
         add(errors, 422, ErrorCode.VALIDATION_ERROR);          // bad input, also malformed JSON/parameters (400 is mapped to 422 too)
         if (hasBody) {
@@ -171,6 +199,21 @@ public class OpenApiConfig {
         }
         if (path.endsWith("/groups/{gid}") && method == PathItem.HttpMethod.DELETE) {
             add(errors, 409, ErrorCode.GROUP_NOT_EMPTY);
+        }
+        if (path.endsWith("/members/{mid}/unlink")) {
+            add(errors, 409, ErrorCode.OWNER_MEMBER_PROTECTED);
+        }
+        if (path.endsWith("/join") || path.endsWith("/approve")) {          // B11: the three ways joining can collide
+            add(errors, 409, ErrorCode.ALREADY_MEMBER);
+            add(errors, 409, ErrorCode.MEMBER_ALREADY_CLAIMED);
+            add(errors, 409, ErrorCode.DUPLICATE_MEMBER_NAME);
+            add(errors, 422, ErrorCode.MEMBER_NOT_IN_GROUP);
+        }
+        if (path.endsWith("/approve")) {
+            add(errors, 410, ErrorCode.INVITE_EXPIRED);
+        }
+        if (path.endsWith("/approve") || path.endsWith("/reject")) {
+            add(errors, 409, ErrorCode.VERSION_CONFLICT);                  // already decided the other way
         }
         if (auth) {
             add(errors, 401, ErrorCode.UNAUTHORIZED);
@@ -221,8 +264,10 @@ public class OpenApiConfig {
         return switch (status) {
             case 400 -> "Malformed request";
             case 401 -> "Not authenticated";
-            case 404 -> "Not found, or not yours (identical answer: never 403)";
+            case 403 -> "You are a member of the group but your role does not allow this";
+            case 404 -> "Not found, or you are not a member of the group (identical answer)";
             case 409 -> "Conflict";
+            case 410 -> "Gone: the invitation expired, was used up or was revoked";
             case 413 -> "Request body too large";
             case 422 -> "Rejected";
             case 428 -> "If-Match header required";

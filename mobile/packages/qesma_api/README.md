@@ -85,12 +85,21 @@ Class | Method | HTTP request | Description
 [*GroupControllerApi*](doc/GroupControllerApi.md) | [**getGroup**](doc/GroupControllerApi.md#getgroup) | **GET** /api/v1/groups/{gid} | 
 [*GroupControllerApi*](doc/GroupControllerApi.md) | [**listGroups**](doc/GroupControllerApi.md#listgroups) | **GET** /api/v1/groups | 
 [*GroupControllerApi*](doc/GroupControllerApi.md) | [**updateGroup**](doc/GroupControllerApi.md#updategroup) | **PATCH** /api/v1/groups/{gid} | 
+[*InviteControllerApi*](doc/InviteControllerApi.md) | [**createInvite**](doc/InviteControllerApi.md#createinvite) | **POST** /api/v1/groups/{gid}/invites | Create an invitation (code and link)
+[*InviteControllerApi*](doc/InviteControllerApi.md) | [**listInvites**](doc/InviteControllerApi.md#listinvites) | **GET** /api/v1/groups/{gid}/invites | List the group&#39;s invitations, newest first (with their codes)
+[*InviteControllerApi*](doc/InviteControllerApi.md) | [**revokeInvite**](doc/InviteControllerApi.md#revokeinvite) | **DELETE** /api/v1/groups/{gid}/invites/{iid} | Revoke an invitation (the code stops working; revoking again is not an error)
+[*JoinControllerApi*](doc/JoinControllerApi.md) | [**getInvitePreview**](doc/JoinControllerApi.md#getinvitepreview) | **GET** /api/v1/invites/{code} | Look at an invitation before joining
+[*JoinControllerApi*](doc/JoinControllerApi.md) | [**joinGroup**](doc/JoinControllerApi.md#joingroup) | **POST** /api/v1/invites/{code}/join | Join the group: claim an existing member or become a new one
+[*JoinRequestControllerApi*](doc/JoinRequestControllerApi.md) | [**approveJoinRequest**](doc/JoinRequestControllerApi.md#approvejoinrequest) | **POST** /api/v1/groups/{gid}/join-requests/{rid}/approve | Approve a join request: the person becomes a member (or claims the member they chose)
+[*JoinRequestControllerApi*](doc/JoinRequestControllerApi.md) | [**listJoinRequests**](doc/JoinRequestControllerApi.md#listjoinrequests) | **GET** /api/v1/groups/{gid}/join-requests | List the requests waiting for a decision, oldest first (the requester by display name only)
+[*JoinRequestControllerApi*](doc/JoinRequestControllerApi.md) | [**rejectJoinRequest**](doc/JoinRequestControllerApi.md#rejectjoinrequest) | **POST** /api/v1/groups/{gid}/join-requests/{rid}/reject | Reject a join request
 [*MeControllerApi*](doc/MeControllerApi.md) | [**changePassword**](doc/MeControllerApi.md#changepassword) | **POST** /api/v1/me/password | 
 [*MeControllerApi*](doc/MeControllerApi.md) | [**getMe**](doc/MeControllerApi.md#getme) | **GET** /api/v1/me | 
 [*MeControllerApi*](doc/MeControllerApi.md) | [**updateMe**](doc/MeControllerApi.md#updateme) | **PATCH** /api/v1/me | 
 [*MemberControllerApi*](doc/MemberControllerApi.md) | [**addMember**](doc/MemberControllerApi.md#addmember) | **POST** /api/v1/groups/{gid}/members | 
 [*MemberControllerApi*](doc/MemberControllerApi.md) | [**deleteMember**](doc/MemberControllerApi.md#deletemember) | **DELETE** /api/v1/groups/{gid}/members/{mid} | 
 [*MemberControllerApi*](doc/MemberControllerApi.md) | [**renameMember**](doc/MemberControllerApi.md#renamemember) | **PATCH** /api/v1/groups/{gid}/members/{mid} | 
+[*MemberControllerApi*](doc/MemberControllerApi.md) | [**unlinkMember**](doc/MemberControllerApi.md#unlinkmember) | **POST** /api/v1/groups/{gid}/members/{mid}/unlink | Unlink the account from a member (the member, its history and balance stay)
 [*PasswordAuthControllerApi*](doc/PasswordAuthControllerApi.md) | [**forgotPassword**](doc/PasswordAuthControllerApi.md#forgotpassword) | **POST** /api/v1/auth/password/forgot | 
 [*PasswordAuthControllerApi*](doc/PasswordAuthControllerApi.md) | [**registerWithPassword**](doc/PasswordAuthControllerApi.md#registerwithpassword) | **POST** /api/v1/auth/register | 
 [*PasswordAuthControllerApi*](doc/PasswordAuthControllerApi.md) | [**resendEmailVerification**](doc/PasswordAuthControllerApi.md#resendemailverification) | **POST** /api/v1/auth/email/verify/resend | 
@@ -118,13 +127,22 @@ Class | Method | HTTP request | Description
  - [GoogleLoginRequest](doc/GoogleLoginRequest.md)
  - [GroupDto](doc/GroupDto.md)
  - [GroupSummaryDto](doc/GroupSummaryDto.md)
+ - [InviteCommand](doc/InviteCommand.md)
+ - [InvitePreview](doc/InvitePreview.md)
+ - [InviteView](doc/InviteView.md)
  - [ItemInput](doc/ItemInput.md)
  - [ItemView](doc/ItemView.md)
+ - [JoinCommand](doc/JoinCommand.md)
+ - [JoinRequestView](doc/JoinRequestView.md)
+ - [JoinView](doc/JoinView.md)
+ - [JoinedMember](doc/JoinedMember.md)
  - [LoginRequest](doc/LoginRequest.md)
  - [MemberDto](doc/MemberDto.md)
  - [Net](doc/Net.md)
  - [PageResponseExpenseView](doc/PageResponseExpenseView.md)
  - [PageResponseGroupSummaryDto](doc/PageResponseGroupSummaryDto.md)
+ - [PageResponseInviteView](doc/PageResponseInviteView.md)
+ - [PageResponseJoinRequestView](doc/PageResponseJoinRequestView.md)
  - [PageResponseSettlementView](doc/PageResponseSettlementView.md)
  - [PayerInput](doc/PayerInput.md)
  - [PayerView](doc/PayerView.md)
@@ -142,6 +160,7 @@ Class | Method | HTTP request | Description
  - [TaxInput](doc/TaxInput.md)
  - [TokenResponse](doc/TokenResponse.md)
  - [TransferView](doc/TransferView.md)
+ - [Unclaimed](doc/Unclaimed.md)
  - [UpdateGroupRequest](doc/UpdateGroupRequest.md)
  - [UpdateMeRequest](doc/UpdateMeRequest.md)
  - [UpdateMemberRequest](doc/UpdateMemberRequest.md)

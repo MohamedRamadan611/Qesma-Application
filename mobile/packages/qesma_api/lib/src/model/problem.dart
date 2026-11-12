@@ -24,7 +24,7 @@ abstract class Problem implements Built<Problem, ProblemBuilder> {
   /// Stable machine-readable error code.
   @BuiltValueField(wireName: r'code')
   ProblemCodeEnum get code;
-  // enum codeEnum {  VALIDATION_ERROR,  PAYERS_TOTAL_MISMATCH,  SPLIT_TOTAL_MISMATCH,  MEMBER_NOT_IN_GROUP,  IDEMPOTENCY_KEY_REUSED,  DUPLICATE_MEMBER_NAME,  MEMBER_HAS_TRANSACTIONS,  OWNER_MEMBER_PROTECTED,  VERSION_CONFLICT,  GROUP_NOT_EMPTY,  NOT_FOUND,  UNAUTHORIZED,  INTERNAL_ERROR,  RATE_LIMITED,  AUTH_PROVIDER_UNAVAILABLE,  USERNAME_TAKEN,  };
+  // enum codeEnum {  VALIDATION_ERROR,  PAYERS_TOTAL_MISMATCH,  SPLIT_TOTAL_MISMATCH,  MEMBER_NOT_IN_GROUP,  IDEMPOTENCY_KEY_REUSED,  DUPLICATE_MEMBER_NAME,  MEMBER_HAS_TRANSACTIONS,  OWNER_MEMBER_PROTECTED,  VERSION_CONFLICT,  INVITE_EXPIRED,  INVITE_REVOKED,  ALREADY_MEMBER,  MEMBER_ALREADY_CLAIMED,  GROUP_NOT_EMPTY,  NOT_FOUND,  FORBIDDEN,  UNAUTHORIZED,  INTERNAL_ERROR,  RATE_LIMITED,  AUTH_PROVIDER_UNAVAILABLE,  USERNAME_TAKEN,  };
 
   @BuiltValueField(wireName: r'detail')
   String? get detail;
@@ -241,11 +241,26 @@ class ProblemCodeEnum extends EnumClass {
   @BuiltValueEnumConst(wireName: r'VERSION_CONFLICT')
   static const ProblemCodeEnum VERSION_CONFLICT = _$problemCodeEnum_VERSION_CONFLICT;
   /// Stable machine-readable error code.
+  @BuiltValueEnumConst(wireName: r'INVITE_EXPIRED')
+  static const ProblemCodeEnum INVITE_EXPIRED = _$problemCodeEnum_INVITE_EXPIRED;
+  /// Stable machine-readable error code.
+  @BuiltValueEnumConst(wireName: r'INVITE_REVOKED')
+  static const ProblemCodeEnum INVITE_REVOKED = _$problemCodeEnum_INVITE_REVOKED;
+  /// Stable machine-readable error code.
+  @BuiltValueEnumConst(wireName: r'ALREADY_MEMBER')
+  static const ProblemCodeEnum ALREADY_MEMBER = _$problemCodeEnum_ALREADY_MEMBER;
+  /// Stable machine-readable error code.
+  @BuiltValueEnumConst(wireName: r'MEMBER_ALREADY_CLAIMED')
+  static const ProblemCodeEnum MEMBER_ALREADY_CLAIMED = _$problemCodeEnum_MEMBER_ALREADY_CLAIMED;
+  /// Stable machine-readable error code.
   @BuiltValueEnumConst(wireName: r'GROUP_NOT_EMPTY')
   static const ProblemCodeEnum GROUP_NOT_EMPTY = _$problemCodeEnum_GROUP_NOT_EMPTY;
   /// Stable machine-readable error code.
   @BuiltValueEnumConst(wireName: r'NOT_FOUND')
   static const ProblemCodeEnum NOT_FOUND = _$problemCodeEnum_NOT_FOUND;
+  /// Stable machine-readable error code.
+  @BuiltValueEnumConst(wireName: r'FORBIDDEN')
+  static const ProblemCodeEnum FORBIDDEN = _$problemCodeEnum_FORBIDDEN;
   /// Stable machine-readable error code.
   @BuiltValueEnumConst(wireName: r'UNAUTHORIZED')
   static const ProblemCodeEnum UNAUTHORIZED = _$problemCodeEnum_UNAUTHORIZED;

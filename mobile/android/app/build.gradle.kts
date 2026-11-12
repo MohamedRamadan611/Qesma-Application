@@ -39,6 +39,9 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // Host of the invite App Link https://<host>/join/<code> (one place; must equal the backend's
+        // qesma.invites.link-base). Override with -PqesmaLinkHost=... or in gradle.properties.
+        manifestPlaceholders["qesmaLinkHost"] = (project.findProperty("qesmaLinkHost") as String?) ?: "qesma.app"
     }
 
     signingConfigs {

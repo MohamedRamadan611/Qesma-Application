@@ -356,7 +356,7 @@ A settlement `from → to, amount` is a recorded real-world payment. Amount may 
 
 ### 8.1 Conventions
 - Auth: `Authorization: Bearer <access JWT>`. All endpoints except the public `/auth/*` ones require it (public: `google`, `refresh`, `logout`, `register`, `login`, `password/forgot`, `password/reset`, `email/verify`; `/auth/email/verify/resend` needs a token like the rest).
-- Authorization (Phase 1): a user can only access groups they own. Accessing another user's group returns **404** (not 403).
+- Authorization (since B10, A65-A67, ADR-009): a user reaches a group only through an ACTIVE member linked to their account and may do what their role allows. A non-member (stranger, LEFT member, unknown id) gets **404**, identical to a group that does not exist; a member whose role lacks the permission gets **403 `FORBIDDEN`**. (Phase 1 was owner-only with 404 for everyone else.)
 - Money: integer minor units + group `currencyCode`. Dates: ISO-8601.
 - Errors: RFC 7807 `application/problem+json` with a stable `code` field.
 - Pagination: `?page=&size=` for lists; expenses sorted by `expenseDate desc, createdAt desc`.
@@ -399,6 +399,17 @@ GET    /groups/{gid}/balances           -> { nets: [{memberId, netMinor}], trans
 POST   /groups/{gid}/settlements        { fromMemberId, toMemberId, amountMinor, settledOn, note? } (Idempotency-Key required)
 GET    /groups/{gid}/settlements
 DELETE /groups/{gid}/settlements/{sid}
+
+# Phase 2, B11 (A70-A76): invitations, joining, join requests, unlink
+POST   /groups/{gid}/invites                     { expiresInDays?, maxUses?, requiresApproval? } -> { id, code, link, status, ... } (Idempotency-Key required; Owner/Admin)
+GET    /groups/{gid}/invites                     (paged, with codes; Owner/Admin)
+DELETE /groups/{gid}/invites/{iid}               (revoke; Owner/Admin)
+GET    /invites/{code}                           (preview for a signed-in person: group name, inviter, count, unclaimed members; no balances)
+POST   /invites/{code}/join                      { claimMemberId | newMemberName } -> 201 JOINED | 202 PENDING_APPROVAL (Idempotency-Key required)
+GET    /groups/{gid}/join-requests               (pending, oldest first; Owner/Admin)
+POST   /groups/{gid}/join-requests/{rid}/approve  (Owner/Admin)
+POST   /groups/{gid}/join-requests/{rid}/reject   (Owner/Admin)
+POST   /groups/{gid}/members/{mid}/unlink        (detach the account, keep the member; Owner/Admin) -> 204
 ```
 
 ### 8.3 Idempotency
@@ -425,7 +436,7 @@ For `EQUAL`: `{ "splitType": "EQUAL", "participantMemberIds": [...] }`. For `EXA
 `preview` response includes: `totalMinor`, `subtotalMinor`, `serviceMinor`, `taxMinor`, per-member breakdown `{ memberId, itemsMinor, serviceMinor, taxMinor, adjustmentMinor, owedMinor }`, and `payersTotalMatches` (boolean) so the UI can show a live mismatch warning.
 
 ### 8.5 Error codes
-`VALIDATION_ERROR`, `PAYERS_TOTAL_MISMATCH`, `SPLIT_TOTAL_MISMATCH`, `MEMBER_NOT_IN_GROUP`, `MEMBER_HAS_TRANSACTIONS`, `DUPLICATE_MEMBER_NAME`, `OWNER_MEMBER_PROTECTED`, `VERSION_CONFLICT`, `IDEMPOTENCY_KEY_REUSED`, `GROUP_NOT_EMPTY`, `NOT_FOUND`, `UNAUTHORIZED`, `USERNAME_TAKEN` (A64).
+`VALIDATION_ERROR`, `PAYERS_TOTAL_MISMATCH`, `SPLIT_TOTAL_MISMATCH`, `MEMBER_NOT_IN_GROUP`, `MEMBER_HAS_TRANSACTIONS`, `DUPLICATE_MEMBER_NAME`, `OWNER_MEMBER_PROTECTED`, `FORBIDDEN` (A65), `VERSION_CONFLICT`, `IDEMPOTENCY_KEY_REUSED`, `GROUP_NOT_EMPTY`, `NOT_FOUND`, `UNAUTHORIZED`, `USERNAME_TAKEN` (A64).
 
 ---
 
@@ -522,7 +533,7 @@ Owed: A 130.00, B 130.00, C 180.00. Total 440.00.
 
 ## 12. Out-of-scope reminders for future phases (design hooks, do not build now)
 - Members will later gain `status` (ACTIVE/LEFT) and invitations; keep member queries going through a service so this is additive.
-- Roles/permissions will replace owner-only checks; centralize authorization in one place now.
+- Roles/permissions replaced the owner-only checks in B10 (A65-A67): authorization lives in `GroupAccessService`.
 - Multi-currency will add per-expense currency and exchange rates; keep `currency_code` on the group and never assume EGP in code.
 - Settlements will gain status (PENDING/CONFIRMED/DISPUTED); keep it a separate table.
 
@@ -601,3 +612,15 @@ Code compiles; unit + integration tests pass; OpenAPI updated; migrations includ
 | A63 | `UserDto` gains `hasPassword` and `emailVerified` (Google accounts are verified). Request objects carrying credentials redact themselves in `toString` (A51). `EMAIL_ALREADY_USED` (409) is a new error code beyond spec 8.5. | Decided (BA1); **identifier amended by A64** (username, not email) |
 | A64 | Password accounts are identified by a **username** (3 to 30 characters: letters of any script, digits, dots, hyphens, underscores; case-insensitive; no `@`; a few reserved names), not an email (ADR-008; amends A59-A63). A taken name is `409 USERNAME_TAKEN` (replaces `EMAIL_ALREADY_USED`). No email is collected; a forgotten password cannot be recovered until optional email + a mail provider exist. The emailed-link endpoints stay, dormant, for accounts that have an address on file. `UserDto.username` is new. | Decided (BA2) |
 | A52 | Deployment is one VPS with Docker Compose and Caddy (ADR-005); backups are a daily `pg_dump` with a tested restore (`scripts/test-restore.sh`). Dependency scanning is Trivy + Dependabot in CI (ADR-003). Backups live on the same host until copied off by the operator. | Decided (B8) |
+| A65 | Roles (Phase 2, B10, ADR-009): a caller reaches a group only through an ACTIVE member linked to their account. Not a member, a LEFT member or an unknown group: `404 NOT_FOUND` with the identical body (IDOR defense unchanged). A member whose role lacks the permission: `403 FORBIDDEN` (new error code beyond 8.5, like A15). Precedence: 401, 404, 403, then validation/conflict. | Decided (B10) |
+| A66 | `members.role` (`OWNER`/`ADMIN`/`MEMBER`) is the single authority for ownership; exactly one OWNER per group (partial unique index; an owner is linked and ACTIVE, CHECK). `expense_groups.owner_user_id` stays as the immutable creator and is no longer used for authorization. `members.status` (`ACTIVE`/`LEFT`) with `joined_at`/`left_at` exists from V12; a LEFT member is treated like a stranger (404) until B12 adds leaving. | Decided (B10) |
+| A67 | Phase 1 operations map to permissions: reads, expense preview, expense and settlement creation for every member; edit group for Owner/Admin; delete group (empty only) for Owner; add/rename/delete member for Owner/Admin (deleting a linked member stays `409 OWNER_MEMBER_PROTECTED` after the 403 check); edit/delete an expense and delete a settlement: the creator (`created_by_user_id`) or Owner/Admin. One `Role -> Permission` table, one component (`GroupAccessService`). | Decided (B10) |
+| A68 | V12 aborts with a clear error if any group has no member linked to its creator (groups created before B9, see A55), so no data is silently orphaned; delete or re-seed such local data first. No backfill. | Decided (B10) |
+| A69 | `GET /groups` lists every group where the caller has an ACTIVE member; `memberCount` counts ACTIVE members; `GroupSummaryDto`/`GroupDto` gain `yourRole`, `MemberDto` gains `role`, `status`, `hasAccount` (never an account id). The list query joins the caller's member inside one statement (no per-group check). `YourNetQuery` only sums the caller's own member rows. | Decided (B10) |
+| A70 | Invitations (Phase 2, B11): **one secret per invite**, the 8-character code (alphabet `ABCDEFGHJKLMNPQRSTUVWXYZ23456789`, ~2^40, from `SecureRandom`, stored normalised), typed by hand and also the end of the link `qesma.invites.link-base` + code. Supersedes the two-secret (code + hashed link token) design of PHASE2_SPEC 4: a token would sit in the stored create response for 24 h and could not be shown again to admins. Guessing is limited by expiry (1-30 days, default 7), revoke, a per-IP limit (30/min) and a per-user cap on failed lookups (10 per 15 min). The code is never logged, tagged in a metric, echoed in a message or part of a request hash. | Decided (B11) |
+| A71 | `GET /invites/{code}` and `POST /invites/{code}/join` need a signed-in user but **no group authorization** (the code is the capability). The preview shows only group name, type, the inviter's member name, the active member count, the unclaimed members (id + name), `requiresApproval`, expiry and the caller's state (NONE, PENDING_APPROVAL, ALREADY_MEMBER): no balances, no expense counts, no accounts. Unknown code 404; expired or used up 410 `INVITE_EXPIRED`; revoked 410 `INVITE_REVOKED` (revoked wins). New codes `INVITE_EXPIRED`, `INVITE_REVOKED`, `ALREADY_MEMBER`, `MEMBER_ALREADY_CLAIMED`. | Decided (B11) |
+| A72 | Join is one transaction under the lock order idempotency lock, invite row (`FOR UPDATE`), group row. Claiming a ghost is a conditional UPDATE (`user_id IS NULL`), so of parallel claims exactly one wins; `(group_id, user_id)` and the member-name unique indexes are the last defense (the former maps to 409 `ALREADY_MEMBER`). `use_count` only grows on JOINED/APPROVED and `CHECK use_count <= max_uses` backs it. Replays answer with the stored result (also after the invite expired or was revoked). | Decided (B11) |
+| A73 | Invites that require approval answer `202 PENDING_APPROVAL`; asking twice is the same request (one open request per user and invite, partial unique index). Approving re-runs the join atomically: a ghost claimed or a name taken meanwhile is 409 and the request stays PENDING so it can be rejected; approving past `max_uses` is 410 `INVITE_EXPIRED`. Pending requests stay decidable after revoke or expiry. | Decided (B11) |
+| A74 | A request already decided the other way answers `409 VERSION_CONFLICT` ("already decided"); repeating the same decision returns the stored result (200). No new code before B13. | Decided (B11) |
+| A75 | Unlink (`POST /groups/{gid}/members/{mid}/unlink`, Owner/Admin): the account is detached, the member, its history and balance stay, the person loses access at once and the member is claimable again; the role is reset to MEMBER. The owner's member is protected (409 `OWNER_MEMBER_PROTECTED`), only the owner may unlink an admin (403 otherwise), unlinking a member without an account is a 204 no-op. | Decided (B11) |
+| A76 | New permissions `MANAGE_INVITES`, `APPROVE_JOINS`, `UNLINK_MEMBER` (Owner, Admin). B11 emits no events or notifications (B15 adds them through one recorder). `INVITE_*` per-IP limiting reuses the auth limiter class with its own prefix; the per-user cap is an in-memory component (one instance, resets on restart, same accepted limits). Known limit: a reverse proxy or Spring Security DEBUG logging that records request paths would show codes. | Decided (B11) |

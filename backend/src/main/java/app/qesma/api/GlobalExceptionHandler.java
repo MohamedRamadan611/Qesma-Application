@@ -99,6 +99,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             return respond(problem(HttpStatus.CONFLICT, ErrorCode.DUPLICATE_MEMBER_NAME,
                     "A member with this name already exists in the group"));
         }
+        if (detail.contains("ux_members_group_user")) {      // two invites of one group used by one person at once (B11)
+            return respond(problem(HttpStatus.CONFLICT, ErrorCode.ALREADY_MEMBER,
+                    "You are already a member of this group"));
+        }
         return handleUnexpected(ex);
     }
 

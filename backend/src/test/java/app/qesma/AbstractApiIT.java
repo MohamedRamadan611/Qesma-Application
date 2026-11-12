@@ -76,6 +76,20 @@ public abstract class AbstractApiIT extends AbstractIntegrationTest {
         return body(r);
     }
 
+    /**
+     * Links {@code user} to a NEW member of the group with the given role and status, straight in the database: there is
+     * no invitation API before B11, so this is how tests get ADMIN / MEMBER / LEFT callers. Returns the member id.
+     */
+    protected String linkUser(String groupId, Session user, String role, String status, String displayName) {
+        int seq = jdbc.queryForObject("select member_seq from expense_groups where id = ?::uuid", Integer.class, groupId) + 1;
+        jdbc.update("update expense_groups set member_seq = ? where id = ?::uuid", seq, groupId);
+        UUID id = UUID.randomUUID();
+        jdbc.update("insert into members (id, group_id, display_name, user_id, sort_order, role, status, joined_at, left_at) "
+                + "values (?, ?::uuid, ?, ?, ?, ?, ?, now(), case when ? = 'LEFT' then now() end)",
+                id, groupId, displayName, user.userId(), seq, role, status, status);
+        return id.toString();
+    }
+
     private final java.util.Set<String> claimedOwnerMembers = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
     /**

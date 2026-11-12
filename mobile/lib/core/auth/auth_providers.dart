@@ -4,6 +4,7 @@ import 'package:qesma_api/qesma_api.dart';
 
 import '../api/connectivity.dart';
 import '../api/dio_factory.dart';
+import '../api/forbidden_events.dart';
 import 'auth_interceptor.dart';
 import 'auth_log.dart';
 import 'google_id_token_source.dart';
@@ -50,6 +51,7 @@ final apiDioProvider = Provider<Dio>((ref) {
   dio.interceptors.addAll([
     ConnectivityInterceptor((online) => ref.read(connectivityProvider.notifier).report(online: online)),
     AuthInterceptor(session: ref.watch(sessionManagerProvider), dio: dio),
+    ForbiddenRefreshInterceptor((gid) => ref.read(forbiddenEventsProvider.notifier).report(gid)),
     RequestLogInterceptor(),
   ]);
   return dio;

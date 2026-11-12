@@ -1,6 +1,5 @@
 package app.qesma.service;
 
-import app.qesma.domain.ExpenseGroup;
 import app.qesma.domain.Member;
 import app.qesma.engine.BalanceCalculator;
 import app.qesma.engine.EngineException;
@@ -40,12 +39,12 @@ public class BalanceService {
     /** One snapshot for the roster and the sums, so concurrent writes cannot skew the result. */
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public BalanceView balances(UUID userId, UUID groupId) {
-        ExpenseGroup group = access.requireOwned(userId, groupId);
-        return metrics.timer("qesma.balances.compute").record(() -> compute(group, groupId));
+        GroupContext ctx = access.requireMember(userId, groupId);
+        return metrics.timer("qesma.balances.compute").record(() -> compute(ctx, groupId));
     }
 
-    private BalanceView compute(ExpenseGroup group, UUID groupId) {
-        List<Member> members = access.listMembers(group);
+    private BalanceView compute(GroupContext ctx, UUID groupId) {
+        List<Member> members = access.listMembers(ctx);
         List<MemberRef> roster = members.stream()
                 .map(m -> new MemberRef(m.getId().toString(), m.getSortOrder())).toList();
         Map<String, Long> nets;

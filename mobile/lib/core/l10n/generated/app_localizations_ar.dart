@@ -198,6 +198,9 @@ class AppLocalizationsAr extends AppLocalizations {
       'محاولات كتير في وقت قصير. استنى دقيقة وجرّب تاني.';
 
   @override
+  String get errorForbidden => 'صلاحيتك في المجموعة مش بتسمح بالإجراء ده.';
+
+  @override
   String get errorAuthProviderUnavailable =>
       'مش قادرين نتواصل مع جوجل دلوقتي. جرّب تاني بعد شوية.';
 
@@ -1523,4 +1526,240 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get accountSignedInWithPassword =>
       'مسجّل دخول باسم المستخدم وكلمة السر';
+
+  @override
+  String get inviteAction => 'دعوة أعضاء';
+
+  @override
+  String get inviteSheetTitle => 'دعوة أعضاء للجروب';
+
+  @override
+  String inviteSheetSubtitle(String group) {
+    return 'جروب «$group»';
+  }
+
+  @override
+  String get inviteSheetIntro =>
+      'شارك الكود أو الرابط مع صحابك عشان يشوفوا الحسابات ويضيفوا مصاريفهم أول بأول.';
+
+  @override
+  String get inviteCodeLabel => 'كود الانضمام';
+
+  @override
+  String get inviteCopyCode => 'نسخ الكود';
+
+  @override
+  String get inviteCodeCopied => 'تم نسخ الكود';
+
+  @override
+  String get inviteCopyLink => 'نسخ الرابط';
+
+  @override
+  String get inviteLinkCopied => 'تم نسخ الرابط';
+
+  @override
+  String get inviteShareLink => 'مشاركة الرابط';
+
+  @override
+  String inviteShareText(String group, String link, String code) {
+    return 'انضم لجروب «$group» على قسمة:\n$link\nأو اكتب الكود: $code';
+  }
+
+  @override
+  String inviteExpiresIn(String duration) {
+    return 'ينتهي بعد $duration';
+  }
+
+  @override
+  String get inviteExpiresSoon => 'ينتهي خلال أقل من ساعة';
+
+  @override
+  String get inviteExpiryChoiceLabel => 'مدة صلاحية الدعوة الجديدة';
+
+  @override
+  String get inviteApprovalTitle => 'يحتاج موافقة الأدمن';
+
+  @override
+  String get inviteApprovalBody => 'مراجعة العضو الجديد قبل ما يدخل الجروب';
+
+  @override
+  String get inviteApprovalTag => 'بموافقة الأدمن';
+
+  @override
+  String get inviteCreateNew => 'إنشاء دعوة جديدة';
+
+  @override
+  String get inviteCreate => 'إنشاء دعوة';
+
+  @override
+  String get inviteCreated => 'تم إنشاء الدعوة';
+
+  @override
+  String get inviteRevoke => 'إلغاء الدعوة';
+
+  @override
+  String get inviteRevokeConfirmTitle => 'إلغاء الدعوة؟';
+
+  @override
+  String get inviteRevokeConfirmBody =>
+      'اللي معاه الكود أو الرابط مش هيقدر ينضم بيه تاني. اللي انضموا قبل كده بيفضلوا في الجروب.';
+
+  @override
+  String get inviteKeep => 'لأ، سيبها';
+
+  @override
+  String get inviteRevoked => 'تم إلغاء الدعوة';
+
+  @override
+  String get inviteOtherActiveTitle => 'دعوات تانية شغالة';
+
+  @override
+  String get inviteNoActive =>
+      'مفيش دعوة شغالة دلوقتي. اعمل واحدة وابعتها لصحابك.';
+
+  @override
+  String inviteUsesProgress(String used, String max) {
+    return '$used من $max انضموا';
+  }
+
+  @override
+  String inviteUsesCount(String used) {
+    return 'اللي انضموا: $used';
+  }
+
+  @override
+  String get inviteJoinTitle => 'الانضمام لجروب';
+
+  @override
+  String inviteInvitedBy(String name) {
+    return 'دعاك $name';
+  }
+
+  @override
+  String get inviteWhoAreYou => 'إنت مين من الأعضاء؟';
+
+  @override
+  String get inviteWhoBody =>
+      'لو المنظّم كان ضاف اسمك وسجّل مصاريفك قبل كده، اختار اسمك عشان نربط حسابك بيها من غير تكرار.';
+
+  @override
+  String get inviteNewMember => 'أنا عضو جديد (مش في القائمة)';
+
+  @override
+  String get inviteNewMemberBody => 'هنضيف اسمك كعضو جديد في الجروب';
+
+  @override
+  String get inviteNameLabel => 'اسمك في الجروب';
+
+  @override
+  String get inviteJoinButton => 'انضم';
+
+  @override
+  String get inviteJoinNote =>
+      'بعد الانضمام هتقدر تسجّل المصاريف وتتابع الحسابات مع باقي الأعضاء.';
+
+  @override
+  String get inviteNeedsApprovalNote =>
+      'الدعوة دي محتاجة موافقة الأدمن قبل ما تدخل الجروب.';
+
+  @override
+  String get inviteClaimedNotice =>
+      'الاسم ده اتاخد من شخص تاني. اختار اسم تاني أو انضم كعضو جديد.';
+
+  @override
+  String get inviteExpiredTitle => 'الدعوة انتهت';
+
+  @override
+  String get inviteExpiredBody =>
+      'انتهت صلاحية الدعوة دي. اطلب من أدمن الجروب دعوة جديدة.';
+
+  @override
+  String get inviteRevokedTitle => 'الدعوة اتلغت';
+
+  @override
+  String get inviteRevokedBody =>
+      'أدمن الجروب لغى الدعوة دي. اطلب منه دعوة جديدة لو لسه عايز تنضم.';
+
+  @override
+  String get inviteNotFoundTitle => 'الدعوة مش موجودة';
+
+  @override
+  String get inviteNotFoundBody => 'راجع الكود وجرّب تاني، أو اطلب دعوة جديدة.';
+
+  @override
+  String get inviteAlreadyMemberTitle => 'إنت عضو في الجروب ده بالفعل';
+
+  @override
+  String get inviteAlreadyMemberBody => 'مش محتاج دعوة. افتح الجروب من هنا.';
+
+  @override
+  String get inviteOpenGroup => 'افتح الجروب';
+
+  @override
+  String get inviteWaitingTitle => 'في انتظار موافقة الأدمن';
+
+  @override
+  String inviteWaitingBody(String group) {
+    return 'طلبك للانضمام لجروب «$group» اتبعت. هتدخل أول ما الأدمن يوافق.';
+  }
+
+  @override
+  String get inviteRefreshStatus => 'تحديث الحالة';
+
+  @override
+  String get inviteStillWaiting => 'لسه في انتظار الموافقة';
+
+  @override
+  String get inviteBackHome => 'الرجوع للرئيسية';
+
+  @override
+  String get inviteEnterCodeButton => 'عندك كود دعوة؟';
+
+  @override
+  String get inviteEnterCodeTitle => 'الانضمام بكود';
+
+  @override
+  String get inviteEnterCodeBody =>
+      'اكتب كود الدعوة اللي وصلك، أو الصق الرابط.';
+
+  @override
+  String get inviteCodeFieldLabel => 'كود الدعوة';
+
+  @override
+  String get inviteCodeInvalid => 'الكود 8 حروف وأرقام. راجعه وجرّب تاني.';
+
+  @override
+  String get inviteContinue => 'متابعة';
+
+  @override
+  String get inviteDayOne => 'يوم';
+
+  @override
+  String get inviteDayTwo => 'يومين';
+
+  @override
+  String inviteDaysFew(String count) {
+    return '$count أيام';
+  }
+
+  @override
+  String inviteDaysMany(String count) {
+    return '$count يوم';
+  }
+
+  @override
+  String get inviteHourOne => 'ساعة';
+
+  @override
+  String get inviteHourTwo => 'ساعتين';
+
+  @override
+  String inviteHoursFew(String count) {
+    return '$count ساعات';
+  }
+
+  @override
+  String inviteHoursMany(String count) {
+    return '$count ساعة';
+  }
 }

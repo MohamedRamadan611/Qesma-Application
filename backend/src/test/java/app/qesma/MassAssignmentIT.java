@@ -44,6 +44,12 @@ class MassAssignmentIT extends AbstractApiIT {
         evil.put("authSubject", "stolen");
         evil.put("email", "stolen@example.com");
         evil.put("isYou", true);
+        evil.put("role", "OWNER");                       // B10: roles are never client-settable
+        evil.put("yourRole", "OWNER");
+        evil.put("status", "LEFT");
+        evil.put("hasAccount", true);
+        evil.put("joinedAt", "2001-01-01T00:00:00Z");
+        evil.put("leftAt", "2001-01-01T00:00:00Z");
         evil.put("yourMemberId", UUID.randomUUID().toString());
         evil.put("yourNetMinor", 123456);
         return evil;
@@ -95,6 +101,16 @@ class MassAssignmentIT extends AbstractApiIT {
         assertThat(member.get("sort_order")).isEqualTo(2);              // after the owner's member #1
         assertThat(member.get("user_id")).as("a client cannot link a member to an account").isNull();
         assertThat(body(m1).get("isYou").asBoolean()).isFalse();
+        Map<String, Object> roleRow = jdbc.queryForMap("select role, status, left_at, joined_at from members where id = ?::uuid", a);
+        assertThat(roleRow.get("role")).as("a client cannot choose a member's role").isEqualTo("MEMBER");
+        assertThat(roleRow.get("status")).isEqualTo("ACTIVE");
+        assertThat(roleRow.get("left_at")).isNull();
+        assertThat(roleRow.get("joined_at").toString()).doesNotContain("2001");
+        assertThat(body(m1).get("role").asText()).isEqualTo("MEMBER");
+        assertThat(body(m1).get("hasAccount").asBoolean()).isFalse();
+        assertThat(jdbc.queryForObject("select count(*) from members where group_id = ?::uuid and role = 'OWNER'", Long.class, gid))
+                .as("still exactly one owner").isEqualTo(1L);
+        assertThat(body(g).get("yourRole").asText()).isEqualTo("OWNER");
         assertThat(jdbc.queryForObject("select sort_order from members where id = ?::uuid", Integer.class, b)).isEqualTo(3);
         assertThat(status(call(PATCH, "/api/v1/groups/" + gid + "/members/" + a, me,
                 withForbidden(Map.of("displayName", "A2"), other, foreignGroup)))).isEqualTo(200);

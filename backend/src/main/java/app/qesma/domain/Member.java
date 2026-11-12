@@ -37,6 +37,26 @@ public class Member implements Persistable<UUID> {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    /** OWNER, ADMIN or MEMBER (V12). Authorization reads it through {@code GroupAccessService} only. */
+    @Column(name = "role", nullable = false)
+    private String role = ROLE_MEMBER;
+
+    /** ACTIVE or LEFT (V12). A LEFT member has no access to the group but stays in its history. */
+    @Column(name = "status", nullable = false)
+    private String status = STATUS_ACTIVE;
+
+    @Column(name = "joined_at")
+    private Instant joinedAt;
+
+    @Column(name = "left_at")
+    private Instant leftAt;
+
+    public static final String ROLE_OWNER = "OWNER";
+    public static final String ROLE_ADMIN = "ADMIN";
+    public static final String ROLE_MEMBER = "MEMBER";
+    public static final String STATUS_ACTIVE = "ACTIVE";
+    public static final String STATUS_LEFT = "LEFT";
+
     @Transient
     private boolean isNew = true;
 
@@ -49,13 +69,39 @@ public class Member implements Persistable<UUID> {
         this.displayName = displayName;
         this.sortOrder = sortOrder;
         this.createdAt = createdAt;
+        this.joinedAt = createdAt;
     }
 
-    /** The owner of a group as its first member, linked to their account (B9, Decision A53). */
+    /** The owner of a group as its first member, linked to their account and holding the OWNER role (A53, A66). */
     public static Member forOwner(UUID id, UUID groupId, String displayName, UUID ownerUserId, Instant createdAt) {
         Member m = new Member(id, groupId, displayName, 1, createdAt);
         m.userId = ownerUserId;
+        m.role = ROLE_OWNER;
         return m;
+    }
+
+    /** A person who joined through an invitation: linked to their account from the start, role MEMBER (B11). */
+    public static Member forJoined(UUID id, UUID groupId, String displayName, int sortOrder, UUID userId,
+                                   Instant now) {
+        Member m = new Member(id, groupId, displayName, sortOrder, now);
+        m.userId = userId;
+        return m;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public Instant getJoinedAt() {
+        return joinedAt;
+    }
+
+    public Instant getLeftAt() {
+        return leftAt;
     }
 
     @Override

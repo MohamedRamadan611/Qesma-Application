@@ -80,12 +80,27 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
                     physics: const AlwaysScrollableScrollPhysics(),
                     child: SizedBox(
                       height: box.maxHeight,
-                      child: EmptyState(
-                        icon: Icons.group_outlined,
-                        title: l10n.groupsEmptyTitle,
-                        message: l10n.groupsEmptyBody,
-                        actionLabel: l10n.groupsNew,
-                        onAction: () => context.push(Routes.newGroup),
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: EmptyState(
+                              icon: Icons.group_outlined,
+                              title: l10n.groupsEmptyTitle,
+                              message: l10n.groupsEmptyBody,
+                              actionLabel: l10n.groupsNew,
+                              onAction: () => context.push(Routes.newGroup),
+                            ),
+                          ),
+                          // Somebody who was sent an invite code starts here.
+                          Padding(
+                            padding: const EdgeInsetsDirectional.fromSTEB(QesmaSpacing.margin, 0, QesmaSpacing.margin, QesmaSpacing.lg),
+                            child: AppButton(
+                              label: l10n.inviteEnterCodeButton,
+                              variant: AppButtonVariant.text,
+                              onPressed: () => context.push(Routes.join),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -117,6 +132,13 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
     return AppScaffold(
       title: l10n.groupsTitle,
       showBack: false,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.group_add),
+          tooltip: l10n.inviteEnterCodeButton,
+          onPressed: () => context.push(Routes.join),
+        ),
+      ],
       floatingActionButton: state.status == GroupsStatus.ready && state.items.isNotEmpty
           ? FloatingActionButton.extended(
               onPressed: () => context.push(Routes.newGroup),

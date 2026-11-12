@@ -10,27 +10,37 @@
   "lastExpenseAt": "2026-11-10T02:04:14.653825Z",
   "yourMemberId": "650a2534-75c8-426e-a607-0924ab985bdc",
   "yourNetMinor": 2000,
+  "yourRole": "OWNER",
   "members": [
     {
       "id": "650a2534-75c8-426e-a607-0924ab985bdc",
       "displayName": "Mohamed",
       "sortOrder": 1,
       "createdAt": "2026-11-10T02:04:14.379750Z",
-      "isYou": true
+      "isYou": true,
+      "role": "OWNER",
+      "status": "ACTIVE",
+      "hasAccount": true
     },
     {
       "id": "025f85ad-3a0a-4aea-bcba-2a9a120fe678",
       "displayName": "Asem",
       "sortOrder": 2,
       "createdAt": "2026-11-10T02:04:14.451600Z",
-      "isYou": false
+      "isYou": false,
+      "role": "MEMBER",
+      "status": "ACTIVE",
+      "hasAccount": false
     },
     {
       "id": "f1184040-b439-4f1a-bb7b-46ee1d5cb610",
       "displayName": "Mohsen",
       "sortOrder": 3,
       "createdAt": "2026-11-10T02:04:14.504922Z",
-      "isYou": false
+      "isYou": false,
+      "role": "MEMBER",
+      "status": "ACTIVE",
+      "hasAccount": false
     }
   ]
 }

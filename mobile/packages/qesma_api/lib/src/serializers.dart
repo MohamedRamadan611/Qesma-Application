@@ -28,13 +28,22 @@ import 'package:qesma_api/src/model/forgot_password_request.dart';
 import 'package:qesma_api/src/model/google_login_request.dart';
 import 'package:qesma_api/src/model/group_dto.dart';
 import 'package:qesma_api/src/model/group_summary_dto.dart';
+import 'package:qesma_api/src/model/invite_command.dart';
+import 'package:qesma_api/src/model/invite_preview.dart';
+import 'package:qesma_api/src/model/invite_view.dart';
 import 'package:qesma_api/src/model/item_input.dart';
 import 'package:qesma_api/src/model/item_view.dart';
+import 'package:qesma_api/src/model/join_command.dart';
+import 'package:qesma_api/src/model/join_request_view.dart';
+import 'package:qesma_api/src/model/join_view.dart';
+import 'package:qesma_api/src/model/joined_member.dart';
 import 'package:qesma_api/src/model/login_request.dart';
 import 'package:qesma_api/src/model/member_dto.dart';
 import 'package:qesma_api/src/model/net.dart';
 import 'package:qesma_api/src/model/page_response_expense_view.dart';
 import 'package:qesma_api/src/model/page_response_group_summary_dto.dart';
+import 'package:qesma_api/src/model/page_response_invite_view.dart';
+import 'package:qesma_api/src/model/page_response_join_request_view.dart';
 import 'package:qesma_api/src/model/page_response_settlement_view.dart';
 import 'package:qesma_api/src/model/payer_input.dart';
 import 'package:qesma_api/src/model/payer_view.dart';
@@ -52,6 +61,7 @@ import 'package:qesma_api/src/model/tax_charge.dart';
 import 'package:qesma_api/src/model/tax_input.dart';
 import 'package:qesma_api/src/model/token_response.dart';
 import 'package:qesma_api/src/model/transfer_view.dart';
+import 'package:qesma_api/src/model/unclaimed.dart';
 import 'package:qesma_api/src/model/update_group_request.dart';
 import 'package:qesma_api/src/model/update_me_request.dart';
 import 'package:qesma_api/src/model/update_member_request.dart';
@@ -75,13 +85,22 @@ part 'serializers.g.dart';
   GoogleLoginRequest,
   GroupDto,
   GroupSummaryDto,
+  InviteCommand,
+  InvitePreview,
+  InviteView,
   ItemInput,
   ItemView,
+  JoinCommand,
+  JoinRequestView,
+  JoinView,
+  JoinedMember,
   LoginRequest,
   MemberDto,
   Net,
   PageResponseExpenseView,
   PageResponseGroupSummaryDto,
+  PageResponseInviteView,
+  PageResponseJoinRequestView,
   PageResponseSettlementView,
   PayerInput,
   PayerView,
@@ -99,6 +118,7 @@ part 'serializers.g.dart';
   TaxInput,
   TokenResponse,
   TransferView,
+  Unclaimed,
   UpdateGroupRequest,
   UpdateMeRequest,
   UpdateMemberRequest,

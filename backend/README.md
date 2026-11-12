@@ -117,6 +117,29 @@ Auth endpoints are limited to 10 requests/minute per IP (in memory, per instance
 
 Copy `../.env.example` to `../.env` (git-ignored) to override compose defaults.
 
+## Roles and authorization (B10, ADR-009)
+A caller reaches a group only through an ACTIVE member linked to their account (`members.role` = `OWNER`, `ADMIN` or `MEMBER`). A stranger, a LEFT member or an unknown id gets the same `404 NOT_FOUND`; a member whose role lacks the permission gets `403 FORBIDDEN`. All checks are in `GroupAccessService` (`Role`, `Permission`, `GroupContext`); the operation-to-permission table is Decision A67 and `RoleMatrixIT` tests every operation for every role. `GET /groups` lists every group where you are an active member and shows `yourRole`. Until invitations exist (B11) there is no API to add a non-owner account to a group; tests insert member rows directly (`AbstractApiIT.linkUser`). Migration V12 stops with a clear error if a group has no member linked to its creator (groups created before B9): delete or re-seed that local data first.
+
+## Invitations and joining (B11, A70-A76)
+Owner or Admin creates an invite; anyone signed in who has the code can look at it and join, either as a **new member** or by **claiming a member nobody has claimed** (history and balance stay with that member). Two fake users (`$TA` = owner token, `$TB` = the person joining, `$G` = group id, `$M` = a ghost member id):
+```bash
+# create (Idempotency-Key required): expiresInDays 1..30 (default 7), maxUses 1..1000 (optional), requiresApproval (default false)
+curl -s -X POST localhost:8080/api/v1/groups/$G/invites -H "Authorization: Bearer $TA" -H "Idempotency-Key: $(uuidgen)" \
+  -H 'Content-Type: application/json' -d '{"expiresInDays":7}'
+# -> {"id":"...","code":"K7HQ2M9X","link":"https://qesma.app/join/K7HQ2M9X","status":"ACTIVE",...}   (the code is typed as K7HQ-2M9X; case, dashes and Arabic digits are accepted)
+
+# the person looks first: name, who invited, member count, unclaimed members (no balances, no accounts)
+curl -s localhost:8080/api/v1/invites/K7HQ2M9X -H "Authorization: Bearer $TB"
+
+# join: exactly one of claimMemberId / newMemberName -> 201 JOINED, or 202 PENDING_APPROVAL when the invite needs approval
+curl -s -X POST localhost:8080/api/v1/invites/K7HQ2M9X/join -H "Authorization: Bearer $TB" -H "Idempotency-Key: $(uuidgen)" \
+  -H 'Content-Type: application/json' -d "{\"claimMemberId\":\"$M\"}"
+
+# approval: GET /groups/$G/join-requests, then POST /groups/$G/join-requests/<rid>/approve or /reject
+# revoke: DELETE /groups/$G/invites/<iid> (204)   unlink an account from a member: POST /groups/$G/members/$M/unlink (204)
+```
+Unknown code `404`; expired or used up `410 INVITE_EXPIRED`; revoked `410 INVITE_REVOKED`; already a member `409 ALREADY_MEMBER`; claimed by somebody else `409 MEMBER_ALREADY_CLAIMED`. Lookups are limited per IP (30/min on `/api/v1/invites/**`) and per user (10 lookups that find nothing per 15 minutes) with `429 RATE_LIMITED`; tune with `qesma.invites.*`. The deep-link (`qesma.invites.link-base`) and the Android App Links file are outside the backend. The code is a secret: it is not logged, but a reverse proxy that logs request paths would show it.
+
 ## Smoke test (end to end, against a running backend)
 `scripts/smoke.sh` (bash + curl + jq) signs in two fake users, then walks the Phase 1 flow and asserts exact minor-unit values: group + 5 members, equal expense (V3), idempotent replay, user B gets 404, multi-payer (V4), itemized V5-V8 with preview parity, edit/ETag/stale ETag/delete/revisions, V1 balances and transfers, `yourNetMinor`, settlement and V2 balances, then the username + password accounts of ADR-008 (register with a lower-cased username, login, the identical 401 for a wrong password and an unknown name, `USERNAME_TAKEN`, a refused common password, owner-only 404 for a password user's group, change password with fresh tokens, the old password refused). `SMOKE_DAHAB=1` adds the seeded Dahab trip (profile `seed`): the documented nets and four transfers. It prints one `PASS`/`FAIL` line per check and exits non-zero on the first failure. Each run creates fresh users and groups, so it can be repeated.
 ```bash

@@ -24,10 +24,20 @@ const ProblemCodeEnum _$problemCodeEnum_OWNER_MEMBER_PROTECTED =
     const ProblemCodeEnum._('OWNER_MEMBER_PROTECTED');
 const ProblemCodeEnum _$problemCodeEnum_VERSION_CONFLICT =
     const ProblemCodeEnum._('VERSION_CONFLICT');
+const ProblemCodeEnum _$problemCodeEnum_INVITE_EXPIRED =
+    const ProblemCodeEnum._('INVITE_EXPIRED');
+const ProblemCodeEnum _$problemCodeEnum_INVITE_REVOKED =
+    const ProblemCodeEnum._('INVITE_REVOKED');
+const ProblemCodeEnum _$problemCodeEnum_ALREADY_MEMBER =
+    const ProblemCodeEnum._('ALREADY_MEMBER');
+const ProblemCodeEnum _$problemCodeEnum_MEMBER_ALREADY_CLAIMED =
+    const ProblemCodeEnum._('MEMBER_ALREADY_CLAIMED');
 const ProblemCodeEnum _$problemCodeEnum_GROUP_NOT_EMPTY =
     const ProblemCodeEnum._('GROUP_NOT_EMPTY');
 const ProblemCodeEnum _$problemCodeEnum_NOT_FOUND =
     const ProblemCodeEnum._('NOT_FOUND');
+const ProblemCodeEnum _$problemCodeEnum_FORBIDDEN =
+    const ProblemCodeEnum._('FORBIDDEN');
 const ProblemCodeEnum _$problemCodeEnum_UNAUTHORIZED =
     const ProblemCodeEnum._('UNAUTHORIZED');
 const ProblemCodeEnum _$problemCodeEnum_INTERNAL_ERROR =
@@ -59,10 +69,20 @@ ProblemCodeEnum _$problemCodeEnumValueOf(String name) {
       return _$problemCodeEnum_OWNER_MEMBER_PROTECTED;
     case 'VERSION_CONFLICT':
       return _$problemCodeEnum_VERSION_CONFLICT;
+    case 'INVITE_EXPIRED':
+      return _$problemCodeEnum_INVITE_EXPIRED;
+    case 'INVITE_REVOKED':
+      return _$problemCodeEnum_INVITE_REVOKED;
+    case 'ALREADY_MEMBER':
+      return _$problemCodeEnum_ALREADY_MEMBER;
+    case 'MEMBER_ALREADY_CLAIMED':
+      return _$problemCodeEnum_MEMBER_ALREADY_CLAIMED;
     case 'GROUP_NOT_EMPTY':
       return _$problemCodeEnum_GROUP_NOT_EMPTY;
     case 'NOT_FOUND':
       return _$problemCodeEnum_NOT_FOUND;
+    case 'FORBIDDEN':
+      return _$problemCodeEnum_FORBIDDEN;
     case 'UNAUTHORIZED':
       return _$problemCodeEnum_UNAUTHORIZED;
     case 'INTERNAL_ERROR':
@@ -89,8 +109,13 @@ final BuiltSet<ProblemCodeEnum> _$problemCodeEnumValues =
   _$problemCodeEnum_MEMBER_HAS_TRANSACTIONS,
   _$problemCodeEnum_OWNER_MEMBER_PROTECTED,
   _$problemCodeEnum_VERSION_CONFLICT,
+  _$problemCodeEnum_INVITE_EXPIRED,
+  _$problemCodeEnum_INVITE_REVOKED,
+  _$problemCodeEnum_ALREADY_MEMBER,
+  _$problemCodeEnum_MEMBER_ALREADY_CLAIMED,
   _$problemCodeEnum_GROUP_NOT_EMPTY,
   _$problemCodeEnum_NOT_FOUND,
+  _$problemCodeEnum_FORBIDDEN,
   _$problemCodeEnum_UNAUTHORIZED,
   _$problemCodeEnum_INTERNAL_ERROR,
   _$problemCodeEnum_RATE_LIMITED,
@@ -113,8 +138,13 @@ class _$ProblemCodeEnumSerializer
     'MEMBER_HAS_TRANSACTIONS': 'MEMBER_HAS_TRANSACTIONS',
     'OWNER_MEMBER_PROTECTED': 'OWNER_MEMBER_PROTECTED',
     'VERSION_CONFLICT': 'VERSION_CONFLICT',
+    'INVITE_EXPIRED': 'INVITE_EXPIRED',
+    'INVITE_REVOKED': 'INVITE_REVOKED',
+    'ALREADY_MEMBER': 'ALREADY_MEMBER',
+    'MEMBER_ALREADY_CLAIMED': 'MEMBER_ALREADY_CLAIMED',
     'GROUP_NOT_EMPTY': 'GROUP_NOT_EMPTY',
     'NOT_FOUND': 'NOT_FOUND',
+    'FORBIDDEN': 'FORBIDDEN',
     'UNAUTHORIZED': 'UNAUTHORIZED',
     'INTERNAL_ERROR': 'INTERNAL_ERROR',
     'RATE_LIMITED': 'RATE_LIMITED',
@@ -131,8 +161,13 @@ class _$ProblemCodeEnumSerializer
     'MEMBER_HAS_TRANSACTIONS': 'MEMBER_HAS_TRANSACTIONS',
     'OWNER_MEMBER_PROTECTED': 'OWNER_MEMBER_PROTECTED',
     'VERSION_CONFLICT': 'VERSION_CONFLICT',
+    'INVITE_EXPIRED': 'INVITE_EXPIRED',
+    'INVITE_REVOKED': 'INVITE_REVOKED',
+    'ALREADY_MEMBER': 'ALREADY_MEMBER',
+    'MEMBER_ALREADY_CLAIMED': 'MEMBER_ALREADY_CLAIMED',
     'GROUP_NOT_EMPTY': 'GROUP_NOT_EMPTY',
     'NOT_FOUND': 'NOT_FOUND',
+    'FORBIDDEN': 'FORBIDDEN',
     'UNAUTHORIZED': 'UNAUTHORIZED',
     'INTERNAL_ERROR': 'INTERNAL_ERROR',
     'RATE_LIMITED': 'RATE_LIMITED',

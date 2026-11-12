@@ -12,6 +12,7 @@ Method | HTTP request | Description
 [**addMember**](MemberControllerApi.md#addmember) | **POST** /api/v1/groups/{gid}/members | 
 [**deleteMember**](MemberControllerApi.md#deletemember) | **DELETE** /api/v1/groups/{gid}/members/{mid} | 
 [**renameMember**](MemberControllerApi.md#renamemember) | **PATCH** /api/v1/groups/{gid}/members/{mid} | 
+[**unlinkMember**](MemberControllerApi.md#unlinkmember) | **POST** /api/v1/groups/{gid}/members/{mid}/unlink | Unlink the account from a member (the member, its history and balance stay)
 
 
 # **addMember**
@@ -141,6 +142,50 @@ Name | Type | Description  | Notes
 
  - **Content-Type**: application/json
  - **Accept**: application/json, application/problem+json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **unlinkMember**
+> unlinkMember(gid, mid)
+
+Unlink the account from a member (the member, its history and balance stay)
+
+The person loses access to the group at once and the member can be claimed again. The owner's member cannot be unlinked (409 OWNER_MEMBER_PROTECTED); only the owner may unlink an admin.
+
+### Example
+```dart
+import 'package:qesma_api/api.dart';
+
+final api = QesmaApi().getMemberControllerApi();
+final String gid = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final String mid = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    api.unlinkMember(gid, mid);
+} catch on DioException (e) {
+    print('Exception when calling MemberControllerApi->unlinkMember: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **gid** | **String**|  | 
+ **mid** | **String**|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/problem+json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

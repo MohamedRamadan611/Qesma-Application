@@ -51,7 +51,7 @@ import org.springframework.test.web.servlet.MvcResult;
 class SecurityChainTest {
 
     @TestConfiguration
-    @org.springframework.boot.context.properties.EnableConfigurationProperties(AuthProperties.class)
+    @org.springframework.boot.context.properties.EnableConfigurationProperties({AuthProperties.class, app.qesma.service.InviteProperties.class})
     static class Beans {
         @Bean
         MeterRegistry meterRegistry() {

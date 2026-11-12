@@ -26,9 +26,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class AuthRateLimitFilter extends OncePerRequestFilter {
 
     static final String PROTECTED_PREFIX = "/api/v1/auth/";
+    static final String METRIC_AUTH = "qesma.auth.rate_limited";
     private static final int EVICTION_THRESHOLD = 10_000;
     private static final Logger log = LoggerFactory.getLogger(AuthRateLimitFilter.class);
 
+    private final String prefix;
+    private final String metricName;
     private final int maxRequests;
     private final long windowMillis;
     private final Clock clock;
@@ -38,8 +41,16 @@ public class AuthRateLimitFilter extends OncePerRequestFilter {
 
     public AuthRateLimitFilter(AuthProperties.RateLimit limit, Clock clock, ProblemJsonWriter problems,
                                MeterRegistry metrics) {
-        this.maxRequests = limit.maxRequests();
-        this.windowMillis = limit.window().toMillis();
+        this(PROTECTED_PREFIX, METRIC_AUTH, limit.maxRequests(), limit.window(), clock, problems, metrics);
+    }
+
+    /** The same per-IP fixed window for another path prefix (invitation codes, B11). */
+    public AuthRateLimitFilter(String prefix, String metricName, int maxRequests, Duration window, Clock clock,
+                               ProblemJsonWriter problems, MeterRegistry metrics) {
+        this.prefix = prefix;
+        this.metricName = metricName;
+        this.maxRequests = maxRequests;
+        this.windowMillis = window.toMillis();
         this.clock = clock;
         this.problems = problems;
         this.metrics = metrics;
@@ -47,7 +58,13 @@ public class AuthRateLimitFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !request.getRequestURI().startsWith(PROTECTED_PREFIX);
+        return !request.getRequestURI().startsWith(prefix);
+    }
+
+    /** Two instances of this filter live in one chain; each needs its own "already filtered" marker. */
+    @Override
+    protected String getFilterName() {
+        return "RateLimit:" + prefix;
     }
 
     @Override
@@ -63,8 +80,9 @@ public class AuthRateLimitFilter extends OncePerRequestFilter {
                         : new Window(current.startMillis, current.count + 1));
         if (window.count > maxRequests) {
             long retryAfterSeconds = Math.max(1, Duration.ofMillis(window.startMillis + windowMillis - now).toSeconds());
-            metrics.counter("qesma.auth.rate_limited").increment();
-            log.atWarn().addKeyValue("event", "auth.rate_limited").log("auth.rate_limited");
+            metrics.counter(metricName).increment();
+            log.atWarn().addKeyValue("event", "rate_limited").addKeyValue("scope", prefix)
+                    .log("rate_limited scope={}", prefix);
             response.setHeader("Retry-After", Long.toString(retryAfterSeconds));
             problems.write(response, HttpStatus.TOO_MANY_REQUESTS, ErrorCode.RATE_LIMITED, "Too many requests");
             return;

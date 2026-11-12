@@ -58,6 +58,10 @@ class RequestLogInterceptor extends Interceptor {
 
   void _log(RequestOptions request, int? status, String? requestId) {
     final id = requestId == null ? '' : ' [$requestId]';
-    _sink('${request.method} ${request.uri.path} -> ${status ?? 'no response'}$id');
+    _sink('${request.method} ${redactSecrets(request.uri.path)} -> ${status ?? 'no response'}$id');
   }
+
+  /// An invite code is the only secret of its invitation and sits in the path (`/invites/<code>`, `/invites/<code>/join`):
+  /// it never reaches a log.
+  static String redactSecrets(String path) => path.replaceAllMapped(RegExp(r'(/invites/)[^/]+'), (m) => '${m[1]}***');
 }

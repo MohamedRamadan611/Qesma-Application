@@ -11,6 +11,7 @@ import '../../../core/router/app_router.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../application/group_detail_controller.dart';
+import '../application/group_permissions.dart';
 import '../data/group_type.dart';
 import 'group_dialogs.dart';
 import 'group_ui.dart';
@@ -192,12 +193,13 @@ class _EditGroupScreenState extends ConsumerState<EditGroupScreen> {
             },
           ),
           const SizedBox(height: QesmaSpacing.sm),
-          AppButton(
-            label: l10n.groupDelete,
-            icon: Icons.delete_outline,
-            variant: AppButtonVariant.secondary,
-            onPressed: detail.busy ? null : _delete,
-          ),
+          if (ref.watch(groupPermissionsProvider(widget.gid)).canDeleteGroup)   // only the owner deletes a group
+            AppButton(
+              label: l10n.groupDelete,
+              icon: Icons.delete_outline,
+              variant: AppButtonVariant.secondary,
+              onPressed: detail.busy ? null : _delete,
+            ),
         ],
       );
     }

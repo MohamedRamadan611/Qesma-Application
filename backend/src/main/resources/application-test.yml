@@ -9,6 +9,12 @@ qesma:
     password:
       bcrypt-cost: 4          # the minimum: tests hash hundreds of times (production uses 12)
 
+  invites:
+    rate-limit:
+      max-requests: 100000    # the shared test context makes thousands of calls; InviteRateLimitIT lowers it
+    failed-lookups:
+      max: 100000
+
 logging:
   structured:
     format:

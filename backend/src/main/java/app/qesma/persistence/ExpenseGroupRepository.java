@@ -14,12 +14,34 @@ import org.springframework.data.repository.query.Param;
 
 public interface ExpenseGroupRepository extends JpaRepository<ExpenseGroup, UUID> {
 
-    Optional<ExpenseGroup> findByIdAndOwnerUserId(UUID id, UUID ownerUserId);
+    /**
+     * The group, only if {@code user} has an ACTIVE member in it (B10, Decision A65): anybody else, and a LEFT member,
+     * gets an empty result, which the caller turns into the same 404 as for an unknown id.
+     */
+    @Query("""
+            select g from ExpenseGroup g where g.id = :id and exists
+              (select 1 from Member m where m.groupId = g.id and m.userId = :user and m.status = 'ACTIVE')
+            """)
+    Optional<ExpenseGroup> findReachable(@Param("id") UUID id, @Param("user") UUID user);
 
-    /** Row lock on the group: serializes member creation/rename/delete and group deletion. */
+    /**
+     * Row lock on a group by id with NO membership check: only for the invitation paths, where the invite code is the
+     * capability and the caller is not a member yet. Always taken after the invite row (lock order: invite, group).
+     */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select g from ExpenseGroup g where g.id = :id and g.ownerUserId = :owner")
-    Optional<ExpenseGroup> findOwnedForUpdate(@Param("id") UUID id, @Param("owner") UUID owner);
+    @Query("select g from ExpenseGroup g where g.id = :id")
+    Optional<ExpenseGroup> findByIdForUpdate(@Param("id") UUID id);
+
+    /**
+     * Row lock on the group, taken only when the caller is an ACTIVE member (a stranger locks nothing): serializes
+     * member creation/rename/delete, ledger writes and group deletion.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            select g from ExpenseGroup g where g.id = :id and exists
+              (select 1 from Member m where m.groupId = g.id and m.userId = :user and m.status = 'ACTIVE')
+            """)
+    Optional<ExpenseGroup> findReachableForUpdate(@Param("id") UUID id, @Param("user") UUID user);
 
     /** Database defaults supply version (1), timestamps and member_seq (0). */
     @Modifying
@@ -35,17 +57,23 @@ public interface ExpenseGroupRepository extends JpaRepository<ExpenseGroup, UUID
     @Query(nativeQuery = true, value = "UPDATE expense_groups SET member_seq = :seq WHERE id = :id")
     int setMemberSeq(@Param("id") UUID id, @Param("seq") int seq);
 
-    /** The owner's groups, newest first, with member counts from a single statement. */
+    /**
+     * The groups where {@code user} has an ACTIVE member, newest first, with member counts, totals and the caller's
+     * role from a single statement: membership is a join predicate here, never a per-group check (no N+1).
+     */
     @Query(value = """
             select new app.qesma.persistence.GroupSummaryRow(g.id, g.name, g.type, g.currencyCode,
-                   (select count(m) from Member m where m.groupId = g.id),
+                   (select count(m) from Member m where m.groupId = g.id and m.status = 'ACTIVE'),
                    (select coalesce(sum(x.totalMinor), 0L) from Expense x
                      where x.groupId = g.id and x.deletedAt is null),
-                   (select max(x.createdAt) from Expense x where x.groupId = g.id and x.deletedAt is null))
-            from ExpenseGroup g
-            where g.ownerUserId = :owner
+                   (select max(x.createdAt) from Expense x where x.groupId = g.id and x.deletedAt is null),
+                   me.role)
+            from ExpenseGroup g join Member me on me.groupId = g.id and me.userId = :user and me.status = 'ACTIVE'
             order by g.createdAt desc, g.id desc
             """,
-            countQuery = "select count(g) from ExpenseGroup g where g.ownerUserId = :owner")
-    Page<GroupSummaryRow> findSummaries(@Param("owner") UUID owner, Pageable pageable);
+            countQuery = """
+            select count(g) from ExpenseGroup g
+            join Member me on me.groupId = g.id and me.userId = :user and me.status = 'ACTIVE'
+            """)
+    Page<GroupSummaryRow> findSummaries(@Param("user") UUID user, Pageable pageable);
 }

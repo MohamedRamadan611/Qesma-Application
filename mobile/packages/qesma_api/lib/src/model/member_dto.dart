@@ -13,9 +13,12 @@ part 'member_dto.g.dart';
 /// Properties:
 /// * [createdAt] 
 /// * [displayName] 
+/// * [hasAccount] 
 /// * [id] 
 /// * [isYou] 
+/// * [role] 
 /// * [sortOrder] 
+/// * [status] 
 @BuiltValue()
 abstract class MemberDto implements Built<MemberDto, MemberDtoBuilder> {
   @BuiltValueField(wireName: r'createdAt')
@@ -24,14 +27,23 @@ abstract class MemberDto implements Built<MemberDto, MemberDtoBuilder> {
   @BuiltValueField(wireName: r'displayName')
   String get displayName;
 
+  @BuiltValueField(wireName: r'hasAccount')
+  bool get hasAccount;
+
   @BuiltValueField(wireName: r'id')
   String get id;
 
   @BuiltValueField(wireName: r'isYou')
   bool get isYou;
 
+  @BuiltValueField(wireName: r'role')
+  String get role;
+
   @BuiltValueField(wireName: r'sortOrder')
   int get sortOrder;
+
+  @BuiltValueField(wireName: r'status')
+  String get status;
 
   MemberDto._();
 
@@ -66,6 +78,11 @@ class _$MemberDtoSerializer implements PrimitiveSerializer<MemberDto> {
       object.displayName,
       specifiedType: const FullType(String),
     );
+    yield r'hasAccount';
+    yield serializers.serialize(
+      object.hasAccount,
+      specifiedType: const FullType(bool),
+    );
     yield r'id';
     yield serializers.serialize(
       object.id,
@@ -76,10 +93,20 @@ class _$MemberDtoSerializer implements PrimitiveSerializer<MemberDto> {
       object.isYou,
       specifiedType: const FullType(bool),
     );
+    yield r'role';
+    yield serializers.serialize(
+      object.role,
+      specifiedType: const FullType(String),
+    );
     yield r'sortOrder';
     yield serializers.serialize(
       object.sortOrder,
       specifiedType: const FullType(int),
+    );
+    yield r'status';
+    yield serializers.serialize(
+      object.status,
+      specifiedType: const FullType(String),
     );
   }
 
@@ -118,6 +145,13 @@ class _$MemberDtoSerializer implements PrimitiveSerializer<MemberDto> {
           ) as String;
           result.displayName = valueDes;
           break;
+        case r'hasAccount':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(bool),
+          ) as bool;
+          result.hasAccount = valueDes;
+          break;
         case r'id':
           final valueDes = serializers.deserialize(
             value,
@@ -132,12 +166,26 @@ class _$MemberDtoSerializer implements PrimitiveSerializer<MemberDto> {
           ) as bool;
           result.isYou = valueDes;
           break;
+        case r'role':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.role = valueDes;
+          break;
         case r'sortOrder':
           final valueDes = serializers.deserialize(
             value,
             specifiedType: const FullType(int),
           ) as int;
           result.sortOrder = valueDes;
+          break;
+        case r'status':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.status = valueDes;
           break;
         default:
           unhandled.add(key);

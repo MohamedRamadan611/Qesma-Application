@@ -58,6 +58,11 @@ ErrorCopy _forCode(AppLocalizations l10n, ApiErrorCode code, String? memberName)
     ApiErrorCode.rateLimited => ErrorCopy(message: l10n.errorRateLimited),
     ApiErrorCode.authProviderUnavailable => ErrorCopy(message: l10n.errorAuthProviderUnavailable),
     ApiErrorCode.usernameTaken => ErrorCopy(message: l10n.authErrorUsernameTaken),
+    ApiErrorCode.forbidden => ErrorCopy(message: l10n.errorForbidden),
+    ApiErrorCode.inviteExpired => ErrorCopy(title: l10n.inviteExpiredTitle, message: l10n.inviteExpiredBody),
+    ApiErrorCode.inviteRevoked => ErrorCopy(title: l10n.inviteRevokedTitle, message: l10n.inviteRevokedBody),
+    ApiErrorCode.alreadyMember => ErrorCopy(title: l10n.inviteAlreadyMemberTitle, message: l10n.inviteAlreadyMemberBody),
+    ApiErrorCode.memberAlreadyClaimed => ErrorCopy(message: l10n.inviteClaimedNotice),
     ApiErrorCode.unknown => ErrorCopy(message: l10n.errorUnexpected),
   };
 }

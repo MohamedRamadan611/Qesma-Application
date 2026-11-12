@@ -6,7 +6,9 @@ import '../../../core/errors/api_problem.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
+import '../../invites/presentation/invite_sheet.dart';
 import '../application/group_detail_controller.dart';
+import '../application/group_permissions.dart';
 import 'group_dialogs.dart';
 import 'group_ui.dart';
 import 'member_sheets.dart';
@@ -24,38 +26,58 @@ class MembersTab extends ConsumerWidget {
     final controller = ref.read(groupDetailControllerProvider(group.id).notifier);
     final busy = ref.watch(groupDetailControllerProvider(group.id)).busy;
     final members = group.members.toList()..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    // Owner and admin manage members; everybody else gets a read-only list (the server still decides).
+    final canManage = ref.watch(groupPermissionsProvider(group.id)).canManageMembers;
+    final canInvite = ref.watch(groupPermissionsProvider(group.id)).canManageInvites;
 
-    return ListView(
-      padding: const EdgeInsets.all(QesmaSpacing.margin),
-      children: [
-        AppButton(
-          label: l10n.membersAdd,
-          icon: Icons.person_add_alt,
-          variant: AppButtonVariant.secondary,
-          onPressed: busy
-              ? null
-              : () => showMemberNameSheet(
-                    context,
-                    title: l10n.memberAddTitle,
-                    subtitle: l10n.memberAddSubtitle,
-                    onSave: (name) async {
-                      final failure = await controller.addMember(name);
-                      // The reply may have been lost although the member exists: show the real list.
-                      if (failure != null && codeOf(failure) == ApiErrorCode.duplicateMemberName) await controller.load();
-                      return failure;
-                    },
-                  ),
-        ),
-        const SizedBox(height: QesmaSpacing.md),
-        for (final member in members) ...[
-          _MemberRow(
-            member: member,
-            busy: busy,
-            onOptions: () => _options(context, controller, member),
-          ),
-          const SizedBox(height: QesmaSpacing.sm),
+    return RefreshIndicator(
+      onRefresh: () async {
+        await controller.load();
+      },
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(QesmaSpacing.margin),
+        children: [
+          if (canManage) ...[
+            AppButton(
+              label: l10n.membersAdd,
+              icon: Icons.person_add_alt,
+              variant: AppButtonVariant.secondary,
+              onPressed: busy
+                  ? null
+                  : () => showMemberNameSheet(
+                        context,
+                        title: l10n.memberAddTitle,
+                        subtitle: l10n.memberAddSubtitle,
+                        onSave: (name) async {
+                          final failure = await controller.addMember(name);
+                          // The reply may have been lost although the member exists: show the real list.
+                          if (failure != null && codeOf(failure) == ApiErrorCode.duplicateMemberName) await controller.load();
+                          return failure;
+                        },
+                      ),
+            ),
+            const SizedBox(height: QesmaSpacing.sm),
+          ],
+          if (canInvite) ...[
+            AppButton(
+              label: l10n.inviteAction,
+              icon: Icons.group_add,
+              variant: AppButtonVariant.secondary,
+              onPressed: () => showInviteSheet(context, gid: group.id, groupName: group.name),
+            ),
+          ],
+          if (canManage || canInvite) const SizedBox(height: QesmaSpacing.md),
+          for (final member in members) ...[
+            _MemberRow(
+              member: member,
+              busy: busy,
+              onOptions: canManage ? () => _options(context, controller, member) : null,
+            ),
+            const SizedBox(height: QesmaSpacing.sm),
+          ],
         ],
-      ],
+      ),
     );
   }
 
@@ -125,7 +147,7 @@ class _MemberRow extends StatelessWidget {
 
   final MemberDto member;
   final bool busy;
-  final VoidCallback onOptions;
+  final VoidCallback? onOptions;
 
   @override
   Widget build(BuildContext context) {
@@ -147,11 +169,12 @@ class _MemberRow extends StatelessWidget {
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.more_vert),
-            tooltip: l10n.membersOptions(member.displayName),
-            onPressed: busy ? null : onOptions,
-          ),
+          if (onOptions != null)
+            IconButton(
+              icon: const Icon(Icons.more_vert),
+              tooltip: l10n.membersOptions(member.displayName),
+              onPressed: busy ? null : onOptions,
+            ),
         ],
       ),
     );

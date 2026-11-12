@@ -17,6 +17,11 @@ void main() {
       // TODO
     });
 
+    // bool hasAccount
+    test('to test the property `hasAccount`', () async {
+      // TODO
+    });
+
     // String id
     test('to test the property `id`', () async {
       // TODO
@@ -27,8 +32,18 @@ void main() {
       // TODO
     });
 
+    // String role
+    test('to test the property `role`', () async {
+      // TODO
+    });
+
     // int sortOrder
     test('to test the property `sortOrder`', () async {
+      // TODO
+    });
+
+    // String status
+    test('to test the property `status`', () async {
       // TODO
     });
 

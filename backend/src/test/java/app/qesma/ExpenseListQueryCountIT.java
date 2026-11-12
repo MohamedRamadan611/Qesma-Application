@@ -25,8 +25,8 @@ import org.springframework.test.web.servlet.MvcResult;
 @TestPropertySource(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
 class ExpenseListQueryCountIT extends AbstractApiIT {
 
-    /** group lookup + page + count + payers + splits + members. */
-    private static final int EXPECTED_STATEMENTS = 6;
+    /** group lookup + caller's member row (B10 authorization) + page + count + payers + splits + members. */
+    private static final int EXPECTED_STATEMENTS = 7;
 
     @Autowired EntityManagerFactory emf;
 
@@ -104,7 +104,7 @@ class ExpenseListQueryCountIT extends AbstractApiIT {
         long one = statementsFor(ali, url + "?size=1");
         long thirty = statementsFor(ali, url + "?size=30");
         assertThat(thirty).as("statements for 30 settlements").isEqualTo(one);
-        assertThat(one).as("group lookup + page + count").isLessThanOrEqualTo(3);
+        assertThat(one).as("group lookup + caller member + page + count").isLessThanOrEqualTo(4);
     }
 
     @Test

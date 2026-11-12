@@ -24,7 +24,8 @@ public class YourNetQuery {
 
     private static final String SQL = """
             with mine as (
-              select m.id as member_id, m.group_id from members m where m.user_id = ? and m.group_id = any(?)
+              select m.id as member_id, m.group_id from members m
+              where m.user_id = ? and m.group_id = any(?) and m.status = 'ACTIVE'
             )
             select mine.group_id, mine.member_id,
                    coalesce(sum(l.paid), 0)::bigint, coalesce(sum(l.owed), 0)::bigint,
@@ -33,17 +34,19 @@ public class YourNetQuery {
             left join (
               select p.member_id, p.amount_minor as paid, 0::bigint as owed, 0::bigint as sent, 0::bigint as received
               from expense_payers p join expenses e on e.id = p.expense_id
-              where e.deleted_at is null and e.group_id = any(?)
+              where e.deleted_at is null and e.group_id = any(?) and p.member_id in (select member_id from mine)
               union all
               select s.member_id, 0, s.owed_minor, 0, 0
               from expense_splits s join expenses e on e.id = s.expense_id
-              where e.deleted_at is null and e.group_id = any(?)
+              where e.deleted_at is null and e.group_id = any(?) and s.member_id in (select member_id from mine)
               union all
               select t.from_member_id, 0, 0, t.amount_minor, 0
               from settlements t where t.deleted_at is null and t.group_id = any(?)
+                and t.from_member_id in (select member_id from mine)
               union all
               select t.to_member_id, 0, 0, 0, t.amount_minor
               from settlements t where t.deleted_at is null and t.group_id = any(?)
+                and t.to_member_id in (select member_id from mine)
             ) l on l.member_id = mine.member_id
             group by mine.group_id, mine.member_id
             """;

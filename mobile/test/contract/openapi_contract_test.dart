@@ -37,7 +37,7 @@ void main() {
         operations[id] = '${method.toUpperCase()} $path';
       });
     });
-    expect(operations, hasLength(31), reason: 'the API has exactly 31 operations (24 Phase 1 + 7 password-auth)');
+    expect(operations, hasLength(40), reason: 'the API has exactly 40 operations (24 Phase 1 + 7 password-auth + 9 invitations, join and unlink)');
 
     final generated = Directory('packages/qesma_api/lib/src/api')
         .listSync()

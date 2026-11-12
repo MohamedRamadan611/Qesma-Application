@@ -26,7 +26,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Groups (spec 3.1, 8.2). All access is by owner id; ownership is decided only by {@link GroupAccessService}. */
+/** Groups (spec 3.1, 8.2). Access and roles are decided only by {@link GroupAccessService}. */
 @Service
 public class GroupService {
 
@@ -35,12 +35,16 @@ public class GroupService {
     /** One row of the group list. */
     /** {@code yourNetMinor}: what the caller is owed (positive) or owes (negative); null when they have no member in the group. */
     public record GroupSummary(UUID id, String name, String type, String currencyCode, long memberCount,
-                               long totalSpentMinor, java.time.Instant lastExpenseAt, Long yourNetMinor) {
+                               long totalSpentMinor, java.time.Instant lastExpenseAt, Long yourNetMinor,
+                               String yourRole) {
     }
 
-    /** A group together with its members in {@code sort_order} and its expense totals (non-deleted expenses). */
+    /**
+     * A group together with its members in {@code sort_order} and its expense totals (non-deleted expenses);
+     * {@code yourRole} is the caller's role (OWNER, ADMIN or MEMBER).
+     */
     public record GroupDetail(ExpenseGroup group, List<Member> members, long totalSpentMinor,
-                              java.time.Instant lastExpenseAt, UUID yourMemberId, Long yourNetMinor) {
+                              java.time.Instant lastExpenseAt, UUID yourMemberId, Long yourNetMinor, String yourRole) {
     }
 
     private final GroupAccessService access;
@@ -90,16 +94,16 @@ public class GroupService {
         Map<UUID, YourNetQuery.YourTotals> mine = yourNet.forGroups(userId,
                 found.getContent().stream().map(GroupSummaryRow::id).toList());
         return found.map(r -> new GroupSummary(r.id(), r.name(), r.type(), r.currencyCode(), r.memberCount(),
-                r.totalSpentMinor(), r.lastExpenseAt(), netOf(mine.get(r.id()))));
+                r.totalSpentMinor(), r.lastExpenseAt(), netOf(mine.get(r.id())), r.role()));
     }
 
     @Transactional(readOnly = true)
     public GroupDetail get(UUID userId, UUID groupId) {
-        ExpenseGroup group = access.requireOwned(userId, groupId);
+        GroupContext ctx = access.requireMember(userId, groupId);
         GroupTotals totals = expenses.totals(groupId);
         YourNetQuery.YourTotals mine = yourNet.forGroups(userId, List.of(groupId)).get(groupId);
-        return new GroupDetail(group, members.findByGroupIdOrderBySortOrderAsc(groupId),
-                totals.totalSpentMinor(), totals.lastExpenseAt(), mine == null ? null : mine.memberId(), netOf(mine));
+        return new GroupDetail(ctx.group(), access.listMembers(ctx), totals.totalSpentMinor(),
+                totals.lastExpenseAt(), ctx.me().getId(), netOf(mine), ctx.role().name());
     }
 
     /**
@@ -109,7 +113,7 @@ public class GroupService {
      */
     @Transactional
     public ExpenseGroup update(UUID userId, UUID groupId, int expectedVersion, String rawName, String rawType) {
-        ExpenseGroup group = access.requireOwned(userId, groupId);
+        ExpenseGroup group = access.require(userId, groupId, Permission.EDIT_GROUP).group();
         if (group.getVersion() != expectedVersion) {
             throw ApiException.conflict(ErrorCode.VERSION_CONFLICT, "The group was modified by someone else");
         }
@@ -126,7 +130,7 @@ public class GroupService {
     /** Deletes a group that holds no ledger data, together with its (ledger-free) members. */
     @Transactional
     public void delete(UUID userId, UUID groupId) {
-        ExpenseGroup group = access.requireOwnedForUpdate(userId, groupId);
+        ExpenseGroup group = access.requireForUpdate(userId, groupId, Permission.DELETE_GROUP).group();
         if (usage.hasLedgerData(groupId)) {
             throw ApiException.conflict(ErrorCode.GROUP_NOT_EMPTY, "The group has expenses or settlements");
         }

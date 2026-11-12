@@ -50,6 +50,16 @@ public class MemberController {
         return MemberDto.from(members.rename(currentUser.id(), gid, mid, request.displayName()), currentUser.id());
     }
 
+    /** Detaches the person's account from a member; the member and its history stay (Owner/Admin). */
+    @PostMapping("/{mid}/unlink")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @io.swagger.v3.oas.annotations.Operation(summary = "Unlink the account from a member (the member, its history and balance stay)",
+            description = "The person loses access to the group at once and the member can be claimed again. The "
+                    + "owner's member cannot be unlinked (409 OWNER_MEMBER_PROTECTED); only the owner may unlink an admin.")
+    public void unlink(@PathVariable UUID gid, @PathVariable UUID mid) {
+        members.unlink(currentUser.id(), gid, mid);
+    }
+
     @DeleteMapping("/{mid}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable UUID gid, @PathVariable UUID mid) {

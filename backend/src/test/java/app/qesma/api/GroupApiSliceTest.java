@@ -52,7 +52,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 class GroupApiSliceTest {
 
     @TestConfiguration
-    @EnableConfigurationProperties(AuthProperties.class)
+    @EnableConfigurationProperties({AuthProperties.class, app.qesma.service.InviteProperties.class})
     static class Beans {
         @Bean
         MeterRegistry meterRegistry() {
@@ -114,7 +114,7 @@ class GroupApiSliceTest {
         // the owner is member #1 and linked to the caller: the response shows it as "you"
         Member ownerRow = member(ownerMember, "Me", 1, me);   // build the mock before stubbing with it
         when(groups.get(me, gid)).thenReturn(new GroupService.GroupDetail(created, List.of(ownerRow), 0L, null,
-                ownerMember, 0L));
+                ownerMember, 0L, "OWNER"));
 
         // The client tries to smuggle in owner, version and id: they have nowhere to go.
         String evil = "{\"name\":\"Dahab\",\"type\":\"TRIP\",\"currencyCode\":\"EGP\","
@@ -139,7 +139,7 @@ class GroupApiSliceTest {
         ExpenseGroup g = group(4);
         Member a = member(m1, "Ali", 1);
         Member b = member(m2, "Sara", 2);
-        when(groups.get(me, gid)).thenReturn(new GroupService.GroupDetail(g, List.of(a, b), 125_050L, Instant.parse("2026-02-03T04:05:06Z"), m1, -2_500L));
+        when(groups.get(me, gid)).thenReturn(new GroupService.GroupDetail(g, List.of(a, b), 125_050L, Instant.parse("2026-02-03T04:05:06Z"), m1, -2_500L, "OWNER"));
 
         MvcResult r = mvc.perform(authed(get("/api/v1/groups/" + gid))).andReturn();
 
@@ -156,7 +156,7 @@ class GroupApiSliceTest {
 
     @Test
     void listIsPagedAndCarriesTheUiFields() throws Exception {
-        var row = new GroupService.GroupSummary(gid, "Dahab", "TRIP", "EGP", 5, 9_900L, Instant.parse("2026-02-03T04:05:06Z"), -2_500L);
+        var row = new GroupService.GroupSummary(gid, "Dahab", "TRIP", "EGP", 5, 9_900L, Instant.parse("2026-02-03T04:05:06Z"), -2_500L, "OWNER");
         when(groups.list(me, 2, 10)).thenReturn(new PageImpl<>(List.of(row), PageRequest.of(2, 10), 21));
 
         MvcResult r = mvc.perform(authed(get("/api/v1/groups?page=2&size=10"))).andReturn();
@@ -196,7 +196,7 @@ class GroupApiSliceTest {
         ExpenseGroup updated = group(4);
         when(groups.update(me, gid, 3, "New", null)).thenReturn(updated);
         Member kept = member(UUID.randomUUID(), "Ali", 1);
-        when(groups.get(me, gid)).thenReturn(new GroupService.GroupDetail(updated, List.of(kept), 500L, null, null, null));
+        when(groups.get(me, gid)).thenReturn(new GroupService.GroupDetail(updated, List.of(kept), 500L, null, null, null, "OWNER"));
 
         MvcResult r = mvc.perform(authed(patch("/api/v1/groups/" + gid)).header("If-Match", "\"3\"")
                 .content("{\"name\":\"New\"}")).andReturn();

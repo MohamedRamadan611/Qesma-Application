@@ -22,5 +22,14 @@ void main() {
       // TODO
     });
 
+    // Unlink the account from a member (the member, its history and balance stay)
+    //
+    // The person loses access to the group at once and the member can be claimed again. The owner's member cannot be unlinked (409 OWNER_MEMBER_PROTECTED); only the owner may unlink an admin.
+    //
+    //Future unlinkMember(String gid, String mid) async
+    test('test unlinkMember', () async {
+      // TODO
+    });
+
   });
 }

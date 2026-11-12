@@ -167,3 +167,15 @@ Runs the real login, `GET /me`, refresh rotation, reuse detection and logout. Sk
 - **Mode:** follows the phone by default; Account > Appearance sets System / Light / Dark. It applies at once and is remembered on the device (`ThemeModeController`, `PreferenceStore`); signing out keeps it.
 - **Verification:** `test/core/theme/contrast_test.dart` holds both palettes to 4.5:1 (text) and 3:1 (boundaries); `test/a11y/guidelines_test.dart` runs Flutter's tap-target, label and rendered-contrast guidelines on six screens in both themes and languages; `test/goldens/dark_goldens_test.dart` has dark goldens of the key screens (the light goldens are unchanged by the refactor).
 - **Audit report:** `docs/design/accessibility-audit-fl8.md` (findings, evidence, NOT VERIFIED list).
+
+## Invitations and joining (FL11)
+- **Invite sheet** (`features/invites/presentation/invite_sheet.dart`): opened from the group header icon and the members tab, only when `Permissions.canManageInvites` (Owner/Admin). Code `XXXX-XXXX`, link, copy, system share sheet (`share_plus` 13.3.1, behind `InviteSharer`), expiry 1/7/30 days (text computed from the server's `expiresAt`), approval toggle, revoke with confirm, other active invites.
+- **Join screen** (`join_screen.dart`) at `/join/:code`, code entry at `/join`. Unclaimed names only, no balances (the preview has none). States: expired, revoked, unknown, already a member, waiting for approval (refresh status), rate limited, offline.
+- **Pending invite**: a signed-out person opening a link has the code kept in memory and in secure storage (`qesma.pending_invite`) until it is used or found dead; sign-in leads back to the join screen (also after the process was killed). The code is never logged (`RequestLogInterceptor.redactSecrets` hides `/invites/<code>`).
+- **App Link**: `AndroidManifest.xml` has an `autoVerify` intent filter for `https://${qesmaLinkHost}/join/`. The host is the Gradle property `qesmaLinkHost` (default `qesma.app`) and must equal the backend's `qesma.invites.link-base`.
+- Try it on a phone: `adb shell am start -a android.intent.action.VIEW -d "https://qesma.app/join/ABCD2345"` (warm: app open; cold: app closed).
+
+### Open items (not done here)
+- **`https://<host>/.well-known/assetlinks.json`** (package `app.qesma.app` + release signing SHA-256) must be served by the backend/infra, otherwise Android asks "open with" instead of opening the app directly. The Play Store landing page for "app not installed" is out of scope.
+- **Production link host** is unconfirmed (`qesma.app` is the design's value).
+- `InvitePreview` has no group id, so "already a member -> open the group" finds the group by name in the refreshed list (opens the list when the name is not unique). Suggest `groupId` in the preview for members (B11 follow-up).

@@ -23,6 +23,8 @@ class _$GroupSummaryDto extends GroupSummaryDto {
   final String type;
   @override
   final int yourNetMinor;
+  @override
+  final String yourRole;
 
   factory _$GroupSummaryDto([void Function(GroupSummaryDtoBuilder)? updates]) =>
       (GroupSummaryDtoBuilder()..update(updates))._build();
@@ -35,7 +37,8 @@ class _$GroupSummaryDto extends GroupSummaryDto {
       required this.name,
       required this.totalSpentMinor,
       required this.type,
-      required this.yourNetMinor})
+      required this.yourNetMinor,
+      required this.yourRole})
       : super._();
   @override
   GroupSummaryDto rebuild(void Function(GroupSummaryDtoBuilder) updates) =>
@@ -55,7 +58,8 @@ class _$GroupSummaryDto extends GroupSummaryDto {
         name == other.name &&
         totalSpentMinor == other.totalSpentMinor &&
         type == other.type &&
-        yourNetMinor == other.yourNetMinor;
+        yourNetMinor == other.yourNetMinor &&
+        yourRole == other.yourRole;
   }
 
   @override
@@ -69,6 +73,7 @@ class _$GroupSummaryDto extends GroupSummaryDto {
     _$hash = $jc(_$hash, totalSpentMinor.hashCode);
     _$hash = $jc(_$hash, type.hashCode);
     _$hash = $jc(_$hash, yourNetMinor.hashCode);
+    _$hash = $jc(_$hash, yourRole.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -83,7 +88,8 @@ class _$GroupSummaryDto extends GroupSummaryDto {
           ..add('name', name)
           ..add('totalSpentMinor', totalSpentMinor)
           ..add('type', type)
-          ..add('yourNetMinor', yourNetMinor))
+          ..add('yourNetMinor', yourNetMinor)
+          ..add('yourRole', yourRole))
         .toString();
   }
 }
@@ -126,6 +132,10 @@ class GroupSummaryDtoBuilder
   int? get yourNetMinor => _$this._yourNetMinor;
   set yourNetMinor(int? yourNetMinor) => _$this._yourNetMinor = yourNetMinor;
 
+  String? _yourRole;
+  String? get yourRole => _$this._yourRole;
+  set yourRole(String? yourRole) => _$this._yourRole = yourRole;
+
   GroupSummaryDtoBuilder() {
     GroupSummaryDto._defaults(this);
   }
@@ -141,6 +151,7 @@ class GroupSummaryDtoBuilder
       _totalSpentMinor = $v.totalSpentMinor;
       _type = $v.type;
       _yourNetMinor = $v.yourNetMinor;
+      _yourRole = $v.yourRole;
       _$v = null;
     }
     return this;
@@ -177,6 +188,8 @@ class GroupSummaryDtoBuilder
               type, r'GroupSummaryDto', 'type'),
           yourNetMinor: BuiltValueNullFieldError.checkNotNull(
               yourNetMinor, r'GroupSummaryDto', 'yourNetMinor'),
+          yourRole: BuiltValueNullFieldError.checkNotNull(
+              yourRole, r'GroupSummaryDto', 'yourRole'),
         );
     replace(_$result);
     return _$result;

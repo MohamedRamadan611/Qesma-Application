@@ -194,6 +194,50 @@ class ApiContractCoverageIT extends AbstractApiIT {
         String empty = body(hit(POST, "/api/v1/groups", me, Map.of("name", "Empty", "type", "OTHER"))).get("id").asText();
         assertThat(status(hit(DELETE, "/api/v1/groups/" + empty, me, null))).isEqualTo(204);
         expect(hit(GET, "/api/v1/groups/" + UUID.randomUUID(), me, null), 404, ErrorCode.NOT_FOUND);
+        // a plain MEMBER may read but not edit the group: 403 FORBIDDEN (B10, A65)
+        Session plain = newUser();
+        linkUser(g.substring(g.lastIndexOf('/') + 1), plain, "MEMBER", "ACTIVE", "Plain");
+        expect(hit(PATCH, g, plain, Map.of("name", "Nope"), "If-Match", "\"1\""), 403, ErrorCode.FORBIDDEN);
+        // ---- invitations and join (B11) -------------------------------------------------------------------------------
+        MvcResult inv = hit(POST, g + "/invites", me, Map.of("expiresInDays", 7), "Idempotency-Key", key());
+        assertThat(status(inv)).isEqualTo(201);
+        String invId = body(inv).get("id").asText();
+        String invCode = body(inv).get("code").asText();
+        assertThat(status(hit(GET, g + "/invites", me, null))).isEqualTo(200);
+        Session joiner = newUser();
+        assertThat(status(hit(GET, "/api/v1/invites/" + invCode, joiner, null))).isEqualTo(200);
+        MvcResult joined = hit(POST, "/api/v1/invites/" + invCode + "/join", joiner, Map.of("newMemberName", "Joiner"),
+                "Idempotency-Key", key());
+        assertThat(status(joined)).isEqualTo(201);
+        String joinerMember = body(joined).get("member").get("id").asText();
+        expect(hit(POST, "/api/v1/invites/" + invCode + "/join", joiner, Map.of("newMemberName", "Joiner2"),
+                "Idempotency-Key", key()), 409, ErrorCode.ALREADY_MEMBER);
+        expect(hit(POST, "/api/v1/invites/" + invCode + "/join", newUser(), Map.of("claimMemberId", joinerMember),
+                "Idempotency-Key", key()), 409, ErrorCode.MEMBER_ALREADY_CLAIMED);
+        expect(hit(GET, "/api/v1/invites/ZZZZZZZZ", joiner, null), 404, ErrorCode.NOT_FOUND);
+        String revokedCode = body(hit(POST, g + "/invites", me, Map.of(), "Idempotency-Key", key())).get("code").asText();
+        String revokedId = jdbc.queryForObject("select id::text from group_invites where code = ?", String.class, revokedCode);
+        assertThat(status(hit(DELETE, g + "/invites/" + revokedId, me, null))).isEqualTo(204);
+        expect(hit(GET, "/api/v1/invites/" + revokedCode, newUser(), null), 410, ErrorCode.INVITE_REVOKED);
+        String expiredCode = body(hit(POST, g + "/invites", me, Map.of(), "Idempotency-Key", key())).get("code").asText();
+        jdbc.update("update group_invites set created_at = now() - interval '2 days', expires_at = now() - interval '1 day' "
+                + "where code = ?", expiredCode);
+        expect(hit(GET, "/api/v1/invites/" + expiredCode, newUser(), null), 410, ErrorCode.INVITE_EXPIRED);
+        String approvalCode = body(hit(POST, g + "/invites", me, Map.of("requiresApproval", true), "Idempotency-Key", key()))
+                .get("code").asText();
+        MvcResult pending = hit(POST, "/api/v1/invites/" + approvalCode + "/join", newUser(), Map.of("newMemberName", "Asks"),
+                "Idempotency-Key", key());
+        assertThat(status(pending)).isEqualTo(202);
+        MvcResult pending2 = hit(POST, "/api/v1/invites/" + approvalCode + "/join", newUser(), Map.of("newMemberName", "Asks Too"),
+                "Idempotency-Key", key());
+        assertThat(status(hit(GET, g + "/join-requests", me, null))).isEqualTo(200);
+        assertThat(status(hit(POST, g + "/join-requests/" + body(pending).get("requestId").asText() + "/approve", me, null)))
+                .isEqualTo(200);
+        assertThat(status(hit(POST, g + "/join-requests/" + body(pending2).get("requestId").asText() + "/reject", me, null)))
+                .isEqualTo(200);
+        assertThat(status(hit(POST, g + "/members/" + joinerMember + "/unlink", me, null))).isEqualTo(204);
+        assertThat(invId).isNotBlank();
+
         expect(hit(GET, "/api/v1/me", null, null), 401, ErrorCode.UNAUTHORIZED);
 
         doThrow(new GoogleIdTokenVerifier.AuthProviderUnavailableException(new RuntimeException("jwks down")))

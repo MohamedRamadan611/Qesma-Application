@@ -69,5 +69,10 @@ void main() {
       // TODO
     });
 
+    // String yourRole
+    test('to test the property `yourRole`', () async {
+      // TODO
+    });
+
   });
 }

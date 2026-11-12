@@ -353,9 +353,12 @@
             "description" : "Integer minor units (piasters: 1 EGP = 100). Never a decimal.",
             "format" : "int64",
             "type" : "integer"
+          },
+          "yourRole" : {
+            "type" : "string"
           }
         },
-        "required" : [ "createdAt", "currencyCode", "id", "members", "name", "totalSpentMinor", "type", "updatedAt", "version", "yourMemberId", "yourNetMinor" ],
+        "required" : [ "createdAt", "currencyCode", "id", "members", "name", "totalSpentMinor", "type", "updatedAt", "version", "yourMemberId", "yourNetMinor", "yourRole" ],
         "type" : "object"
       },
       "GroupSummaryDto" : {
@@ -391,9 +394,107 @@
             "description" : "Integer minor units (piasters: 1 EGP = 100). Never a decimal.",
             "format" : "int64",
             "type" : "integer"
+          },
+          "yourRole" : {
+            "type" : "string"
           }
         },
-        "required" : [ "currencyCode", "id", "memberCount", "name", "totalSpentMinor", "type", "yourNetMinor" ],
+        "required" : [ "currencyCode", "id", "memberCount", "name", "totalSpentMinor", "type", "yourNetMinor", "yourRole" ],
+        "type" : "object"
+      },
+      "InviteCommand" : {
+        "properties" : {
+          "expiresInDays" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "maxUses" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "requiresApproval" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "InvitePreview" : {
+        "properties" : {
+          "callerState" : {
+            "type" : "string"
+          },
+          "expiresAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "groupName" : {
+            "type" : "string"
+          },
+          "groupType" : {
+            "type" : "string"
+          },
+          "inviterName" : {
+            "type" : "string"
+          },
+          "memberCount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "requiresApproval" : {
+            "type" : "boolean"
+          },
+          "unclaimedMembers" : {
+            "items" : {
+              "$ref" : "#/components/schemas/Unclaimed"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "InviteView" : {
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "expiresAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "groupId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "link" : {
+            "type" : "string"
+          },
+          "maxUses" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "requiresApproval" : {
+            "type" : "boolean"
+          },
+          "revokedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "useCount" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
         "type" : "object"
       },
       "ItemInput" : {
@@ -442,6 +543,85 @@
         "required" : [ "amountMinor", "assigneeMemberIds", "id", "name" ],
         "type" : "object"
       },
+      "JoinCommand" : {
+        "properties" : {
+          "claimMemberId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "newMemberName" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "JoinRequestView" : {
+        "properties" : {
+          "claimMemberId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "claimMemberName" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "decidedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "newMemberName" : {
+            "type" : "string"
+          },
+          "requesterName" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "JoinView" : {
+        "properties" : {
+          "groupId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "member" : {
+            "$ref" : "#/components/schemas/JoinedMember"
+          },
+          "requestId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "JoinedMember" : {
+        "properties" : {
+          "displayName" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "role" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "LoginRequest" : {
         "properties" : {
           "password" : {
@@ -467,6 +647,9 @@
           "displayName" : {
             "type" : "string"
           },
+          "hasAccount" : {
+            "type" : "boolean"
+          },
           "id" : {
             "format" : "uuid",
             "type" : "string"
@@ -474,12 +657,18 @@
           "isYou" : {
             "type" : "boolean"
           },
+          "role" : {
+            "type" : "string"
+          },
           "sortOrder" : {
             "format" : "int32",
             "type" : "integer"
+          },
+          "status" : {
+            "type" : "string"
           }
         },
-        "required" : [ "createdAt", "displayName", "id", "isYou", "sortOrder" ],
+        "required" : [ "createdAt", "displayName", "hasAccount", "id", "isYou", "role", "sortOrder", "status" ],
         "type" : "object"
       },
       "Net" : {
@@ -530,6 +719,62 @@
           "items" : {
             "items" : {
               "$ref" : "#/components/schemas/GroupSummaryDto"
+            },
+            "type" : "array"
+          },
+          "page" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "size" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "totalElements" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "totalPages" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "items", "page", "size", "totalElements", "totalPages" ],
+        "type" : "object"
+      },
+      "PageResponseInviteView" : {
+        "properties" : {
+          "items" : {
+            "items" : {
+              "$ref" : "#/components/schemas/InviteView"
+            },
+            "type" : "array"
+          },
+          "page" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "size" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "totalElements" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "totalPages" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "items", "page", "size", "totalElements", "totalPages" ],
+        "type" : "object"
+      },
+      "PageResponseJoinRequestView" : {
+        "properties" : {
+          "items" : {
+            "items" : {
+              "$ref" : "#/components/schemas/JoinRequestView"
             },
             "type" : "array"
           },
@@ -616,7 +861,7 @@
         "properties" : {
           "code" : {
             "description" : "Stable machine-readable error code.",
-            "enum" : [ "VALIDATION_ERROR", "PAYERS_TOTAL_MISMATCH", "SPLIT_TOTAL_MISMATCH", "MEMBER_NOT_IN_GROUP", "IDEMPOTENCY_KEY_REUSED", "DUPLICATE_MEMBER_NAME", "MEMBER_HAS_TRANSACTIONS", "OWNER_MEMBER_PROTECTED", "VERSION_CONFLICT", "GROUP_NOT_EMPTY", "NOT_FOUND", "UNAUTHORIZED", "INTERNAL_ERROR", "RATE_LIMITED", "AUTH_PROVIDER_UNAVAILABLE", "USERNAME_TAKEN" ],
+            "enum" : [ "VALIDATION_ERROR", "PAYERS_TOTAL_MISMATCH", "SPLIT_TOTAL_MISMATCH", "MEMBER_NOT_IN_GROUP", "IDEMPOTENCY_KEY_REUSED", "DUPLICATE_MEMBER_NAME", "MEMBER_HAS_TRANSACTIONS", "OWNER_MEMBER_PROTECTED", "VERSION_CONFLICT", "INVITE_EXPIRED", "INVITE_REVOKED", "ALREADY_MEMBER", "MEMBER_ALREADY_CLAIMED", "GROUP_NOT_EMPTY", "NOT_FOUND", "FORBIDDEN", "UNAUTHORIZED", "INTERNAL_ERROR", "RATE_LIMITED", "AUTH_PROVIDER_UNAVAILABLE", "USERNAME_TAKEN" ],
             "type" : "string"
           },
           "detail" : {
@@ -902,6 +1147,18 @@
           }
         },
         "required" : [ "amountMinor", "fromMemberId", "toMemberId" ],
+        "type" : "object"
+      },
+      "Unclaimed" : {
+        "properties" : {
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
         "type" : "object"
       },
       "UpdateGroupRequest" : {
@@ -1928,6 +2185,16 @@
             },
             "description" : "Not authenticated (code: UNAUTHORIZED)"
           },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "You are a member of the group but your role does not allow this (code: FORBIDDEN)"
+          },
           "404" : {
             "content" : {
               "application/problem+json" : {
@@ -1936,7 +2203,7 @@
                 }
               }
             },
-            "description" : "Not found, or not yours (identical answer: never 403) (code: NOT_FOUND)"
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
           },
           "409" : {
             "content" : {
@@ -2020,7 +2287,7 @@
                 }
               }
             },
-            "description" : "Not found, or not yours (identical answer: never 403) (code: NOT_FOUND)"
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
           },
           "422" : {
             "content" : {
@@ -2115,6 +2382,16 @@
             },
             "description" : "Not authenticated (code: UNAUTHORIZED)"
           },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "You are a member of the group but your role does not allow this (code: FORBIDDEN)"
+          },
           "404" : {
             "content" : {
               "application/problem+json" : {
@@ -2123,7 +2400,7 @@
                 }
               }
             },
-            "description" : "Not found, or not yours (identical answer: never 403) (code: NOT_FOUND)"
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
           },
           "409" : {
             "content" : {
@@ -2221,7 +2498,7 @@
                 }
               }
             },
-            "description" : "Not found, or not yours (identical answer: never 403) (code: NOT_FOUND)"
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
           },
           "422" : {
             "content" : {
@@ -2341,7 +2618,7 @@
                 }
               }
             },
-            "description" : "Not found, or not yours (identical answer: never 403) (code: NOT_FOUND)"
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
           },
           "422" : {
             "content" : {
@@ -2523,7 +2800,7 @@
                 }
               }
             },
-            "description" : "Not found, or not yours (identical answer: never 403) (code: NOT_FOUND)"
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
           },
           "413" : {
             "content" : {
@@ -2686,7 +2963,7 @@
                 }
               }
             },
-            "description" : "Not found, or not yours (identical answer: never 403) (code: NOT_FOUND)"
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
           },
           "413" : {
             "content" : {
@@ -2776,6 +3053,16 @@
             },
             "description" : "Not authenticated (code: UNAUTHORIZED)"
           },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "You are a member of the group but your role does not allow this (code: FORBIDDEN)"
+          },
           "404" : {
             "content" : {
               "application/problem+json" : {
@@ -2784,7 +3071,7 @@
                 }
               }
             },
-            "description" : "Not found, or not yours (identical answer: never 403) (code: NOT_FOUND)"
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
           },
           "409" : {
             "content" : {
@@ -2887,7 +3174,7 @@
                 }
               }
             },
-            "description" : "Not found, or not yours (identical answer: never 403) (code: NOT_FOUND)"
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
           },
           "422" : {
             "content" : {
@@ -3055,6 +3342,16 @@
             },
             "description" : "Not authenticated (code: UNAUTHORIZED)"
           },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "You are a member of the group but your role does not allow this (code: FORBIDDEN)"
+          },
           "404" : {
             "content" : {
               "application/problem+json" : {
@@ -3063,7 +3360,7 @@
                 }
               }
             },
-            "description" : "Not found, or not yours (identical answer: never 403) (code: NOT_FOUND)"
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
           },
           "409" : {
             "content" : {
@@ -3173,7 +3470,7 @@
                 }
               }
             },
-            "description" : "Not found, or not yours (identical answer: never 403) (code: NOT_FOUND)"
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
           },
           "422" : {
             "content" : {
@@ -3198,6 +3495,631 @@
         },
         "summary" : "History of an expense, oldest first",
         "tags" : [ "expense-controller" ]
+      }
+    },
+    "/api/v1/groups/{gid}/invites" : {
+      "get" : {
+        "operationId" : "listInvites",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "gid",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "default" : 0,
+            "format" : "int32",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "default" : 20,
+            "format" : "int32",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PageResponseInviteView"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Malformed request (code: VALIDATION_ERROR)"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "You are a member of the group but your role does not allow this (code: FORBIDDEN)"
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "summary" : "List the group's invitations, newest first (with their codes)",
+        "tags" : [ "invite-controller" ]
+      },
+      "post" : {
+        "description" : "Idempotency-Key (UUID) is required. Defaults: expires in 7 days (1 to 30), unlimited uses (or 1 to 1000), no approval. The code (8 characters, shown XXXX-XXXX) is typed by hand and is also the end of the link.",
+        "operationId" : "createInvite",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "gid",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "description" : "Client-generated UUID, one per create action. Reuse the same key when retrying the SAME action: the stored answer is returned (header Idempotency-Replayed: true). Keys are kept 24 hours.",
+          "in" : "header",
+          "name" : "Idempotency-Key",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InviteCommand"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InviteView"
+                }
+              }
+            },
+            "description" : "Created (or the stored answer of an identical earlier request: header Idempotency-Replayed: true)",
+            "headers" : {
+              "Idempotency-Replayed" : {
+                "description" : "true when this is the stored answer of an identical earlier request",
+                "schema" : {
+                  "type" : "string"
+                },
+                "style" : "simple"
+              },
+              "Location" : {
+                "description" : "URL of the invitation",
+                "schema" : {
+                  "type" : "string"
+                },
+                "style" : "simple"
+              }
+            }
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Malformed request (code: VALIDATION_ERROR)"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "You are a member of the group but your role does not allow this (code: FORBIDDEN)"
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
+          },
+          "413" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Request body too large (code: VALIDATION_ERROR)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR, IDEMPOTENCY_KEY_REUSED)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "summary" : "Create an invitation (code and link)",
+        "tags" : [ "invite-controller" ]
+      }
+    },
+    "/api/v1/groups/{gid}/invites/{iid}" : {
+      "delete" : {
+        "operationId" : "revokeInvite",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "gid",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "in" : "path",
+          "name" : "iid",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Revoked"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "You are a member of the group but your role does not allow this (code: FORBIDDEN)"
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "summary" : "Revoke an invitation (the code stops working; revoking again is not an error)",
+        "tags" : [ "invite-controller" ]
+      }
+    },
+    "/api/v1/groups/{gid}/join-requests" : {
+      "get" : {
+        "operationId" : "listJoinRequests",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "gid",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "default" : 0,
+            "format" : "int32",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "default" : 20,
+            "format" : "int32",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PageResponseJoinRequestView"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Malformed request (code: VALIDATION_ERROR)"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "You are a member of the group but your role does not allow this (code: FORBIDDEN)"
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "summary" : "List the requests waiting for a decision, oldest first (the requester by display name only)",
+        "tags" : [ "join-request-controller" ]
+      }
+    },
+    "/api/v1/groups/{gid}/join-requests/{rid}/approve" : {
+      "post" : {
+        "description" : "Repeating the same decision returns the stored result. A member somebody else claimed in the meantime is 409 and the request stays pending so it can be rejected.",
+        "operationId" : "approveJoinRequest",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "gid",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "in" : "path",
+          "name" : "rid",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/JoinRequestView"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "You are a member of the group but your role does not allow this (code: FORBIDDEN)"
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
+          },
+          "409" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Conflict (code: ALREADY_MEMBER, MEMBER_ALREADY_CLAIMED, DUPLICATE_MEMBER_NAME, VERSION_CONFLICT)"
+          },
+          "410" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Gone: the invitation expired, was used up or was revoked (code: INVITE_EXPIRED)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR, MEMBER_NOT_IN_GROUP)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "summary" : "Approve a join request: the person becomes a member (or claims the member they chose)",
+        "tags" : [ "join-request-controller" ]
+      }
+    },
+    "/api/v1/groups/{gid}/join-requests/{rid}/reject" : {
+      "post" : {
+        "operationId" : "rejectJoinRequest",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "gid",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "in" : "path",
+          "name" : "rid",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/JoinRequestView"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "You are a member of the group but your role does not allow this (code: FORBIDDEN)"
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
+          },
+          "409" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Conflict (code: VERSION_CONFLICT)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "summary" : "Reject a join request",
+        "tags" : [ "join-request-controller" ]
       }
     },
     "/api/v1/groups/{gid}/members" : {
@@ -3262,6 +4184,16 @@
             },
             "description" : "Not authenticated (code: UNAUTHORIZED)"
           },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "You are a member of the group but your role does not allow this (code: FORBIDDEN)"
+          },
           "404" : {
             "content" : {
               "application/problem+json" : {
@@ -3270,7 +4202,7 @@
                 }
               }
             },
-            "description" : "Not found, or not yours (identical answer: never 403) (code: NOT_FOUND)"
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
           },
           "409" : {
             "content" : {
@@ -3350,6 +4282,16 @@
             },
             "description" : "Not authenticated (code: UNAUTHORIZED)"
           },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "You are a member of the group but your role does not allow this (code: FORBIDDEN)"
+          },
           "404" : {
             "content" : {
               "application/problem+json" : {
@@ -3358,7 +4300,7 @@
                 }
               }
             },
-            "description" : "Not found, or not yours (identical answer: never 403) (code: NOT_FOUND)"
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
           },
           "409" : {
             "content" : {
@@ -3453,6 +4395,16 @@
             },
             "description" : "Not authenticated (code: UNAUTHORIZED)"
           },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "You are a member of the group but your role does not allow this (code: FORBIDDEN)"
+          },
           "404" : {
             "content" : {
               "application/problem+json" : {
@@ -3461,7 +4413,7 @@
                 }
               }
             },
-            "description" : "Not found, or not yours (identical answer: never 403) (code: NOT_FOUND)"
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
           },
           "409" : {
             "content" : {
@@ -3504,6 +4456,96 @@
             "description" : "Unexpected error (code: INTERNAL_ERROR)"
           }
         },
+        "tags" : [ "member-controller" ]
+      }
+    },
+    "/api/v1/groups/{gid}/members/{mid}/unlink" : {
+      "post" : {
+        "description" : "The person loses access to the group at once and the member can be claimed again. The owner's member cannot be unlinked (409 OWNER_MEMBER_PROTECTED); only the owner may unlink an admin.",
+        "operationId" : "unlinkMember",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "gid",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "in" : "path",
+          "name" : "mid",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "You are a member of the group but your role does not allow this (code: FORBIDDEN)"
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
+          },
+          "409" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Conflict (code: OWNER_MEMBER_PROTECTED)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "summary" : "Unlink the account from a member (the member, its history and balance stay)",
         "tags" : [ "member-controller" ]
       }
     },
@@ -3576,7 +4618,7 @@
                 }
               }
             },
-            "description" : "Not found, or not yours (identical answer: never 403) (code: NOT_FOUND)"
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
           },
           "422" : {
             "content" : {
@@ -3700,7 +4742,7 @@
                 }
               }
             },
-            "description" : "Not found, or not yours (identical answer: never 403) (code: NOT_FOUND)"
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
           },
           "413" : {
             "content" : {
@@ -3771,6 +4813,16 @@
             },
             "description" : "Not authenticated (code: UNAUTHORIZED)"
           },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "You are a member of the group but your role does not allow this (code: FORBIDDEN)"
+          },
           "404" : {
             "content" : {
               "application/problem+json" : {
@@ -3779,7 +4831,7 @@
                 }
               }
             },
-            "description" : "Not found, or not yours (identical answer: never 403) (code: NOT_FOUND)"
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
           },
           "422" : {
             "content" : {
@@ -3804,6 +4856,250 @@
         },
         "summary" : "Delete a settlement (soft delete; its effect on balances is reversed)",
         "tags" : [ "settlement-controller" ]
+      }
+    },
+    "/api/v1/invites/{code}" : {
+      "get" : {
+        "description" : "Group name, who invited you, member count and the members nobody has claimed yet. No balances and no accounts. 404 for an unknown code, 410 when expired, used up or revoked.",
+        "operationId" : "getInvitePreview",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "code",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InvitePreview"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
+          },
+          "410" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Gone: the invitation expired, was used up or was revoked (code: INVITE_EXPIRED, INVITE_REVOKED)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR)"
+          },
+          "429" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Too many requests (code: RATE_LIMITED)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "summary" : "Look at an invitation before joining",
+        "tags" : [ "join-controller" ]
+      }
+    },
+    "/api/v1/invites/{code}/join" : {
+      "post" : {
+        "description" : "Idempotency-Key (UUID) is required. Send exactly one of claimMemberId or newMemberName. 201 JOINED, or 202 PENDING_APPROVAL when an admin must approve first.",
+        "operationId" : "joinGroup",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "code",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "Client-generated UUID, one per create action. Reuse the same key when retrying the SAME action: the stored answer is returned (header Idempotency-Replayed: true). Keys are kept 24 hours.",
+          "in" : "header",
+          "name" : "Idempotency-Key",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/JoinCommand"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/JoinView"
+                }
+              }
+            },
+            "description" : "Joined (or the stored answer of an identical earlier request: header Idempotency-Replayed: true)",
+            "headers" : {
+              "Idempotency-Replayed" : {
+                "description" : "true when this is the stored answer of an identical earlier request",
+                "schema" : {
+                  "type" : "string"
+                },
+                "style" : "simple"
+              }
+            }
+          },
+          "202" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/JoinView"
+                }
+              }
+            },
+            "description" : "Waiting for an admin's approval"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Malformed request (code: VALIDATION_ERROR)"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
+          },
+          "409" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Conflict (code: ALREADY_MEMBER, MEMBER_ALREADY_CLAIMED, DUPLICATE_MEMBER_NAME)"
+          },
+          "410" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Gone: the invitation expired, was used up or was revoked (code: INVITE_EXPIRED, INVITE_REVOKED)"
+          },
+          "413" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Request body too large (code: VALIDATION_ERROR)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR, IDEMPOTENCY_KEY_REUSED, MEMBER_NOT_IN_GROUP)"
+          },
+          "429" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Too many requests (code: RATE_LIMITED)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "summary" : "Join the group: claim an existing member or become a new one",
+        "tags" : [ "join-controller" ]
       }
     },
     "/api/v1/me" : {

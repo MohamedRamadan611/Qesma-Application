@@ -31,6 +31,8 @@ class _$GroupDto extends GroupDto {
   final String yourMemberId;
   @override
   final int yourNetMinor;
+  @override
+  final String yourRole;
 
   factory _$GroupDto([void Function(GroupDtoBuilder)? updates]) =>
       (GroupDtoBuilder()..update(updates))._build();
@@ -47,7 +49,8 @@ class _$GroupDto extends GroupDto {
       required this.updatedAt,
       required this.version,
       required this.yourMemberId,
-      required this.yourNetMinor})
+      required this.yourNetMinor,
+      required this.yourRole})
       : super._();
   @override
   GroupDto rebuild(void Function(GroupDtoBuilder) updates) =>
@@ -71,7 +74,8 @@ class _$GroupDto extends GroupDto {
         updatedAt == other.updatedAt &&
         version == other.version &&
         yourMemberId == other.yourMemberId &&
-        yourNetMinor == other.yourNetMinor;
+        yourNetMinor == other.yourNetMinor &&
+        yourRole == other.yourRole;
   }
 
   @override
@@ -89,6 +93,7 @@ class _$GroupDto extends GroupDto {
     _$hash = $jc(_$hash, version.hashCode);
     _$hash = $jc(_$hash, yourMemberId.hashCode);
     _$hash = $jc(_$hash, yourNetMinor.hashCode);
+    _$hash = $jc(_$hash, yourRole.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -107,7 +112,8 @@ class _$GroupDto extends GroupDto {
           ..add('updatedAt', updatedAt)
           ..add('version', version)
           ..add('yourMemberId', yourMemberId)
-          ..add('yourNetMinor', yourNetMinor))
+          ..add('yourNetMinor', yourNetMinor)
+          ..add('yourRole', yourRole))
         .toString();
   }
 }
@@ -166,6 +172,10 @@ class GroupDtoBuilder implements Builder<GroupDto, GroupDtoBuilder> {
   int? get yourNetMinor => _$this._yourNetMinor;
   set yourNetMinor(int? yourNetMinor) => _$this._yourNetMinor = yourNetMinor;
 
+  String? _yourRole;
+  String? get yourRole => _$this._yourRole;
+  set yourRole(String? yourRole) => _$this._yourRole = yourRole;
+
   GroupDtoBuilder() {
     GroupDto._defaults(this);
   }
@@ -185,6 +195,7 @@ class GroupDtoBuilder implements Builder<GroupDto, GroupDtoBuilder> {
       _version = $v.version;
       _yourMemberId = $v.yourMemberId;
       _yourNetMinor = $v.yourNetMinor;
+      _yourRole = $v.yourRole;
       _$v = null;
     }
     return this;
@@ -229,6 +240,8 @@ class GroupDtoBuilder implements Builder<GroupDto, GroupDtoBuilder> {
                 yourMemberId, r'GroupDto', 'yourMemberId'),
             yourNetMinor: BuiltValueNullFieldError.checkNotNull(
                 yourNetMinor, r'GroupDto', 'yourNetMinor'),
+            yourRole: BuiltValueNullFieldError.checkNotNull(
+                yourRole, r'GroupDto', 'yourRole'),
           );
     } catch (_) {
       late String _$failedField;

@@ -368,8 +368,9 @@ void main() {
   });
 
   group('nothing omitted from the design is built', () {
-    const forbiddenAr = ['صورة', 'كاميرا', 'جهات الاتصال', 'دعوة', 'أدمن', 'ادمن', 'لون', 'شهري', 'جاهز للتسوية', 'سدد الآن'];
-    const forbiddenEn = ['photo', 'camera', 'contacts', 'cover', 'invite', 'admin', 'monthly', 'ready to settle', 'colour', 'color', 'pay now'];
+    // FL11 built invitations (and with them the words "invite" and "admin"); the scope guard still watches the rest.
+    const forbiddenAr = ['صورة', 'كاميرا', 'جهات الاتصال', 'لون', 'شهري', 'جاهز للتسوية', 'سدد الآن'];
+    const forbiddenEn = ['photo', 'camera', 'contacts', 'cover', 'monthly', 'ready to settle', 'colour', 'color', 'pay now'];
 
     test('neither ARB file has such copy', () {
       for (final (file, words) in [('ar', forbiddenAr), ('en', forbiddenEn)]) {

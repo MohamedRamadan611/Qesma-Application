@@ -54,7 +54,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 class ExpenseApiSliceTest {
 
     @TestConfiguration
-    @EnableConfigurationProperties(AuthProperties.class)
+    @EnableConfigurationProperties({AuthProperties.class, app.qesma.service.InviteProperties.class})
     static class Beans {
         @Bean
         MeterRegistry meterRegistry() {

@@ -2,7 +2,6 @@ package app.qesma.service;
 
 import app.qesma.api.ApiException;
 import app.qesma.api.ErrorCode;
-import app.qesma.domain.ExpenseGroup;
 import app.qesma.domain.Member;
 import app.qesma.domain.Settlement;
 import app.qesma.persistence.SettlementRepository;
@@ -27,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Settlements of a group (spec 7.8, 8.2): recorded real-world payments that move balances. Creation is idempotent
- * through the same {@link IdempotencyService} as expenses; deletion is a soft delete. Ownership is decided only by
+ * through the same {@link IdempotencyService} as expenses; deletion is a soft delete. Access and roles are decided only by
  * {@link GroupAccessService}.
  */
 @Service
@@ -67,7 +66,7 @@ public class SettlementService {
                                              SettlementCommand command) {
         String key = idempotencyKey.toString();
         idempotency.lock(userId, key);
-        ExpenseGroup group = access.requireOwnedForUpdate(userId, groupId);
+        GroupContext ctx = access.requireForUpdate(userId, groupId, Permission.ADD_SETTLEMENT);
 
         SettlementValidator.Valid request = SettlementValidator.validate(command);
         String requestHash = hasher.hash(CREATE_ENDPOINT, groupId, canonical(request));
@@ -78,7 +77,7 @@ public class SettlementService {
             return replay.get();
         }
 
-        List<Member> members = access.listMembers(group);
+        List<Member> members = access.listMembers(ctx);
         requireMember(members, request.fromMemberId());
         requireMember(members, request.toMemberId());
 
@@ -100,15 +99,17 @@ public class SettlementService {
     @Transactional(readOnly = true)
     public Page<SettlementView> list(UUID userId, UUID groupId, int page, int size) {
         FieldRules.page(page, size);
-        access.requireOwned(userId, groupId);
+        access.requireMember(userId, groupId);
         return settlements.findPage(groupId, PageRequest.of(page, size)).map(SettlementService::view);
     }
 
     /** Soft delete: balances stop counting it. Deleting an already deleted settlement is a plain 404. */
     @Transactional
     public void delete(UUID userId, UUID groupId, UUID settlementId) {
-        access.requireOwnedForUpdate(userId, groupId);
+        GroupContext ctx = access.requireForUpdate(userId, groupId, Permission.READ_GROUP);
         Settlement settlement = settlements.findActive(settlementId, groupId).orElseThrow(ApiException::notFound);
+        ctx.requireModify(settlement.getCreatedByUserId(), Permission.DELETE_OWN_SETTLEMENT,
+                Permission.DELETE_ANY_SETTLEMENT);
         settlement.markDeleted(clock.instant().truncatedTo(ChronoUnit.MICROS));
         metrics.counter("qesma.settlements", "op", "deleted").increment();
         log.atInfo().addKeyValue("event", "settlement.deleted").addKeyValue("userId", userId)

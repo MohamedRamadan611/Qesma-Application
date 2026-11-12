@@ -114,6 +114,8 @@ class IdorMatrixIT extends AbstractApiIT {
                 + "where group_id = ?::uuid order by id", gid));
         s.put("settlements", jdbc.queryForList("select id, amount_minor, deleted_at from settlements "
                 + "where group_id = ?::uuid order by id", gid));
+        s.put("invites", jdbc.queryForList("select id, use_count, revoked_at from group_invites where group_id = ?::uuid order by id", gid));
+        s.put("requests", jdbc.queryForList("select id, status from join_requests where group_id = ?::uuid order by id", gid));
         s.put("revisions", jdbc.queryForObject("select count(*) from expense_revisions r join expenses e on e.id = r.expense_id "
                 + "where e.group_id = ?::uuid", Long.class, gid));
         s.put("keys", jdbc.queryForObject("select count(*) from idempotency_keys", Long.class));
@@ -131,15 +133,22 @@ class IdorMatrixIT extends AbstractApiIT {
         String sid = body(call(HttpMethod.POST, "/api/v1/groups/" + gid + "/settlements", owner,
                 Map.of("fromMemberId", m1, "toMemberId", m2, "amountMinor", 100L, "settledOn", "2026-10-20"),
                 "Idempotency-Key", UUID.randomUUID().toString())).get("id").asText();
-        Map<String, String> real = Map.of("gid", gid, "mid", m1, "mid2", m2, "eid", eid, "sid", sid);
+        JsonNode invite = body(call(HttpMethod.POST, "/api/v1/groups/" + gid + "/invites", owner,
+                Map.of("requiresApproval", true), "Idempotency-Key", UUID.randomUUID().toString()));
+        String iid = invite.get("id").asText();
+        Session joiner = newUser();
+        String rid = body(call(HttpMethod.POST, "/api/v1/invites/" + invite.get("code").asText() + "/join", joiner,
+                Map.of("newMemberName", "Joiner"), "Idempotency-Key", UUID.randomUUID().toString())).get("requestId").asText();
+        Map<String, String> real = Map.of("gid", gid, "mid", m1, "mid2", m2, "eid", eid, "sid", sid, "iid", iid, "rid", rid);
         Map<String, String> ghost = Map.of("gid", UUID.randomUUID().toString(), "mid", UUID.randomUUID().toString(),
                 "mid2", UUID.randomUUID().toString(), "eid", UUID.randomUUID().toString(),
-                "sid", UUID.randomUUID().toString());
+                "sid", UUID.randomUUID().toString(), "iid", UUID.randomUUID().toString(),
+                "rid", UUID.randomUUID().toString());
 
         List<Op> ops = groupScopedOperations();
         Set<String> labels = new TreeSet<>();
         ops.forEach(o -> labels.add(o.label()));
-        assertThat(ops).as("group-scoped operations found in the OpenAPI document").hasSize(17);
+        assertThat(ops).as("group-scoped operations found in the OpenAPI document").hasSize(24);
 
         Map<String, Object> before = snapshot(gid);
         for (Op op : ops) {

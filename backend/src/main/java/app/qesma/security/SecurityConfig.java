@@ -1,6 +1,7 @@
 package app.qesma.security;
 
 import app.qesma.api.ErrorCode;
+import app.qesma.service.InviteProperties;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
 import java.time.Clock;
@@ -26,8 +27,8 @@ public class SecurityConfig {
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationEntryPoint entryPoint,
-            JwtDecoder accessTokenDecoder, AuthProperties props, Clock clock, ProblemJsonWriter problems,
-            MeterRegistry metrics) throws Exception {
+            JwtDecoder accessTokenDecoder, AuthProperties props, InviteProperties invites, Clock clock,
+            ProblemJsonWriter problems, MeterRegistry metrics) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .cors(AbstractHttpConfigurer::disable)
@@ -53,6 +54,10 @@ public class SecurityConfig {
             .exceptionHandling(e -> e.authenticationEntryPoint(entryPoint))
             // Built here (not a bean) so it is only part of the security chain, never registered twice.
             .addFilterBefore(new AuthRateLimitFilter(props.rateLimit(), clock, problems, metrics),
+                    BearerTokenAuthenticationFilter.class)
+            // per-IP limit on invitation codes: guessing a code needs many requests (B11)
+            .addFilterBefore(new AuthRateLimitFilter("/api/v1/invites/", "qesma.invite.rate_limited",
+                    invites.rateLimit().maxRequests(), invites.rateLimit().window(), clock, problems, metrics),
                     BearerTokenAuthenticationFilter.class)
             .addFilterBefore(new RequestSizeLimitFilter(RequestSizeLimitFilter.MAX_BODY_BYTES, problems, metrics),
                     BearerTokenAuthenticationFilter.class);

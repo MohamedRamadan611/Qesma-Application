@@ -11,7 +11,7 @@
 4. The backend is authoritative for all calculations.
 5. Ledger is never hard-deleted. Edits create revisions; deletes are soft. Balances are computed, never stored.
 6. Every create endpoint is idempotent via `Idempotency-Key` (spec 8.3). Key write and business write share one transaction.
-7. Authorization: Phase 1 = owner-only. Another user's group => 404 (not 403). All checks go through one central component.
+7. Authorization: a caller reaches a group only through an ACTIVE linked member and may do what their role allows (ADR-009, A65-A67). A non-member's access => 404 (identical to an unknown id); a member lacking the permission => 403 `FORBIDDEN`. All checks go through one central component (`GroupAccessService`).
 8. Errors: RFC 7807 problem+json with a stable `code` from the spec's list (8.5). No swallowed exceptions. No stack traces to clients.
 9. Schema invariants live in the database (CHECK, UNIQUE, FK, NOT NULL). Flyway migrations are forward-only and reviewed.
 10. No secrets in code, logs, or git. Never log tokens, Authorization headers, or personal data beyond ids.

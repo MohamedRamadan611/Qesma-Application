@@ -41,6 +41,8 @@ Commit the updated `docs/openapi.json`, then re-run the client generation above.
 
 Every operation has an explicit, stable `operationId` (the Dart method name): `signInWithGoogle`, `refreshSession`, `signOut`, `getMe`, `updateMe`, `listGroups`, `createGroup`, `getGroup`, `updateGroup`, `deleteGroup`, `addMember`, `renameMember`, `deleteMember`, `listExpenses`, `createExpense`, `previewExpense`, `getExpense`, `updateExpense`, `deleteExpense`, `listExpenseRevisions`, `getBalances`, `listSettlements`, `createSettlement`, `deleteSettlement`. They live in one table (`OpenApiConfig.OPERATION_IDS`); a new endpoint without an entry fails the OpenAPI export, and `ApiContractCoverageIT` checks they are unique and well formed. Renaming one is a breaking change for the generated client.
 
+B10/B11 added nine operations (the contract has 40): `createInvite`, `listInvites`, `revokeInvite`, `getInvitePreview`, `joinGroup`, `listJoinRequests`, `approveJoinRequest`, `rejectJoinRequest`, `unlinkMember`. The generated client in `mobile/packages/qesma_api` was regenerated for them in FL10 (`mobile/openapi.sha256` matches).
+
 ## 3. Rules a client must follow
 
 | Topic | Rule |
@@ -66,3 +68,6 @@ fake:dahab:mohamed@example.com:محمد
 ```
 
 `fake-auth` is refused together with the `prod` profile.
+
+## B11 (invitations) contract changes
+New operations (regenerate the client): `createInvite`, `listInvites`, `revokeInvite` (group-scoped, Owner/Admin), `getInvitePreview` (`GET /invites/{code}`), `joinGroup` (`POST /invites/{code}/join`: **201 JOINED or 202 PENDING_APPROVAL**, so the generated method must accept both), `listJoinRequests`, `approveJoinRequest`, `rejectJoinRequest`, `unlinkMember`. New error codes: `INVITE_EXPIRED` (410), `INVITE_REVOKED` (410), `ALREADY_MEMBER` (409), `MEMBER_ALREADY_CLAIMED` (409); `403 FORBIDDEN` also appears on the group-scoped invite operations. The invite code has no separate link token: the link is `https://<host>/join/<code>`.

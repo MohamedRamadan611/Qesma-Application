@@ -34,10 +34,11 @@ public final class GroupDtos {
      * member #1 of every group they create); it is computed by the server and cannot be set by a client.
      */
     public record MemberDto(UUID id, String displayName, int sortOrder, Instant createdAt,
-                            @JsonProperty("isYou") boolean isYou) {
+                            @JsonProperty("isYou") boolean isYou, String role, String status, boolean hasAccount) {
         static MemberDto from(Member m, UUID callerUserId) {
             return new MemberDto(m.getId(), m.getDisplayName(), m.getSortOrder(), m.getCreatedAt(),
-                    m.getUserId() != null && m.getUserId().equals(callerUserId));
+                    m.getUserId() != null && m.getUserId().equals(callerUserId), m.getRole(), m.getStatus(),
+                    m.getUserId() != null);
         }
     }
 
@@ -48,22 +49,22 @@ public final class GroupDtos {
      * different currencies.
      */
     public record GroupSummaryDto(UUID id, String name, String type, String currencyCode, long memberCount,
-                                  long totalSpentMinor, Instant lastExpenseAt, Long yourNetMinor) {
+                                  long totalSpentMinor, Instant lastExpenseAt, Long yourNetMinor, String yourRole) {
         static GroupSummaryDto from(GroupService.GroupSummary s) {
             return new GroupSummaryDto(s.id(), s.name(), s.type(), s.currencyCode(), s.memberCount(),
-                    s.totalSpentMinor(), s.lastExpenseAt(), s.yourNetMinor());
+                    s.totalSpentMinor(), s.lastExpenseAt(), s.yourNetMinor(), s.yourRole());
         }
     }
 
     /** {@code yourMemberId} and {@code yourNetMinor} are null when the caller has no member in the group. */
     public record GroupDto(UUID id, String name, String type, String currencyCode, Instant createdAt,
                            Instant updatedAt, int version, long totalSpentMinor, Instant lastExpenseAt,
-                           UUID yourMemberId, Long yourNetMinor, List<MemberDto> members) {
+                           UUID yourMemberId, Long yourNetMinor, String yourRole, List<MemberDto> members) {
         static GroupDto from(GroupService.GroupDetail d, UUID callerUserId) {
             ExpenseGroup g = d.group();
             return new GroupDto(g.getId(), g.getName(), g.getType(), g.getCurrencyCode(), g.getCreatedAt(),
                     g.getUpdatedAt(), g.getVersion(), d.totalSpentMinor(), d.lastExpenseAt(), d.yourMemberId(),
-                    d.yourNetMinor(), d.members().stream().map(m -> MemberDto.from(m, callerUserId)).toList());
+                    d.yourNetMinor(), d.yourRole(), d.members().stream().map(m -> MemberDto.from(m, callerUserId)).toList());
         }
     }
 }

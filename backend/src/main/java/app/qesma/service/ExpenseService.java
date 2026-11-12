@@ -3,7 +3,6 @@ package app.qesma.service;
 import app.qesma.api.ApiException;
 import app.qesma.api.ErrorCode;
 import app.qesma.domain.Expense;
-import app.qesma.domain.ExpenseGroup;
 import app.qesma.domain.ExpenseItem;
 import app.qesma.domain.ExpenseItemAssignee;
 import app.qesma.domain.ExpensePayer;
@@ -99,7 +98,7 @@ public class ExpenseService {
     public IdempotencyService.Outcome create(UUID userId, UUID groupId, UUID idempotencyKey, ExpenseCommand command) {
         String key = idempotencyKey.toString();
         idempotency.lock(userId, key);                                         // 1. same-key requests run one at a time
-        ExpenseGroup group = access.requireOwnedForUpdate(userId, groupId);    // 2. ownership (404) + group row lock
+        GroupContext ctx = access.requireForUpdate(userId, groupId, Permission.ADD_EXPENSE); // 2. membership (404), role (403) + group row lock
 
         ExpenseValidator.Valid request = ExpenseValidator.validate(command);   // 3. shape validation, no I/O
         String requestHash = hasher.hash(CREATE_ENDPOINT, groupId, request);
@@ -110,7 +109,7 @@ public class ExpenseService {
             return replay.get();
         }
 
-        List<Member> members = access.listMembers(group);                      // 5. business write
+        List<Member> members = access.listMembers(ctx);                        // 5. business write
         ExpenseCalculator.Computation calc = ExpenseCalculator.compute(request, members);
         ExpenseCalculator.requirePayersMatch(calc);
 
@@ -136,9 +135,9 @@ public class ExpenseService {
      */
     @Transactional(readOnly = true)
     public ExpensePreview preview(UUID userId, UUID groupId, ExpenseCommand command) {
-        ExpenseGroup group = access.requireOwned(userId, groupId);
+        GroupContext ctx = access.requireMember(userId, groupId);
         ExpenseValidator.Valid request = ExpenseValidator.validate(command, false);
-        ExpenseCalculator.Computation calc = ExpenseCalculator.compute(request, access.listMembers(group));
+        ExpenseCalculator.Computation calc = ExpenseCalculator.compute(request, access.listMembers(ctx));
         boolean payersMatch = ExpenseCalculator.payersMatch(calc);
         metrics.counter("qesma.expense_previews", "splitType", request.splitType()).increment();
         return new ExpensePreview(calc.totalMinor(), calc.subtotalMinor(),
@@ -155,12 +154,13 @@ public class ExpenseService {
     @Transactional
     public ExpenseView update(UUID userId, UUID groupId, UUID expenseId, int expectedVersion,
                               ExpenseCommand command) {
-        ExpenseGroup group = access.requireOwnedForUpdate(userId, groupId);
+        GroupContext ctx = access.requireForUpdate(userId, groupId, Permission.READ_GROUP);
         Expense expense = expenses.findActive(expenseId, groupId).orElseThrow(ApiException::notFound);
+        ctx.requireModify(expense.getCreatedByUserId(), Permission.EDIT_OWN_EXPENSE, Permission.EDIT_ANY_EXPENSE);
         requireVersion(expense, expectedVersion);
 
         ExpenseValidator.Valid request = ExpenseValidator.validate(command);
-        List<Member> members = access.listMembers(group);
+        List<Member> members = access.listMembers(ctx);
         ExpenseCalculator.Computation calc = ExpenseCalculator.compute(request, members);
         ExpenseCalculator.requirePayersMatch(calc);
 
@@ -188,13 +188,14 @@ public class ExpenseService {
      */
     @Transactional
     public int delete(UUID userId, UUID groupId, UUID expenseId, int expectedVersion) {
-        ExpenseGroup group = access.requireOwnedForUpdate(userId, groupId);
+        GroupContext ctx = access.requireForUpdate(userId, groupId, Permission.READ_GROUP);
         Expense expense = expenses.findActive(expenseId, groupId).orElseThrow(ApiException::notFound);
+        ctx.requireModify(expense.getCreatedByUserId(), Permission.EDIT_OWN_EXPENSE, Permission.EDIT_ANY_EXPENSE);
         requireVersion(expense, expectedVersion);
 
         Instant now = clock.instant().truncatedTo(ChronoUnit.MICROS);
         expense.markDeleted(now);
-        ExpenseView last = new PageMapper(List.of(expense), access.listMembers(group)).view(expense);
+        ExpenseView last = new PageMapper(List.of(expense), access.listMembers(ctx)).view(expense);
         revisions.insert(expenseId, expense.getVersion(), DELETE, toJson(last), userId, now);
 
         metrics.counter("qesma.expenses", "op", "deleted", "splitType", expense.getSplitType()).increment();
@@ -208,7 +209,7 @@ public class ExpenseService {
     /** History of an expense, oldest first. Still available after the expense was deleted. */
     @Transactional(readOnly = true)
     public List<ExpenseRevisionView> revisions(UUID userId, UUID groupId, UUID expenseId) {
-        access.requireOwned(userId, groupId);
+        access.requireMember(userId, groupId);
         if (!expenses.existsByIdAndGroupId(expenseId, groupId)) {
             throw ApiException.notFound();
         }
@@ -239,22 +240,22 @@ public class ExpenseService {
         if (fromDate != null && toDate != null && fromDate.isAfter(toDate)) {
             throw ApiException.validation("fromDate must not be after toDate");
         }
-        ExpenseGroup group = access.requireOwned(userId, groupId);
+        GroupContext ctx = access.requireMember(userId, groupId);
         LocalDate from = fromDate == null ? OPEN_FROM : fromDate;
         LocalDate to = toDate == null ? OPEN_TO : toDate;
         PageRequest paging = PageRequest.of(page, size);
         Page<Expense> found = memberId == null
                 ? expenses.findPage(groupId, from, to, paging)
                 : expenses.findPageForMember(groupId, from, to, memberId, paging);
-        List<Member> members = access.listMembers(group);
+        List<Member> members = access.listMembers(ctx);
         return found.map(new PageMapper(found.getContent(), members)::view);
     }
 
     @Transactional(readOnly = true)
     public ExpenseView get(UUID userId, UUID groupId, UUID expenseId) {
-        ExpenseGroup group = access.requireOwned(userId, groupId);
+        GroupContext ctx = access.requireMember(userId, groupId);
         Expense expense = expenses.findActive(expenseId, groupId).orElseThrow(ApiException::notFound);
-        return new PageMapper(List.of(expense), access.listMembers(group)).view(expense);
+        return new PageMapper(List.of(expense), access.listMembers(ctx)).view(expense);
     }
 
     // ---- helpers ------------------------------------------------------------------------------------------

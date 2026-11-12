@@ -10,6 +10,7 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/theme_mode_controller.dart';
 import 'core/widgets/app_states.dart';
 import 'features/auth/presentation/session_expired_dialog.dart';
+import 'features/groups/application/freshness.dart';
 
 class QesmaApp extends ConsumerWidget {
   const QesmaApp({super.key});
@@ -27,7 +28,9 @@ class QesmaApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      builder: (context, child) => SessionExpiredHost(child: _OfflineHost(child: child ?? const SizedBox.shrink())),
+      builder: (context, child) => FreshnessHost(
+        child: SessionExpiredHost(child: _OfflineHost(child: child ?? const SizedBox.shrink())),
+      ),
       theme: buildAppTheme(Brightness.light),
       darkTheme: buildAppTheme(Brightness.dark),
       themeMode: ref.watch(themeModeProvider), // the phone's setting unless the user chose one

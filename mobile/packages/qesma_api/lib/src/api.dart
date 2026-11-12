@@ -13,6 +13,9 @@ import 'package:qesma_api/src/api/auth_controller_api.dart';
 import 'package:qesma_api/src/api/balance_controller_api.dart';
 import 'package:qesma_api/src/api/expense_controller_api.dart';
 import 'package:qesma_api/src/api/group_controller_api.dart';
+import 'package:qesma_api/src/api/invite_controller_api.dart';
+import 'package:qesma_api/src/api/join_controller_api.dart';
+import 'package:qesma_api/src/api/join_request_controller_api.dart';
 import 'package:qesma_api/src/api/me_controller_api.dart';
 import 'package:qesma_api/src/api/member_controller_api.dart';
 import 'package:qesma_api/src/api/password_auth_controller_api.dart';
@@ -94,6 +97,24 @@ class QesmaApi {
   /// by doing that all interceptors will not be executed
   GroupControllerApi getGroupControllerApi() {
     return GroupControllerApi(dio, serializers);
+  }
+
+  /// Get InviteControllerApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  InviteControllerApi getInviteControllerApi() {
+    return InviteControllerApi(dio, serializers);
+  }
+
+  /// Get JoinControllerApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  JoinControllerApi getJoinControllerApi() {
+    return JoinControllerApi(dio, serializers);
+  }
+
+  /// Get JoinRequestControllerApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  JoinRequestControllerApi getJoinRequestControllerApi() {
+    return JoinRequestControllerApi(dio, serializers);
   }
 
   /// Get MeControllerApi instance, base route and serializer can be overridden by a given but be careful,

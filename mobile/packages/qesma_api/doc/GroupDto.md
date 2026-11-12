@@ -20,6 +20,7 @@ Name | Type | Description | Notes
 **version** | **int** |  | 
 **yourMemberId** | **String** |  | 
 **yourNetMinor** | **int** | Integer minor units (piasters: 1 EGP = 100). Never a decimal. | 
+**yourRole** | **String** |  | 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

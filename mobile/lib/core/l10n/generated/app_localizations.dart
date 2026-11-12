@@ -410,6 +410,12 @@ abstract class AppLocalizations {
   /// **'محاولات كتير في وقت قصير. استنى دقيقة وجرّب تاني.'**
   String get errorRateLimited;
 
+  /// FORBIDDEN: a member whose role lacks the permission (the app then re-reads the group, the role may have changed).
+  ///
+  /// In ar, this message translates to:
+  /// **'صلاحيتك في المجموعة مش بتسمح بالإجراء ده.'**
+  String get errorForbidden;
+
   /// AUTH_PROVIDER_UNAVAILABLE.
   ///
   /// In ar, this message translates to:
@@ -2689,6 +2695,414 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'مسجّل دخول باسم المستخدم وكلمة السر'**
   String get accountSignedInWithPassword;
+
+  /// Group menu and members tab: opens the invite sheet.
+  ///
+  /// In ar, this message translates to:
+  /// **'دعوة أعضاء'**
+  String get inviteAction;
+
+  /// Invite sheet title.
+  ///
+  /// In ar, this message translates to:
+  /// **'دعوة أعضاء للجروب'**
+  String get inviteSheetTitle;
+
+  /// Invite sheet subtitle with the group name.
+  ///
+  /// In ar, this message translates to:
+  /// **'جروب «{group}»'**
+  String inviteSheetSubtitle(String group);
+
+  /// Invite sheet intro.
+  ///
+  /// In ar, this message translates to:
+  /// **'شارك الكود أو الرابط مع صحابك عشان يشوفوا الحسابات ويضيفوا مصاريفهم أول بأول.'**
+  String get inviteSheetIntro;
+
+  /// Label above the big code.
+  ///
+  /// In ar, this message translates to:
+  /// **'كود الانضمام'**
+  String get inviteCodeLabel;
+
+  /// Button.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسخ الكود'**
+  String get inviteCopyCode;
+
+  /// Snackbar after copying the code.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم نسخ الكود'**
+  String get inviteCodeCopied;
+
+  /// Tooltip of the copy button next to the link.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسخ الرابط'**
+  String get inviteCopyLink;
+
+  /// Snackbar after copying the link.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم نسخ الرابط'**
+  String get inviteLinkCopied;
+
+  /// Opens the system share sheet.
+  ///
+  /// In ar, this message translates to:
+  /// **'مشاركة الرابط'**
+  String get inviteShareLink;
+
+  /// Text sent through the share sheet.
+  ///
+  /// In ar, this message translates to:
+  /// **'انضم لجروب «{group}» على قسمة:\n{link}\nأو اكتب الكود: {code}'**
+  String inviteShareText(String group, String link, String code);
+
+  /// Expiry text computed from the server expiry time.
+  ///
+  /// In ar, this message translates to:
+  /// **'ينتهي بعد {duration}'**
+  String inviteExpiresIn(String duration);
+
+  /// Expiry text.
+  ///
+  /// In ar, this message translates to:
+  /// **'ينتهي خلال أقل من ساعة'**
+  String get inviteExpiresSoon;
+
+  /// Label above the 1/7/30 day chips.
+  ///
+  /// In ar, this message translates to:
+  /// **'مدة صلاحية الدعوة الجديدة'**
+  String get inviteExpiryChoiceLabel;
+
+  /// Toggle title.
+  ///
+  /// In ar, this message translates to:
+  /// **'يحتاج موافقة الأدمن'**
+  String get inviteApprovalTitle;
+
+  /// Toggle description.
+  ///
+  /// In ar, this message translates to:
+  /// **'مراجعة العضو الجديد قبل ما يدخل الجروب'**
+  String get inviteApprovalBody;
+
+  /// Small tag on an invite that needs approval.
+  ///
+  /// In ar, this message translates to:
+  /// **'بموافقة الأدمن'**
+  String get inviteApprovalTag;
+
+  /// Section title of the settings.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنشاء دعوة جديدة'**
+  String get inviteCreateNew;
+
+  /// Button.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنشاء دعوة'**
+  String get inviteCreate;
+
+  /// Snackbar.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم إنشاء الدعوة'**
+  String get inviteCreated;
+
+  /// Text button and confirm label.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلغاء الدعوة'**
+  String get inviteRevoke;
+
+  /// Dialog title.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلغاء الدعوة؟'**
+  String get inviteRevokeConfirmTitle;
+
+  /// Dialog body.
+  ///
+  /// In ar, this message translates to:
+  /// **'اللي معاه الكود أو الرابط مش هيقدر ينضم بيه تاني. اللي انضموا قبل كده بيفضلوا في الجروب.'**
+  String get inviteRevokeConfirmBody;
+
+  /// Dialog button that does nothing.
+  ///
+  /// In ar, this message translates to:
+  /// **'لأ، سيبها'**
+  String get inviteKeep;
+
+  /// Snackbar.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم إلغاء الدعوة'**
+  String get inviteRevoked;
+
+  /// List title.
+  ///
+  /// In ar, this message translates to:
+  /// **'دعوات تانية شغالة'**
+  String get inviteOtherActiveTitle;
+
+  /// Empty state of the invite sheet.
+  ///
+  /// In ar, this message translates to:
+  /// **'مفيش دعوة شغالة دلوقتي. اعمل واحدة وابعتها لصحابك.'**
+  String get inviteNoActive;
+
+  /// Use count of an invite with a limit.
+  ///
+  /// In ar, this message translates to:
+  /// **'{used} من {max} انضموا'**
+  String inviteUsesProgress(String used, String max);
+
+  /// Use count of an invite without a limit.
+  ///
+  /// In ar, this message translates to:
+  /// **'اللي انضموا: {used}'**
+  String inviteUsesCount(String used);
+
+  /// Join screen title.
+  ///
+  /// In ar, this message translates to:
+  /// **'الانضمام لجروب'**
+  String get inviteJoinTitle;
+
+  /// Who invited.
+  ///
+  /// In ar, this message translates to:
+  /// **'دعاك {name}'**
+  String inviteInvitedBy(String name);
+
+  /// Question above the radio cards.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنت مين من الأعضاء؟'**
+  String get inviteWhoAreYou;
+
+  /// Explanation under the question.
+  ///
+  /// In ar, this message translates to:
+  /// **'لو المنظّم كان ضاف اسمك وسجّل مصاريفك قبل كده، اختار اسمك عشان نربط حسابك بيها من غير تكرار.'**
+  String get inviteWhoBody;
+
+  /// Radio card.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنا عضو جديد (مش في القائمة)'**
+  String get inviteNewMember;
+
+  /// Radio card description.
+  ///
+  /// In ar, this message translates to:
+  /// **'هنضيف اسمك كعضو جديد في الجروب'**
+  String get inviteNewMemberBody;
+
+  /// Name field label.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسمك في الجروب'**
+  String get inviteNameLabel;
+
+  /// Primary button.
+  ///
+  /// In ar, this message translates to:
+  /// **'انضم'**
+  String get inviteJoinButton;
+
+  /// Note under the join button.
+  ///
+  /// In ar, this message translates to:
+  /// **'بعد الانضمام هتقدر تسجّل المصاريف وتتابع الحسابات مع باقي الأعضاء.'**
+  String get inviteJoinNote;
+
+  /// Note when the invite needs approval.
+  ///
+  /// In ar, this message translates to:
+  /// **'الدعوة دي محتاجة موافقة الأدمن قبل ما تدخل الجروب.'**
+  String get inviteNeedsApprovalNote;
+
+  /// Shown after MEMBER_ALREADY_CLAIMED.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاسم ده اتاخد من شخص تاني. اختار اسم تاني أو انضم كعضو جديد.'**
+  String get inviteClaimedNotice;
+
+  /// State title.
+  ///
+  /// In ar, this message translates to:
+  /// **'الدعوة انتهت'**
+  String get inviteExpiredTitle;
+
+  /// State body (also the INVITE_EXPIRED error).
+  ///
+  /// In ar, this message translates to:
+  /// **'انتهت صلاحية الدعوة دي. اطلب من أدمن الجروب دعوة جديدة.'**
+  String get inviteExpiredBody;
+
+  /// State title.
+  ///
+  /// In ar, this message translates to:
+  /// **'الدعوة اتلغت'**
+  String get inviteRevokedTitle;
+
+  /// State body (also the INVITE_REVOKED error).
+  ///
+  /// In ar, this message translates to:
+  /// **'أدمن الجروب لغى الدعوة دي. اطلب منه دعوة جديدة لو لسه عايز تنضم.'**
+  String get inviteRevokedBody;
+
+  /// State title.
+  ///
+  /// In ar, this message translates to:
+  /// **'الدعوة مش موجودة'**
+  String get inviteNotFoundTitle;
+
+  /// State body.
+  ///
+  /// In ar, this message translates to:
+  /// **'راجع الكود وجرّب تاني، أو اطلب دعوة جديدة.'**
+  String get inviteNotFoundBody;
+
+  /// State title (also the ALREADY_MEMBER error).
+  ///
+  /// In ar, this message translates to:
+  /// **'إنت عضو في الجروب ده بالفعل'**
+  String get inviteAlreadyMemberTitle;
+
+  /// State body.
+  ///
+  /// In ar, this message translates to:
+  /// **'مش محتاج دعوة. افتح الجروب من هنا.'**
+  String get inviteAlreadyMemberBody;
+
+  /// Button.
+  ///
+  /// In ar, this message translates to:
+  /// **'افتح الجروب'**
+  String get inviteOpenGroup;
+
+  /// State title.
+  ///
+  /// In ar, this message translates to:
+  /// **'في انتظار موافقة الأدمن'**
+  String get inviteWaitingTitle;
+
+  /// State body.
+  ///
+  /// In ar, this message translates to:
+  /// **'طلبك للانضمام لجروب «{group}» اتبعت. هتدخل أول ما الأدمن يوافق.'**
+  String inviteWaitingBody(String group);
+
+  /// Button.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحديث الحالة'**
+  String get inviteRefreshStatus;
+
+  /// Snackbar after a refresh that changed nothing.
+  ///
+  /// In ar, this message translates to:
+  /// **'لسه في انتظار الموافقة'**
+  String get inviteStillWaiting;
+
+  /// Button.
+  ///
+  /// In ar, this message translates to:
+  /// **'الرجوع للرئيسية'**
+  String get inviteBackHome;
+
+  /// Entry point on the groups list.
+  ///
+  /// In ar, this message translates to:
+  /// **'عندك كود دعوة؟'**
+  String get inviteEnterCodeButton;
+
+  /// Code entry screen title.
+  ///
+  /// In ar, this message translates to:
+  /// **'الانضمام بكود'**
+  String get inviteEnterCodeTitle;
+
+  /// Code entry explanation.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب كود الدعوة اللي وصلك، أو الصق الرابط.'**
+  String get inviteEnterCodeBody;
+
+  /// Field label.
+  ///
+  /// In ar, this message translates to:
+  /// **'كود الدعوة'**
+  String get inviteCodeFieldLabel;
+
+  /// Inline error.
+  ///
+  /// In ar, this message translates to:
+  /// **'الكود 8 حروف وأرقام. راجعه وجرّب تاني.'**
+  String get inviteCodeInvalid;
+
+  /// Button.
+  ///
+  /// In ar, this message translates to:
+  /// **'متابعة'**
+  String get inviteContinue;
+
+  /// Length of time: one day.
+  ///
+  /// In ar, this message translates to:
+  /// **'يوم'**
+  String get inviteDayOne;
+
+  /// Length of time: two days.
+  ///
+  /// In ar, this message translates to:
+  /// **'يومين'**
+  String get inviteDayTwo;
+
+  /// Length of time: 3 to 10 days.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} أيام'**
+  String inviteDaysFew(String count);
+
+  /// Length of time: 11 days or more.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} يوم'**
+  String inviteDaysMany(String count);
+
+  /// Length of time: one hour.
+  ///
+  /// In ar, this message translates to:
+  /// **'ساعة'**
+  String get inviteHourOne;
+
+  /// Length of time: two hours.
+  ///
+  /// In ar, this message translates to:
+  /// **'ساعتين'**
+  String get inviteHourTwo;
+
+  /// Length of time: 3 to 10 hours.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} ساعات'**
+  String inviteHoursFew(String count);
+
+  /// Length of time: 11 hours or more.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} ساعة'**
+  String inviteHoursMany(String count);
 }
 
 class _AppLocalizationsDelegate

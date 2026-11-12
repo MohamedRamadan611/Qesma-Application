@@ -202,6 +202,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Too many attempts in a short time. Wait a minute and try again.';
 
   @override
+  String get errorForbidden => 'Your role in this group does not allow that.';
+
+  @override
   String get errorAuthProviderUnavailable =>
       'We can\'t reach Google right now. Please try again in a moment.';
 
@@ -1541,4 +1544,245 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get accountSignedInWithPassword =>
       'Signed in with username and password';
+
+  @override
+  String get inviteAction => 'Invite members';
+
+  @override
+  String get inviteSheetTitle => 'Invite people to the group';
+
+  @override
+  String inviteSheetSubtitle(String group) {
+    return 'Group “$group”';
+  }
+
+  @override
+  String get inviteSheetIntro =>
+      'Share the code or the link with your friends so they can see the balances and add their expenses.';
+
+  @override
+  String get inviteCodeLabel => 'Join code';
+
+  @override
+  String get inviteCopyCode => 'Copy code';
+
+  @override
+  String get inviteCodeCopied => 'Code copied';
+
+  @override
+  String get inviteCopyLink => 'Copy link';
+
+  @override
+  String get inviteLinkCopied => 'Link copied';
+
+  @override
+  String get inviteShareLink => 'Share link';
+
+  @override
+  String inviteShareText(String group, String link, String code) {
+    return 'Join the group “$group” on Qesma:\n$link\nOr enter the code: $code';
+  }
+
+  @override
+  String inviteExpiresIn(String duration) {
+    return 'Expires in $duration';
+  }
+
+  @override
+  String get inviteExpiresSoon => 'Expires in less than an hour';
+
+  @override
+  String get inviteExpiryChoiceLabel => 'How long the new invite lasts';
+
+  @override
+  String get inviteApprovalTitle => 'Needs admin approval';
+
+  @override
+  String get inviteApprovalBody =>
+      'An admin reviews each new person before they get in';
+
+  @override
+  String get inviteApprovalTag => 'Admin approval';
+
+  @override
+  String get inviteCreateNew => 'Create a new invite';
+
+  @override
+  String get inviteCreate => 'Create invite';
+
+  @override
+  String get inviteCreated => 'Invite created';
+
+  @override
+  String get inviteRevoke => 'Cancel this invite';
+
+  @override
+  String get inviteRevokeConfirmTitle => 'Cancel this invite?';
+
+  @override
+  String get inviteRevokeConfirmBody =>
+      'Nobody will be able to join with this code or link any more. People who already joined stay in the group.';
+
+  @override
+  String get inviteKeep => 'Keep it';
+
+  @override
+  String get inviteRevoked => 'Invite cancelled';
+
+  @override
+  String get inviteOtherActiveTitle => 'Other active invites';
+
+  @override
+  String get inviteNoActive =>
+      'There is no active invite right now. Create one and send it to your friends.';
+
+  @override
+  String inviteUsesProgress(String used, String max) {
+    return '$used of $max joined';
+  }
+
+  @override
+  String inviteUsesCount(String used) {
+    return 'Joined: $used';
+  }
+
+  @override
+  String get inviteJoinTitle => 'Join a group';
+
+  @override
+  String inviteInvitedBy(String name) {
+    return '$name invited you';
+  }
+
+  @override
+  String get inviteWhoAreYou => 'Which of these members are you?';
+
+  @override
+  String get inviteWhoBody =>
+      'If the organiser already added your name and recorded your expenses, pick it so your account is linked to them without duplicates.';
+
+  @override
+  String get inviteNewMember => 'I am a new member (not in the list)';
+
+  @override
+  String get inviteNewMemberBody =>
+      'Your name is added as a new member of the group';
+
+  @override
+  String get inviteNameLabel => 'Your name in this group';
+
+  @override
+  String get inviteJoinButton => 'Join';
+
+  @override
+  String get inviteJoinNote =>
+      'After you join you can record expenses and follow the balances with the other members.';
+
+  @override
+  String get inviteNeedsApprovalNote =>
+      'An admin has to approve you before you get into this group.';
+
+  @override
+  String get inviteClaimedNotice =>
+      'Someone else just took that name. Pick another one or join as a new member.';
+
+  @override
+  String get inviteExpiredTitle => 'This invite has expired';
+
+  @override
+  String get inviteExpiredBody =>
+      'This invite is no longer valid. Ask a group admin for a new one.';
+
+  @override
+  String get inviteRevokedTitle => 'This invite was cancelled';
+
+  @override
+  String get inviteRevokedBody =>
+      'A group admin cancelled this invite. Ask for a new one if you still want to join.';
+
+  @override
+  String get inviteNotFoundTitle => 'Invite not found';
+
+  @override
+  String get inviteNotFoundBody =>
+      'Check the code and try again, or ask for a new invite.';
+
+  @override
+  String get inviteAlreadyMemberTitle => 'You are already in this group';
+
+  @override
+  String get inviteAlreadyMemberBody =>
+      'You do not need an invite. Open the group from here.';
+
+  @override
+  String get inviteOpenGroup => 'Open the group';
+
+  @override
+  String get inviteWaitingTitle => 'Waiting for admin approval';
+
+  @override
+  String inviteWaitingBody(String group) {
+    return 'Your request to join “$group” was sent. You get in as soon as an admin approves.';
+  }
+
+  @override
+  String get inviteRefreshStatus => 'Check status';
+
+  @override
+  String get inviteStillWaiting => 'Still waiting for approval';
+
+  @override
+  String get inviteBackHome => 'Back to home';
+
+  @override
+  String get inviteEnterCodeButton => 'Have an invite code?';
+
+  @override
+  String get inviteEnterCodeTitle => 'Join with a code';
+
+  @override
+  String get inviteEnterCodeBody =>
+      'Type the invite code you received, or paste the link.';
+
+  @override
+  String get inviteCodeFieldLabel => 'Invite code';
+
+  @override
+  String get inviteCodeInvalid =>
+      'The code is 8 letters and digits. Check it and try again.';
+
+  @override
+  String get inviteContinue => 'Continue';
+
+  @override
+  String get inviteDayOne => '1 day';
+
+  @override
+  String get inviteDayTwo => '2 days';
+
+  @override
+  String inviteDaysFew(String count) {
+    return '$count days';
+  }
+
+  @override
+  String inviteDaysMany(String count) {
+    return '$count days';
+  }
+
+  @override
+  String get inviteHourOne => '1 hour';
+
+  @override
+  String get inviteHourTwo => '2 hours';
+
+  @override
+  String inviteHoursFew(String count) {
+    return '$count hours';
+  }
+
+  @override
+  String inviteHoursMany(String count) {
+    return '$count hours';
+  }
 }

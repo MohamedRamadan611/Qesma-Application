@@ -27,6 +27,7 @@ GroupSummaryDto _group(String id, String name, String type, int total, int net, 
   ..id = id
   ..name = name
   ..type = type
+  ..yourRole = 'OWNER'
   ..currencyCode = 'EGP'
   ..memberCount = id == 'c' ? 1 : 5
   ..totalSpentMinor = total

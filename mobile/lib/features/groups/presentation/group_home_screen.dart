@@ -11,7 +11,9 @@ import '../../../core/widgets/widgets.dart';
 import '../../balances/presentation/balances_tab.dart';
 import '../../expenses/application/expenses_list_controller.dart';
 import '../../expenses/presentation/expenses_tab.dart';
+import '../../invites/presentation/invite_sheet.dart';
 import '../application/group_detail_controller.dart';
+import '../application/group_permissions.dart';
 import '../data/group_type.dart';
 import 'group_ui.dart';
 import 'members_tab.dart';
@@ -98,12 +100,21 @@ class _GroupHomeScreenState extends ConsumerState<GroupHomeScreen> {
       titleTag: AppTag(label: type.label(l10n), tone: AppTagTone.info),
       showBack: true,
       onBack: () => context.go(Routes.home),
+      // Only an owner or an admin edits the group (the server still decides; a plain member would get 403).
       actions: [
-        IconButton(
-          icon: const Icon(Icons.edit_outlined),
-          tooltip: l10n.groupEditTitle,
-          onPressed: () => context.push(Routes.editGroup(group.id)),
-        ),
+        // Owner and Admin invite people (the server still decides; a plain member would get 403).
+        if (ref.watch(groupPermissionsProvider(widget.gid)).canManageInvites)
+          IconButton(
+            icon: const Icon(Icons.person_add),
+            tooltip: l10n.inviteAction,
+            onPressed: () => showInviteSheet(context, gid: group.id, groupName: group.name),
+          ),
+        if (ref.watch(groupPermissionsProvider(widget.gid)).canEditGroup)
+          IconButton(
+            icon: const Icon(Icons.edit_outlined),
+            tooltip: l10n.groupEditTitle,
+            onPressed: () => context.push(Routes.editGroup(group.id)),
+          ),
       ],
       floatingActionButton: _tab == 0
           ? FloatingActionButton.extended(

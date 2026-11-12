@@ -25,6 +25,7 @@ part 'group_dto.g.dart';
 /// * [version] 
 /// * [yourMemberId] 
 /// * [yourNetMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
+/// * [yourRole] 
 @BuiltValue()
 abstract class GroupDto implements Built<GroupDto, GroupDtoBuilder> {
   @BuiltValueField(wireName: r'createdAt')
@@ -64,6 +65,9 @@ abstract class GroupDto implements Built<GroupDto, GroupDtoBuilder> {
   /// Integer minor units (piasters: 1 EGP = 100). Never a decimal.
   @BuiltValueField(wireName: r'yourNetMinor')
   int get yourNetMinor;
+
+  @BuiltValueField(wireName: r'yourRole')
+  String get yourRole;
 
   GroupDto._();
 
@@ -149,6 +153,11 @@ class _$GroupDtoSerializer implements PrimitiveSerializer<GroupDto> {
     yield serializers.serialize(
       object.yourNetMinor,
       specifiedType: const FullType(int),
+    );
+    yield r'yourRole';
+    yield serializers.serialize(
+      object.yourRole,
+      specifiedType: const FullType(String),
     );
   }
 
@@ -257,6 +266,13 @@ class _$GroupDtoSerializer implements PrimitiveSerializer<GroupDto> {
             specifiedType: const FullType(int),
           ) as int;
           result.yourNetMinor = valueDes;
+          break;
+        case r'yourRole':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.yourRole = valueDes;
           break;
         default:
           unhandled.add(key);

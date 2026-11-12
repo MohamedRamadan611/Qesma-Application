@@ -18,8 +18,18 @@ public enum ErrorCode {
     MEMBER_HAS_TRANSACTIONS,
     OWNER_MEMBER_PROTECTED,
     VERSION_CONFLICT,
+    /** The invite is past its expiry or used up (410, Phase 2 B11). */
+    INVITE_EXPIRED,
+    /** The invite was revoked by an admin (410). */
+    INVITE_REVOKED,
+    /** The caller already has a member in the group (409). */
+    ALREADY_MEMBER,
+    /** The member was claimed by somebody else meanwhile (409). */
+    MEMBER_ALREADY_CLAIMED,
     GROUP_NOT_EMPTY,
     NOT_FOUND,
+    /** A member of the group lacks the role permission for this action (Phase 2, Decision A65). */
+    FORBIDDEN,
     UNAUTHORIZED,
     INTERNAL_ERROR,
     RATE_LIMITED,

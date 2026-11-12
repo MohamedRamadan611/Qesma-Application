@@ -3,7 +3,9 @@
 This file is shared context for the Flutter prompts (`.claude/commands/fl*.md`). It reconciles three sources that do not fully agree: the screen images (`docs/design/screens/`), the Phase 1 spec (`docs/PROJECT_SPEC.md` sections 3 and 9) and the real API (`docs/openapi.json`). When they disagree, **the API and spec win; the design is never "made to work" with fake data.**
 
 ## 1. Rules that apply to every mobile prompt
-1. **Phase 1 only.** Build what the spec lists and the backend supports. Anything else in a design is **omitted** (not disabled, not faked, not "coming soon"). Section 4 lists what is hidden.
+1. **Phase 1, plus the Phase 2 features that are switched on.** Build what the spec lists and the backend supports. Anything else in a design is **omitted** (not disabled, not faked, not "coming soon"). A Phase 2 feature (invites, settlements v2, payment handles, reminders, notifications, account deletion) exists in the app only after the prompt that builds it adds the feature to `enabledFeatures` in `mobile/test/guards/scope_guard_test.dart` (same commit as its screens); until then the guard fails on its words, icons and routes. Elements omitted for good (guest mode, receipt scan, export, contacts, cover photos, ...) are never enabled. Section 4 lists what is hidden.
+   - **Roles (FL10):** `GroupDto.yourRole` / `GroupSummaryDto.yourRole` (OWNER, ADMIN, MEMBER) feed `Permissions` (`lib/core/permissions`). It only shows or hides controls; the server decides and every call still handles `403 FORBIDDEN` (the app then re-reads the group, so the role and buttons catch up) and `404`. Unknown role = MEMBER. Expense and payment edit/delete buttons are not hidden by role because the API does not say who created them (open item for B13/B19).
+   - **Several phones (FL10):** no sockets or timers. Pull-to-refresh on every list, and a refetch of what is on screen when the app returns from the background (at most every 15 s).
 2. **No money arithmetic in Dart** beyond what the spec explicitly allows. Allowed: summing amounts the user typed (payer "remaining" indicator, exact-share "remaining" indicator) and counting. Everything else (splits, rounding, service, tax, totals, balances, suggested transfers, "equal" prefills, "half"/percent shortcuts) comes from the backend: `POST /groups/{gid}/expenses/preview` and `GET /groups/{gid}/balances`. To prefill "equal" amounts, call preview with the EQUAL split and copy `members[].owedMinor`.
 3. **Money is `int` piasters.** Never `double`/`num`/`Decimal` for amounts. Parse user input ("1,000.50", Arabic-Indic digits) with string logic into piasters; format with Western digits (0-9) and the suffix `ج.م` (Decision A3). Maximum amount 10^12 piasters.
 4. **Percentages are integer basis points** (`bps`): parse "12" -> 1200, "12.5" -> 1250 by string logic (max 2 decimals, 0..100.00).
@@ -44,15 +46,23 @@ Do not rename the files without telling the owner; the prompts below use the rea
 | `P10-03-Account-Settings.png` | Account settings | fl8 | - | connected Google email (read only), sign out | InstaPay/wallet handles (Phase 2), export (out of scope), active devices, sign out everywhere, **delete account** (required before public release, not in the Phase 1 backend: record as an open item) |
 | `P11-01-No-Internet.png`, `P11-02-Generic-Error.png`, `P11-03-Loading-pattern.png` | Offline, generic error, skeleton | fl1, fl8 | - | shared widgets used everywhere | - |
 | `P11-05-Coach-Marks.png` | 3-step first-run tour | fl8 (optional, last) | - | only if time allows | - |
-| `P12-*`, `P13-*`, `P14-*` | Invites, transfer status/disputes/remind, activity, notifications | fl11-fl16 (Phase 2 only) | see `docs/PHASE2_SPEC.md` section 11 | **Not in FL0-FL9: do not build there.** Built later by `fl11`-`fl16`; `fl10` rewrites this row into a full Phase 2 table (index: `docs/prompts/PHASE2_PROMPTS.md`) | everything until then |
+| `P12-01-Invite-Sheet.png` | Invite sheet: code, link, share, expiry, approval toggle, revoke | fl11 | `createInvite`, `listInvites`, `revokeInvite` | code in a large copyable box (XXXX-XXXX), link, system share sheet, copy, expiry 1/7/30 days, approval toggle, revoke with confirm, list of active invites; Owner/Admin only (`canManageInvites`) | the sample code `DHB-4821` (the real code is longer and random) |
+| `P12-02-Join Screen.png` | Join: who are you? + edge-case preview panel | fl11 | `getInvitePreview`, `joinGroup` | group name, inviter, member count, radio cards of **unclaimed names only**, "I am a new member", join; states expired / revoked / waiting for approval / already a member; code entry fallback and the App Link `/join/<code>` | **balance chips on the member cards** (a person who has not joined must not see the group's money), the "edge cases" panel (design-only), photos |
+| `P12-03-Member-Tab-Update.png` | Members tab v2: connected / name only, role chips, options sheet | fl12 | `listJoinRequests`, `approveJoinRequest`, `rejectJoinRequest`, `unlinkMember` (+ B12 endpoints) | badges from `hasAccount`, role chips from `role`, options per role, join-requests inbox, leave, transfer ownership | photos, activity captions |
+| `P13-01-Transfer.png`, `P13-02-Receiver-View.png`, `P13-03-Status Chips.png`, `P13-03-Disputed-Settlement.png` (two files share the number: open by content) | Two-sided settlement: pay card with handles, receiver confirm, status chips, disputed detail | fl13 | B13 + B14 endpoints (not in the contract yet) | transfer card with the receiver's handles and the "the app does not move money" note, "I paid", receiver "received / not received", chips (pending amber, confirmed green, disputed red, cancelled), disputed detail with confirm / cancel by role | the **attached transfer screenshot**, the **transaction number**, photos, bank-verified labels (no backend data) |
+| `P13-04-Remind.png`, `P13-05-Profile-Payment.png` | Remind button, payment details in the profile | fl14 | B14 + B16 endpoints (not in the contract yet) | InstaPay and wallet fields with the privacy note, "Remind" disabled from the server's next-allowed time | - |
+| `P14-02-Group-Activity.png`, `P14-03-Notification-Settings.png` | Activity feed, notification settings | fl15 | B15 + B16 endpoints (not in the contract yet) | timeline from event types (one ARB template per type), notification center, per-group mute, global switch | avatar photos; there is **no screenshot of the notification center list** (derive it) |
+| (no file) | Conflict screen, delete account | fl16 | B17 endpoints (not in the contract yet) | latest vs yours with re-apply / discard; delete account with consequences and a typed confirmation | - |
 
 ## 4. Missing designs (derive from `docs/design/DESIGN.md`, the nearest screen and the ux-copy skill; list them in each plan)
 Empty states, loading skeletons per screen, delete-group confirm/blocked, delete-member confirm/blocked, delete-expense confirm, edit-conflict dialog, expense history sheet, members tab, all-settled balances, dark theme (light only in Phase 1).
 
-## 5. Backend limits the UI must respect
-Group name 60 code points · member name 40 · expense title 100 · item name 100 · settlement note 200 · display name 60 · up to 100 payers/participants/shares/items and 100 assignees per item · amounts 1..10^12 piasters (adjustment ±10^12) · `expenseDate` / `settledOn` 2000-01-01..2100-12-31 · page size max 100 (default 20) · request body max 64 KB · auth endpoints 10 requests/minute/IP · access token 15 minutes, refresh token 30 days (rotates on every refresh; **reusing an old refresh token ends the whole session**) · idempotency keys kept 24 hours.
+Phase 2 (no screenshot exists): the notification center list (only `P14-02`/`P14-03` exist, there is no `P14-01`), the member options sheet per role, join-requests inbox, leave group, transfer ownership, the version-conflict screen, delete account, the code-entry fallback of the join flow.
 
-## 6. Endpoints (24, from `docs/openapi.json`)
+## 5. Backend limits the UI must respect
+Group name 60 code points · member name 40 · expense title 100 · item name 100 · settlement note 200 · display name 60 · up to 100 payers/participants/shares/items and 100 assignees per item · amounts 1..10^12 piasters (adjustment ±10^12) · `expenseDate` / `settledOn` 2000-01-01..2100-12-31 · page size max 100 (default 20) · request body max 64 KB · invite code 8 characters from `ABCDEFGHJKLMNPQRSTUVWXYZ23456789` (typed as XXXX-XXXX, case/dash/Arabic digits accepted), invite expiry 1..30 days (default 7), max uses 1..1000, join name 40 · `/api/v1/invites/**` 30 requests/minute/IP and 10 lookups that find nothing per 15 minutes per user (`RATE_LIMITED`) · auth endpoints 10 requests/minute/IP · access token 15 minutes, refresh token 30 days (rotates on every refresh; **reusing an old refresh token ends the whole session**) · idempotency keys kept 24 hours.
+
+## 6. Endpoints (40 in `docs/openapi.json`: the 24 below, 7 password-auth, 9 invitations)
 | Operation | Success | Notes |
 |:--|:--|:--|
 | `POST /auth/google` `{idToken}` | 200 `AuthResponse` | rate limited; 503 `AUTH_PROVIDER_UNAVAILABLE` |
@@ -74,6 +84,19 @@ Operation ids (the method names of the generated client, fixed in `OpenApiConfig
 
 > Since B9 the OpenAPI declares the real success statuses (201 for creates, 204 for deletes); regenerate the client after B9 (`docs/mobile-client.md`).
 
+Phase 2 so far (B10 roles, B11 invitations), method names of the generated client:
+
+| Operation | Success | Notes |
+|:--|:--|:--|
+| `createInvite` `POST /groups/{gid}/invites` (Idempotency-Key) | **201** `InviteView` | Owner/Admin; `{expiresInDays?, maxUses?, requiresApproval?}`; the response carries `code` and `link` |
+| `listInvites`, `revokeInvite` | 200 page / **204** | Owner/Admin; revoking again is not an error |
+| `getInvitePreview` `GET /invites/{code}` | 200 `InvitePreview` | any signed-in person; 404 unknown, **410** expired/used up/revoked; no balances |
+| `joinGroup` `POST /invites/{code}/join` (Idempotency-Key) | **201** `JoinView` JOINED or **202** PENDING_APPROVAL | body: exactly one of `claimMemberId` / `newMemberName` |
+| `listJoinRequests`, `approveJoinRequest`, `rejectJoinRequest` | 200 | Owner/Admin; repeating a decision is fine, the opposite one is 409 `VERSION_CONFLICT` |
+| `unlinkMember` `POST /groups/{gid}/members/{mid}/unlink` | **204** | Owner/Admin; keeps the member and its history |
+
+Still to come with their backend prompts: member lifecycle (B12), settlement v2 (B13), payment handles (B14), activity and notifications (B15), prefs and remind (B16), conflict body and account deletion (B17).
+
 ## 7. Error code -> UX
 | Code | Meaning | UX |
 |:--|:--|:--|
@@ -92,3 +115,9 @@ Operation ids (the method names of the generated client, fixed in `OpenApiConfig
 | `RATE_LIMITED` | too many sign-ins | wait message |
 | `AUTH_PROVIDER_UNAVAILABLE` | Google keys unreachable | "try again in a moment" |
 | `INTERNAL_ERROR` | server bug | generic error with the `requestId` |
+| `FORBIDDEN` (403, B10) | a member whose role lacks the permission | short message "your role does not allow that" (`errorForbidden`); the app re-reads the group so the role and buttons catch up (FL10) |
+| `INVITE_EXPIRED` (410, B11) | expired or used up | join screen state "this invite has expired": ask an admin for a new invite (FL11) |
+| `INVITE_REVOKED` (410, B11) | revoked by an admin | join screen state "this invite was cancelled" (FL11) |
+| `ALREADY_MEMBER` (409, B11) | already a member of this group | join screen state: open the group (found by name in the refreshed list) (FL11) |
+| `MEMBER_ALREADY_CLAIMED` (409, B11) | somebody else claimed that member | notice, list re-read, typed name kept (FL11) |
+| (not in the contract yet) `MEMBER_INACTIVE` 422, `OWNER_MUST_TRANSFER` 409 (B12), `INVALID_STATE_TRANSITION` 409 (B13), `REMIND_RATE_LIMITED` 429 (B16) | | added with their prompts |
