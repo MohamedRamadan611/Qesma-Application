@@ -11,7 +11,7 @@ Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**addMember**](MemberControllerApi.md#addmember) | **POST** /api/v1/groups/{gid}/members | 
 [**deleteMember**](MemberControllerApi.md#deletemember) | **DELETE** /api/v1/groups/{gid}/members/{mid} | 
-[**renameMember**](MemberControllerApi.md#renamemember) | **PATCH** /api/v1/groups/{gid}/members/{mid} | 
+[**renameMember**](MemberControllerApi.md#renamemember) | **PATCH** /api/v1/groups/{gid}/members/{mid} | Rename a member, change its role, or remove/reactivate it
 [**unlinkMember**](MemberControllerApi.md#unlinkmember) | **POST** /api/v1/groups/{gid}/members/{mid}/unlink | Unlink the account from a member (the member, its history and balance stay)
 
 
@@ -103,7 +103,9 @@ void (empty response body)
 # **renameMember**
 > MemberDto renameMember(gid, mid, updateMemberRequest)
 
+Rename a member, change its role, or remove/reactivate it
 
+Send at least one of displayName, role, status. displayName: Owner/Admin. role (ADMIN or MEMBER): Owner only. status (LEFT removes a linked member, ACTIVE reactivates): Owner, and Admin for members (not admins). The owner's member is protected (409 OWNER_MEMBER_PROTECTED). A member without an account has no role or status.
 
 ### Example
 ```dart

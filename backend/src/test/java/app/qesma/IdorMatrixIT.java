@@ -149,7 +149,7 @@ class IdorMatrixIT extends AbstractApiIT {
         List<Op> ops = groupScopedOperations();
         Set<String> labels = new TreeSet<>();
         ops.forEach(o -> labels.add(o.label()));
-        assertThat(ops).as("group-scoped operations found in the OpenAPI document").hasSize(28);
+        assertThat(ops).as("group-scoped operations found in the OpenAPI document").hasSize(29);
 
         Map<String, Object> before = snapshot(gid);
         for (Op op : ops) {

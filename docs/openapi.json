@@ -1,6 +1,52 @@
 {
   "components" : {
     "schemas" : {
+      "ActivityItem" : {
+        "properties" : {
+          "actorMemberId" : {
+            "format" : "uuid",
+            "nullable" : true,
+            "type" : "string"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "payload" : {
+            "$ref" : "#/components/schemas/EventPayload"
+          },
+          "subject" : {
+            "nullable" : true,
+            "type" : "string"
+          },
+          "type" : {
+            "enum" : [ "EXPENSE_ADDED", "EXPENSE_EDITED", "EXPENSE_DELETED", "SETTLEMENT_PENDING", "SETTLEMENT_CONFIRMED", "SETTLEMENT_DISPUTED", "SETTLEMENT_CANCELLED", "INVITE_ACCEPTED", "JOIN_REQUESTED", "MEMBER_JOINED", "MEMBER_LEFT", "MEMBER_REACTIVATED", "MEMBER_UNLINKED", "ROLE_CHANGED", "OWNERSHIP_TRANSFERRED" ],
+            "type" : "string"
+          }
+        },
+        "required" : [ "createdAt", "id", "payload", "type" ],
+        "type" : "object"
+      },
+      "ActivityPage" : {
+        "properties" : {
+          "items" : {
+            "items" : {
+              "$ref" : "#/components/schemas/ActivityItem"
+            },
+            "type" : "array"
+          },
+          "nextBefore" : {
+            "nullable" : true,
+            "type" : "string"
+          }
+        },
+        "required" : [ "items" ],
+        "type" : "object"
+      },
       "AuthResponse" : {
         "properties" : {
           "accessToken" : {
@@ -94,6 +140,73 @@
           }
         },
         "required" : [ "displayName" ],
+        "type" : "object"
+      },
+      "EventPayload" : {
+        "properties" : {
+          "amountMinor" : {
+            "description" : "Integer minor units (piasters: 1 EGP = 100). Never a decimal.",
+            "format" : "int64",
+            "nullable" : true,
+            "type" : "integer"
+          },
+          "expenseId" : {
+            "format" : "uuid",
+            "nullable" : true,
+            "type" : "string"
+          },
+          "fromMemberId" : {
+            "format" : "uuid",
+            "nullable" : true,
+            "type" : "string"
+          },
+          "inviteId" : {
+            "format" : "uuid",
+            "nullable" : true,
+            "type" : "string"
+          },
+          "memberId" : {
+            "format" : "uuid",
+            "nullable" : true,
+            "type" : "string"
+          },
+          "previousRole" : {
+            "enum" : [ "OWNER", "ADMIN", "MEMBER" ],
+            "nullable" : true,
+            "type" : "string"
+          },
+          "requestId" : {
+            "format" : "uuid",
+            "nullable" : true,
+            "type" : "string"
+          },
+          "role" : {
+            "enum" : [ "OWNER", "ADMIN", "MEMBER" ],
+            "nullable" : true,
+            "type" : "string"
+          },
+          "settlementId" : {
+            "format" : "uuid",
+            "nullable" : true,
+            "type" : "string"
+          },
+          "toMemberId" : {
+            "format" : "uuid",
+            "nullable" : true,
+            "type" : "string"
+          },
+          "totalMinor" : {
+            "description" : "Integer minor units (piasters: 1 EGP = 100). Never a decimal.",
+            "format" : "int64",
+            "nullable" : true,
+            "type" : "integer"
+          },
+          "version" : {
+            "format" : "int32",
+            "nullable" : true,
+            "type" : "integer"
+          }
+        },
         "type" : "object"
       },
       "ExpenseCommand" : {
@@ -638,6 +751,35 @@
         "required" : [ "password", "username" ],
         "type" : "object"
       },
+      "MarkReadRequest" : {
+        "properties" : {
+          "all" : {
+            "type" : "boolean"
+          },
+          "ids" : {
+            "items" : {
+              "format" : "uuid",
+              "type" : "string"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "MarkReadResult" : {
+        "properties" : {
+          "marked" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "unreadCount" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "marked", "unreadCount" ],
+        "type" : "object"
+      },
       "MemberDto" : {
         "properties" : {
           "createdAt" : {
@@ -684,6 +826,68 @@
           }
         },
         "required" : [ "memberId", "netMinor" ],
+        "type" : "object"
+      },
+      "NotificationItem" : {
+        "properties" : {
+          "actorMemberId" : {
+            "format" : "uuid",
+            "nullable" : true,
+            "type" : "string"
+          },
+          "actorName" : {
+            "nullable" : true,
+            "type" : "string"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "groupId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "groupName" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "payload" : {
+            "$ref" : "#/components/schemas/EventPayload"
+          },
+          "readAt" : {
+            "format" : "date-time",
+            "nullable" : true,
+            "type" : "string"
+          },
+          "subject" : {
+            "nullable" : true,
+            "type" : "string"
+          },
+          "type" : {
+            "enum" : [ "EXPENSE_ADDED", "EXPENSE_EDITED", "EXPENSE_DELETED", "SETTLEMENT_PENDING", "SETTLEMENT_CONFIRMED", "SETTLEMENT_DISPUTED", "SETTLEMENT_CANCELLED", "INVITE_ACCEPTED", "JOIN_REQUESTED", "MEMBER_JOINED", "MEMBER_LEFT", "MEMBER_REACTIVATED", "MEMBER_UNLINKED", "ROLE_CHANGED", "OWNERSHIP_TRANSFERRED" ],
+            "type" : "string"
+          }
+        },
+        "required" : [ "createdAt", "groupId", "groupName", "id", "payload", "type" ],
+        "type" : "object"
+      },
+      "NotificationPage" : {
+        "properties" : {
+          "items" : {
+            "items" : {
+              "$ref" : "#/components/schemas/NotificationItem"
+            },
+            "type" : "array"
+          },
+          "nextBefore" : {
+            "nullable" : true,
+            "type" : "string"
+          }
+        },
+        "required" : [ "items" ],
         "type" : "object"
       },
       "PageResponseExpenseView" : {
@@ -854,6 +1058,19 @@
           }
         },
         "required" : [ "amountMinor", "memberId" ],
+        "type" : "object"
+      },
+      "PaymentHandlesView" : {
+        "properties" : {
+          "instapay" : {
+            "nullable" : true,
+            "type" : "string"
+          },
+          "wallet" : {
+            "nullable" : true,
+            "type" : "string"
+          }
+        },
         "type" : "object"
       },
       "Problem" : {
@@ -1195,6 +1412,9 @@
             "format" : "int64",
             "type" : "integer"
           },
+          "receiverHandles" : {
+            "$ref" : "#/components/schemas/PaymentHandlesView"
+          },
           "toMemberId" : {
             "format" : "uuid",
             "type" : "string"
@@ -1213,6 +1433,16 @@
             "type" : "string"
           }
         },
+        "type" : "object"
+      },
+      "UnreadCount" : {
+        "properties" : {
+          "count" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "count" ],
         "type" : "object"
       },
       "UpdateGroupRequest" : {
@@ -1244,6 +1474,17 @@
             "type" : "string"
           },
           "status" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "UpdatePaymentHandlesRequest" : {
+        "properties" : {
+          "instapay" : {
+            "type" : "string"
+          },
+          "wallet" : {
             "type" : "string"
           }
         },
@@ -2513,6 +2754,100 @@
           }
         },
         "tags" : [ "group-controller" ]
+      }
+    },
+    "/api/v1/groups/{gid}/activity" : {
+      "get" : {
+        "description" : "Every ACTIVE member reads the whole history. limit: 1 to 50 (default 20). before: the opaque nextBefore of the previous page (422 if malformed). nextBefore is null on the last page. payload holds ids, a version and integer amounts only; subject is the expense title (EXPENSE_* events, also after the expense was deleted) or the member's name (member events), resolved at read time.",
+        "operationId" : "listGroupActivity",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "gid",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "before",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ActivityPage"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Malformed request (code: VALIDATION_ERROR)"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "summary" : "The group's activity feed, newest first (keyset pagination)",
+        "tags" : [ "activity-controller" ]
       }
     },
     "/api/v1/groups/{gid}/balances" : {
@@ -5770,6 +6105,339 @@
           }
         },
         "tags" : [ "me-controller" ]
+      }
+    },
+    "/api/v1/me/payment-handles" : {
+      "get" : {
+        "description" : "Personal data. Co-members see a receiver's handles only on the balances transfers they pay (or as Owner/Admin).",
+        "operationId" : "getPaymentHandles",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaymentHandlesView"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "summary" : "Your own InstaPay address and mobile-wallet number",
+        "tags" : [ "me-controller" ]
+      },
+      "put" : {
+        "description" : "A null, absent or blank field removes that handle. Wallet: Egyptian mobile (Arabic digits, spaces, dashes and +20 accepted), stored as 01XXXXXXXXX. InstaPay: name@bank, 3 to 60 ASCII characters, stored lower case.",
+        "operationId" : "updatePaymentHandles",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdatePaymentHandlesRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaymentHandlesView"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Malformed request (code: VALIDATION_ERROR)"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "413" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Request body too large (code: VALIDATION_ERROR)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "summary" : "Replace your payment handles",
+        "tags" : [ "me-controller" ]
+      }
+    },
+    "/api/v1/notifications" : {
+      "get" : {
+        "description" : "limit: 1 to 50 (default 20). before: the opaque nextBefore of the previous page (422 if malformed). groupName is always present; actorName and subject only while you are still an ACTIVE member of that group. Notifications stay readable after you leave a group.",
+        "operationId" : "listNotifications",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "before",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NotificationPage"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Malformed request (code: VALIDATION_ERROR)"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "summary" : "Your notifications, newest first (keyset pagination)",
+        "tags" : [ "notification-controller" ]
+      }
+    },
+    "/api/v1/notifications/read" : {
+      "post" : {
+        "description" : "Body: exactly one of ids (1 to 100 notification ids) or all: true (else 422). Ids that are unknown or belong to someone else are ignored (the answer is identical). marked counts the rows that changed now. Not a create: no Idempotency-Key, repeating it is harmless.",
+        "operationId" : "markNotificationsRead",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MarkReadRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MarkReadResult"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Malformed request (code: VALIDATION_ERROR)"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "413" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Request body too large (code: VALIDATION_ERROR)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "summary" : "Mark your notifications read",
+        "tags" : [ "notification-controller" ]
+      }
+    },
+    "/api/v1/notifications/unread-count" : {
+      "get" : {
+        "operationId" : "getUnreadNotificationCount",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UnreadCount"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "summary" : "How many of your notifications are unread",
+        "tags" : [ "notification-controller" ]
       }
     }
   },

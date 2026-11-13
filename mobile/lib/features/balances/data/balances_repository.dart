@@ -1,3 +1,4 @@
+import 'package:built_collection/built_collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qesma_api/qesma_api.dart';
 
@@ -32,23 +33,42 @@ class BalancesRepository {
         return body;
       });
 
-  /// Newest first (the server sorts), 20 per page.
-  Future<SettlementsPage> settlements(String gid, {int page = 0}) => _run(() async {
-        final body = (await _api.getSettlementControllerApi().listSettlements(gid: gid, page: page, size: pageSize)).data;
+  /// Newest first (the server sorts), 20 per page. [statuses] narrows to those states (the server filter); empty = every status.
+  Future<SettlementsPage> settlements(String gid, {int page = 0, int size = pageSize, List<String> statuses = const []}) => _run(() async {
+        final body = (await _api.getSettlementControllerApi().listSettlements(
+          gid: gid,
+          status: statuses.isEmpty ? null : BuiltList<String>(statuses),
+          page: page,
+          size: size,
+        )).data;
         if (body == null) throw const ApiUnexpected();
         return (items: body.items.toList(), page: body.page, totalPages: body.totalPages, total: body.totalElements);
       });
 
-  /// Records a payment. [key] is the `Idempotency-Key` of this user action.
+  /// Declares / records a payment. [key] is the `Idempotency-Key` of this user action.
   Future<SettlementView> record(String gid, SettlementCommand command, String key) => _run(() async {
         final body = (await _api.getSettlementControllerApi().createSettlement(gid: gid, idempotencyKey: key, settlementCommand: command)).data;
         if (body == null) throw const ApiUnexpected();
         return body;
       });
 
-  /// Soft delete (204, no `If-Match`: settlements have no version).
-  Future<void> delete(String gid, String sid) => _run(() async {
-        await _api.getSettlementControllerApi().deleteSettlement(gid: gid, sid: sid);
+  /// The three transitions (B13). No body and no key: they are idempotent by state, the server answers 200 with the current view.
+  Future<SettlementView> confirm(String gid, String sid) => _run(() async {
+        final body = (await _api.getSettlementControllerApi().confirmSettlement(gid: gid, sid: sid)).data;
+        if (body == null) throw const ApiUnexpected();
+        return body;
+      });
+
+  Future<SettlementView> dispute(String gid, String sid) => _run(() async {
+        final body = (await _api.getSettlementControllerApi().disputeSettlement(gid: gid, sid: sid)).data;
+        if (body == null) throw const ApiUnexpected();
+        return body;
+      });
+
+  Future<SettlementView> cancel(String gid, String sid) => _run(() async {
+        final body = (await _api.getSettlementControllerApi().cancelSettlement(gid: gid, sid: sid)).data;
+        if (body == null) throw const ApiUnexpected();
+        return body;
       });
 }
 

@@ -9,6 +9,7 @@ import '../../../core/router/app_router.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../balances/presentation/balances_tab.dart';
+import '../../balances/presentation/receiver_card.dart';
 import '../../expenses/application/expenses_list_controller.dart';
 import '../../expenses/presentation/expenses_tab.dart';
 import '../../invites/presentation/invite_sheet.dart';
@@ -125,6 +126,8 @@ class _GroupHomeScreenState extends ConsumerState<GroupHomeScreen> {
           : null,
       body: Column(
         children: [
+          // Payments waiting for this person to confirm (FL13), visible on every tab.
+          IncomingPaymentsBanner(gid: group.id),
           Padding(
             padding: const EdgeInsetsDirectional.fromSTEB(
               QesmaSpacing.margin,

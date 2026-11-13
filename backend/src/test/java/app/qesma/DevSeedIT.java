@@ -81,8 +81,19 @@ class DevSeedIT extends AbstractApiIT {
         assertThat(dinner.get("shares").findValues("owedMinor").stream().map(JsonNode::asLong).toList())
                 .containsExactly(16599L, 16598L, 22982L);
 
+        // B15: the seed goes through the real services, so the feed has the events of what it created
+        JsonNode feed = body(call(GET, "/api/v1/groups/" + gid + "/activity?limit=50", owner, null)).get("items");
+        List<String> types = new java.util.ArrayList<>();
+        feed.forEach(i -> types.add(i.get("type").asText()));
+        assertThat(types).contains("EXPENSE_ADDED", "SETTLEMENT_PENDING", "SETTLEMENT_DISPUTED", "ROLE_CHANGED",
+                "MEMBER_LEFT");
+        assertThat(types.stream().filter("EXPENSE_ADDED"::equals).count()).isEqualTo(3L);
+        long eventsBefore = jdbc.queryForObject("select count(*) from group_events where group_id = ?::uuid", Long.class, gid);
+
         // running the seeder again changes nothing
         seeder.run(new DefaultApplicationArguments());
+        assertThat(jdbc.queryForObject("select count(*) from group_events where group_id = ?::uuid", Long.class, gid))
+                .as("a second run writes no events").isEqualTo(eventsBefore);
         assertThat(body(call(GET, "/api/v1/groups", owner, null)).get("items")).hasSize(1);
         assertThat(jdbc.queryForObject("select count(*) from expenses where group_id = ?::uuid", Long.class, gid)).isEqualTo(3L);
     }

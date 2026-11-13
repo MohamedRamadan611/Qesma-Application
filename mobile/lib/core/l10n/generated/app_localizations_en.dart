@@ -1246,27 +1246,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get balancesDeletePayment => 'Delete payment';
-
-  @override
-  String balancesDeletePaymentSpoken(String from, String to, String amount) {
-    return 'Delete the payment from $from to $to, $amount';
-  }
-
-  @override
-  String get balancesDeleteTitle => 'Delete this payment?';
-
-  @override
-  String get balancesDeleteBody =>
-      'Balances will be recalculated without this payment. It cannot be restored.';
-
-  @override
-  String get balancesDeleted => 'Payment deleted.';
-
-  @override
-  String get balancesDeleteGone => 'This payment was already removed.';
-
-  @override
   String get balancesLoadMore => 'Load more';
 
   @override
@@ -1785,4 +1764,521 @@ class AppLocalizationsEn extends AppLocalizations {
   String inviteHoursMany(String count) {
     return '$count hours';
   }
+
+  @override
+  String get membersBadgeConnected => 'Linked to an account';
+
+  @override
+  String get membersBadgeNameOnly => 'Name only';
+
+  @override
+  String get membersRoleOwner => 'Owner';
+
+  @override
+  String get membersRoleAdmin => 'Admin';
+
+  @override
+  String get membersLeftChip => 'Left';
+
+  @override
+  String get membersActionPromote => 'Make admin';
+
+  @override
+  String get membersActionPromoteHint =>
+      'Can edit the group and manage members and invitations.';
+
+  @override
+  String get membersActionDemote => 'Remove admin';
+
+  @override
+  String get membersActionDemoteHint => 'Becomes a regular member.';
+
+  @override
+  String get membersActionUnlink => 'Unlink account';
+
+  @override
+  String get membersActionUnlinkHint =>
+      'Becomes a name only; the expenses and history stay.';
+
+  @override
+  String get membersActionMarkLeft => 'Mark as left';
+
+  @override
+  String get membersActionMarkLeftHint =>
+      'Stays in the list with the balance, and cannot be added to new expenses.';
+
+  @override
+  String get membersActionReactivate => 'Reactivate';
+
+  @override
+  String get membersActionReactivateHint => 'Becomes an active member again.';
+
+  @override
+  String get membersActionTransfer => 'Transfer ownership';
+
+  @override
+  String get membersActionTransferHint =>
+      'They become the owner and you become an admin.';
+
+  @override
+  String memberUnlinkConfirmTitle(String name) {
+    return 'Unlink the account of $name?';
+  }
+
+  @override
+  String memberUnlinkConfirmBody(String name) {
+    return '$name becomes a name only and loses access to the group. Their expenses and history stay, and you can invite them again.';
+  }
+
+  @override
+  String get memberUnlinkConfirmAction => 'Unlink account';
+
+  @override
+  String memberMarkLeftConfirmTitle(String name) {
+    return 'Mark $name as left?';
+  }
+
+  @override
+  String memberMarkLeftConfirmBody(String name) {
+    return '$name stays in the list with the balance, but cannot be added to new expenses.';
+  }
+
+  @override
+  String get memberMarkLeftConfirmAction => 'Mark as left';
+
+  @override
+  String memberPromoteConfirmTitle(String name) {
+    return 'Make $name an admin?';
+  }
+
+  @override
+  String memberPromoteConfirmBody(String name) {
+    return '$name will be able to edit the group and manage members and invitations.';
+  }
+
+  @override
+  String get memberPromoteConfirmAction => 'Make admin';
+
+  @override
+  String memberDemoteConfirmTitle(String name) {
+    return 'Remove admin from $name?';
+  }
+
+  @override
+  String memberDemoteConfirmBody(String name) {
+    return '$name becomes a regular member.';
+  }
+
+  @override
+  String get memberDemoteConfirmAction => 'Remove admin';
+
+  @override
+  String memberReactivatedNotice(String name) {
+    return '$name is active again.';
+  }
+
+  @override
+  String get membersLeave => 'Leave group';
+
+  @override
+  String get groupLeaveConfirmTitle => 'Leave this group?';
+
+  @override
+  String get groupLeaveConfirmBody =>
+      'Your balance stays in the group and you will no longer see it. You need a new invitation to come back.';
+
+  @override
+  String get groupLeaveConfirmAction => 'Leave group';
+
+  @override
+  String get groupLeftNotice => 'You left the group.';
+
+  @override
+  String get membersTransfer => 'Transfer ownership';
+
+  @override
+  String get memberTransferPickerTitle => 'Transfer ownership';
+
+  @override
+  String get memberTransferPickerSubtitle =>
+      'Pick who becomes the owner. They must be linked to an account.';
+
+  @override
+  String get memberTransferPickerEmptyTitle => 'Nobody to transfer to';
+
+  @override
+  String get memberTransferPickerEmptyBody =>
+      'Ownership goes to an active member linked to an account. Invite someone to the group first.';
+
+  @override
+  String memberTransferConfirmTitle(String name) {
+    return 'Transfer ownership to $name?';
+  }
+
+  @override
+  String memberTransferConfirmBody(String name) {
+    return '$name becomes the owner and you become an admin. You cannot undo this yourself.';
+  }
+
+  @override
+  String get memberTransferConfirmAction => 'Transfer ownership';
+
+  @override
+  String get memberTransferDoneNotice => 'Ownership was transferred.';
+
+  @override
+  String get errorOwnerMustTransferTitle => 'Transfer ownership first';
+
+  @override
+  String get errorOwnerMustTransferMessage =>
+      'The owner cannot leave the group. Transfer ownership to another member, then leave.';
+
+  @override
+  String get errorMemberInactive =>
+      'This member has left the group. The list was refreshed.';
+
+  @override
+  String inviteRequestsBanner(String count) {
+    return 'Pending join requests: $count';
+  }
+
+  @override
+  String get inviteRequestsTitle => 'Join requests';
+
+  @override
+  String get inviteRequestsEmptyTitle => 'No join requests';
+
+  @override
+  String get inviteRequestsEmptyBody =>
+      'When someone uses an invitation that needs approval, the request shows up here.';
+
+  @override
+  String inviteRequestClaims(String name) {
+    return 'Wants to be: $name';
+  }
+
+  @override
+  String inviteRequestNewMember(String name) {
+    return 'New member named $name';
+  }
+
+  @override
+  String inviteRequestWhen(String when) {
+    return 'Requested $when';
+  }
+
+  @override
+  String get inviteRequestApprove => 'Approve';
+
+  @override
+  String get inviteRequestReject => 'Reject';
+
+  @override
+  String inviteRequestApproveLabel(String name) {
+    return 'Approve the request of $name';
+  }
+
+  @override
+  String inviteRequestRejectLabel(String name) {
+    return 'Reject the request of $name';
+  }
+
+  @override
+  String get inviteRequestClaimedNotice =>
+      'That name was linked to another account. The list was refreshed.';
+
+  @override
+  String get inviteRequestDecidedNotice =>
+      'Somebody already decided this request. The list was refreshed.';
+
+  @override
+  String get inviteRequestApprovedNotice => 'Request approved.';
+
+  @override
+  String get inviteRequestRejectedNotice => 'Request rejected.';
+
+  @override
+  String get inviteRequestUnknownName => 'Someone';
+
+  @override
+  String get settlementChipPending => 'Waiting for confirmation';
+
+  @override
+  String get settlementChipConfirmed => 'Confirmed';
+
+  @override
+  String get settlementChipDisputed => 'Disputed';
+
+  @override
+  String get settlementChipCancelled => 'Cancelled';
+
+  @override
+  String get settlementChipUnknown => 'Other status';
+
+  @override
+  String settlementChipSpoken(String status) {
+    return 'Payment status: $status';
+  }
+
+  @override
+  String get settlementByAdmin => 'Recorded by an admin';
+
+  @override
+  String get payNoMoveNote =>
+      'The app does not move money — transfer from your bank or wallet app, then tap I paid.';
+
+  @override
+  String payHandlesTitle(String name) {
+    return 'Payment details of $name';
+  }
+
+  @override
+  String get payInstapayLabel => 'InstaPay address';
+
+  @override
+  String get payWalletLabel => 'Mobile wallet';
+
+  @override
+  String get payCopyOne => 'Copy';
+
+  @override
+  String payCopyOneSpoken(String what) {
+    return 'Copy $what';
+  }
+
+  @override
+  String get payCopyAll => 'Copy details';
+
+  @override
+  String get payCopied => 'Copied';
+
+  @override
+  String payNoHandles(String name) {
+    return '$name has not added payment details yet. Agree on how to transfer, then tap I paid.';
+  }
+
+  @override
+  String get payButton => 'I paid';
+
+  @override
+  String payButtonSpoken(String amount, String name) {
+    return 'I paid $amount to $name';
+  }
+
+  @override
+  String get payOnBehalf => 'Record on behalf';
+
+  @override
+  String get payReceived => 'I received it';
+
+  @override
+  String payTransferTitle(String name) {
+    return 'Pay $name';
+  }
+
+  @override
+  String get pendingBadge => 'A payment is waiting for confirmation';
+
+  @override
+  String pendingExplain(String pending, String amount) {
+    return 'Balances count confirmed payments only. A payment of $pending is waiting for confirmation; $amount is still due until it is confirmed.';
+  }
+
+  @override
+  String get disputeFlag => 'A payment is disputed';
+
+  @override
+  String get paymentTitleDeclare => 'I paid';
+
+  @override
+  String get paymentTitleReceived => 'I received it';
+
+  @override
+  String get paymentTitleOnBehalf => 'Record on behalf';
+
+  @override
+  String paymentHintPending(String name) {
+    return 'It goes to $name to confirm. Balances do not change until they confirm.';
+  }
+
+  @override
+  String get paymentHintConfirmed =>
+      'It is recorded as confirmed and counted in the balances right away.';
+
+  @override
+  String paymentHintNoAccount(String name) {
+    return '$name has no account in the app, so an admin records this payment.';
+  }
+
+  @override
+  String get paymentHintNotAllowed =>
+      'You can record your own payments only. An admin records for others.';
+
+  @override
+  String paymentSentPending(String name) {
+    return 'Sent to $name to confirm.';
+  }
+
+  @override
+  String get incomingBannerOne => 'A payment is waiting for you to confirm';
+
+  @override
+  String incomingBannerMany(String count) {
+    return '$count payments are waiting for you to confirm';
+  }
+
+  @override
+  String get incomingTitle => 'Payments waiting for you';
+
+  @override
+  String receiverCardTitle(String name, String amount) {
+    return '$name says they paid you $amount';
+  }
+
+  @override
+  String get receiverCardBody =>
+      'Check your account and make sure the money arrived before you confirm.';
+
+  @override
+  String get receiverConfirm => 'Received';
+
+  @override
+  String receiverConfirmSpoken(String amount, String name) {
+    return 'Confirm you received $amount from $name';
+  }
+
+  @override
+  String get receiverDispute => 'Not received yet';
+
+  @override
+  String receiverDisputeSpoken(String amount, String name) {
+    return 'Say you have not received $amount from $name';
+  }
+
+  @override
+  String get disputeDialogTitle => 'Money has not arrived?';
+
+  @override
+  String disputeDialogBody(String name) {
+    return 'We will tell $name you have not received it. The payment is not counted until it is confirmed or cancelled.';
+  }
+
+  @override
+  String get disputeDialogConfirm => 'Yes, not received';
+
+  @override
+  String get cancelDialogTitle => 'Cancel this payment?';
+
+  @override
+  String get cancelDialogBody =>
+      'It will be cancelled and not counted in the balances. It stays in the history as cancelled.';
+
+  @override
+  String get cancelDialogConfirm => 'Cancel payment';
+
+  @override
+  String get cancelDialogKeep => 'No, keep it';
+
+  @override
+  String get settlementConfirmedSnack =>
+      'Payment confirmed and counted in the balances.';
+
+  @override
+  String get settlementDisputedSnack =>
+      'Noted: you have not received the payment.';
+
+  @override
+  String get settlementCancelledSnack => 'Payment cancelled.';
+
+  @override
+  String get settlementStateChanged =>
+      'This payment changed. Here is its current state.';
+
+  @override
+  String get settlementGone => 'This payment is no longer there.';
+
+  @override
+  String get settlementDetailTitle => 'Payment details';
+
+  @override
+  String get settlementDetailAmount => 'Payment amount';
+
+  @override
+  String get settlementPayerRole => 'Payer';
+
+  @override
+  String get settlementReceiverRole => 'Receiver';
+
+  @override
+  String get stmtPayerPaid => 'Says: I paid';
+
+  @override
+  String get stmtPayerCancelled => 'The payment was cancelled';
+
+  @override
+  String get stmtReceiverWaiting => 'Has not answered yet';
+
+  @override
+  String get stmtReceiverNotReceived => 'Says: not received';
+
+  @override
+  String get stmtReceiverConfirmed => 'Confirmed it arrived';
+
+  @override
+  String get stmtRecordedByAdmin => 'Recorded by an admin';
+
+  @override
+  String get detailBannerPending => 'Waiting for the receiver';
+
+  @override
+  String get detailBannerDisputed => 'This payment is disputed';
+
+  @override
+  String get detailBannerDisputedBody =>
+      'Waiting for both sides to agree, or for an admin';
+
+  @override
+  String get detailBannerConfirmed => 'Confirmed and counted in the balances';
+
+  @override
+  String get detailBannerCancelled => 'Cancelled and not counted';
+
+  @override
+  String get detailNotCounted =>
+      'This payment is not counted in the balances until it is confirmed.';
+
+  @override
+  String detailDeclaredAt(String when) {
+    return 'Declared: $when';
+  }
+
+  @override
+  String detailDisputedAt(String when) {
+    return 'Dispute raised: $when';
+  }
+
+  @override
+  String detailConfirmedAt(String when) {
+    return 'Confirmed: $when';
+  }
+
+  @override
+  String detailCancelledAt(String when) {
+    return 'Cancelled: $when';
+  }
+
+  @override
+  String detailDateOn(String date) {
+    return 'Payment date: $date';
+  }
+
+  @override
+  String get guidanceTitle => 'Resolve it in a friendly way';
+
+  @override
+  String get guidanceBody =>
+      'Both sides and the admins can sort it out after checking the account statement and transfer messages. The app does not decide and does not move money.';
+
+  @override
+  String get detailConfirm => 'Confirm and receive the payment';
 }

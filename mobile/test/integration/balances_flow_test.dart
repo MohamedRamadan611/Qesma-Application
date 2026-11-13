@@ -91,7 +91,7 @@ void main() {
     final replay = await repo.record(gid, buildSettlementCommand(form(s, m, '1'))!, replayKey);
     expect(replay.id, first.id);
     expect((await repo.settlements(gid)).total, 2, reason: '80.00 and the 1.00, once each');
-    await repo.delete(gid, first.id);
+    await repo.cancel(gid, first.id);
 
     final v2 = await repo.balances(gid);
     expect(nets(v2), [2000, 0, -2000], reason: 'V2');
@@ -106,20 +106,15 @@ void main() {
 
     // History: the server counts and pages it.
     final page = await repo.settlements(gid);
-    expect(page.total, 3);
-    expect(page.items.map((p) => p.amountMinor).toSet(), {8000, 500, 3000});
+    expect(page.total, 4, reason: 'cancelled payments stay in the history (B13)');
+    expect(page.items.map((p) => p.amountMinor).toSet(), {8000, 100, 500, 3000});
 
-    // Deleting reverses the effect; a second delete is a plain 404.
-    await repo.delete(gid, larger.id);
-    await repo.delete(gid, partial.id);
+    // Cancelling reverses the effect; a second cancel is the idempotent 200 (A84), not an error.
+    await repo.cancel(gid, larger.id);
+    await repo.cancel(gid, partial.id);
     expect(nets(await repo.balances(gid)), [2000, 0, -2000]);
-    Object? gone;
-    try {
-      await repo.delete(gid, larger.id);
-    } catch (e) {
-      gone = e;
-    }
-    expect((gone! as ApiHttpFailure).problem?.code, ApiErrorCode.notFound);
+    final again = await repo.cancel(gid, larger.id);
+    expect(again.status, 'CANCELLED');
 
     // Refusals by code.
     Future<ApiErrorCode?> refused(SettlementCommand c) async {

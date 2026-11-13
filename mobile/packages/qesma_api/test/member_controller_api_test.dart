@@ -17,6 +17,10 @@ void main() {
       // TODO
     });
 
+    // Rename a member, change its role, or remove/reactivate it
+    //
+    // Send at least one of displayName, role, status. displayName: Owner/Admin. role (ADMIN or MEMBER): Owner only. status (LEFT removes a linked member, ACTIVE reactivates): Owner, and Admin for members (not admins). The owner's member is protected (409 OWNER_MEMBER_PROTECTED). A member without an account has no role or status.
+    //
     //Future<MemberDto> renameMember(String gid, String mid, UpdateMemberRequest updateMemberRequest) async
     test('test renameMember', () async {
       // TODO

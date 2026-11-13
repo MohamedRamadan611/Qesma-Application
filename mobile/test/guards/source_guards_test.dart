@@ -187,6 +187,35 @@ void main() {
     expect(hits, isEmpty, reason: 'Balances and transfers come only from the endpoint (SCREEN_MAP).\n${hits.join('\n')}');
   });
 
+  // FL13: a pending payment is information next to the server's amount; the client never subtracts it
+  // (SCREEN_MAP rule 2, PHASE2_SPEC 6, decision A83).
+  final pendingArithmetic = RegExp(
+    r'pendingMinor\s*[-+*/%]\s*[\w(]'
+    r'|[\w)]\s*[-+*/%]=?\s*\w*\.?pendingMinor\b'
+    r'|pendingMinor[^;]*(\.fold\(|\.reduce\(|\.sum\b)'
+    r'|\b(amountMinor|netMinor)\b[^;]*\bpendingMinor\b[^;]*[-+]'
+    r'|\bpendingMinor\b[^;]*\b(amountMinor|netMinor)\b\s*[-+]',
+  );
+
+  test('pendingMinor is never added to or subtracted from anything (shown beside the server amount, never applied to it)', () {
+    final hits = _scan(pendingArithmetic);
+    expect(hits, isEmpty, reason: 'Pending is informational (A83): the server owns every number.\n${hits.join('\n')}');
+  });
+
+  test('the pending arithmetic guard is alive', () {
+    for (final bad in [
+      'final left = t.amountMinor - t.pendingMinor;',
+      'total += t.pendingMinor;',
+      't.pendingMinor + 1',
+      'items.map((t) => t.pendingMinor).fold(0, (a, b) => a + b)',
+    ]) {
+      expect(pendingArithmetic.hasMatch(bad), isTrue, reason: bad);
+    }
+    for (final fine in ['if (transfer.pendingMinor > 0) badge()', 'moneyDisplay(l10n, transfer.pendingMinor)']) {
+      expect(pendingArithmetic.hasMatch(fine), isFalse, reason: fine);
+    }
+  });
+
   test('no analytics, tracking or crash SDKs and no extra preference/connectivity/version packages (FL8 constraint)', () {
     final pubspec = File('pubspec.yaml').readAsStringSync();
     final deps = pubspec.split('dev_dependencies:').first;

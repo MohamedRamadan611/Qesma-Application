@@ -17,7 +17,10 @@
     {
       "fromMemberId": "f1184040-b439-4f1a-bb7b-46ee1d5cb610",
       "toMemberId": "650a2534-75c8-426e-a607-0924ab985bdc",
-      "amountMinor": 2000
+      "amountMinor": 2000,
+      "hasDispute": false,
+      "openSettlementIds": [],
+      "pendingMinor": 0
     }
   ]
 }

@@ -54,10 +54,12 @@ public class SettlementService {
     private final ObjectMapper mapper;
     private final Clock clock;
     private final MeterRegistry metrics;
+    private final GroupEventRecorder events;
 
     public SettlementService(GroupAccessService access, SettlementRepository settlements,
                              IdempotencyService idempotency, RequestHasher hasher, ObjectMapper mapper, Clock clock,
-                             MeterRegistry metrics) {
+                             MeterRegistry metrics, GroupEventRecorder events) {
+        this.events = events;
         this.access = access;
         this.settlements = settlements;
         this.idempotency = idempotency;
@@ -126,6 +128,11 @@ public class SettlementService {
                 request.toMemberId(), request.amountMinor(), request.settledOn(), request.note(), userId, me, now,
                 confirmed, onBehalf));
         String body = toJson(view(saved));
+        // B15: the receiver learns of a declared payment; both parties learn of a recorded (confirmed) one
+        events.record(groupId, me, confirmed ? EventType.SETTLEMENT_CONFIRMED : EventType.SETTLEMENT_PENDING,
+                EventPayload.settlement(id, request.amountMinor(), request.fromMemberId(), request.toMemberId()),
+                confirmed ? GroupEventRecorder.Recipients.members(Set.of(request.fromMemberId(), request.toMemberId()))
+                        : GroupEventRecorder.Recipients.members(Set.of(request.toMemberId())));
         idempotency.store(userId, key, CREATE_ENDPOINT, requestHash, HttpStatus.CREATED.value(), body);
         String op = confirmed ? "recorded" : "declared";
         metrics.counter("qesma.settlements", "op", op).increment();
@@ -188,6 +195,7 @@ public class SettlementService {
                     Instant now = clock.instant().truncatedTo(ChronoUnit.MICROS);
                     int rows = settlements.transition(settlementId, groupId, s.getStatus(), decision.to().name(), now);
                     if (rows == 1) {
+                        recordTransition(groupId, ctx.me().getId(), s, decision.to());   // B15: only the winner writes
                         String op = decision.to().name().toLowerCase(java.util.Locale.ROOT);
                         metrics.counter("qesma.settlements", "op", op).increment();
                         log.atInfo().addKeyValue("event", "settlement." + op).addKeyValue("userId", userId)
@@ -201,6 +209,21 @@ public class SettlementService {
             }
         }
         throw ApiException.conflict(ErrorCode.INVALID_STATE_TRANSITION, "The settlement was changed concurrently");
+    }
+
+    /** CONFIRMED / DISPUTED / CANCELLED: the two parties (the actor is excluded by the recorder); a dispute also reaches Owner/Admins. */
+    private void recordTransition(UUID groupId, UUID actorMemberId, Settlement s, SettlementTransitions.Status to) {
+        EventType type = switch (to) {
+            case CONFIRMED -> EventType.SETTLEMENT_CONFIRMED;
+            case DISPUTED -> EventType.SETTLEMENT_DISPUTED;
+            case CANCELLED -> EventType.SETTLEMENT_CANCELLED;
+            case PENDING -> throw new IllegalStateException("No transition leads to PENDING");
+        };
+        Set<UUID> parties = Set.of(s.getFromMemberId(), s.getToMemberId());
+        events.record(groupId, actorMemberId, type,
+                EventPayload.settlement(s.getId(), s.getAmountMinor(), s.getFromMemberId(), s.getToMemberId()),
+                to == SettlementTransitions.Status.DISPUTED ? GroupEventRecorder.Recipients.membersAndManagers(parties)
+                        : GroupEventRecorder.Recipients.members(parties));
     }
 
     private static Set<Actor> actorsOf(GroupContext ctx, Settlement s) {

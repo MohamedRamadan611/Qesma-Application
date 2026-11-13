@@ -1,0 +1,72 @@
+{
+  "pending": {
+    "id": "11111111-1111-4111-8111-111111111111",
+    "groupId": "5d817874-014a-4639-9e28-de345c25a2b2",
+    "fromMemberId": "025f85ad-3a0a-4aea-bcba-2a9a120fe678",
+    "toMemberId": "650a2534-75c8-426e-a607-0924ab985bdc",
+    "amountMinor": 8000,
+    "settledOn": "2026-10-24",
+    "createdAt": "2026-11-10T09:30:00Z",
+    "declaredAt": "2026-11-10T09:30:00Z",
+    "status": "PENDING",
+    "recordedByAdmin": false,
+    "createdByMemberId": "025f85ad-3a0a-4aea-bcba-2a9a120fe678",
+    "note": "transfer from the bank"
+  },
+  "disputed": {
+    "id": "22222222-2222-4222-8222-222222222222",
+    "groupId": "5d817874-014a-4639-9e28-de345c25a2b2",
+    "fromMemberId": "025f85ad-3a0a-4aea-bcba-2a9a120fe678",
+    "toMemberId": "650a2534-75c8-426e-a607-0924ab985bdc",
+    "amountMinor": 8000,
+    "settledOn": "2026-10-24",
+    "createdAt": "2026-11-10T09:30:00Z",
+    "declaredAt": "2026-11-10T09:30:00Z",
+    "status": "DISPUTED",
+    "recordedByAdmin": false,
+    "createdByMemberId": "025f85ad-3a0a-4aea-bcba-2a9a120fe678",
+    "disputedAt": "2026-11-10T11:00:00Z"
+  },
+  "confirmed": {
+    "id": "33333333-3333-4333-8333-333333333333",
+    "groupId": "5d817874-014a-4639-9e28-de345c25a2b2",
+    "fromMemberId": "025f85ad-3a0a-4aea-bcba-2a9a120fe678",
+    "toMemberId": "650a2534-75c8-426e-a607-0924ab985bdc",
+    "amountMinor": 8000,
+    "settledOn": "2026-10-24",
+    "createdAt": "2026-11-10T09:30:00Z",
+    "declaredAt": "2026-11-10T09:30:00Z",
+    "status": "CONFIRMED",
+    "recordedByAdmin": false,
+    "createdByMemberId": "025f85ad-3a0a-4aea-bcba-2a9a120fe678",
+    "confirmedAt": "2026-11-10T10:00:00Z"
+  },
+  "cancelled": {
+    "id": "44444444-4444-4444-8444-444444444444",
+    "groupId": "5d817874-014a-4639-9e28-de345c25a2b2",
+    "fromMemberId": "025f85ad-3a0a-4aea-bcba-2a9a120fe678",
+    "toMemberId": "650a2534-75c8-426e-a607-0924ab985bdc",
+    "amountMinor": 3000,
+    "settledOn": "2026-10-24",
+    "createdAt": "2026-11-10T09:30:00Z",
+    "declaredAt": "2026-11-10T09:30:00Z",
+    "status": "CANCELLED",
+    "recordedByAdmin": false,
+    "createdByMemberId": "025f85ad-3a0a-4aea-bcba-2a9a120fe678",
+    "cancelledAt": "2026-11-10T12:00:00Z"
+  },
+  "adminRecorded": {
+    "id": "55555555-5555-4555-8555-555555555555",
+    "groupId": "5d817874-014a-4639-9e28-de345c25a2b2",
+    "fromMemberId": "f1184040-b439-4f1a-bb7b-46ee1d5cb610",
+    "toMemberId": "650a2534-75c8-426e-a607-0924ab985bdc",
+    "amountMinor": 2000,
+    "settledOn": "2026-10-24",
+    "createdAt": "2026-11-10T09:30:00Z",
+    "declaredAt": "2026-11-10T09:30:00Z",
+    "status": "CONFIRMED",
+    "recordedByAdmin": true,
+    "createdByMemberId": "650a2534-75c8-426e-a607-0924ab985bdc",
+    "confirmedAt": "2026-11-10T10:30:00Z"
+  }
+}

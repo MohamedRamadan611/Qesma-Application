@@ -5,6 +5,7 @@ import 'package:qesma_api/qesma_api.dart';
 
 import '../../../core/errors/api_failure.dart';
 import '../../../core/errors/api_problem.dart';
+import '../../balances/application/balances_refresh.dart';
 import '../data/groups_repository.dart';
 import 'groups_list_controller.dart';
 
@@ -92,7 +93,11 @@ class GroupDetailController extends Notifier<GroupDetailState> {
     } else {
       state = state.copyWith(busy: false);
     }
-    if (ref.mounted) unawaited(ref.read(groupsListControllerProvider.notifier).refresh());
+    if (ref.mounted) {
+      unawaited(ref.read(groupsListControllerProvider.notifier).refresh());
+      // Members changed (left, unlinked, roles): the balances tab shows server data for them too.
+      if (reload) refreshBalanceTab(ref, gid, settlements: false);
+    }
     return null;
   }
 
@@ -110,6 +115,18 @@ class GroupDetailController extends Notifier<GroupDetailState> {
   Future<ApiFailure?> renameMember(String mid, String name) => _change(() => _repo.renameMember(gid, mid, name));
 
   Future<ApiFailure?> deleteMember(String mid) => _change(() => _repo.deleteMember(gid, mid));
+
+  // Member lifecycle (B12, FL12). Roles and status are never edited locally: the group is re-read after each call.
+  Future<ApiFailure?> setRole(String mid, String role) => _change(() => _repo.setRole(gid, mid, role));
+
+  Future<ApiFailure?> setStatus(String mid, String status) => _change(() => _repo.setStatus(gid, mid, status));
+
+  Future<ApiFailure?> unlinkMember(String mid) => _change(() => _repo.unlink(gid, mid));
+
+  Future<ApiFailure?> transferOwnership(String toMemberId) => _change(() => _repo.transferOwnership(gid, toMemberId));
+
+  /// After success the group is no longer readable by this person (404), so it is not re-read.
+  Future<ApiFailure?> leave() => _change(() => _repo.leave(gid), reload: false);
 }
 
 final groupDetailControllerProvider =

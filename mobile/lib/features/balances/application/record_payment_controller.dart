@@ -29,20 +29,24 @@ enum PaymentOutcome {
 }
 
 class RecordPaymentView {
-  const RecordPaymentView({required this.form, this.sending = false, this.failure});
+  const RecordPaymentView({required this.form, this.sending = false, this.failure, this.created});
 
   final PaymentForm form;
   final bool sending;
   final ApiFailure? failure;
 
-  RecordPaymentView copyWith({PaymentForm? form, bool? sending, ApiFailure? failure, bool clearFailure = false}) => RecordPaymentView(
+  /// What the server created (its status says PENDING or CONFIRMED); set after a successful send.
+  final SettlementView? created;
+
+  RecordPaymentView copyWith({PaymentForm? form, bool? sending, ApiFailure? failure, bool clearFailure = false, SettlementView? created}) => RecordPaymentView(
         form: form ?? this.form,
         sending: sending ?? this.sending,
         failure: clearFailure ? null : (failure ?? this.failure),
+        created: created ?? this.created,
       );
 }
 
-/// The Record payment sheet: the inputs and one idempotent send. The key lives in an
+/// The payment sheet: the inputs and one idempotent send. The key lives in an
 /// [IdempotentAction]: reused when the same body is sent again (a retry after offline or a 5xx),
 /// replaced as soon as any input changes, forgotten after success or a definitive refusal.
 class RecordPaymentController extends Notifier<RecordPaymentView> {
@@ -109,16 +113,17 @@ class RecordPaymentController extends Notifier<RecordPaymentView> {
     if (command == null) return PaymentOutcome.invalid;
     state = state.copyWith(sending: true, clearFailure: true);
     try {
+      SettlementView created;
       try {
-        await _action.run(settlementBodyJson(command), (k) => _repo.record(gid, command, k));
+        created = await _action.run(settlementBodyJson(command), (k) => _repo.record(gid, command, k));
       } on ApiHttpFailure catch (failure) {
         // A key the server already tied to another body is a client bug: try once more with a fresh key.
         if (failure.problem?.code != ApiErrorCode.idempotencyKeyReused) rethrow;
         _action.reset();
-        await _action.run(settlementBodyJson(command), (k) => _repo.record(gid, command, k));
+        created = await _action.run(settlementBodyJson(command), (k) => _repo.record(gid, command, k));
       }
-      if (ref.mounted) state = state.copyWith(sending: false);
-      refreshAfterPayment(ref, gid);
+      if (ref.mounted) state = state.copyWith(sending: false, created: created);
+      refreshAfterSettlementChange(ref, gid);
       return PaymentOutcome.recorded;
     } on ApiFailure catch (failure) {
       if (ref.mounted) state = state.copyWith(sending: false, failure: failure);

@@ -102,6 +102,8 @@ class ApiContractCoverageIT extends AbstractApiIT {
         String refresh = body(login).get("refreshToken").asText();
         assertThat(status(hit(GET, "/api/v1/me", me, null))).isEqualTo(200);
         assertThat(status(hit(PATCH, "/api/v1/me", me, Map.of("displayName", "Walker 2")))).isEqualTo(200);
+        assertThat(status(hit(PUT, "/api/v1/me/payment-handles", me, Map.of("instapay", "walker@instapay", "wallet", "01012345678")))).isEqualTo(200);
+        assertThat(status(hit(GET, "/api/v1/me/payment-handles", me, null))).isEqualTo(200);
         MvcResult refreshed = hit(POST, "/api/v1/auth/refresh", null, Map.of("refreshToken", refresh));
         assertThat(status(refreshed)).isEqualTo(200);
         assertThat(status(hit(POST, "/api/v1/auth/logout", null,
@@ -172,6 +174,17 @@ class ApiContractCoverageIT extends AbstractApiIT {
         String sid = body(hit(POST, g + "/settlements", me, pay, "Idempotency-Key", key())).get("id").asText();
         assertThat(status(hit(GET, g + "/settlements", me, null))).isEqualTo(200);
         assertThat(status(hit(GET, g + "/balances", me, null))).isEqualTo(200);
+
+        // ---- activity feed and notification center (B15) ---------------------------------------------------------
+        MvcResult feedPage = hit(GET, g + "/activity?limit=2", me, null);
+        assertThat(status(feedPage)).isEqualTo(200);
+        assertThat(body(feedPage).get("items")).isNotEmpty();                       // the expenses and settlement above
+        assertThat(status(hit(GET, "/api/v1/notifications?limit=5", me, null))).isEqualTo(200);
+        assertThat(status(hit(GET, "/api/v1/notifications/unread-count", me, null))).isEqualTo(200);
+        MvcResult marked = hit(POST, "/api/v1/notifications/read", me, Map.of("all", true));
+        assertThat(status(marked)).isEqualTo(200);
+        assertThat(body(marked).get("unreadCount").asLong()).isZero();
+        expect(hit(GET, g + "/activity?before=not-a-cursor", me, null), 422, ErrorCode.VALIDATION_ERROR);
 
         // ---- every error code, on a real response ------------------------------------------------------------
         expect(hit(POST, "/api/v1/groups", me, Map.of("name", " ", "type", "TRIP")), 422, ErrorCode.VALIDATION_ERROR);

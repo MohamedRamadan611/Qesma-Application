@@ -5,6 +5,7 @@ import 'package:qesma/core/l10n/generated/app_localizations.dart';
 import 'package:qesma/core/router/app_router.dart';
 import 'package:qesma/core/widgets/widgets.dart';
 import 'package:qesma/features/balances/presentation/balances_tab.dart';
+import 'package:qesma/features/balances/presentation/settlement_status_chip.dart';
 import 'package:qesma/features/balances/presentation/transfer_card.dart';
 import 'package:qesma/features/expenses/presentation/expense_ui.dart';
 import 'package:qesma_api/qesma_api.dart';
@@ -59,7 +60,7 @@ void main() {
         expect(find.text('${l10n.balanceOwes} ${money(locale, -2000, signed: true)}'), findsOneWidget);
         expect(find.text(money(locale, 8000)), findsOneWidget, reason: 'the recorded payment');
         expect(find.textContaining('cash on the road'), findsOneWidget);
-        expect(find.byTooltip(l10n.balancesDeletePayment), findsOneWidget);
+        expect(find.byType(SettlementStatusChip), findsOneWidget, reason: 'every payment shows its status');
       });
 
       testWidgets('nothing to settle: the all-settled state, no suggested transfers, the nets are all settled', (tester) async {
@@ -74,7 +75,7 @@ void main() {
       testWidgets('the screen only shows what the server said: inconsistent numbers are shown unchanged (no recomputing)', (tester) async {
         final odd = balancesMap('balances_v1');
         (odd['nets'] as List)[0]['netMinor'] = 777; // does not add up with the others, on purpose
-        (odd['transfers'] as List).add({'fromMemberId': server.you, 'toMemberId': server.member('Asem'), 'amountMinor': 12345});
+        (odd['transfers'] as List).add({'fromMemberId': server.you, 'toMemberId': server.member('Asem'), 'amountMinor': 12345, 'hasDispute': false, 'openSettlementIds': <String>[], 'pendingMinor': 0,});
         server.balances = odd;
         await openBalances(tester, server, locale: locale);
         expect(find.text(countPhraseFor(l10n, 3)), findsOneWidget, reason: 'the count is the number of transfers sent: 3');
@@ -85,7 +86,7 @@ void main() {
       testWidgets('N transfers needed is the count of transfers: 7 gets the plural form', (tester) async {
         final many = balancesMap('balances_v1');
         final transfers = <Map<String, dynamic>>[
-          for (var i = 0; i < 7; i++) {'fromMemberId': server.member('Asem'), 'toMemberId': server.you, 'amountMinor': 100 + i},
+          for (var i = 0; i < 7; i++) {'fromMemberId': server.member('Asem'), 'toMemberId': server.you, 'amountMinor': 100 + i, 'hasDispute': false, 'openSettlementIds': <String>[], 'pendingMinor': 0,},
         ];
         many['transfers'] = transfers;
         server.balances = many;
@@ -148,7 +149,7 @@ void main() {
       testWidgets('from a transfer: prefilled with its members and amount; confirming sends the right body and refreshes', (tester) async {
         server.balancesAfterCreate = balancesMap('balances_v2');
         await openBalances(tester, server, locale: locale);
-        await tester.tap(find.text(l10n.balancesRecordPayment).first);
+        await tester.tap(find.text(l10n.payReceived).first);
         await tester.pumpAndSettle();
         expect(find.byType(AppBottomSheet), findsOneWidget);
         expect(inSheet(find.text('Asem')), findsOneWidget);
@@ -209,7 +210,7 @@ void main() {
         // The tab itself is read first, then the network drops for the payment.
         server.balancesOffline = false;
         await openBalances(tester, server, locale: locale);
-        await tester.tap(find.text(l10n.balancesRecordPayment).first);
+        await tester.tap(find.text(l10n.payReceived).first);
         await tester.pumpAndSettle();
         server.balancesOffline = true;
         await tester.tap(find.text(l10n.paymentConfirm(money(locale, 8000))));
@@ -227,7 +228,7 @@ void main() {
 
       testWidgets('a server refusal (VALIDATION_ERROR) is shown in the sheet and keeps what was typed', (tester) async {
         await openBalances(tester, server, locale: locale);
-        await tester.tap(find.text(l10n.balancesRecordPayment).first);
+        await tester.tap(find.text(l10n.payReceived).first);
         await tester.pumpAndSettle();
         server.forceNextSettlementCode = 'VALIDATION_ERROR';
         await tester.tap(find.text(l10n.paymentConfirm(money(locale, 8000))));
@@ -238,7 +239,7 @@ void main() {
 
       testWidgets('the "full amount" chip puts the transfer\'s own amount back', (tester) async {
         await openBalances(tester, server, locale: locale);
-        await tester.tap(find.text(l10n.balancesRecordPayment).first);
+        await tester.tap(find.text(l10n.payReceived).first);
         await tester.pumpAndSettle();
         await tester.enterText(inSheet(find.byType(TextField)).first, '5');
         await tester.pumpAndSettle();
@@ -249,7 +250,7 @@ void main() {
 
       testWidgets('the from picker never offers the member already chosen as the receiver', (tester) async {
         await openBalances(tester, server, locale: locale);
-        await tester.tap(find.text(l10n.balancesRecordPayment).first);
+        await tester.tap(find.text(l10n.payReceived).first);
         await tester.pumpAndSettle();
         await tester.tap(find.text(l10n.paymentFrom));
         await tester.pumpAndSettle();
@@ -262,13 +263,13 @@ void main() {
 
       testWidgets('closing after a change asks first; closing untouched does not', (tester) async {
         await openBalances(tester, server, locale: locale);
-        await tester.tap(find.text(l10n.balancesRecordPayment).first);
+        await tester.tap(find.text(l10n.payReceived).first);
         await tester.pumpAndSettle();
         await tester.tap(find.byTooltip(l10n.commonClose));
         await tester.pumpAndSettle();
         expect(find.byType(AppBottomSheet), findsNothing, reason: 'nothing changed');
 
-        await tester.tap(find.text(l10n.balancesRecordPayment).first);
+        await tester.tap(find.text(l10n.payReceived).first);
         await tester.pumpAndSettle();
         await tester.enterText(inSheet(find.byType(TextField)).first, '5');
         await tester.pumpAndSettle();
@@ -283,8 +284,8 @@ void main() {
 
       testWidgets('no overflow at text scale 2.0 and the confirm button stays reachable', (tester) async {
         await openBalances(tester, server, locale: locale, textScale: 2.0, height: 1400);
-        await reveal(tester, find.text(l10n.balancesRecordPayment).first);
-        await tester.tap(find.text(l10n.balancesRecordPayment).first);
+        await reveal(tester, find.text(l10n.payReceived).first);
+        await tester.tap(find.text(l10n.payReceived).first);
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
         expect(find.text(l10n.paymentConfirm(money(locale, 8000))), findsOneWidget);
@@ -292,48 +293,6 @@ void main() {
     });
 
     group('Payment history ($name)', () {
-      testWidgets('deleting asks first, says it is final, then refreshes both lists', (tester) async {
-        server.seedV2();
-        server.balancesAfterDelete = balancesMap('balances_v1');
-        await openBalances(tester, server, locale: locale, height: 3000);
-        await tester.tap(find.byTooltip(l10n.balancesDeletePayment));
-        await tester.pumpAndSettle();
-        expect(find.text(l10n.balancesDeleteTitle), findsOneWidget);
-        expect(find.text(l10n.balancesDeleteBody), findsOneWidget);
-        await tester.tap(find.text(l10n.commonDelete));
-        await tester.pumpAndSettle();
-        expect(server.settlements, isEmpty);
-        expect(find.text(l10n.balancesDeleted), findsOneWidget);
-        expect(find.text(l10n.balancesHistoryEmpty), findsOneWidget);
-        expect(find.text(l10n.balancesNeedTwo), findsOneWidget, reason: 'the balances are the server\'s V1 again');
-        expect(find.byType(SnackBarAction), findsNothing, reason: 'no undo: the backend cannot restore a payment');
-      });
-
-      testWidgets('cancelling the question deletes nothing', (tester) async {
-        server.seedV2();
-        await openBalances(tester, server, locale: locale, height: 3000);
-        await tester.tap(find.byTooltip(l10n.balancesDeletePayment));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text(l10n.commonCancel));
-        await tester.pumpAndSettle();
-        expect(server.settlements, hasLength(1));
-        expect(server.requests.where((r) => r.startsWith('DELETE')), isEmpty);
-      });
-
-      testWidgets('a payment somebody else already removed: the 404 is absorbed and the lists show what is true now', (tester) async {
-        server.seedV2();
-        await openBalances(tester, server, locale: locale, height: 3000);
-        server.settlements.clear();
-        server.balances = balancesMap('balances_v1');
-        await tester.tap(find.byTooltip(l10n.balancesDeletePayment));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text(l10n.commonDelete));
-        await tester.pumpAndSettle();
-        expect(find.text(l10n.balancesDeleteGone), findsOneWidget);
-        expect(find.text(l10n.balancesHistoryEmpty), findsOneWidget);
-        expect(find.text(l10n.balancesNeedTwo), findsOneWidget);
-      });
-
       testWidgets('a long history loads the next page on request', (tester) async {
         for (var i = 0; i < 25; i++) {
           server.settlements.add({
@@ -344,13 +303,14 @@ void main() {
             'amountMinor': 100 + i,
             'settledOn': '2026-09-${(1 + i % 28).toString().padLeft(2, '0')}',
             'createdAt': '2026-11-10T10:00:00Z',
+            'declaredAt': '2026-11-10T10:00:00Z', 'status': 'CONFIRMED', 'recordedByAdmin': true,
           });
         }
         await openBalances(tester, server, locale: locale, height: 9000);
         expect(find.text(l10n.balancesLoadMore), findsOneWidget);
-        expect(find.byTooltip(l10n.balancesDeletePayment), findsNWidgets(20));
+        expect(find.byType(SettlementStatusChip), findsNWidgets(20));
         await tapText(tester, l10n.balancesLoadMore);
-        expect(find.byTooltip(l10n.balancesDeletePayment), findsNWidgets(25));
+        expect(find.byType(SettlementStatusChip), findsNWidgets(25));
         expect(find.text(l10n.balancesLoadMore), findsNothing);
       });
     });

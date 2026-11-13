@@ -29,5 +29,7 @@ public enum Permission {
     /** Leave the group yourself (B12). The Owner holds it too, but gets 409 OWNER_MUST_TRANSFER. */
     LEAVE_GROUP,
     /** Remove a linked member from the group (status LEFT) or reactivate one (B12, Owner and Admin). */
-    MANAGE_MEMBER_STATUS
+    MANAGE_MEMBER_STATUS,
+    /** See the payment handles of any transfer receiver of the group, not only of the transfers you pay (B14, Owner and Admin). */
+    VIEW_ALL_PAYMENT_HANDLES
 }

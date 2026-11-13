@@ -8,13 +8,18 @@ part of 'update_member_request.dart';
 
 class _$UpdateMemberRequest extends UpdateMemberRequest {
   @override
-  final String displayName;
+  final String? displayName;
+  @override
+  final String? role;
+  @override
+  final String? status;
 
   factory _$UpdateMemberRequest(
           [void Function(UpdateMemberRequestBuilder)? updates]) =>
       (UpdateMemberRequestBuilder()..update(updates))._build();
 
-  _$UpdateMemberRequest._({required this.displayName}) : super._();
+  _$UpdateMemberRequest._({this.displayName, this.role, this.status})
+      : super._();
   @override
   UpdateMemberRequest rebuild(
           void Function(UpdateMemberRequestBuilder) updates) =>
@@ -27,13 +32,18 @@ class _$UpdateMemberRequest extends UpdateMemberRequest {
   @override
   bool operator ==(Object other) {
     if (identical(other, this)) return true;
-    return other is UpdateMemberRequest && displayName == other.displayName;
+    return other is UpdateMemberRequest &&
+        displayName == other.displayName &&
+        role == other.role &&
+        status == other.status;
   }
 
   @override
   int get hashCode {
     var _$hash = 0;
     _$hash = $jc(_$hash, displayName.hashCode);
+    _$hash = $jc(_$hash, role.hashCode);
+    _$hash = $jc(_$hash, status.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -41,7 +51,9 @@ class _$UpdateMemberRequest extends UpdateMemberRequest {
   @override
   String toString() {
     return (newBuiltValueToStringHelper(r'UpdateMemberRequest')
-          ..add('displayName', displayName))
+          ..add('displayName', displayName)
+          ..add('role', role)
+          ..add('status', status))
         .toString();
   }
 }
@@ -54,6 +66,14 @@ class UpdateMemberRequestBuilder
   String? get displayName => _$this._displayName;
   set displayName(String? displayName) => _$this._displayName = displayName;
 
+  String? _role;
+  String? get role => _$this._role;
+  set role(String? role) => _$this._role = role;
+
+  String? _status;
+  String? get status => _$this._status;
+  set status(String? status) => _$this._status = status;
+
   UpdateMemberRequestBuilder() {
     UpdateMemberRequest._defaults(this);
   }
@@ -62,6 +82,8 @@ class UpdateMemberRequestBuilder
     final $v = _$v;
     if ($v != null) {
       _displayName = $v.displayName;
+      _role = $v.role;
+      _status = $v.status;
       _$v = null;
     }
     return this;
@@ -83,8 +105,9 @@ class UpdateMemberRequestBuilder
   _$UpdateMemberRequest _build() {
     final _$result = _$v ??
         _$UpdateMemberRequest._(
-          displayName: BuiltValueNullFieldError.checkNotNull(
-              displayName, r'UpdateMemberRequest', 'displayName'),
+          displayName: displayName,
+          role: role,
+          status: status,
         );
     replace(_$result);
     return _$result;

@@ -32,12 +32,18 @@ const ProblemCodeEnum _$problemCodeEnum_ALREADY_MEMBER =
     const ProblemCodeEnum._('ALREADY_MEMBER');
 const ProblemCodeEnum _$problemCodeEnum_MEMBER_ALREADY_CLAIMED =
     const ProblemCodeEnum._('MEMBER_ALREADY_CLAIMED');
+const ProblemCodeEnum _$problemCodeEnum_MEMBER_INACTIVE =
+    const ProblemCodeEnum._('MEMBER_INACTIVE');
+const ProblemCodeEnum _$problemCodeEnum_OWNER_MUST_TRANSFER =
+    const ProblemCodeEnum._('OWNER_MUST_TRANSFER');
 const ProblemCodeEnum _$problemCodeEnum_GROUP_NOT_EMPTY =
     const ProblemCodeEnum._('GROUP_NOT_EMPTY');
 const ProblemCodeEnum _$problemCodeEnum_NOT_FOUND =
     const ProblemCodeEnum._('NOT_FOUND');
 const ProblemCodeEnum _$problemCodeEnum_FORBIDDEN =
     const ProblemCodeEnum._('FORBIDDEN');
+const ProblemCodeEnum _$problemCodeEnum_INVALID_STATE_TRANSITION =
+    const ProblemCodeEnum._('INVALID_STATE_TRANSITION');
 const ProblemCodeEnum _$problemCodeEnum_UNAUTHORIZED =
     const ProblemCodeEnum._('UNAUTHORIZED');
 const ProblemCodeEnum _$problemCodeEnum_INTERNAL_ERROR =
@@ -77,12 +83,18 @@ ProblemCodeEnum _$problemCodeEnumValueOf(String name) {
       return _$problemCodeEnum_ALREADY_MEMBER;
     case 'MEMBER_ALREADY_CLAIMED':
       return _$problemCodeEnum_MEMBER_ALREADY_CLAIMED;
+    case 'MEMBER_INACTIVE':
+      return _$problemCodeEnum_MEMBER_INACTIVE;
+    case 'OWNER_MUST_TRANSFER':
+      return _$problemCodeEnum_OWNER_MUST_TRANSFER;
     case 'GROUP_NOT_EMPTY':
       return _$problemCodeEnum_GROUP_NOT_EMPTY;
     case 'NOT_FOUND':
       return _$problemCodeEnum_NOT_FOUND;
     case 'FORBIDDEN':
       return _$problemCodeEnum_FORBIDDEN;
+    case 'INVALID_STATE_TRANSITION':
+      return _$problemCodeEnum_INVALID_STATE_TRANSITION;
     case 'UNAUTHORIZED':
       return _$problemCodeEnum_UNAUTHORIZED;
     case 'INTERNAL_ERROR':
@@ -113,9 +125,12 @@ final BuiltSet<ProblemCodeEnum> _$problemCodeEnumValues =
   _$problemCodeEnum_INVITE_REVOKED,
   _$problemCodeEnum_ALREADY_MEMBER,
   _$problemCodeEnum_MEMBER_ALREADY_CLAIMED,
+  _$problemCodeEnum_MEMBER_INACTIVE,
+  _$problemCodeEnum_OWNER_MUST_TRANSFER,
   _$problemCodeEnum_GROUP_NOT_EMPTY,
   _$problemCodeEnum_NOT_FOUND,
   _$problemCodeEnum_FORBIDDEN,
+  _$problemCodeEnum_INVALID_STATE_TRANSITION,
   _$problemCodeEnum_UNAUTHORIZED,
   _$problemCodeEnum_INTERNAL_ERROR,
   _$problemCodeEnum_RATE_LIMITED,
@@ -142,9 +157,12 @@ class _$ProblemCodeEnumSerializer
     'INVITE_REVOKED': 'INVITE_REVOKED',
     'ALREADY_MEMBER': 'ALREADY_MEMBER',
     'MEMBER_ALREADY_CLAIMED': 'MEMBER_ALREADY_CLAIMED',
+    'MEMBER_INACTIVE': 'MEMBER_INACTIVE',
+    'OWNER_MUST_TRANSFER': 'OWNER_MUST_TRANSFER',
     'GROUP_NOT_EMPTY': 'GROUP_NOT_EMPTY',
     'NOT_FOUND': 'NOT_FOUND',
     'FORBIDDEN': 'FORBIDDEN',
+    'INVALID_STATE_TRANSITION': 'INVALID_STATE_TRANSITION',
     'UNAUTHORIZED': 'UNAUTHORIZED',
     'INTERNAL_ERROR': 'INTERNAL_ERROR',
     'RATE_LIMITED': 'RATE_LIMITED',
@@ -165,9 +183,12 @@ class _$ProblemCodeEnumSerializer
     'INVITE_REVOKED': 'INVITE_REVOKED',
     'ALREADY_MEMBER': 'ALREADY_MEMBER',
     'MEMBER_ALREADY_CLAIMED': 'MEMBER_ALREADY_CLAIMED',
+    'MEMBER_INACTIVE': 'MEMBER_INACTIVE',
+    'OWNER_MUST_TRANSFER': 'OWNER_MUST_TRANSFER',
     'GROUP_NOT_EMPTY': 'GROUP_NOT_EMPTY',
     'NOT_FOUND': 'NOT_FOUND',
     'FORBIDDEN': 'FORBIDDEN',
+    'INVALID_STATE_TRANSITION': 'INVALID_STATE_TRANSITION',
     'UNAUTHORIZED': 'UNAUTHORIZED',
     'INTERNAL_ERROR': 'INTERNAL_ERROR',
     'RATE_LIMITED': 'RATE_LIMITED',

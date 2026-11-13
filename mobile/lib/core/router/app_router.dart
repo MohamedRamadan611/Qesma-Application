@@ -10,10 +10,12 @@ import '../../features/auth/presentation/username_auth_screens.dart';
 import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/auth/presentation/splash_screen.dart';
 import '../../features/auth/presentation/welcome_screen.dart';
+import '../../features/balances/presentation/settlement_detail_screen.dart';
 import '../../features/expenses/presentation/expense_details_screen.dart';
 import '../../features/expenses/presentation/expense_form_screen.dart';
 import '../../features/groups/presentation/create_group_screen.dart';
 import '../../features/groups/presentation/edit_group_screen.dart';
+import '../../features/members/presentation/join_requests_screen.dart';
 import '../../features/groups/presentation/group_home_screen.dart';
 import '../../features/groups/presentation/groups_list_screen.dart';
 import '../../features/invites/application/invite_code.dart';
@@ -35,8 +37,10 @@ abstract final class Routes {
   static const String accountSettings = '/account/settings';
   static String group(String gid) => '/groups/$gid';
   static String editGroup(String gid) => '/groups/$gid/edit';
+  static String joinRequests(String gid) => '/groups/$gid/join-requests';
   static String addExpense(String gid) => '/groups/$gid/expenses/new';
   static String expense(String gid, String eid) => '/groups/$gid/expenses/$eid';
+  static String settlement(String gid, String sid) => '/groups/$gid/settlements/$sid';
   static String editExpense(String gid, String eid) => '/groups/$gid/expenses/$eid/edit';
   static const String splash = '/splash';
   static const String welcome = '/welcome';
@@ -158,6 +162,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => GroupHomeScreen(gid: state.pathParameters['gid']!, initialTab: state.uri.queryParameters['tab']),
         routes: [
           GoRoute(path: 'edit', builder: (context, state) => EditGroupScreen(gid: state.pathParameters['gid']!)),
+          GoRoute(path: 'settlements/:sid', builder: (context, state) => SettlementDetailScreen(gid: state.pathParameters['gid']!, sid: state.pathParameters['sid']!)),
+          GoRoute(path: 'join-requests', builder: (context, state) => JoinRequestsScreen(gid: state.pathParameters['gid']!)),
           // 'expenses/new' must stay before 'expenses/:eid' (first match wins).
           GoRoute(path: 'expenses/new', builder: (context, state) => ExpenseFormScreen(gid: state.pathParameters['gid']!)),
           GoRoute(

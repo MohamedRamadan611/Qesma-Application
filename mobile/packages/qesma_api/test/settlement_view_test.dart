@@ -13,8 +13,33 @@ void main() {
       // TODO
     });
 
+    // DateTime cancelledAt
+    test('to test the property `cancelledAt`', () async {
+      // TODO
+    });
+
+    // DateTime confirmedAt
+    test('to test the property `confirmedAt`', () async {
+      // TODO
+    });
+
     // DateTime createdAt
     test('to test the property `createdAt`', () async {
+      // TODO
+    });
+
+    // String createdByMemberId
+    test('to test the property `createdByMemberId`', () async {
+      // TODO
+    });
+
+    // DateTime declaredAt
+    test('to test the property `declaredAt`', () async {
+      // TODO
+    });
+
+    // DateTime disputedAt
+    test('to test the property `disputedAt`', () async {
       // TODO
     });
 
@@ -38,8 +63,18 @@ void main() {
       // TODO
     });
 
+    // bool recordedByAdmin
+    test('to test the property `recordedByAdmin`', () async {
+      // TODO
+    });
+
     // Date settledOn
     test('to test the property `settledOn`', () async {
+      // TODO
+    });
+
+    // String status
+    test('to test the property `status`', () async {
       // TODO
     });
 

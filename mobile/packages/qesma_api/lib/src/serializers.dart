@@ -47,6 +47,7 @@ import 'package:qesma_api/src/model/page_response_join_request_view.dart';
 import 'package:qesma_api/src/model/page_response_settlement_view.dart';
 import 'package:qesma_api/src/model/payer_input.dart';
 import 'package:qesma_api/src/model/payer_view.dart';
+import 'package:qesma_api/src/model/payment_handles_view.dart';
 import 'package:qesma_api/src/model/problem.dart';
 import 'package:qesma_api/src/model/refresh_request.dart';
 import 'package:qesma_api/src/model/register_request.dart';
@@ -60,11 +61,13 @@ import 'package:qesma_api/src/model/share_view.dart';
 import 'package:qesma_api/src/model/tax_charge.dart';
 import 'package:qesma_api/src/model/tax_input.dart';
 import 'package:qesma_api/src/model/token_response.dart';
+import 'package:qesma_api/src/model/transfer_ownership_request.dart';
 import 'package:qesma_api/src/model/transfer_view.dart';
 import 'package:qesma_api/src/model/unclaimed.dart';
 import 'package:qesma_api/src/model/update_group_request.dart';
 import 'package:qesma_api/src/model/update_me_request.dart';
 import 'package:qesma_api/src/model/update_member_request.dart';
+import 'package:qesma_api/src/model/update_payment_handles_request.dart';
 import 'package:qesma_api/src/model/user_dto.dart';
 import 'package:qesma_api/src/model/verify_email_request.dart';
 
@@ -104,6 +107,7 @@ part 'serializers.g.dart';
   PageResponseSettlementView,
   PayerInput,
   PayerView,
+  PaymentHandlesView,
   Problem,
   RefreshRequest,
   RegisterRequest,
@@ -117,11 +121,13 @@ part 'serializers.g.dart';
   TaxCharge,
   TaxInput,
   TokenResponse,
+  TransferOwnershipRequest,
   TransferView,
   Unclaimed,
   UpdateGroupRequest,
   UpdateMeRequest,
   UpdateMemberRequest,
+  UpdatePaymentHandlesRequest,
   UserDto,
   VerifyEmailRequest,
 ])
@@ -129,6 +135,10 @@ Serializers serializers = (_$serializers.toBuilder()
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(ExpenseRevisionView)]),
         () => ListBuilder<ExpenseRevisionView>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(String)]),
+        () => ListBuilder<String>(),
       )
       ..add(const OneOfSerializer())
       ..add(const AnyOfSerializer())

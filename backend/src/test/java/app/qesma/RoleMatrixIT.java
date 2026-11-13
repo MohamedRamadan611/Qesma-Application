@@ -69,6 +69,7 @@ class RoleMatrixIT extends AbstractApiIT {
         MATRIX.put("DELETE /api/v1/groups/{gid}/expenses/{eid}", new Row(204, 204, 403));
         MATRIX.put("GET /api/v1/groups/{gid}/expenses/{eid}/revisions", new Row(200, 200, 200));
         MATRIX.put("GET /api/v1/groups/{gid}/balances", new Row(200, 200, 200));
+        MATRIX.put("GET /api/v1/groups/{gid}/activity", new Row(200, 200, 200));   // B15: every ACTIVE member
         MATRIX.put("GET /api/v1/groups/{gid}/settlements", new Row(200, 200, 200));
         // B13: recording a payment between two OTHER members is for Owner/Admin only (403 for a member)
         MATRIX.put("POST /api/v1/groups/{gid}/settlements", new Row(201, 201, 403));

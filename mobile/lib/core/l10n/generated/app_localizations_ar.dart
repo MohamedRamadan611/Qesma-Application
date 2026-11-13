@@ -1233,27 +1233,6 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get balancesDeletePayment => 'امسح السداد';
-
-  @override
-  String balancesDeletePaymentSpoken(String from, String to, String amount) {
-    return 'امسح سداد $from لـ $to، $amount';
-  }
-
-  @override
-  String get balancesDeleteTitle => 'تمسح السداد ده؟';
-
-  @override
-  String get balancesDeleteBody =>
-      'الأرصدة هتتحسب من جديد من غير السداد ده، ومش هينفع نرجّعه بعد كده.';
-
-  @override
-  String get balancesDeleted => 'اتمسح السداد.';
-
-  @override
-  String get balancesDeleteGone => 'السداد ده كان اتمسح قبل كده.';
-
-  @override
   String get balancesLoadMore => 'حمّل المزيد';
 
   @override
@@ -1762,4 +1741,515 @@ class AppLocalizationsAr extends AppLocalizations {
   String inviteHoursMany(String count) {
     return '$count ساعة';
   }
+
+  @override
+  String get membersBadgeConnected => 'متصل بحساب';
+
+  @override
+  String get membersBadgeNameOnly => 'اسم فقط';
+
+  @override
+  String get membersRoleOwner => 'مالك';
+
+  @override
+  String get membersRoleAdmin => 'أدمن';
+
+  @override
+  String get membersLeftChip => 'غادر';
+
+  @override
+  String get membersActionPromote => 'ترقية لأدمن';
+
+  @override
+  String get membersActionPromoteHint =>
+      'يقدر يعدل الجروب ويدير الأعضاء والدعوات.';
+
+  @override
+  String get membersActionDemote => 'إلغاء الأدمن';
+
+  @override
+  String get membersActionDemoteHint => 'يرجع عضو عادي.';
+
+  @override
+  String get membersActionUnlink => 'فصل الحساب';
+
+  @override
+  String get membersActionUnlinkHint =>
+      'يرجع اسم فقط، وفواتيره وسجله بيفضلوا زي ما هم.';
+
+  @override
+  String get membersActionMarkLeft => 'عضو غادر';
+
+  @override
+  String get membersActionMarkLeftHint =>
+      'يفضل في القائمة ورصيده ظاهر، وميتضافش لمصاريف جديدة.';
+
+  @override
+  String get membersActionReactivate => 'إعادة التفعيل';
+
+  @override
+  String get membersActionReactivateHint => 'يرجع عضو نشط في الجروب.';
+
+  @override
+  String get membersActionTransfer => 'نقل الملكية';
+
+  @override
+  String get membersActionTransferHint => 'يبقى هو المالك وإنت تبقى أدمن.';
+
+  @override
+  String memberUnlinkConfirmTitle(String name) {
+    return 'فصل حساب $name؟';
+  }
+
+  @override
+  String memberUnlinkConfirmBody(String name) {
+    return '$name هيرجع اسم فقط ومش هيدخل الجروب تاني. مصاريفه وسجله بيفضلوا زي ما هم، وتقدر تدعوه من جديد.';
+  }
+
+  @override
+  String get memberUnlinkConfirmAction => 'فصل الحساب';
+
+  @override
+  String memberMarkLeftConfirmTitle(String name) {
+    return 'تسجيل $name كغادر؟';
+  }
+
+  @override
+  String memberMarkLeftConfirmBody(String name) {
+    return '$name هيفضل في القائمة ورصيده ظاهر، بس مش هيتضاف لمصاريف جديدة.';
+  }
+
+  @override
+  String get memberMarkLeftConfirmAction => 'تسجيل كغادر';
+
+  @override
+  String memberPromoteConfirmTitle(String name) {
+    return 'ترقية $name لأدمن؟';
+  }
+
+  @override
+  String memberPromoteConfirmBody(String name) {
+    return '$name هيقدر يعدل الجروب ويدير الأعضاء والدعوات.';
+  }
+
+  @override
+  String get memberPromoteConfirmAction => 'ترقية';
+
+  @override
+  String memberDemoteConfirmTitle(String name) {
+    return 'إلغاء الأدمن عن $name؟';
+  }
+
+  @override
+  String memberDemoteConfirmBody(String name) {
+    return '$name هيرجع عضو عادي.';
+  }
+
+  @override
+  String get memberDemoteConfirmAction => 'إلغاء الأدمن';
+
+  @override
+  String memberReactivatedNotice(String name) {
+    return 'رجّعنا $name للجروب.';
+  }
+
+  @override
+  String get membersLeave => 'غادر الجروب';
+
+  @override
+  String get groupLeaveConfirmTitle => 'تغادر الجروب؟';
+
+  @override
+  String get groupLeaveConfirmBody =>
+      'رصيدك بيفضل محفوظ في الجروب ومش هتشوفه تاني. عشان ترجع لازم دعوة جديدة.';
+
+  @override
+  String get groupLeaveConfirmAction => 'غادر الجروب';
+
+  @override
+  String get groupLeftNotice => 'خرجت من الجروب.';
+
+  @override
+  String get membersTransfer => 'نقل الملكية';
+
+  @override
+  String get memberTransferPickerTitle => 'نقل الملكية';
+
+  @override
+  String get memberTransferPickerSubtitle =>
+      'اختار العضو اللي هيبقى المالك. لازم يكون متصل بحساب.';
+
+  @override
+  String get memberTransferPickerEmptyTitle => 'مفيش عضو تنقله له';
+
+  @override
+  String get memberTransferPickerEmptyBody =>
+      'الملكية بتتنقل لعضو نشط ومتصل بحساب. ادعو حد للجروب الأول.';
+
+  @override
+  String memberTransferConfirmTitle(String name) {
+    return 'نقل الملكية لـ $name؟';
+  }
+
+  @override
+  String memberTransferConfirmBody(String name) {
+    return '$name هيبقى المالك وإنت هتبقى أدمن. مش هتقدر ترجّعها بنفسك.';
+  }
+
+  @override
+  String get memberTransferConfirmAction => 'نقل الملكية';
+
+  @override
+  String get memberTransferDoneNotice => 'الملكية اتنقلت.';
+
+  @override
+  String get errorOwnerMustTransferTitle => 'انقل الملكية الأول';
+
+  @override
+  String get errorOwnerMustTransferMessage =>
+      'المالك مش بيغادر الجروب. انقل الملكية لعضو تاني وبعدين غادر.';
+
+  @override
+  String get errorMemberInactive => 'العضو ده غادر الجروب. حدّثنا القائمة.';
+
+  @override
+  String inviteRequestsBanner(String count) {
+    return 'طلبات انضمام مستنية: $count';
+  }
+
+  @override
+  String get inviteRequestsTitle => 'طلبات الانضمام';
+
+  @override
+  String get inviteRequestsEmptyTitle => 'مفيش طلبات انضمام';
+
+  @override
+  String get inviteRequestsEmptyBody =>
+      'لما حد يستخدم دعوة محتاجة موافقة، طلبه هيظهر هنا.';
+
+  @override
+  String inviteRequestClaims(String name) {
+    return 'عايز يبقى: $name';
+  }
+
+  @override
+  String inviteRequestNewMember(String name) {
+    return 'عضو جديد باسم $name';
+  }
+
+  @override
+  String inviteRequestWhen(String when) {
+    return 'اتطلب $when';
+  }
+
+  @override
+  String get inviteRequestApprove => 'قبول';
+
+  @override
+  String get inviteRequestReject => 'رفض';
+
+  @override
+  String inviteRequestApproveLabel(String name) {
+    return 'قبول طلب $name';
+  }
+
+  @override
+  String inviteRequestRejectLabel(String name) {
+    return 'رفض طلب $name';
+  }
+
+  @override
+  String get inviteRequestClaimedNotice =>
+      'الاسم ده اتربط بحساب تاني. حدّثنا القائمة.';
+
+  @override
+  String get inviteRequestDecidedNotice =>
+      'حد تاني قرر في الطلب ده بالفعل. حدّثنا القائمة.';
+
+  @override
+  String get inviteRequestApprovedNotice => 'اتقبل الطلب.';
+
+  @override
+  String get inviteRequestRejectedNotice => 'اترفض الطلب.';
+
+  @override
+  String get inviteRequestUnknownName => 'شخص';
+
+  @override
+  String get settlementChipPending => 'في انتظار التأكيد';
+
+  @override
+  String get settlementChipConfirmed => 'مؤكّد';
+
+  @override
+  String get settlementChipDisputed => 'فيه خلاف';
+
+  @override
+  String get settlementChipCancelled => 'اتلغت';
+
+  @override
+  String get settlementChipUnknown => 'حالة تانية';
+
+  @override
+  String settlementChipSpoken(String status) {
+    return 'حالة الدفعة: $status';
+  }
+
+  @override
+  String get settlementByAdmin => 'اتسجّلت بواسطة الأدمن';
+
+  @override
+  String get payNoMoveNote =>
+      'التطبيق مبيحوّلش فلوس — حوّل من تطبيق البنك أو المحفظة وبعدين اضغط دفعت';
+
+  @override
+  String payHandlesTitle(String name) {
+    return 'بيانات الدفع لـ $name';
+  }
+
+  @override
+  String get payInstapayLabel => 'عنوان إنستا باي';
+
+  @override
+  String get payWalletLabel => 'محفظة إلكترونية';
+
+  @override
+  String get payCopyOne => 'نسخ';
+
+  @override
+  String payCopyOneSpoken(String what) {
+    return 'انسخ $what';
+  }
+
+  @override
+  String get payCopyAll => 'نسخ البيانات';
+
+  @override
+  String get payCopied => 'اتنسخ';
+
+  @override
+  String payNoHandles(String name) {
+    return '$name لسه مضافش بيانات دفع. اتفقوا على طريقة التحويل ودوس دفعت بعد ما تحوّل.';
+  }
+
+  @override
+  String get payButton => 'دفعت';
+
+  @override
+  String payButtonSpoken(String amount, String name) {
+    return 'دفعت $amount لـ $name';
+  }
+
+  @override
+  String get payOnBehalf => 'تسجيل بالنيابة';
+
+  @override
+  String get payReceived => 'سجّلت إني استلمت';
+
+  @override
+  String payTransferTitle(String name) {
+    return 'حوّل لـ $name';
+  }
+
+  @override
+  String get pendingBadge => 'فيه دفعة في انتظار التأكيد';
+
+  @override
+  String pendingExplain(String pending, String amount) {
+    return 'الأرصدة بتحسب الدفعات المؤكَّدة بس. فيه دفعة $pending في انتظار التأكيد، والمطلوب لسه $amount لحد ما تتأكد.';
+  }
+
+  @override
+  String get disputeFlag => 'فيه خلاف على دفعة';
+
+  @override
+  String get paymentTitleDeclare => 'دفعت';
+
+  @override
+  String get paymentTitleReceived => 'استلمت';
+
+  @override
+  String get paymentTitleOnBehalf => 'تسجيل بالنيابة';
+
+  @override
+  String paymentHintPending(String name) {
+    return 'هتتبعت لـ $name عشان يأكّدها. الأرصدة مش هتتغيّر لحد ما يأكّد.';
+  }
+
+  @override
+  String get paymentHintConfirmed =>
+      'هتتسجّل مؤكّدة على طول وهتتحسب في الأرصدة.';
+
+  @override
+  String paymentHintNoAccount(String name) {
+    return '$name مالوش حساب في التطبيق، فالأدمن هو اللي يسجّل الدفعة دي.';
+  }
+
+  @override
+  String get paymentHintNotAllowed =>
+      'تقدر تسجّل دفعاتك إنت بس. الأدمن هو اللي بيسجّل بالنيابة عن غيره.';
+
+  @override
+  String paymentSentPending(String name) {
+    return 'اتبعتت لـ $name عشان يأكّدها.';
+  }
+
+  @override
+  String get incomingBannerOne => 'فيه دفعة مستنياك تأكّدها';
+
+  @override
+  String incomingBannerMany(String count) {
+    return 'فيه $count دفعات مستنياك تأكّدها';
+  }
+
+  @override
+  String get incomingTitle => 'دفعات مستنياك';
+
+  @override
+  String receiverCardTitle(String name, String amount) {
+    return '$name بيقول إنه دفعلك $amount';
+  }
+
+  @override
+  String get receiverCardBody =>
+      'راجع حسابك واتأكد إن الفلوس وصلت قبل ما تأكّد.';
+
+  @override
+  String get receiverConfirm => 'استلمت';
+
+  @override
+  String receiverConfirmSpoken(String amount, String name) {
+    return 'أكّد إنك استلمت $amount من $name';
+  }
+
+  @override
+  String get receiverDispute => 'لسه مااستلمتش';
+
+  @override
+  String receiverDisputeSpoken(String amount, String name) {
+    return 'بلّغ إنك لسه مااستلمتش $amount من $name';
+  }
+
+  @override
+  String get disputeDialogTitle => 'لسه مااستلمتش الفلوس؟';
+
+  @override
+  String disputeDialogBody(String name) {
+    return 'هنبلّغ $name إنك مااستلمتش. الدفعة مش هتتحسب لحد ما تتأكد أو تتلغي.';
+  }
+
+  @override
+  String get disputeDialogConfirm => 'أيوه، مااستلمتش';
+
+  @override
+  String get cancelDialogTitle => 'تلغي الدفعة دي؟';
+
+  @override
+  String get cancelDialogBody =>
+      'الدفعة هتتلغي ومش هتتحسب في الأرصدة. هتفضل ظاهرة في السجل بحالة اتلغت.';
+
+  @override
+  String get cancelDialogConfirm => 'إلغاء الدفعة';
+
+  @override
+  String get cancelDialogKeep => 'لأ، سيبها';
+
+  @override
+  String get settlementConfirmedSnack => 'اتأكّدت الدفعة وهتتحسب في الأرصدة.';
+
+  @override
+  String get settlementDisputedSnack => 'اتسجّل إنك مااستلمتش الدفعة.';
+
+  @override
+  String get settlementCancelledSnack => 'اتلغت الدفعة.';
+
+  @override
+  String get settlementStateChanged => 'الدفعة اتغيّرت: دي حالتها دلوقتي.';
+
+  @override
+  String get settlementGone => 'الدفعة دي مبقتش موجودة.';
+
+  @override
+  String get settlementDetailTitle => 'تفاصيل الدفعة';
+
+  @override
+  String get settlementDetailAmount => 'مبلغ الدفعة';
+
+  @override
+  String get settlementPayerRole => 'الدافع';
+
+  @override
+  String get settlementReceiverRole => 'المستلم';
+
+  @override
+  String get stmtPayerPaid => 'بيقول: دفعت';
+
+  @override
+  String get stmtPayerCancelled => 'الدفعة اتلغت';
+
+  @override
+  String get stmtReceiverWaiting => 'لسه مردّش';
+
+  @override
+  String get stmtReceiverNotReceived => 'بيقول: لسه مااستلمتش';
+
+  @override
+  String get stmtReceiverConfirmed => 'أكّد إنه استلم';
+
+  @override
+  String get stmtRecordedByAdmin => 'اتسجّلت بواسطة الأدمن';
+
+  @override
+  String get detailBannerPending => 'في انتظار تأكيد المستلم';
+
+  @override
+  String get detailBannerDisputed => 'فيه خلاف على الدفعة دي';
+
+  @override
+  String get detailBannerDisputedBody =>
+      'في انتظار اتفاق الطرفين أو تدخّل الأدمن';
+
+  @override
+  String get detailBannerConfirmed => 'الدفعة اتأكّدت وبتتحسب في الأرصدة';
+
+  @override
+  String get detailBannerCancelled => 'الدفعة اتلغت ومش بتتحسب';
+
+  @override
+  String get detailNotCounted => 'الدفعة دي مش بتتحسب في الأرصدة لحد ما تتأكد.';
+
+  @override
+  String detailDeclaredAt(String when) {
+    return 'اتسجّلت: $when';
+  }
+
+  @override
+  String detailDisputedAt(String when) {
+    return 'اتبلّغ بالخلاف: $when';
+  }
+
+  @override
+  String detailConfirmedAt(String when) {
+    return 'اتأكّدت: $when';
+  }
+
+  @override
+  String detailCancelledAt(String when) {
+    return 'اتلغت: $when';
+  }
+
+  @override
+  String detailDateOn(String date) {
+    return 'تاريخ السداد: $date';
+  }
+
+  @override
+  String get guidanceTitle => 'إرشاد لحل الخلاف وديًا';
+
+  @override
+  String get guidanceBody =>
+      'الطرفين والأدمن يقدروا يحلّوا الخلاف بعد ما يراجعوا كشف الحساب ورسايل التحويل. التطبيق مبيحكمش ومبيحوّلش فلوس.';
+
+  @override
+  String get detailConfirm => 'تأكيد واستلام الدفعة';
 }

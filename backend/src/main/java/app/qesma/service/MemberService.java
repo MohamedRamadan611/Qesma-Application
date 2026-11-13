@@ -34,9 +34,12 @@ public class MemberService {
     private final MemberUsageChecker usage;
     private final Clock clock;
     private final MeterRegistry metrics;
+    private final GroupEventRecorder events;
 
     public MemberService(GroupAccessService access, ExpenseGroupRepository groups, MemberRepository members,
-                         ObjectProvider<MemberUsageChecker> usage, Clock clock, MeterRegistry metrics) {
+                         ObjectProvider<MemberUsageChecker> usage, Clock clock, MeterRegistry metrics,
+                         GroupEventRecorder events) {
+        this.events = events;
         this.access = access;
         this.groups = groups;
         this.members = members;
@@ -133,6 +136,8 @@ public class MemberService {
         access.requireMayManage(ctx, userId, member, Permission.UNLINK_MEMBER);   // only the owner may unlink an admin
         members.unlink(memberId, groupId);
         record("unlinked", userId, groupId, memberId);
+        events.record(groupId, ctx.me().getId(), EventType.MEMBER_UNLINKED, EventPayload.member(memberId),
+                GroupEventRecorder.Recipients.none());           // feed only: the account has no access any more
     }
 
     /** The fields of {@code PATCH /members/{mid}}; null means "not sent". Nothing else can be set (B12, A80). */
@@ -194,16 +199,26 @@ public class MemberService {
             member.rename(name);
             record("renamed", userId, groupId, memberId);
         }
+        UUID actor = ctx.me().getId();
         if (Member.STATUS_LEFT.equals(newStatus) && !Member.STATUS_LEFT.equals(member.getStatus())) {
+            Role previous = Role.valueOf(member.getRole());
             member.markLeft(now);
             record("removed", userId, groupId, memberId);
+            events.record(groupId, actor, EventType.MEMBER_LEFT,         // the removed member has no access: not notified
+                    EventPayload.member(memberId).withRoles(null, previous), GroupEventRecorder.Recipients.managers());
         } else if (Member.STATUS_ACTIVE.equals(newStatus) && Member.STATUS_LEFT.equals(member.getStatus())) {
             member.reactivate();
             record("reactivated", userId, groupId, memberId);
+            events.record(groupId, actor, EventType.MEMBER_REACTIVATED, EventPayload.member(memberId),
+                    GroupEventRecorder.Recipients.members(java.util.Set.of(memberId)));
         }
         if (newRole != null && !newRole.equals(member.getRole())) {
+            Role previous = Role.valueOf(member.getRole());
             member.changeRole(newRole);
             record("role_changed", userId, groupId, memberId);
+            events.record(groupId, actor, EventType.ROLE_CHANGED,
+                    EventPayload.member(memberId).withRoles(Role.valueOf(newRole), previous),
+                    GroupEventRecorder.Recipients.members(java.util.Set.of(memberId)));
         }
         return member;
     }
@@ -217,6 +232,9 @@ public class MemberService {
         }
         ctx.me().markLeft(clock.instant().truncatedTo(ChronoUnit.MICROS));
         record("left", userId, groupId, ctx.me().getId());
+        events.record(groupId, ctx.me().getId(), EventType.MEMBER_LEFT,
+                EventPayload.member(ctx.me().getId()).withRoles(null, ctx.role()),
+                GroupEventRecorder.Recipients.managers());
     }
 
     /**
@@ -241,10 +259,14 @@ public class MemberService {
             throw ApiException.validation("Ownership can only go to a member with an account");
         }
         UUID oldOwner = ctx.me().getId();
+        Role previous = Role.valueOf(target.getRole());
         if (members.demoteOwner(oldOwner, groupId) != 1 || members.promoteOwner(toMemberId, groupId) != 1) {
             throw ApiException.conflict(ErrorCode.VERSION_CONFLICT, "The members changed; try again"); // rolls back
         }
         record("ownership_transferred", userId, groupId, toMemberId);
+        events.record(groupId, oldOwner, EventType.OWNERSHIP_TRANSFERRED,
+                EventPayload.member(toMemberId).withRoles(null, previous),
+                GroupEventRecorder.Recipients.members(java.util.Set.of(toMemberId)));
     }
 
     static ApiException inactive() {

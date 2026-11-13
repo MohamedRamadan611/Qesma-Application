@@ -12,7 +12,14 @@ import '../../../core/widgets/widgets.dart';
 import '../../expenses/presentation/expense_blocks.dart';
 import '../../expenses/presentation/expense_ui.dart';
 import '../../groups/presentation/group_ui.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../core/router/app_router.dart';
+import '../../groups/application/group_permissions.dart';
 import '../application/balances_controller.dart';
+import '../application/incoming_settlements.dart';
+import '../application/settlement_rules.dart';
+import 'receiver_card.dart';
 import '../application/record_payment_state.dart';
 import '../application/settlements_controller.dart';
 import 'member_net_row.dart';
@@ -49,32 +56,18 @@ class _BalancesTabState extends ConsumerState<BalancesTab> {
   Future<void> _refresh() async {
     final failure = await ref.read(balancesControllerProvider(_gid).notifier).refresh();
     await ref.read(settlementsControllerProvider(_gid).notifier).refresh();
+    ref.invalidate(incomingPaymentsProvider(_gid));
     if (failure != null && mounted) showAppSnackBar(context, AppLocalizations.of(context).balancesRefreshFailed);
   }
 
   Future<void> _record(PaymentSeed seed) async {
-    final recorded = await showRecordPaymentSheet(context, gid: _gid, seed: seed);
-    if (recorded && mounted) showAppSnackBar(context, AppLocalizations.of(context).paymentRecorded);
-  }
-
-  Future<void> _delete(SettlementView payment, String Function(String) nameOf) async {
+    final created = await showRecordPaymentSheet(context, gid: _gid, seed: seed);
+    if (created == null || !mounted) return;
     final l10n = AppLocalizations.of(context);
-    final confirmed = await showConfirmDialog(
-      context,
-      title: l10n.balancesDeleteTitle,
-      message: l10n.balancesDeleteBody,
-      confirmLabel: l10n.commonDelete,
-      destructive: true,
-    );
-    if (!confirmed || !mounted) return;
-    final (outcome, failure) = await ref.read(settlementsControllerProvider(_gid).notifier).delete(payment.id);
-    if (!mounted) return;
-    final text = switch (outcome) {
-      SettlementDeleteOutcome.deleted => l10n.balancesDeleted,
-      SettlementDeleteOutcome.alreadyGone => l10n.balancesDeleteGone,
-      SettlementDeleteOutcome.failed => failure == null ? null : errorCopyFor(l10n, failure).message,
-    };
-    if (text != null) showAppSnackBar(context, text);
+    final nameOf = memberNameResolver(widget.group, l10n);
+    // The wording follows the status the server gave the payment, never a guess.
+    final text = created.statusKind == SettlementStatus.pending ? l10n.paymentSentPending(fsIsolate(nameOf(created.toMemberId))) : l10n.paymentRecorded;
+    showAppSnackBar(context, text);
   }
 
   @override
@@ -103,6 +96,7 @@ class _BalancesTabState extends ConsumerState<BalancesTab> {
     final settlements = ref.watch(settlementsControllerProvider(_gid));
     final members = {for (final m in group.members) m.id: m};
     final transfers = balances.transfers.toList();
+    final canRecordForOthers = ref.watch(groupPermissionsProvider(_gid)).canManageMembers;
 
     return RefreshIndicator(
       onRefresh: _refresh,
@@ -115,6 +109,7 @@ class _BalancesTabState extends ConsumerState<BalancesTab> {
           children: [
             _StatusCard(totalSpentMinor: group.totalSpentMinor, transferCount: transfers.length),
             const SizedBox(height: QesmaSpacing.md),
+            IncomingPaymentsSection(group: group),
             if (transfers.isEmpty)
               _AllSettled()
             else
@@ -126,11 +121,7 @@ class _BalancesTabState extends ConsumerState<BalancesTab> {
                   children: [
                     for (var i = 0; i < transfers.length; i++) ...[
                       if (i > 0) const SizedBox(height: QesmaSpacing.sm + 4),
-                      TransferCard(
-                        transfer: transfers[i],
-                        nameOf: nameOf,
-                        onRecord: () => _record(PaymentSeed(fromId: transfers[i].fromMemberId, toId: transfers[i].toMemberId, amountMinor: transfers[i].amountMinor)),
-                      ),
+                      _transferCard(transfers[i], nameOf, group.yourMemberId, canRecordForOthers),
                     ],
                   ],
                 ),
@@ -160,13 +151,28 @@ class _BalancesTabState extends ConsumerState<BalancesTab> {
             SettlementHistory(
               state: settlements,
               nameOf: nameOf,
-              onDelete: (payment) => _delete(payment, nameOf),
+              onOpen: (payment) => context.push(Routes.settlement(_gid, payment.id)),
               onLoadMore: () => ref.read(settlementsControllerProvider(_gid).notifier).loadMore(retry: true),
               onRetry: ref.read(settlementsControllerProvider(_gid).notifier).load,
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// A suggested transfer with the controls this person's role allows: the payer pays, the receiver can record cash received,
+/// an Owner/Admin can record on behalf, anyone else only reads it.
+extension on _BalancesTabState {
+  Widget _transferCard(TransferView t, String Function(String) nameOf, String you, bool canRecordForOthers) {
+    final role = t.fromMemberId == you ? TransferRole.payer : (t.toMemberId == you ? TransferRole.receiver : TransferRole.other);
+    final seed = PaymentSeed(fromId: t.fromMemberId, toId: t.toMemberId, amountMinor: t.amountMinor);
+    return TransferCard(
+      transfer: t,
+      nameOf: nameOf,
+      role: role,
+      onRecord: role == TransferRole.other && !canRecordForOthers ? null : () => _record(seed),
     );
   }
 }

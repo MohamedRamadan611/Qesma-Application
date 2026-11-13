@@ -46,7 +46,9 @@ class FakeMember {
     required this.sortOrder,
     String? role,
     this.status = 'ACTIVE',
-  }) : role = role ?? (isYou ? 'OWNER' : 'MEMBER');
+    bool? linked,
+  })  : linked = linked ?? isYou,
+        role = role ?? (isYou ? 'OWNER' : 'MEMBER');
 
   final String id;
   String name;
@@ -56,10 +58,33 @@ class FakeMember {
   String role;
   String status;
 
-  /// A member with an account behind it (the signed-in person; B10 `hasAccount`).
-  bool get hasAccount => isYou;
+  /// A member with an account behind it (the signed-in person by default; B10 `hasAccount`).
+  bool linked;
+  bool get hasAccount => linked;
   bool hasTransactions;
   final int sortOrder;
+}
+
+class FakeJoinRequest {
+  FakeJoinRequest({required this.id, required this.requester, this.claimName, this.newName, DateTime? createdAt})
+      : createdAt = createdAt ?? DateTime.utc(2026, 10, 18, 10);
+
+  final String id;
+  final String requester;
+  final String? claimName;
+  final String? newName;
+  final DateTime createdAt;
+  String status = 'PENDING';
+
+  Map<String, dynamic> json() => {
+        'id': id,
+        'requesterName': requester,
+        if (claimName != null) 'claimMemberName': claimName,
+        if (claimName != null) 'claimMemberId': 'c-$id',
+        if (newName != null) 'newMemberName': newName,
+        'status': status,
+        'createdAt': createdAt.toIso8601String(),
+      };
 }
 
 /// The groups/members endpoints of the backend, as far as the client depends on them:
@@ -70,6 +95,16 @@ class FakeGroupsServer extends FakeBackend {
 
   final Map<String, FakeGroup> groups = {};
   final List<String> requests = [];
+
+  /// Pending join requests per group id (FL12).
+  final Map<String, List<FakeJoinRequest>> joinRequests = {};
+
+  /// `(status, code)` answered by the next member-lifecycle call (patch role/status, unlink, leave, transfer, decide).
+  final List<(int, String)> lifecycleFaults = [];
+
+  /// Bodies of the `PATCH .../members/{mid}` calls, in order.
+  final List<Map<String, dynamic>> memberPatches = [];
+  int groupReads = 0;
   CreateFault nextCreateFault = CreateFault.none;
   bool offline = false;
 
@@ -232,6 +267,7 @@ class FakeGroupsServer extends FakeBackend {
     if (parts.length == 1) {
       switch (method) {
         case 'GET':
+          groupReads++;
           return jsonOk(200, _group(group), etag: '${group.version}');
         case 'PATCH':
           final sent = options.headers['If-Match'] as String?;
@@ -249,6 +285,43 @@ class FakeGroupsServer extends FakeBackend {
       }
     }
 
+    // FL12: join requests, leave, transfer, unlink
+    if (parts.length >= 2 && (parts[1] == 'join-requests' || parts[1] == 'leave' || parts[1] == 'transfer-ownership' || (parts.length == 4 && parts[3] == 'unlink'))) {
+      final fault = method == 'GET' ? null : (lifecycleFaults.isEmpty ? null : lifecycleFaults.removeAt(0));
+      if (fault != null) return problemResponse(fault.$1, fault.$2);
+      final me = group.members.firstWhere((m) => m.isYou);
+      if (parts[1] == 'join-requests') {
+        final list = joinRequests.putIfAbsent(group.id, () => []);
+        if (parts.length == 2) {
+          return jsonOk(200, {'items': [for (final r in list) r.json()], 'page': 0, 'size': 100, 'totalElements': list.length, 'totalPages': 1});
+        }
+        final request = list.where((r) => r.id == parts[2]).firstOrNull;
+        if (request == null) return problemResponse(404, 'NOT_FOUND');
+        request.status = parts[3] == 'approve' ? 'APPROVED' : 'REJECTED';
+        list.remove(request);
+        return jsonOk(200, request.json());
+      }
+      if (parts[1] == 'leave') {
+        if (group.yourRole == 'OWNER') return problemResponse(409, 'OWNER_MUST_TRANSFER');
+        groups.remove(group.id);
+        return jsonOk(204, null);
+      }
+      if (parts[1] == 'transfer-ownership') {
+        final toId = (await _json(options, requestStream))['toMemberId'];
+        final target = group.members.where((m) => m.id == toId).firstOrNull;
+        if (target == null) return problemResponse(404, 'NOT_FOUND');
+        target.role = 'OWNER';
+        me.role = 'ADMIN';
+        group.yourRole = 'ADMIN';
+        return jsonOk(204, null);
+      }
+      final target = group.members.where((m) => m.id == parts[2]).firstOrNull;
+      if (target == null) return problemResponse(404, 'NOT_FOUND');
+      target.linked = false;
+      target.role = 'MEMBER';
+      return jsonOk(204, null);
+    }
+
     // /groups/{gid}/members[/{mid}]
     if (parts.length >= 2 && parts[1] == 'members') {
       if (parts.length == 2 && method == 'POST') {
@@ -261,7 +334,14 @@ class FakeGroupsServer extends FakeBackend {
       final member = parts.length == 3 ? group.members.where((m) => m.id == parts[2]).firstOrNull : null;
       if (member == null) return problemResponse(404, 'NOT_FOUND');
       if (method == 'PATCH') {
-        final name = (await _json(options, requestStream))['displayName'] as String;
+        final body = await _json(options, requestStream);
+        memberPatches.add(body);
+        final fault = lifecycleFaults.isEmpty ? null : lifecycleFaults.removeAt(0);
+        if (fault != null) return problemResponse(fault.$1, fault.$2);
+        if (body['role'] != null) member.role = body['role'] as String;
+        if (body['status'] != null) member.status = body['status'] as String;
+        if (body['displayName'] == null) return jsonOk(200, _member(member));
+        final name = body['displayName'] as String;
         if (group.members.any((m) => m.name == name && m.id != member.id)) return problemResponse(409, 'DUPLICATE_MEMBER_NAME');
         member.name = name;
         return jsonOk(200, _member(member));

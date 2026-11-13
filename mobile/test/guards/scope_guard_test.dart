@@ -11,7 +11,10 @@ import 'package:flutter_test/flutter_test.dart';
 /// How to enable a Phase 2 feature: the prompt that builds it (FL11 invites, FL13 settlements, FL14 handles and
 /// reminders, FL15 notifications, FL16 account deletion) adds the feature name to [enabledFeatures], in the same
 /// commit as its screens. The permanently omitted elements are never enabled.
-const enabledFeatures = <String>{'invites'}; // FL11: invite sheet, join screen, code entry
+const enabledFeatures = <String>{
+  'invites', // FL11: invite sheet, join screen, code entry
+  'settlements', // FL13: two-sided settlement (dispute, pending, confirm)
+};
 
 /// Words, Arabic words, phrases, icons and routes of one Phase 2 feature.
 class Phase2Feature {
@@ -65,6 +68,10 @@ const _permanentRoutes = <String>["'/guest"];
 
 /// key -> reason, for strings that contain a forbidden word legitimately
 const _allowedKeys = <String, String>{
+  // FL13: the transfer card names the receiver's payment details. The 'handles' feature (the profile screen, FL14) stays off.
+  'payNoMoveNote': 'P13-01 fixed note "transfer from your bank or wallet app"',
+  'payInstapayLabel': 'label of the receiver\x27s InstaPay address on the transfer card',
+  'payWalletLabel': 'label of the receiver\x27s mobile wallet number on the transfer card',
   'expensesEmptyBody': 'Arabic "ضيف" here is the imperative "add", not "guest"',
 };
 

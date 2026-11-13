@@ -47,7 +47,7 @@ void main() {
     final server = FakeBalancesServer();
     await pumpExpensesApp(tester, server, height: 1300, route: '${Routes.group(server.gid)}?tab=balances');
     await tester.pumpAndSettle();
-    await tester.tap(find.text(lookupAppLocalizations(const Locale('ar')).balancesRecordPayment).first);
+    await tester.tap(find.text(lookupAppLocalizations(const Locale('ar')).payReceived).first);
     await tester.pumpAndSettle();
     await expectLater(find.byType(MaterialApp), matchesGoldenFile('record_payment_sheet_ar.png'));
   });

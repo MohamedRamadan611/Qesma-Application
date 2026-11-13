@@ -31,9 +31,10 @@ Future<ProviderContainer> pumpGroupsApp(
   Locale locale = const Locale('ar'),
   double textScale = 1.0,
   bool settle = true,
+  double height = 800,
 }) async {
   tester.view.devicePixelRatio = 1.0;
-  tester.view.physicalSize = const Size(360, 800);
+  tester.view.physicalSize = Size(360, height);
   tester.platformDispatcher.textScaleFactorTestValue = textScale;
   addTearDown(tester.view.reset);
   addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);

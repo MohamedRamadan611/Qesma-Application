@@ -116,6 +116,42 @@ class GroupsRepository {
 
   Future<void> deleteMember(String gid, String mid) =>
       _run(() async => _api.getMemberControllerApi().deleteMember(gid: gid, mid: mid));
+
+  /// `PATCH` with only the role (Owner only; the server decides). [role] is ADMIN or MEMBER.
+  Future<void> setRole(String gid, String mid, String role) => _run(() async {
+        await _api.getMemberControllerApi().renameMember(
+              gid: gid,
+              mid: mid,
+              updateMemberRequest: UpdateMemberRequest((b) => b.role = role),
+            );
+      });
+
+  /// `PATCH` with only the status: LEFT (mark as left) or ACTIVE (reactivate).
+  Future<void> setStatus(String gid, String mid, String status) => _run(() async {
+        await _api.getMemberControllerApi().renameMember(
+              gid: gid,
+              mid: mid,
+              updateMemberRequest: UpdateMemberRequest((b) => b.status = status),
+            );
+      });
+
+  /// 204. The member and its history stay; the account is detached.
+  Future<void> unlink(String gid, String mid) =>
+      _run(() async => _api.getMemberControllerApi().unlinkMember(gid: gid, mid: mid));
+
+  /// 204. The caller becomes LEFT (the owner gets 409 OWNER_MUST_TRANSFER).
+  Future<void> leave(String gid) => _run(() async {
+        await _api.getMembershipControllerApi().leaveGroup(gid: gid);
+        _etags.forget(gid);
+      });
+
+  /// 204. The target becomes the owner, the caller an admin.
+  Future<void> transferOwnership(String gid, String toMemberId) => _run(() async {
+        await _api.getMembershipControllerApi().transferOwnership(
+              gid: gid,
+              transferOwnershipRequest: TransferOwnershipRequest((b) => b.toMemberId = toMemberId),
+            );
+      });
 }
 
 final groupsRepositoryProvider = Provider<GroupsRepository>(

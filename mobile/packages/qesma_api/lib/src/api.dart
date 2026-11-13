@@ -18,6 +18,7 @@ import 'package:qesma_api/src/api/join_controller_api.dart';
 import 'package:qesma_api/src/api/join_request_controller_api.dart';
 import 'package:qesma_api/src/api/me_controller_api.dart';
 import 'package:qesma_api/src/api/member_controller_api.dart';
+import 'package:qesma_api/src/api/membership_controller_api.dart';
 import 'package:qesma_api/src/api/password_auth_controller_api.dart';
 import 'package:qesma_api/src/api/settlement_controller_api.dart';
 
@@ -127,6 +128,12 @@ class QesmaApi {
   /// by doing that all interceptors will not be executed
   MemberControllerApi getMemberControllerApi() {
     return MemberControllerApi(dio, serializers);
+  }
+
+  /// Get MembershipControllerApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  MembershipControllerApi getMembershipControllerApi() {
+    return MembershipControllerApi(dio, serializers);
   }
 
   /// Get PasswordAuthControllerApi instance, base route and serializer can be overridden by a given but be careful,

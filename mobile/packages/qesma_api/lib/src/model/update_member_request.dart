@@ -12,10 +12,18 @@ part 'update_member_request.g.dart';
 ///
 /// Properties:
 /// * [displayName] 
+/// * [role] 
+/// * [status] 
 @BuiltValue()
 abstract class UpdateMemberRequest implements Built<UpdateMemberRequest, UpdateMemberRequestBuilder> {
   @BuiltValueField(wireName: r'displayName')
-  String get displayName;
+  String? get displayName;
+
+  @BuiltValueField(wireName: r'role')
+  String? get role;
+
+  @BuiltValueField(wireName: r'status')
+  String? get status;
 
   UpdateMemberRequest._();
 
@@ -40,11 +48,27 @@ class _$UpdateMemberRequestSerializer implements PrimitiveSerializer<UpdateMembe
     UpdateMemberRequest object, {
     FullType specifiedType = FullType.unspecified,
   }) sync* {
-    yield r'displayName';
-    yield serializers.serialize(
-      object.displayName,
-      specifiedType: const FullType(String),
-    );
+    if (object.displayName != null) {
+      yield r'displayName';
+      yield serializers.serialize(
+        object.displayName,
+        specifiedType: const FullType(String),
+      );
+    }
+    if (object.role != null) {
+      yield r'role';
+      yield serializers.serialize(
+        object.role,
+        specifiedType: const FullType(String),
+      );
+    }
+    if (object.status != null) {
+      yield r'status';
+      yield serializers.serialize(
+        object.status,
+        specifiedType: const FullType(String),
+      );
+    }
   }
 
   @override
@@ -74,6 +98,20 @@ class _$UpdateMemberRequestSerializer implements PrimitiveSerializer<UpdateMembe
             specifiedType: const FullType(String),
           ) as String;
           result.displayName = valueDes;
+          break;
+        case r'role':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.role = valueDes;
+          break;
+        case r'status':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.status = valueDes;
           break;
         default:
           unhandled.add(key);

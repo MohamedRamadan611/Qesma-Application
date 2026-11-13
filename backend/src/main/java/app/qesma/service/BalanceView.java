@@ -10,6 +10,10 @@ import java.util.UUID;
  * <p>Each transfer also carries what is still open between exactly that pair, computed by the backend: the sum of
  * PENDING settlements ({@code pendingMinor}), whether a DISPUTED one exists ({@code hasDispute}) and the ids of the open
  * ones ({@code openSettlementIds}, oldest first) so the UI can open them. The client never subtracts these itself.
+ *
+ * <p>{@code receiverHandles} (B14, A91): the receiver's payment handles, only on the transfers the viewer pays (and on
+ * every transfer when the viewer is Owner/Admin); null otherwise, or when the receiver has none or is not an active
+ * linked member. The only place handles leave the backend besides {@code GET /me/payment-handles}.
  */
 public record BalanceView(List<Net> nets, List<TransferView> transfers) {
 
@@ -17,6 +21,7 @@ public record BalanceView(List<Net> nets, List<TransferView> transfers) {
     }
 
     public record TransferView(UUID fromMemberId, UUID toMemberId, long amountMinor, long pendingMinor,
-                               boolean hasDispute, List<UUID> openSettlementIds) {
+                               boolean hasDispute, List<UUID> openSettlementIds,
+                               PaymentHandlesView receiverHandles) {
     }
 }

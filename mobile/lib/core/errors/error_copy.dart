@@ -63,6 +63,9 @@ ErrorCopy _forCode(AppLocalizations l10n, ApiErrorCode code, String? memberName)
     ApiErrorCode.inviteRevoked => ErrorCopy(title: l10n.inviteRevokedTitle, message: l10n.inviteRevokedBody),
     ApiErrorCode.alreadyMember => ErrorCopy(title: l10n.inviteAlreadyMemberTitle, message: l10n.inviteAlreadyMemberBody),
     ApiErrorCode.memberAlreadyClaimed => ErrorCopy(message: l10n.inviteClaimedNotice),
+    ApiErrorCode.memberInactive => ErrorCopy(message: l10n.errorMemberInactive),
+    ApiErrorCode.ownerMustTransfer => ErrorCopy(title: l10n.errorOwnerMustTransferTitle, message: l10n.errorOwnerMustTransferMessage),
+    ApiErrorCode.invalidStateTransition => ErrorCopy(message: l10n.settlementStateChanged),
     ApiErrorCode.unknown => ErrorCopy(message: l10n.errorUnexpected),
   };
 }

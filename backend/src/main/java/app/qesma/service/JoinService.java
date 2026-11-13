@@ -50,11 +50,13 @@ public class JoinService {
     private final ObjectMapper mapper;
     private final Clock clock;
     private final MeterRegistry metrics;
+    private final GroupEventRecorder events;
 
     public JoinService(GroupAccessService access, MemberService members, InviteStore invites,
                        JoinRequestStore requests, IdempotencyService idempotency, RequestHasher hasher,
                        InviteAttemptLimiter limiter, InviteService inviteService, ObjectMapper mapper, Clock clock,
-                       MeterRegistry metrics) {
+                       MeterRegistry metrics, GroupEventRecorder events) {
+        this.events = events;
         this.access = access;
         this.members = members;
         this.invites = invites;
@@ -107,12 +109,21 @@ public class JoinService {
 
         IdempotencyService.Outcome outcome;
         if (invite.requiresApproval()) {
-            UUID requestId = openRequest(invite, userId, target, now);
+            Opened opened = openRequest(invite, userId, target, now);
+            UUID requestId = opened.requestId();
+            if (opened.created()) {                                       // asking twice is the same request: one event (B15)
+                events.record(invite.groupId(), null, EventType.JOIN_REQUESTED,
+                        EventPayload.member(opened.memberId()).withRequestId(requestId),
+                        GroupEventRecorder.Recipients.managers());
+            }
             outcome = outcome(HttpStatus.ACCEPTED, new JoinView("PENDING_APPROVAL", invite.groupId(), null, requestId));
             metrics.counter("qesma.joins", "result", "pending").increment();
         } else {
             Member member = perform(invite.groupId(), userId, target, now);
             invites.incrementUse(invite.id());
+            events.record(invite.groupId(), member.getId(), EventType.INVITE_ACCEPTED,   // claim, new or rejoin (A79)
+                    EventPayload.member(member.getId()).withInviteId(invite.id()),
+                    GroupEventRecorder.Recipients.membersAndManagers(java.util.Set.of(invite.createdByMemberId())));
             outcome = outcome(HttpStatus.CREATED, new JoinView("JOINED", invite.groupId(), joined(member), null));
             metrics.counter("qesma.joins", "result", "joined").increment();
             log.atInfo().addKeyValue("event", "join.joined").addKeyValue("userId", userId)
@@ -160,6 +171,7 @@ public class JoinService {
             throw ApiException.conflict(ErrorCode.VERSION_CONFLICT, "This request was already decided");
         }
         Instant now = clock.instant().truncatedTo(ChronoUnit.MICROS);
+        Member joined = null;
         if (approve) {
             if (invite.maxUses() != null && invite.useCount() >= invite.maxUses()) {
                 throw ApiException.gone(ErrorCode.INVITE_EXPIRED, "This invitation has expired or was used up");
@@ -168,10 +180,15 @@ public class JoinService {
                 throw ApiException.conflict(ErrorCode.ALREADY_MEMBER, "This person is already a member");
             }
             Target target = new Target(request.claimMemberId(), request.newMemberName());
-            perform(groupId, request.userId(), target, now);   // a ghost claimed meanwhile -> 409, request stays PENDING
+            joined = perform(groupId, request.userId(), target, now);   // a ghost claimed meanwhile -> 409, request stays PENDING
             invites.incrementUse(invite.id());
         }
         requests.decide(requestId, wanted, now, ctx.me().getId());
+        if (joined != null) {                                           // B15: the person and Owner/Admins (not the approver) learn of it
+            events.record(groupId, ctx.me().getId(), EventType.MEMBER_JOINED,
+                    EventPayload.member(joined.getId()).withRequestId(requestId),
+                    GroupEventRecorder.Recipients.membersAndManagers(java.util.Set.of(joined.getId())));
+        }
         metrics.counter("qesma.joins", "result", approve ? "approved" : "rejected").increment();
         log.atInfo().addKeyValue("event", "join.decided").addKeyValue("userId", userId)
                 .addKeyValue("groupId", groupId).addKeyValue("requestId", requestId)
@@ -182,17 +199,21 @@ public class JoinService {
 
     // ---- helpers ------------------------------------------------------------------------------------------------
 
-    private UUID openRequest(InviteStore.Invite invite, UUID userId, Target target, Instant now) {
+    /** The request that is pending for this person; {@code created} is false when an earlier pending one was reused. */
+    private record Opened(UUID requestId, boolean created, UUID memberId) {
+    }
+
+    private Opened openRequest(InviteStore.Invite invite, UUID userId, Target target, Instant now) {
         Optional<JoinRequestStore.Request> existing = requests.findPending(invite.id(), userId);
         if (existing.isPresent()) {
-            return existing.get().id();                                  // asking twice is the same request
+            return new Opened(existing.get().id(), false, null);         // asking twice is the same request
         }
         Optional<Member> left = members.findLeft(invite.groupId(), userId);
         if (left.isPresent()) {                                          // a returning member: the request points at their own row
             UUID id = UUID.randomUUID();
             requests.insert(new JoinRequestStore.Request(id, invite.id(), invite.groupId(), userId,
                     left.get().getId(), null, JoinRequestStore.PENDING, now, null));
-            return id;
+            return new Opened(id, true, left.get().getId());
         }
         String name = target.claimMemberId() != null ? null : members.requireFreeName(invite.groupId(), target.newName());
         if (target.claimMemberId() != null) {
@@ -201,7 +222,7 @@ public class JoinService {
         UUID id = UUID.randomUUID();
         requests.insert(new JoinRequestStore.Request(id, invite.id(), invite.groupId(), userId, target.claimMemberId(),
                 name, JoinRequestStore.PENDING, now, null));
-        return id;
+        return new Opened(id, true, target.claimMemberId());
     }
 
     private Member perform(UUID groupId, UUID accountId, Target target, Instant now) {

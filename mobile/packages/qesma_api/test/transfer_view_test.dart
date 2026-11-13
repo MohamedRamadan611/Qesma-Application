@@ -18,6 +18,27 @@ void main() {
       // TODO
     });
 
+    // bool hasDispute
+    test('to test the property `hasDispute`', () async {
+      // TODO
+    });
+
+    // BuiltList<String> openSettlementIds
+    test('to test the property `openSettlementIds`', () async {
+      // TODO
+    });
+
+    // Integer minor units (piasters: 1 EGP = 100). Never a decimal.
+    // int pendingMinor
+    test('to test the property `pendingMinor`', () async {
+      // TODO
+    });
+
+    // PaymentHandlesView receiverHandles
+    test('to test the property `receiverHandles`', () async {
+      // TODO
+    });
+
     // String toMemberId
     test('to test the property `toMemberId`', () async {
       // TODO

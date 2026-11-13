@@ -67,6 +67,31 @@ class LayeringTest {
     }
 
     @Test
+    void theEventAndNotificationStoresAreReachedOnlyByTheRecorderTheActivityServiceAndThePurgeJob() throws IOException {
+        List<String> allowed = List.of("GroupEventRecorder.java", "ActivityService.java", "ActivityPurgeJob.java");
+        for (Path file : sources("service")) {
+            String text = Files.readString(file);
+            if (text.contains("GroupEventStore") || text.contains("NotificationStore")) {
+                assertThat(allowed).as(file + " must not touch the event stores directly")
+                        .contains(file.getFileName().toString());
+            }
+        }
+        for (String pkg : new String[] {"api", "security", "domain", "engine"}) {
+            for (Path file : sources(pkg)) {
+                String text = Files.readString(file);
+                assertThat(text).as(file.toString()).doesNotContain("GroupEventStore").doesNotContain("NotificationStore");
+            }
+        }
+    }
+
+    @Test
+    void onlyServicesRecordEventsThroughTheRecorderAndTheApiNeverDoes() throws IOException {
+        for (Path file : sources("api")) {
+            assertThat(Files.readString(file)).as(file.toString()).doesNotContain("GroupEventRecorder");
+        }
+    }
+
+    @Test
     void groupAndMemberRepositoriesAreUsedOnlyByTheGroupServices() throws IOException {
         List<String> allowed = List.of("GroupAccessService.java", "GroupService.java", "MemberService.java");
         for (Path file : sources("service")) {

@@ -2150,42 +2150,6 @@ abstract class AppLocalizations {
   /// **'{base}، {note}'**
   String balancesPaymentNoteSpoken(String base, String note);
 
-  /// Tooltip of the delete button on a history row.
-  ///
-  /// In ar, this message translates to:
-  /// **'امسح السداد'**
-  String get balancesDeletePayment;
-
-  /// Screen-reader label of the delete button.
-  ///
-  /// In ar, this message translates to:
-  /// **'امسح سداد {from} لـ {to}، {amount}'**
-  String balancesDeletePaymentSpoken(String from, String to, String amount);
-
-  /// Delete payment confirmation title.
-  ///
-  /// In ar, this message translates to:
-  /// **'تمسح السداد ده؟'**
-  String get balancesDeleteTitle;
-
-  /// Delete payment confirmation body (there is no undo).
-  ///
-  /// In ar, this message translates to:
-  /// **'الأرصدة هتتحسب من جديد من غير السداد ده، ومش هينفع نرجّعه بعد كده.'**
-  String get balancesDeleteBody;
-
-  /// Snackbar after a payment was deleted.
-  ///
-  /// In ar, this message translates to:
-  /// **'اتمسح السداد.'**
-  String get balancesDeleted;
-
-  /// Snackbar when the payment to delete no longer exists.
-  ///
-  /// In ar, this message translates to:
-  /// **'السداد ده كان اتمسح قبل كده.'**
-  String get balancesDeleteGone;
-
   /// Button under the history: next page.
   ///
   /// In ar, this message translates to:
@@ -3103,6 +3067,846 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'{count} ساعة'**
   String inviteHoursMany(String count);
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'متصل بحساب'**
+  String get membersBadgeConnected;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسم فقط'**
+  String get membersBadgeNameOnly;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'مالك'**
+  String get membersRoleOwner;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدمن'**
+  String get membersRoleAdmin;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'غادر'**
+  String get membersLeftChip;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'ترقية لأدمن'**
+  String get membersActionPromote;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'يقدر يعدل الجروب ويدير الأعضاء والدعوات.'**
+  String get membersActionPromoteHint;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلغاء الأدمن'**
+  String get membersActionDemote;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'يرجع عضو عادي.'**
+  String get membersActionDemoteHint;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'فصل الحساب'**
+  String get membersActionUnlink;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'يرجع اسم فقط، وفواتيره وسجله بيفضلوا زي ما هم.'**
+  String get membersActionUnlinkHint;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'عضو غادر'**
+  String get membersActionMarkLeft;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'يفضل في القائمة ورصيده ظاهر، وميتضافش لمصاريف جديدة.'**
+  String get membersActionMarkLeftHint;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعادة التفعيل'**
+  String get membersActionReactivate;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'يرجع عضو نشط في الجروب.'**
+  String get membersActionReactivateHint;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'نقل الملكية'**
+  String get membersActionTransfer;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'يبقى هو المالك وإنت تبقى أدمن.'**
+  String get membersActionTransferHint;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'فصل حساب {name}؟'**
+  String memberUnlinkConfirmTitle(String name);
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'{name} هيرجع اسم فقط ومش هيدخل الجروب تاني. مصاريفه وسجله بيفضلوا زي ما هم، وتقدر تدعوه من جديد.'**
+  String memberUnlinkConfirmBody(String name);
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'فصل الحساب'**
+  String get memberUnlinkConfirmAction;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجيل {name} كغادر؟'**
+  String memberMarkLeftConfirmTitle(String name);
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'{name} هيفضل في القائمة ورصيده ظاهر، بس مش هيتضاف لمصاريف جديدة.'**
+  String memberMarkLeftConfirmBody(String name);
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجيل كغادر'**
+  String get memberMarkLeftConfirmAction;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'ترقية {name} لأدمن؟'**
+  String memberPromoteConfirmTitle(String name);
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'{name} هيقدر يعدل الجروب ويدير الأعضاء والدعوات.'**
+  String memberPromoteConfirmBody(String name);
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'ترقية'**
+  String get memberPromoteConfirmAction;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلغاء الأدمن عن {name}؟'**
+  String memberDemoteConfirmTitle(String name);
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'{name} هيرجع عضو عادي.'**
+  String memberDemoteConfirmBody(String name);
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلغاء الأدمن'**
+  String get memberDemoteConfirmAction;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'رجّعنا {name} للجروب.'**
+  String memberReactivatedNotice(String name);
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'غادر الجروب'**
+  String get membersLeave;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'تغادر الجروب؟'**
+  String get groupLeaveConfirmTitle;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'رصيدك بيفضل محفوظ في الجروب ومش هتشوفه تاني. عشان ترجع لازم دعوة جديدة.'**
+  String get groupLeaveConfirmBody;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'غادر الجروب'**
+  String get groupLeaveConfirmAction;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'خرجت من الجروب.'**
+  String get groupLeftNotice;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'نقل الملكية'**
+  String get membersTransfer;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'نقل الملكية'**
+  String get memberTransferPickerTitle;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختار العضو اللي هيبقى المالك. لازم يكون متصل بحساب.'**
+  String get memberTransferPickerSubtitle;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'مفيش عضو تنقله له'**
+  String get memberTransferPickerEmptyTitle;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'الملكية بتتنقل لعضو نشط ومتصل بحساب. ادعو حد للجروب الأول.'**
+  String get memberTransferPickerEmptyBody;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'نقل الملكية لـ {name}؟'**
+  String memberTransferConfirmTitle(String name);
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'{name} هيبقى المالك وإنت هتبقى أدمن. مش هتقدر ترجّعها بنفسك.'**
+  String memberTransferConfirmBody(String name);
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'نقل الملكية'**
+  String get memberTransferConfirmAction;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'الملكية اتنقلت.'**
+  String get memberTransferDoneNotice;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'انقل الملكية الأول'**
+  String get errorOwnerMustTransferTitle;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'المالك مش بيغادر الجروب. انقل الملكية لعضو تاني وبعدين غادر.'**
+  String get errorOwnerMustTransferMessage;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'العضو ده غادر الجروب. حدّثنا القائمة.'**
+  String get errorMemberInactive;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'طلبات انضمام مستنية: {count}'**
+  String inviteRequestsBanner(String count);
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'طلبات الانضمام'**
+  String get inviteRequestsTitle;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'مفيش طلبات انضمام'**
+  String get inviteRequestsEmptyTitle;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'لما حد يستخدم دعوة محتاجة موافقة، طلبه هيظهر هنا.'**
+  String get inviteRequestsEmptyBody;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'عايز يبقى: {name}'**
+  String inviteRequestClaims(String name);
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'عضو جديد باسم {name}'**
+  String inviteRequestNewMember(String name);
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتطلب {when}'**
+  String inviteRequestWhen(String when);
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'قبول'**
+  String get inviteRequestApprove;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'رفض'**
+  String get inviteRequestReject;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'قبول طلب {name}'**
+  String inviteRequestApproveLabel(String name);
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'رفض طلب {name}'**
+  String inviteRequestRejectLabel(String name);
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاسم ده اتربط بحساب تاني. حدّثنا القائمة.'**
+  String get inviteRequestClaimedNotice;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'حد تاني قرر في الطلب ده بالفعل. حدّثنا القائمة.'**
+  String get inviteRequestDecidedNotice;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتقبل الطلب.'**
+  String get inviteRequestApprovedNotice;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'اترفض الطلب.'**
+  String get inviteRequestRejectedNotice;
+
+  /// FL12 members tab v2.
+  ///
+  /// In ar, this message translates to:
+  /// **'شخص'**
+  String get inviteRequestUnknownName;
+
+  /// Status chip: the payer declared it, the receiver has not answered.
+  ///
+  /// In ar, this message translates to:
+  /// **'في انتظار التأكيد'**
+  String get settlementChipPending;
+
+  /// Status chip: confirmed, counted in the balances.
+  ///
+  /// In ar, this message translates to:
+  /// **'مؤكّد'**
+  String get settlementChipConfirmed;
+
+  /// Status chip: the receiver says the money did not arrive.
+  ///
+  /// In ar, this message translates to:
+  /// **'فيه خلاف'**
+  String get settlementChipDisputed;
+
+  /// Status chip: cancelled, never counted.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتلغت'**
+  String get settlementChipCancelled;
+
+  /// Status chip for a status this app version does not know.
+  ///
+  /// In ar, this message translates to:
+  /// **'حالة تانية'**
+  String get settlementChipUnknown;
+
+  /// Screen-reader label of a status chip.
+  ///
+  /// In ar, this message translates to:
+  /// **'حالة الدفعة: {status}'**
+  String settlementChipSpoken(String status);
+
+  /// Small tag on a payment an Owner/Admin recorded on behalf.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتسجّلت بواسطة الأدمن'**
+  String get settlementByAdmin;
+
+  /// Fixed note on the transfer card (P13-01). Contains the word wallet: allowed in the scope guard.
+  ///
+  /// In ar, this message translates to:
+  /// **'التطبيق مبيحوّلش فلوس — حوّل من تطبيق البنك أو المحفظة وبعدين اضغط دفعت'**
+  String get payNoMoveNote;
+
+  /// Heading above the receiver's handles.
+  ///
+  /// In ar, this message translates to:
+  /// **'بيانات الدفع لـ {name}'**
+  String payHandlesTitle(String name);
+
+  /// Label of the receiver's InstaPay address.
+  ///
+  /// In ar, this message translates to:
+  /// **'عنوان إنستا باي'**
+  String get payInstapayLabel;
+
+  /// Label of the receiver's mobile wallet number.
+  ///
+  /// In ar, this message translates to:
+  /// **'محفظة إلكترونية'**
+  String get payWalletLabel;
+
+  /// Button next to one handle.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسخ'**
+  String get payCopyOne;
+
+  /// Screen-reader label of a copy button.
+  ///
+  /// In ar, this message translates to:
+  /// **'انسخ {what}'**
+  String payCopyOneSpoken(String what);
+
+  /// Button that copies every handle shown.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسخ البيانات'**
+  String get payCopyAll;
+
+  /// Snackbar after copying.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتنسخ'**
+  String get payCopied;
+
+  /// Card text when the receiver has no handles.
+  ///
+  /// In ar, this message translates to:
+  /// **'{name} لسه مضافش بيانات دفع. اتفقوا على طريقة التحويل ودوس دفعت بعد ما تحوّل.'**
+  String payNoHandles(String name);
+
+  /// Primary button of the transfer card.
+  ///
+  /// In ar, this message translates to:
+  /// **'دفعت'**
+  String get payButton;
+
+  /// Screen-reader label of the I paid button.
+  ///
+  /// In ar, this message translates to:
+  /// **'دفعت {amount} لـ {name}'**
+  String payButtonSpoken(String amount, String name);
+
+  /// Owner/Admin button on a transfer that is not theirs.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجيل بالنيابة'**
+  String get payOnBehalf;
+
+  /// Button on a transfer the person is owed (records cash received).
+  ///
+  /// In ar, this message translates to:
+  /// **'سجّلت إني استلمت'**
+  String get payReceived;
+
+  /// Title of the payer card.
+  ///
+  /// In ar, this message translates to:
+  /// **'حوّل لـ {name}'**
+  String payTransferTitle(String name);
+
+  /// Badge on a transfer with pendingMinor > 0.
+  ///
+  /// In ar, this message translates to:
+  /// **'فيه دفعة في انتظار التأكيد'**
+  String get pendingBadge;
+
+  /// Explains pending vs confirmed. Both amounts are the server's, never subtracted.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأرصدة بتحسب الدفعات المؤكَّدة بس. فيه دفعة {pending} في انتظار التأكيد، والمطلوب لسه {amount} لحد ما تتأكد.'**
+  String pendingExplain(String pending, String amount);
+
+  /// Flag on a transfer with hasDispute.
+  ///
+  /// In ar, this message translates to:
+  /// **'فيه خلاف على دفعة'**
+  String get disputeFlag;
+
+  /// Payment sheet title (a member declares their payment).
+  ///
+  /// In ar, this message translates to:
+  /// **'دفعت'**
+  String get paymentTitleDeclare;
+
+  /// Payment sheet title (the receiver records it).
+  ///
+  /// In ar, this message translates to:
+  /// **'استلمت'**
+  String get paymentTitleReceived;
+
+  /// Payment sheet title for an Owner/Admin.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجيل بالنيابة'**
+  String get paymentTitleOnBehalf;
+
+  /// Hint in the payment sheet.
+  ///
+  /// In ar, this message translates to:
+  /// **'هتتبعت لـ {name} عشان يأكّدها. الأرصدة مش هتتغيّر لحد ما يأكّد.'**
+  String paymentHintPending(String name);
+
+  /// Hint in the payment sheet.
+  ///
+  /// In ar, this message translates to:
+  /// **'هتتسجّل مؤكّدة على طول وهتتحسب في الأرصدة.'**
+  String get paymentHintConfirmed;
+
+  /// Shown instead of the send button for a member paying a member without an account.
+  ///
+  /// In ar, this message translates to:
+  /// **'{name} مالوش حساب في التطبيق، فالأدمن هو اللي يسجّل الدفعة دي.'**
+  String paymentHintNoAccount(String name);
+
+  /// Hint when the chosen pair is not allowed for a plain member.
+  ///
+  /// In ar, this message translates to:
+  /// **'تقدر تسجّل دفعاتك إنت بس. الأدمن هو اللي بيسجّل بالنيابة عن غيره.'**
+  String get paymentHintNotAllowed;
+
+  /// Snackbar after a PENDING payment was created.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتبعتت لـ {name} عشان يأكّدها.'**
+  String paymentSentPending(String name);
+
+  /// Group home banner, one payment.
+  ///
+  /// In ar, this message translates to:
+  /// **'فيه دفعة مستنياك تأكّدها'**
+  String get incomingBannerOne;
+
+  /// Group home banner, several payments.
+  ///
+  /// In ar, this message translates to:
+  /// **'فيه {count} دفعات مستنياك تأكّدها'**
+  String incomingBannerMany(String count);
+
+  /// Title of the incoming payments sheet and section.
+  ///
+  /// In ar, this message translates to:
+  /// **'دفعات مستنياك'**
+  String get incomingTitle;
+
+  /// Receiver card (P13-02).
+  ///
+  /// In ar, this message translates to:
+  /// **'{name} بيقول إنه دفعلك {amount}'**
+  String receiverCardTitle(String name, String amount);
+
+  /// Receiver card body.
+  ///
+  /// In ar, this message translates to:
+  /// **'راجع حسابك واتأكد إن الفلوس وصلت قبل ما تأكّد.'**
+  String get receiverCardBody;
+
+  /// Receiver button: confirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'استلمت'**
+  String get receiverConfirm;
+
+  /// Screen-reader label.
+  ///
+  /// In ar, this message translates to:
+  /// **'أكّد إنك استلمت {amount} من {name}'**
+  String receiverConfirmSpoken(String amount, String name);
+
+  /// Receiver button: dispute.
+  ///
+  /// In ar, this message translates to:
+  /// **'لسه مااستلمتش'**
+  String get receiverDispute;
+
+  /// Screen-reader label.
+  ///
+  /// In ar, this message translates to:
+  /// **'بلّغ إنك لسه مااستلمتش {amount} من {name}'**
+  String receiverDisputeSpoken(String amount, String name);
+
+  /// Dispute confirmation title.
+  ///
+  /// In ar, this message translates to:
+  /// **'لسه مااستلمتش الفلوس؟'**
+  String get disputeDialogTitle;
+
+  /// Dispute confirmation body.
+  ///
+  /// In ar, this message translates to:
+  /// **'هنبلّغ {name} إنك مااستلمتش. الدفعة مش هتتحسب لحد ما تتأكد أو تتلغي.'**
+  String disputeDialogBody(String name);
+
+  /// Dispute confirmation button.
+  ///
+  /// In ar, this message translates to:
+  /// **'أيوه، مااستلمتش'**
+  String get disputeDialogConfirm;
+
+  /// Cancel confirmation title.
+  ///
+  /// In ar, this message translates to:
+  /// **'تلغي الدفعة دي؟'**
+  String get cancelDialogTitle;
+
+  /// Cancel confirmation body.
+  ///
+  /// In ar, this message translates to:
+  /// **'الدفعة هتتلغي ومش هتتحسب في الأرصدة. هتفضل ظاهرة في السجل بحالة اتلغت.'**
+  String get cancelDialogBody;
+
+  /// Cancel confirmation button and detail action.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلغاء الدفعة'**
+  String get cancelDialogConfirm;
+
+  /// Cancel confirmation: dismiss.
+  ///
+  /// In ar, this message translates to:
+  /// **'لأ، سيبها'**
+  String get cancelDialogKeep;
+
+  /// Snackbar after confirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتأكّدت الدفعة وهتتحسب في الأرصدة.'**
+  String get settlementConfirmedSnack;
+
+  /// Snackbar after dispute.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتسجّل إنك مااستلمتش الدفعة.'**
+  String get settlementDisputedSnack;
+
+  /// Snackbar after cancel.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتلغت الدفعة.'**
+  String get settlementCancelledSnack;
+
+  /// Snackbar/error for INVALID_STATE_TRANSITION (everything is re-read).
+  ///
+  /// In ar, this message translates to:
+  /// **'الدفعة اتغيّرت: دي حالتها دلوقتي.'**
+  String get settlementStateChanged;
+
+  /// Snackbar/state for a 404 on a settlement.
+  ///
+  /// In ar, this message translates to:
+  /// **'الدفعة دي مبقتش موجودة.'**
+  String get settlementGone;
+
+  /// Detail screen title.
+  ///
+  /// In ar, this message translates to:
+  /// **'تفاصيل الدفعة'**
+  String get settlementDetailTitle;
+
+  /// Detail: amount label.
+  ///
+  /// In ar, this message translates to:
+  /// **'مبلغ الدفعة'**
+  String get settlementDetailAmount;
+
+  /// Detail: payer label.
+  ///
+  /// In ar, this message translates to:
+  /// **'الدافع'**
+  String get settlementPayerRole;
+
+  /// Detail: receiver label.
+  ///
+  /// In ar, this message translates to:
+  /// **'المستلم'**
+  String get settlementReceiverRole;
+
+  /// Payer statement (from the status).
+  ///
+  /// In ar, this message translates to:
+  /// **'بيقول: دفعت'**
+  String get stmtPayerPaid;
+
+  /// Payer statement when cancelled.
+  ///
+  /// In ar, this message translates to:
+  /// **'الدفعة اتلغت'**
+  String get stmtPayerCancelled;
+
+  /// Receiver statement while PENDING.
+  ///
+  /// In ar, this message translates to:
+  /// **'لسه مردّش'**
+  String get stmtReceiverWaiting;
+
+  /// Receiver statement while DISPUTED.
+  ///
+  /// In ar, this message translates to:
+  /// **'بيقول: لسه مااستلمتش'**
+  String get stmtReceiverNotReceived;
+
+  /// Receiver statement when CONFIRMED.
+  ///
+  /// In ar, this message translates to:
+  /// **'أكّد إنه استلم'**
+  String get stmtReceiverConfirmed;
+
+  /// Receiver line when an admin recorded it.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتسجّلت بواسطة الأدمن'**
+  String get stmtRecordedByAdmin;
+
+  /// Detail banner, PENDING.
+  ///
+  /// In ar, this message translates to:
+  /// **'في انتظار تأكيد المستلم'**
+  String get detailBannerPending;
+
+  /// Detail banner title, DISPUTED.
+  ///
+  /// In ar, this message translates to:
+  /// **'فيه خلاف على الدفعة دي'**
+  String get detailBannerDisputed;
+
+  /// Detail banner body, DISPUTED.
+  ///
+  /// In ar, this message translates to:
+  /// **'في انتظار اتفاق الطرفين أو تدخّل الأدمن'**
+  String get detailBannerDisputedBody;
+
+  /// Detail banner, CONFIRMED.
+  ///
+  /// In ar, this message translates to:
+  /// **'الدفعة اتأكّدت وبتتحسب في الأرصدة'**
+  String get detailBannerConfirmed;
+
+  /// Detail banner, CANCELLED.
+  ///
+  /// In ar, this message translates to:
+  /// **'الدفعة اتلغت ومش بتتحسب'**
+  String get detailBannerCancelled;
+
+  /// Detail note for PENDING and DISPUTED.
+  ///
+  /// In ar, this message translates to:
+  /// **'الدفعة دي مش بتتحسب في الأرصدة لحد ما تتأكد.'**
+  String get detailNotCounted;
+
+  /// Detail date line.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتسجّلت: {when}'**
+  String detailDeclaredAt(String when);
+
+  /// Detail date line.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتبلّغ بالخلاف: {when}'**
+  String detailDisputedAt(String when);
+
+  /// Detail date line.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتأكّدت: {when}'**
+  String detailConfirmedAt(String when);
+
+  /// Detail date line.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتلغت: {when}'**
+  String detailCancelledAt(String when);
+
+  /// Detail date line (settledOn).
+  ///
+  /// In ar, this message translates to:
+  /// **'تاريخ السداد: {date}'**
+  String detailDateOn(String date);
+
+  /// Guidance box title (disputed detail).
+  ///
+  /// In ar, this message translates to:
+  /// **'إرشاد لحل الخلاف وديًا'**
+  String get guidanceTitle;
+
+  /// Guidance box body: the app does not arbitrate.
+  ///
+  /// In ar, this message translates to:
+  /// **'الطرفين والأدمن يقدروا يحلّوا الخلاف بعد ما يراجعوا كشف الحساب ورسايل التحويل. التطبيق مبيحكمش ومبيحوّلش فلوس.'**
+  String get guidanceBody;
+
+  /// Detail action: confirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'تأكيد واستلام الدفعة'**
+  String get detailConfirm;
 }
 
 class _AppLocalizationsDelegate

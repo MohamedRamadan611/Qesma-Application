@@ -27,6 +27,11 @@ enum ApiErrorCode {
   inviteRevoked('INVITE_REVOKED'),
   alreadyMember('ALREADY_MEMBER'),
   memberAlreadyClaimed('MEMBER_ALREADY_CLAIMED'),
+  // B12 (FL12)
+  memberInactive('MEMBER_INACTIVE'),
+  ownerMustTransfer('OWNER_MUST_TRANSFER'),
+  // B13 (FL13)
+  invalidStateTransition('INVALID_STATE_TRANSITION'),
   unknown('');
 
   const ApiErrorCode(this.wire);

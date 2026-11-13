@@ -5,12 +5,15 @@ import app.qesma.engine.BalanceCalculator;
 import app.qesma.engine.EngineException;
 import app.qesma.engine.MemberRef;
 import app.qesma.engine.Simplifier;
+import app.qesma.engine.Transfer;
 import app.qesma.persistence.BalanceTotalsQuery;
 import app.qesma.persistence.PendingPairsQuery;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,12 +39,14 @@ public class BalanceService {
     private final BalanceTotalsQuery totals;
     private final PendingPairsQuery pending;
     private final MeterRegistry metrics;
+    private final PaymentHandleService paymentHandles;
 
     public BalanceService(GroupAccessService access, BalanceTotalsQuery totals, PendingPairsQuery pending,
-                          MeterRegistry metrics) {
+                          MeterRegistry metrics, PaymentHandleService paymentHandles) {
         this.access = access;
         this.totals = totals;
         this.pending = pending;
+        this.paymentHandles = paymentHandles;
         this.metrics = metrics;
     }
 
@@ -71,14 +76,33 @@ public class BalanceService {
         for (PendingPairsQuery.Pair p : pending.pairs(groupId)) {
             open.put(new Pair(p.fromMemberId(), p.toMemberId()), p);
         }
-        List<BalanceView.TransferView> transfers = Simplifier.simplify(nets, roster).stream().map(t -> {
+        List<Transfer> suggested = Simplifier.simplify(nets, roster);
+        Map<UUID, PaymentHandlesView> handles = handlesOf(ctx, suggested);
+        List<BalanceView.TransferView> transfers = suggested.stream().map(t -> {
             UUID from = UUID.fromString(t.fromMemberId());
             UUID to = UUID.fromString(t.toMemberId());
             PendingPairsQuery.Pair p = open.get(new Pair(from, to));
-            return p == null ? new BalanceView.TransferView(from, to, t.amountMinor(), 0L, false, List.of())
+            PaymentHandlesView receiverHandles = handles.get(to);
+            return p == null ? new BalanceView.TransferView(from, to, t.amountMinor(), 0L, false, List.of(), receiverHandles)
                     : new BalanceView.TransferView(from, to, t.amountMinor(), p.pendingMinor(), p.hasDispute(),
-                            p.ids());
+                            p.ids(), receiverHandles);
         }).toList();
         return new BalanceView(netViews, transfers);
+    }
+
+    /**
+     * Whose handles this viewer may see on these transfers (A91): the receivers of the transfers the viewer pays, or every
+     * receiver for Owner/Admin. ONE batched statement for all of them (never one per transfer).
+     */
+    private Map<UUID, PaymentHandlesView> handlesOf(GroupContext ctx, List<Transfer> suggested) {
+        boolean all = ctx.can(Permission.VIEW_ALL_PAYMENT_HANDLES);
+        UUID me = ctx.me().getId();
+        Set<UUID> receivers = new HashSet<>();
+        for (Transfer t : suggested) {
+            if (all || t.fromMemberId().equals(me.toString())) {
+                receivers.add(UUID.fromString(t.toMemberId()));
+            }
+        }
+        return paymentHandles.visibleForReceivers(ctx, receivers);
     }
 }

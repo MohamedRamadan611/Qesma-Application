@@ -236,25 +236,6 @@ void main() {
       expect(container.read(settlementsControllerProvider(server.gid)).items, hasLength(1));
     });
 
-    test('deleting a payment refetches both lists; a delete of something already gone is a 404 the app absorbs', () async {
-      server.seedV2();
-      server.balancesAfterDelete = balancesMap('balances_v1');
-      keepAlive(container, balancesControllerProvider(server.gid));
-      keepAlive(container, settlementsControllerProvider(server.gid));
-      await container.read(balancesControllerProvider(server.gid).notifier).load();
-      await container.read(settlementsControllerProvider(server.gid).notifier).load();
-      final sid = server.settlements.single['id'] as String;
-      final (outcome, failure) = await container.read(settlementsControllerProvider(server.gid).notifier).delete(sid);
-      expect(outcome, SettlementDeleteOutcome.deleted);
-      expect(failure, isNull);
-      await waitUntil(() => container.read(balancesControllerProvider(server.gid)).balances!.nets.first.netMinor == 10000 && container.read(settlementsControllerProvider(server.gid)).items.isEmpty);
-      expect(container.read(balancesControllerProvider(server.gid)).balances!.nets.map((n) => n.netMinor).toList(), [10000, -8000, -2000]);
-      expect(container.read(settlementsControllerProvider(server.gid)).items, isEmpty);
-
-      final (again, _) = await container.read(settlementsControllerProvider(server.gid).notifier).delete(sid);
-      expect(again, SettlementDeleteOutcome.alreadyGone, reason: 'a second delete is a plain 404 (A45)');
-    });
-
     test('any expense change refreshes the balances and history that are alive, and creates none that are not', () async {
       final refresh = Provider<void Function()>((ref) => () => refreshExpenseViews(ref, server.gid));
       refresh.hashCode; // (keeps the analyzer honest about the unused-variable lint)
@@ -293,6 +274,7 @@ void main() {
           'amountMinor': 100 + i,
           'settledOn': '2026-09-${(1 + i % 28).toString().padLeft(2, '0')}',
           'createdAt': '2026-11-10T10:00:00Z',
+            'declaredAt': '2026-11-10T10:00:00Z', 'status': 'CONFIRMED', 'recordedByAdmin': true,
         });
       }
       keepAlive(container, settlementsControllerProvider(server.gid));

@@ -180,8 +180,8 @@ class MemberControllerApi {
     return _response;
   }
 
-  /// renameMember
-  /// 
+  /// Rename a member, change its role, or remove/reactivate it
+  /// Send at least one of displayName, role, status. displayName: Owner/Admin. role (ADMIN or MEMBER): Owner only. status (LEFT removes a linked member, ACTIVE reactivates): Owner, and Admin for members (not admins). The owner&#39;s member is protected (409 OWNER_MEMBER_PROTECTED). A member without an account has no role or status.
   ///
   /// Parameters:
   /// * [gid] 

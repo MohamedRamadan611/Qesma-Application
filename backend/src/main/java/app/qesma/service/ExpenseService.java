@@ -69,12 +69,15 @@ public class ExpenseService {
     private final ObjectMapper mapper;
     private final Clock clock;
     private final MeterRegistry metrics;
+    private final GroupEventRecorder events;
 
     public ExpenseService(GroupAccessService access, ExpenseRepository expenses, ExpensePayerRepository payers,
                           ExpenseSplitRepository splits, ExpenseItemRepository items,
                           ExpenseItemAssigneeRepository assignees, ExpenseRevisionStore revisions,
                           IdempotencyService idempotency,
-                          RequestHasher hasher, ObjectMapper mapper, Clock clock, MeterRegistry metrics) {
+                          RequestHasher hasher, ObjectMapper mapper, Clock clock, MeterRegistry metrics,
+                          GroupEventRecorder events) {
+        this.events = events;
         this.access = access;
         this.expenses = expenses;
         this.payers = payers;
@@ -120,6 +123,9 @@ public class ExpenseService {
         ExpenseView view = persistChildren(expense, request, calc, members);
         String body = toJson(view);
         revisions.insert(expenseId, expense.getVersion(), CREATE, body, userId, now);  // history v1, same tx
+        events.record(groupId, ctx.me().getId(), EventType.EXPENSE_ADDED,                // feed + notifications, same tx (B15)
+                EventPayload.expense(expenseId, expense.getVersion(), calc.totalMinor()),
+                GroupEventRecorder.Recipients.members(participantsOf(calc, request)));
         idempotency.store(userId, key, CREATE_ENDPOINT, requestHash, HttpStatus.CREATED.value(), body); // 6. same tx
         metrics.counter("qesma.expenses", "op", "created", "splitType", request.splitType()).increment();
         log.atInfo().addKeyValue("event", "expense.created").addKeyValue("userId", userId)
@@ -162,7 +168,8 @@ public class ExpenseService {
         ExpenseValidator.Valid request = ExpenseValidator.validate(command);
         List<Member> members = access.listMembers(ctx);
         // A member who left may stay in an expense that already has them, but cannot be added (B12, A79).
-        ExpenseCalculator.Computation calc = ExpenseCalculator.compute(request, members, memberIdsOf(expenseId));
+        java.util.Set<UUID> before = memberIdsOf(expenseId);   // read before the replace: also the edit's recipients (A99)
+        ExpenseCalculator.Computation calc = ExpenseCalculator.compute(request, members, before);
         ExpenseCalculator.requirePayersMatch(calc);
 
         Instant now = clock.instant().truncatedTo(ChronoUnit.MICROS);
@@ -174,6 +181,11 @@ public class ExpenseService {
         payers.deleteAllOf(expenseId);
         ExpenseView view = persistChildren(expense, request, calc, members);
         revisions.insert(expenseId, expense.getVersion(), UPDATE, toJson(view), userId, now);
+        java.util.Set<UUID> affected = new java.util.HashSet<>(before);
+        affected.addAll(participantsOf(calc, request));
+        events.record(groupId, ctx.me().getId(), EventType.EXPENSE_EDITED,
+                EventPayload.expense(expenseId, expense.getVersion(), calc.totalMinor()),
+                GroupEventRecorder.Recipients.members(affected));
 
         metrics.counter("qesma.expenses", "op", "updated", "splitType", request.splitType()).increment();
         log.atInfo().addKeyValue("event", "expense.updated").addKeyValue("userId", userId)
@@ -198,6 +210,9 @@ public class ExpenseService {
         expense.markDeleted(now);
         ExpenseView last = new PageMapper(List.of(expense), access.listMembers(ctx)).view(expense);
         revisions.insert(expenseId, expense.getVersion(), DELETE, toJson(last), userId, now);
+        events.record(groupId, ctx.me().getId(), EventType.EXPENSE_DELETED,
+                EventPayload.expense(expenseId, expense.getVersion(), null),
+                GroupEventRecorder.Recipients.members(memberIdsOf(expenseId)));   // children stay on a soft delete
 
         metrics.counter("qesma.expenses", "op", "deleted", "splitType", expense.getSplitType()).increment();
         log.atInfo().addKeyValue("event", "expense.deleted").addKeyValue("userId", userId)
@@ -270,6 +285,18 @@ public class ExpenseService {
         List<UUID> itemIds = items.findByExpenseIdIn(one).stream().map(ExpenseItem::getId).toList();
         if (!itemIds.isEmpty()) {
             assignees.findByItemIdIn(itemIds).forEach(a -> ids.add(a.getMemberId()));
+        }
+        return ids;
+    }
+
+    /** Payers, shares and (ITEMIZED) item assignees of a computed expense: everybody the expense concerns. */
+    private static java.util.Set<UUID> participantsOf(ExpenseCalculator.Computation calc,
+                                                      ExpenseValidator.Valid request) {
+        java.util.Set<UUID> ids = new java.util.HashSet<>();
+        calc.payers().forEach(p -> ids.add(UUID.fromString(p.memberId())));
+        calc.shares().forEach(s -> ids.add(s.memberId()));
+        if (request.items() != null) {
+            request.items().forEach(i -> ids.addAll(i.assigneeMemberIds()));
         }
         return ids;
     }

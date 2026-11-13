@@ -40,6 +40,7 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(PageResponseSettlementView.serializer)
       ..add(PayerInput.serializer)
       ..add(PayerView.serializer)
+      ..add(PaymentHandlesView.serializer)
       ..add(Problem.serializer)
       ..add(ProblemCodeEnum.serializer)
       ..add(RefreshRequest.serializer)
@@ -54,11 +55,13 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(TaxCharge.serializer)
       ..add(TaxInput.serializer)
       ..add(TokenResponse.serializer)
+      ..add(TransferOwnershipRequest.serializer)
       ..add(TransferView.serializer)
       ..add(Unclaimed.serializer)
       ..add(UpdateGroupRequest.serializer)
       ..add(UpdateMeRequest.serializer)
       ..add(UpdateMemberRequest.serializer)
+      ..add(UpdatePaymentHandlesRequest.serializer)
       ..add(UserDto.serializer)
       ..add(VerifyEmailRequest.serializer)
       ..addBuilderFactory(
@@ -109,6 +112,9 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(ShareView)]),
           () => ListBuilder<ShareView>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => ListBuilder<String>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(String)]),
           () => ListBuilder<String>())

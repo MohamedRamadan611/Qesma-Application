@@ -10,7 +10,7 @@ public enum Role {
             Permission.ADD_EXPENSE, Permission.ADD_SETTLEMENT, Permission.EDIT_OWN_EXPENSE,
             Permission.EDIT_ANY_EXPENSE, Permission.MANAGE_SETTLEMENTS,
             Permission.MANAGE_INVITES, Permission.APPROVE_JOINS, Permission.UNLINK_MEMBER,
-            Permission.LEAVE_GROUP, Permission.MANAGE_MEMBER_STATUS)),
+            Permission.LEAVE_GROUP, Permission.MANAGE_MEMBER_STATUS, Permission.VIEW_ALL_PAYMENT_HANDLES)),
     MEMBER(EnumSet.of(Permission.READ_GROUP, Permission.ADD_EXPENSE, Permission.ADD_SETTLEMENT,
             Permission.EDIT_OWN_EXPENSE, Permission.LEAVE_GROUP));
 

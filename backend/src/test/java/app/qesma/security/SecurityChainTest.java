@@ -13,6 +13,7 @@ import app.qesma.api.MeController;
 import app.qesma.domain.User;
 import app.qesma.service.AuthService;
 import app.qesma.service.PasswordAuthService;
+import app.qesma.service.PaymentHandleService;
 import app.qesma.service.UserService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -65,6 +66,7 @@ class SecurityChainTest {
     @MockitoBean UserService users;
     @MockitoBean AuthService auth;
     @MockitoBean PasswordAuthService passwordAuth;
+    @MockitoBean PaymentHandleService paymentHandles;
 
     private static final String TEST_SECRET_B64 =
             "dGVzdC1vbmx5LXNlY3JldC1mb3ItaW50ZWdyYXRpb24tdGVzdHMtMDEyMzQ1Njc4OQ==";

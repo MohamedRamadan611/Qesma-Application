@@ -36,6 +36,9 @@ qesma:
   idempotency:
     ttl: 24h              # spec 8.3: stored responses can be replayed for 24 hours
     cleanup-interval: PT1H
+  activity:
+    retention: 180d       # B15 (A103): events and their notifications older than this are purged
+    purge-interval: PT6H
 
 management:
   endpoints:

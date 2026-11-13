@@ -10,17 +10,22 @@ import '../../expenses/presentation/expense_ui.dart';
 import '../../expenses/presentation/status_banner.dart';
 import '../../groups/application/group_detail_controller.dart';
 import '../application/record_payment_controller.dart';
+import '../application/settlement_rules.dart';
+import '../../groups/application/group_permissions.dart';
 import '../application/record_payment_state.dart';
 import 'member_picker_sheet.dart';
 import '../../../core/theme/palette.dart';
 
-/// Opens the Record payment sheet (P9-02). [seed] is a tapped transfer (from, to, the server's
-/// amount) or empty for a payment the user describes. Returns true when a payment was recorded.
-/// Closing it after changes asks first. The sheet shows no "effect of this payment": the new balances
-/// come from the server after it is recorded.
-Future<bool> showRecordPaymentSheet(BuildContext context, {required String gid, PaymentSeed seed = const PaymentSeed()}) async {
+/// Opens the payment sheet (P9-02, FL13). [seed] is a tapped transfer (from, to, the server's amount) or empty for a payment
+/// the user describes. Returns what the server created (its `status` says PENDING or CONFIRMED) or null when nothing was
+/// recorded. Closing it after changes asks first. The sheet shows no "effect of this payment": the new balances come from
+/// the server, and the status the person sees afterwards is the server's.
+///
+/// Who may name whom (A85): a Member records their own payments (they are the payer, or the receiver of cash); an Owner/Admin
+/// may also record on behalf of others. The wording hint is a prediction of the server's rule, never a result.
+Future<SettlementView?> showRecordPaymentSheet(BuildContext context, {required String gid, PaymentSeed seed = const PaymentSeed()}) async {
   final key = (gid: gid, seed: seed);
-  final result = await showModalBottomSheet<bool>(
+  final result = await showModalBottomSheet<SettlementView>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
@@ -30,7 +35,7 @@ Future<bool> showRecordPaymentSheet(BuildContext context, {required String gid, 
       child: _PaymentSheet(pkey: key),
     ),
   );
-  return result ?? false;
+  return result;
 }
 
 class _PaymentSheet extends ConsumerStatefulWidget {
@@ -79,7 +84,7 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
   Future<void> _send() async {
     setState(() => _amountTouched = true);
     final outcome = await _controller.send();
-    if (outcome == PaymentOutcome.recorded && mounted) Navigator.of(context).pop(true);
+    if (outcome == PaymentOutcome.recorded && mounted) Navigator.of(context).pop(ref.read(recordPaymentControllerProvider(widget.pkey)).created);
   }
 
   Future<void> _askDiscard() async {
@@ -92,7 +97,7 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
       cancelLabel: l10n.commonCancel,
       destructive: true,
     );
-    if (discard && mounted) Navigator.of(context).pop(false);
+    if (discard && mounted) Navigator.of(context).pop();
   }
 
   @override
@@ -106,9 +111,24 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
     final stacked = MediaQuery.textScalerOf(context).scale(1) > 1.3;
     final amount = form.amountMinor;
     final suggested = form.suggestedMinor;
+    final you = group?.yourMemberId;
+    final isAdmin = ref.watch(groupPermissionsProvider(widget.pkey.gid)).canManageMembers;
+    final toMember = group?.members.where((m) => m.id == form.toId).firstOrNull;
+    final outcome = expectedInitialOutcome(
+      yourMemberId: you,
+      fromMemberId: form.fromId,
+      toMemberId: form.toId,
+      receiverHasAccount: toMember?.hasAccount ?? false,
+      isAdminOrOwner: isAdmin,
+    );
+    // A Member never picks the payer (it is them) unless they are the receiver of cash, then the receiver is them. Owner/Admin pick both.
+    final fromLocked = !isAdmin && form.toId != you;
+    final toLocked = !isAdmin && form.toId == you;
+    final title = form.fromId == you ? l10n.paymentTitleDeclare : (form.toId == you ? l10n.paymentTitleReceived : l10n.paymentTitleOnBehalf);
+    final toName = form.toId == null ? '' : nameOf(form.toId!);
 
-    final from = _MemberField(label: l10n.paymentFrom, memberId: form.fromId, nameOf: nameOf, onTap: view.sending ? null : () => _pickFrom(form));
-    final to = _MemberField(label: l10n.paymentTo, memberId: form.toId, nameOf: nameOf, onTap: view.sending ? null : () => _pickTo(form));
+    final from = _MemberField(label: l10n.paymentFrom, memberId: form.fromId, nameOf: nameOf, onTap: view.sending || fromLocked ? null : () => _pickFrom(form));
+    final to = _MemberField(label: l10n.paymentTo, memberId: form.toId, nameOf: nameOf, onTap: view.sending || toLocked ? null : () => _pickTo(form));
 
     final amountError = _amountTouched && amount == null;
     final dateError = !form.dateValid;
@@ -176,6 +196,8 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
           errorText: noteError ? l10n.paymentNoteError : null,
           onChanged: _controller.setNote,
         ),
+        const SizedBox(height: QesmaSpacing.md),
+        _OutcomeHint(outcome: outcome, from: form.fromId == you, receiverName: toName),
         if (view.failure != null) ...[
           const SizedBox(height: QesmaSpacing.md),
           StatusBanner(icon: Icons.error_outline, text: errorCopyFor(l10n, view.failure!).message, tone: BannerTone.error),
@@ -191,7 +213,7 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
           label: amount == null ? l10n.paymentConfirmNoAmount : l10n.paymentConfirm(moneyDisplay(l10n, amount)),
           icon: Icons.check,
           loading: view.sending,
-          onPressed: form.canSend && !view.sending ? _send : null,
+          onPressed: form.canSend && !view.sending && outcome != InitialOutcome.notAllowed ? _send : null,
         ),
         const SizedBox(height: QesmaSpacing.xs),
         AppButton(
@@ -208,7 +230,7 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) _askDiscard();
       },
-      child: AppBottomSheet(title: l10n.balancesRecordPayment, subtitle: l10n.paymentSubtitle, action: action, child: body),
+      child: AppBottomSheet(title: title, subtitle: l10n.paymentSubtitle, action: action, child: body),
     );
   }
 }
@@ -251,5 +273,32 @@ class _MemberField extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// What will happen to the payment, in words, before it is sent (a prediction of the server's rule A85; the status shown
+/// after sending is the server's).
+class _OutcomeHint extends StatelessWidget {
+  const _OutcomeHint({required this.outcome, required this.from, required this.receiverName});
+
+  final InitialOutcome outcome;
+
+  /// The signed-in person is the payer.
+  final bool from;
+  final String receiverName;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final (icon, tone, text) = switch (outcome) {
+      InitialOutcome.pending => (Icons.hourglass_top, BannerTone.warning, l10n.paymentHintPending(fsIsolate(receiverName))),
+      InitialOutcome.confirmed => (Icons.check_circle_outline, BannerTone.success, l10n.paymentHintConfirmed),
+      InitialOutcome.notAllowed => (
+          Icons.info_outline,
+          BannerTone.neutral,
+          from ? l10n.paymentHintNoAccount(fsIsolate(receiverName)) : l10n.paymentHintNotAllowed,
+        ),
+    };
+    return StatusBanner(icon: icon, text: text, tone: tone);
   }
 }

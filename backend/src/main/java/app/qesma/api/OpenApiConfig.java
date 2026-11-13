@@ -93,6 +93,8 @@ public class OpenApiConfig {
             Map.entry("POST /api/v1/me/password", "changePassword"),
             Map.entry("GET /api/v1/me", "getMe"),
             Map.entry("PATCH /api/v1/me", "updateMe"),
+            Map.entry("GET /api/v1/me/payment-handles", "getPaymentHandles"),
+            Map.entry("PUT /api/v1/me/payment-handles", "updatePaymentHandles"),
             Map.entry("GET /api/v1/groups", "listGroups"),
             Map.entry("POST /api/v1/groups", "createGroup"),
             Map.entry("GET /api/v1/groups/{gid}", "getGroup"),
@@ -124,7 +126,11 @@ public class OpenApiConfig {
             Map.entry("POST /api/v1/groups/{gid}/join-requests/{rid}/reject", "rejectJoinRequest"),
             Map.entry("POST /api/v1/groups/{gid}/members/{mid}/unlink", "unlinkMember"),
             Map.entry("POST /api/v1/groups/{gid}/leave", "leaveGroup"),
-            Map.entry("POST /api/v1/groups/{gid}/transfer-ownership", "transferOwnership"));
+            Map.entry("POST /api/v1/groups/{gid}/transfer-ownership", "transferOwnership"),
+            Map.entry("GET /api/v1/groups/{gid}/activity", "listGroupActivity"),
+            Map.entry("GET /api/v1/notifications", "listNotifications"),
+            Map.entry("GET /api/v1/notifications/unread-count", "getUnreadNotificationCount"),
+            Map.entry("POST /api/v1/notifications/read", "markNotificationsRead"));
 
     static String operationId(String path, PathItem.HttpMethod method) {
         String id = OPERATION_IDS.get(method + " " + path);
@@ -142,7 +148,7 @@ public class OpenApiConfig {
             "GET /api/v1/groups/{gid}", "GET /api/v1/groups/{gid}/expenses", "POST /api/v1/groups/{gid}/expenses",
             "POST /api/v1/groups/{gid}/expenses/preview", "GET /api/v1/groups/{gid}/expenses/{eid}",
             "GET /api/v1/groups/{gid}/expenses/{eid}/revisions", "GET /api/v1/groups/{gid}/balances",
-            "GET /api/v1/groups/{gid}/settlements",
+            "GET /api/v1/groups/{gid}/settlements", "GET /api/v1/groups/{gid}/activity",
             "POST /api/v1/groups/{gid}/leave");
 
     static Map<Integer, List<ErrorCode>> errorsFor(String path, PathItem.HttpMethod method, Operation op) {
@@ -339,18 +345,28 @@ public class OpenApiConfig {
     private static final java.util.Set<String> RESPONSE_SCHEMAS = java.util.Set.of("AuthResponse", "TokenResponse",
             "UserDto", "GroupDto", "GroupSummaryDto", "MemberDto", "ExpenseView", "ExpensePreview", "BalanceView", "Net",
             "TransferView", "SettlementView", "ExpenseRevisionView", "Charges", "ServiceCharge", "TaxCharge", "ItemView",
-            "PayerView", "ShareView");
+            "PayerView", "ShareView", "PaymentHandlesView", "ActivityPage", "ActivityItem", "NotificationPage",
+            "NotificationItem", "UnreadCount", "MarkReadResult", "EventPayload");
 
     /** Response fields that can be null (all other response fields are always present and non-null). */
-    static final Map<String, java.util.Set<String>> NULLABLE = Map.of(
-            "ExpenseView", java.util.Set.of("items", "charges"),
-            "ShareView", java.util.Set.of("itemsMinor", "serviceMinor", "taxMinor", "adjustmentMinor"),
-            "Charges", java.util.Set.of("service", "tax"),
-            "ExpensePreview", java.util.Set.of("subtotalMinor", "serviceMinor", "taxMinor", "adjustmentMinor"),
-            "SettlementView", java.util.Set.of("note", "createdByMemberId", "confirmedAt", "disputedAt", "cancelledAt"),
-            "GroupDto", java.util.Set.of("lastExpenseAt"),
-            "GroupSummaryDto", java.util.Set.of("lastExpenseAt"),
-            "UserDto", java.util.Set.of("email", "username"));
+    static final Map<String, java.util.Set<String>> NULLABLE = Map.ofEntries(
+            Map.entry("ExpenseView", java.util.Set.of("items", "charges")),
+            Map.entry("ShareView", java.util.Set.of("itemsMinor", "serviceMinor", "taxMinor", "adjustmentMinor")),
+            Map.entry("Charges", java.util.Set.of("service", "tax")),
+            Map.entry("ExpensePreview", java.util.Set.of("subtotalMinor", "serviceMinor", "taxMinor", "adjustmentMinor")),
+            Map.entry("SettlementView", java.util.Set.of("note", "createdByMemberId", "confirmedAt", "disputedAt", "cancelledAt")),
+            Map.entry("GroupDto", java.util.Set.of("lastExpenseAt")),
+            Map.entry("GroupSummaryDto", java.util.Set.of("lastExpenseAt")),
+            Map.entry("UserDto", java.util.Set.of("email", "username")),
+            Map.entry("TransferView", java.util.Set.of("receiverHandles")),
+            Map.entry("PaymentHandlesView", java.util.Set.of("instapay", "wallet")),
+            // B15: the feed shapes. Which payload fields are set depends on the event type, so none is required.
+            Map.entry("ActivityPage", java.util.Set.of("nextBefore")),
+            Map.entry("NotificationPage", java.util.Set.of("nextBefore")),
+            Map.entry("ActivityItem", java.util.Set.of("actorMemberId", "subject")),
+            Map.entry("NotificationItem", java.util.Set.of("actorMemberId", "actorName", "readAt", "subject")),
+            Map.entry("EventPayload", java.util.Set.of("expenseId", "settlementId", "memberId", "requestId", "inviteId",
+                    "fromMemberId", "toMemberId", "version", "totalMinor", "amountMinor", "role", "previousRole")));
 
     /** Request fields a caller must send. Other request fields are optional (the server defaults or ignores them). */
     static final Map<String, List<String>> REQUIRED_REQUEST = Map.ofEntries(

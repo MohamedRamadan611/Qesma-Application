@@ -95,20 +95,26 @@ Class | Method | HTTP request | Description
 [*JoinRequestControllerApi*](doc/JoinRequestControllerApi.md) | [**rejectJoinRequest**](doc/JoinRequestControllerApi.md#rejectjoinrequest) | **POST** /api/v1/groups/{gid}/join-requests/{rid}/reject | Reject a join request
 [*MeControllerApi*](doc/MeControllerApi.md) | [**changePassword**](doc/MeControllerApi.md#changepassword) | **POST** /api/v1/me/password | 
 [*MeControllerApi*](doc/MeControllerApi.md) | [**getMe**](doc/MeControllerApi.md#getme) | **GET** /api/v1/me | 
+[*MeControllerApi*](doc/MeControllerApi.md) | [**getPaymentHandles**](doc/MeControllerApi.md#getpaymenthandles) | **GET** /api/v1/me/payment-handles | Your own InstaPay address and mobile-wallet number
 [*MeControllerApi*](doc/MeControllerApi.md) | [**updateMe**](doc/MeControllerApi.md#updateme) | **PATCH** /api/v1/me | 
+[*MeControllerApi*](doc/MeControllerApi.md) | [**updatePaymentHandles**](doc/MeControllerApi.md#updatepaymenthandles) | **PUT** /api/v1/me/payment-handles | Replace your payment handles
 [*MemberControllerApi*](doc/MemberControllerApi.md) | [**addMember**](doc/MemberControllerApi.md#addmember) | **POST** /api/v1/groups/{gid}/members | 
 [*MemberControllerApi*](doc/MemberControllerApi.md) | [**deleteMember**](doc/MemberControllerApi.md#deletemember) | **DELETE** /api/v1/groups/{gid}/members/{mid} | 
-[*MemberControllerApi*](doc/MemberControllerApi.md) | [**renameMember**](doc/MemberControllerApi.md#renamemember) | **PATCH** /api/v1/groups/{gid}/members/{mid} | 
+[*MemberControllerApi*](doc/MemberControllerApi.md) | [**renameMember**](doc/MemberControllerApi.md#renamemember) | **PATCH** /api/v1/groups/{gid}/members/{mid} | Rename a member, change its role, or remove/reactivate it
 [*MemberControllerApi*](doc/MemberControllerApi.md) | [**unlinkMember**](doc/MemberControllerApi.md#unlinkmember) | **POST** /api/v1/groups/{gid}/members/{mid}/unlink | Unlink the account from a member (the member, its history and balance stay)
+[*MembershipControllerApi*](doc/MembershipControllerApi.md) | [**leaveGroup**](doc/MembershipControllerApi.md#leavegroup) | **POST** /api/v1/groups/{gid}/leave | Leave the group
+[*MembershipControllerApi*](doc/MembershipControllerApi.md) | [**transferOwnership**](doc/MembershipControllerApi.md#transferownership) | **POST** /api/v1/groups/{gid}/transfer-ownership | Make another member the owner (the old owner becomes ADMIN)
 [*PasswordAuthControllerApi*](doc/PasswordAuthControllerApi.md) | [**forgotPassword**](doc/PasswordAuthControllerApi.md#forgotpassword) | **POST** /api/v1/auth/password/forgot | 
 [*PasswordAuthControllerApi*](doc/PasswordAuthControllerApi.md) | [**registerWithPassword**](doc/PasswordAuthControllerApi.md#registerwithpassword) | **POST** /api/v1/auth/register | 
 [*PasswordAuthControllerApi*](doc/PasswordAuthControllerApi.md) | [**resendEmailVerification**](doc/PasswordAuthControllerApi.md#resendemailverification) | **POST** /api/v1/auth/email/verify/resend | 
 [*PasswordAuthControllerApi*](doc/PasswordAuthControllerApi.md) | [**resetPassword**](doc/PasswordAuthControllerApi.md#resetpassword) | **POST** /api/v1/auth/password/reset | 
 [*PasswordAuthControllerApi*](doc/PasswordAuthControllerApi.md) | [**signInWithPassword**](doc/PasswordAuthControllerApi.md#signinwithpassword) | **POST** /api/v1/auth/login | 
 [*PasswordAuthControllerApi*](doc/PasswordAuthControllerApi.md) | [**verifyEmail**](doc/PasswordAuthControllerApi.md#verifyemail) | **POST** /api/v1/auth/email/verify | 
-[*SettlementControllerApi*](doc/SettlementControllerApi.md) | [**createSettlement**](doc/SettlementControllerApi.md#createsettlement) | **POST** /api/v1/groups/{gid}/settlements | Record a settlement (a real-world payment between two members)
-[*SettlementControllerApi*](doc/SettlementControllerApi.md) | [**deleteSettlement**](doc/SettlementControllerApi.md#deletesettlement) | **DELETE** /api/v1/groups/{gid}/settlements/{sid} | Delete a settlement (soft delete; its effect on balances is reversed)
-[*SettlementControllerApi*](doc/SettlementControllerApi.md) | [**listSettlements**](doc/SettlementControllerApi.md#listsettlements) | **GET** /api/v1/groups/{gid}/settlements | List settlements, newest first (deleted ones are not listed)
+[*SettlementControllerApi*](doc/SettlementControllerApi.md) | [**cancelSettlement**](doc/SettlementControllerApi.md#cancelsettlement) | **POST** /api/v1/groups/{gid}/settlements/{sid}/cancel | Cancel (the payer, or an Owner/Admin); replaces the Phase 1 delete
+[*SettlementControllerApi*](doc/SettlementControllerApi.md) | [**confirmSettlement**](doc/SettlementControllerApi.md#confirmsettlement) | **POST** /api/v1/groups/{gid}/settlements/{sid}/confirm | Confirm \&quot;received\&quot; (the receiver, or an Owner/Admin who is not the payer)
+[*SettlementControllerApi*](doc/SettlementControllerApi.md) | [**createSettlement**](doc/SettlementControllerApi.md#createsettlement) | **POST** /api/v1/groups/{gid}/settlements | Declare or record a settlement (a real-world payment between two members)
+[*SettlementControllerApi*](doc/SettlementControllerApi.md) | [**disputeSettlement**](doc/SettlementControllerApi.md#disputesettlement) | **POST** /api/v1/groups/{gid}/settlements/{sid}/dispute | Dispute \&quot;not received\&quot; (the receiver only)
+[*SettlementControllerApi*](doc/SettlementControllerApi.md) | [**listSettlements**](doc/SettlementControllerApi.md#listsettlements) | **GET** /api/v1/groups/{gid}/settlements | List settlements, newest first (cancelled ones included)
 
 
 ## Documentation For Models
@@ -146,6 +152,7 @@ Class | Method | HTTP request | Description
  - [PageResponseSettlementView](doc/PageResponseSettlementView.md)
  - [PayerInput](doc/PayerInput.md)
  - [PayerView](doc/PayerView.md)
+ - [PaymentHandlesView](doc/PaymentHandlesView.md)
  - [Problem](doc/Problem.md)
  - [RefreshRequest](doc/RefreshRequest.md)
  - [RegisterRequest](doc/RegisterRequest.md)
@@ -159,11 +166,13 @@ Class | Method | HTTP request | Description
  - [TaxCharge](doc/TaxCharge.md)
  - [TaxInput](doc/TaxInput.md)
  - [TokenResponse](doc/TokenResponse.md)
+ - [TransferOwnershipRequest](doc/TransferOwnershipRequest.md)
  - [TransferView](doc/TransferView.md)
  - [Unclaimed](doc/Unclaimed.md)
  - [UpdateGroupRequest](doc/UpdateGroupRequest.md)
  - [UpdateMeRequest](doc/UpdateMeRequest.md)
  - [UpdateMemberRequest](doc/UpdateMemberRequest.md)
+ - [UpdatePaymentHandlesRequest](doc/UpdatePaymentHandlesRequest.md)
  - [UserDto](doc/UserDto.md)
  - [VerifyEmailRequest](doc/VerifyEmailRequest.md)
 

@@ -120,6 +120,22 @@ Auth endpoints are limited to 10 requests/minute per IP (in memory, per instance
 
 Copy `../.env.example` to `../.env` (git-ignored) to override compose defaults.
 
+## Payment handles (B14, A90-A94)
+
+A user may store one InstaPay address and one mobile-wallet number. The app only **displays** them so a payer can copy them; it never starts a transfer or calls a bank. They are personal data (PDPL No. 151/2020): lawyer review is an open item.
+
+```bash
+curl -s -X PUT localhost:8080/api/v1/me/payment-handles -H "Authorization: Bearer $T" -H "Content-Type: application/json" \
+  -d '{"instapay":"Ali@InstaPay","wallet":"٠١٠ ١٢٣٤-٥٦٧٨"}'     # -> {"instapay":"ali@instapay","wallet":"01012345678"}
+curl -s localhost:8080/api/v1/me/payment-handles -H "Authorization: Bearer $T"
+curl -s -X PUT localhost:8080/api/v1/me/payment-handles -H "Authorization: Bearer $T" -H "Content-Type: application/json" -d '{}'   # removes both
+```
+
+- **Validation:** wallet = Egyptian mobile (`01[0125]XXXXXXXX`; Arabic digits, spaces, dashes and `+20` accepted, stored as 11 digits). InstaPay = `name@bank`, ASCII, 3 to 60 characters, stored lower case. `null`, absent or blank removes that handle (PUT replaces both). A bad value is `422 VALIDATION_ERROR` naming the field, never echoing the value.
+- **Who sees a receiver's handles:** only in `GET /groups/{gid}/balances` as `transfers[].receiverHandles`, and only to the **payer of that transfer**, or to an **Owner/Admin** (every transfer). Everyone else gets `null`, and so does a ghost, LEFT or unlinked receiver. They are never in `GroupDto`/`MemberDto`, group lists, activity, notifications, invite previews, errors or logs. One batched query serves all transfers.
+- **Client note:** `mobile` must regenerate `qesma_api` (`getPaymentHandles`, `updatePaymentHandles`, `PaymentHandlesView`, `TransferView.receiverHandles`).
+- **Account deletion (B17):** call `PaymentHandleService.deleteAllFor(userId)`.
+
 ## Roles and authorization (B10, ADR-009)
 A caller reaches a group only through an ACTIVE member linked to their account (`members.role` = `OWNER`, `ADMIN` or `MEMBER`). A stranger, a LEFT member or an unknown id gets the same `404 NOT_FOUND`; a member whose role lacks the permission gets `403 FORBIDDEN`. All checks are in `GroupAccessService` (`Role`, `Permission`, `GroupContext`); the operation-to-permission table is Decision A67 and `RoleMatrixIT` tests every operation for every role. `GET /groups` lists every group where you are an active member and shows `yourRole`. Until invitations exist (B11) there is no API to add a non-owner account to a group; tests insert member rows directly (`AbstractApiIT.linkUser`). Migration V12 stops with a clear error if a group has no member linked to its creator (groups created before B9): delete or re-seed that local data first.
 
@@ -148,6 +164,26 @@ Unknown code `404`; expired or used up `410 INVITE_EXPIRED`; revoked `410 INVITE
 - `POST /groups/{gid}/leave` (any active member; the Owner gets `409 OWNER_MUST_TRANSFER`) and `POST /groups/{gid}/transfer-ownership {toMemberId}` (Owner only, target active with an account, one transaction: old owner demoted first, then the target promoted, so the one-OWNER index is never violated).
 - A member who left stays in history, balances and suggested transfers but cannot be used in new expenses, previews or settlements (`422 MEMBER_INACTIVE`); an existing expense that already has them can still be edited. They get `404` for the group, and a new invite reactivates their own row. A group with any linked non-owner member stays non-deletable.
 - Tests: `MemberLifecycleIT` (every transition-table cell), `RoleMatrixIT`, `IdorMatrixIT`, `RoleQueryCountIT`. Mobile must regenerate the client from `docs/openapi.json`.
+
+## Activity and notifications (B15, A95-A103)
+Every real change writes a **group event** in the same transaction as the business write (`GroupEventRecorder`, the single write point, `MANDATORY` propagation); the same call writes the **notifications** of the recipients with one `INSERT ... SELECT`, so the cost does not grow with the group size. A rollback leaves no event. Replays, no-ops (a repeated settlement transition, asking twice for approval) and lost races write nothing. Recipients are ACTIVE members with an account, minus the actor (catalogue and rules: A98). Payloads hold ids, versions, integer amounts and roles only, never a name or a title; names are resolved when a page is read.
+```bash
+# the group feed (any active member): newest first, keyset pagination, limit 1..50 (default 20)
+curl -s "localhost:8080/api/v1/groups/$G/activity?limit=20" -H "Authorization: Bearer $TA"
+#   -> {"items":[{"id","type":"EXPENSE_ADDED","actorMemberId","createdAt","payload":{"expenseId","version","totalMinor"},"subject":"Dinner"}],"nextBefore":"<opaque>"}
+curl -s "localhost:8080/api/v1/groups/$G/activity?limit=20&before=<nextBefore>" -H "Authorization: Bearer $TA"   # next page; nextBefore is null on the last one
+
+# your notification center
+curl -s "localhost:8080/api/v1/notifications?limit=20" -H "Authorization: Bearer $TB"
+curl -s localhost:8080/api/v1/notifications/unread-count -H "Authorization: Bearer $TB"                         # -> {"count":3}
+curl -s -X POST localhost:8080/api/v1/notifications/read -H "Authorization: Bearer $TB" -H 'Content-Type: application/json' \
+  -d '{"ids":["<notification id>"]}'                                                                              # or {"all":true} -> {"marked":1,"unreadCount":2}
+```
+- **Who sees what:** the feed shows the whole group history to every ACTIVE member; a stranger or a member who left gets `404`. A notification list is strictly the caller's own (foreign or unknown ids in `read` are ignored, with the same answer). A user who left a group still lists their old notifications, but `subject` and `actorName` are no longer resolved for them (`groupName` is).
+- **Errors:** a bad `limit` (not 1..50) or a malformed `before` is `422 VALIDATION_ERROR`; `read` needs exactly one of `ids` (1 to 100) or `all: true`.
+- **Retention:** `ActivityPurgeJob` deletes events older than `qesma.activity.retention` (default `180d`, notifications cascade) in chunks of 5000 every `qesma.activity.purge-interval` (`PT6H`, first run after `PT10M`), logging `event=activity.purge deletedEvents millis`. Metrics: `qesma.events{type}`, `qesma.notifications{type}`.
+- **Migration:** `V17__group_events_notifications.sql` (V16 was payment handles). B16's migration becomes V18.
+- **Tests:** `GroupEventsIT` (one test per type, recipients, replays), `EventAtomicityIT`, `EventPayloadPrivacyIT`, `ActivityFeedIT`, `NotificationCenterIT`, `ActivityQueryCountIT`, `ActivityQueryPlanIT`, `ActivityPurgeJobIT`, plus `RoleMatrixIT`, `IdorMatrixIT`, `ApiContractCoverageIT`, `LayeringTest`. Client note: `mobile` must regenerate `qesma_api` (`listGroupActivity`, `listNotifications`, `getUnreadNotificationCount`, `markNotificationsRead`, new schemas).
 
 ## Smoke test (end to end, against a running backend)
 `scripts/smoke.sh` (bash + curl + jq) signs in two fake users, then walks the Phase 1 flow and asserts exact minor-unit values: group + 5 members, equal expense (V3), idempotent replay, user B gets 404, multi-payer (V4), itemized V5-V8 with preview parity, edit/ETag/stale ETag/delete/revisions, V1 balances and transfers, `yourNetMinor`, settlement and V2 balances, then the username + password accounts of ADR-008 (register with a lower-cased username, login, the identical 401 for a wrong password and an unknown name, `USERNAME_TAKEN`, a refused common password, owner-only 404 for a password user's group, change password with fresh tokens, the old password refused). `SMOKE_DAHAB=1` adds the seeded Dahab trip (profile `seed`): the documented nets and four transfers. It prints one `PASS`/`FAIL` line per check and exits non-zero on the first failure. Each run creates fresh users and groups, so it can be repeated.

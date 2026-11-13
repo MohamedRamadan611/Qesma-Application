@@ -64,7 +64,7 @@ void main() {
   testWidgets('dark: record payment sheet', (tester) async {
     final server = FakeBalancesServer();
     await pumpDark(tester, server, route: '${Routes.group(server.gid)}?tab=balances', height: 1300);
-    await tester.tap(find.text(lookupAppLocalizations(const Locale('ar')).balancesRecordPayment).first);
+    await tester.tap(find.text(lookupAppLocalizations(const Locale('ar')).payReceived).first);
     await tester.pumpAndSettle();
     await expectLater(find.byType(MaterialApp), matchesGoldenFile('dark_record_payment_sheet_ar.png'));
   });

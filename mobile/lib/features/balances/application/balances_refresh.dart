@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../groups/application/group_detail_controller.dart';
 import '../../groups/application/groups_list_controller.dart';
 import 'balances_controller.dart';
+import 'incoming_settlements.dart';
 import 'settlements_controller.dart';
 
 /// Refreshes the balances and the payment history, but only those that are alive (never creates a
@@ -25,10 +26,19 @@ void refreshBalanceTab(Ref ref, String gid, {bool balances = true, bool settleme
 /// numbers they change (the group header's totals and "your balance", the groups list card).
 void refreshAfterPayment(Ref ref, String gid, {bool settlements = true}) {
   refreshBalanceTab(ref, gid, settlements: settlements);
+  ref.invalidate(incomingPaymentsProvider(gid));
   if (ref.read(groupDetailControllerProvider(gid).exists)) {
     unawaited(ref.read(groupDetailControllerProvider(gid).notifier).load());
   }
   if (ref.read(groupsListControllerProvider.exists)) {
     unawaited(ref.read(groupsListControllerProvider.notifier).refresh());
   }
+}
+
+/// After a confirm / dispute / cancel: everything [refreshAfterPayment] reads, plus the "payments waiting for me"
+/// list and the detail screens (they are auto-disposed: invalidating one that is not alive does nothing).
+void refreshAfterSettlementChange(Ref ref, String gid) {
+  refreshAfterPayment(ref, gid);
+  ref.invalidate(incomingPaymentsProvider(gid));
+  ref.invalidate(settlementDetailProvider);
 }

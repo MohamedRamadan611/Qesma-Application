@@ -17,10 +17,10 @@ Map<String, dynamic> balancesMap(String name) => (balancesFixture(name) as Map).
 ///
 /// The server's numbers are NOT calculated here: the nets and transfers are real responses captured
 /// from the backend ([balances] starts as the V1 capture), and a test says what the server answers
-/// after a payment is recorded or deleted ([balancesAfterCreate], [balancesAfterDelete]). What the
-/// fake does check is the contract the client depends on: `Idempotency-Key` (replay, reuse), the
-/// validation codes, members of the group, paging newest first, soft delete and the second delete
-/// being a 404.
+/// after a payment is created or a settlement changes state ([balancesAfterCreate], [balancesAfterAction]).
+/// What the fake does check is the contract the client depends on: `Idempotency-Key` (replay, reuse), the
+/// validation codes, members of the group, paging newest first, the status filter, who creates what (A85), the
+/// transition table (A84: who may confirm / dispute / cancel, the idempotent repeat, 409 INVALID_STATE_TRANSITION).
 class FakeBalancesServer extends FakeExpensesServer {
   FakeBalancesServer() {
     final captured = balancesMap('group_v1');
@@ -36,11 +36,11 @@ class FakeBalancesServer extends FakeExpensesServer {
   /// What `GET .../balances` answers now.
   late Map<String, dynamic> balances;
 
-  /// What the server answers from now on once a payment is recorded / deleted.
+  /// What the server answers from now on once a payment is created / a settlement changes state.
   Map<String, dynamic>? balancesAfterCreate;
-  Map<String, dynamic>? balancesAfterDelete;
+  Map<String, dynamic>? balancesAfterAction;
 
-  /// The payments the server lists (any order; they are served newest `settledOn` first).
+  /// The payments the server lists (any order; they are served newest `settledOn` first), every status.
   final List<Map<String, dynamic>> settlements = [];
 
   /// Every create request, in arrival order (replays included).
@@ -49,6 +49,9 @@ class FakeBalancesServer extends FakeExpensesServer {
   /// The Idempotency-Key of every create attempt that reached the door, including ones never answered (offline).
   final List<String?> settlementAttemptKeys = [];
 
+  /// Every confirm / dispute / cancel that reached the door, as `action sid`.
+  final List<String> transitions = [];
+
   bool balancesOffline = false;
   bool loseNextSettlementResponse = false;
   bool failNextSettlementCreate = false;
@@ -56,8 +59,11 @@ class FakeBalancesServer extends FakeExpensesServer {
   bool failNextBalances = false;
   bool failNextSettlementList = false;
 
+  /// Answer the next transition with this status and problem code, then forget it.
+  ({int status, String code})? forceNextTransition;
+
   Completer<void>? holdNextBalances;
-  Completer<void>? holdNextSettlementDelete;
+  Completer<void>? holdNextSettlementAction;
 
   final Map<String, ({String body, Map<String, dynamic> response})> _stored = {};
   int _n = 0;
@@ -67,7 +73,9 @@ class FakeBalancesServer extends FakeExpensesServer {
 
   int count(String method, String part) => requests.where((r) => r.startsWith('$method ') && r.contains(part)).length;
 
-  static final RegExp _path = RegExp(r'/api/v1/groups/([^/]+)/(balances|settlements)(?:/([^/]+))?$');
+  bool get _isAdmin => group.yourRole == 'OWNER' || group.yourRole == 'ADMIN';
+
+  static final RegExp _path = RegExp(r'/api/v1/groups/([^/]+)/(balances|settlements)(?:/([^/]+)(?:/(confirm|dispute|cancel))?)?$');
 
   Future<Map<String, dynamic>> _readBody(RequestOptions options, Stream<Uint8List>? stream) async {
     if (stream == null) return (options.data as Map?)?.cast<String, dynamic>() ?? {};
@@ -94,7 +102,9 @@ class FakeBalancesServer extends FakeExpensesServer {
     if (match == null) return super.fetch(options, requestStream, cancelFuture);
 
     requests.add('${options.method} ${options.uri.path}${options.uri.hasQuery ? '?${options.uri.query}' : ''}');
-    if (options.method == 'POST' && match.group(2) == 'settlements') settlementAttemptKeys.add(options.headers['Idempotency-Key'] as String?);
+    if (options.method == 'POST' && match.group(2) == 'settlements' && match.group(3) == null) {
+      settlementAttemptKeys.add(options.headers['Idempotency-Key'] as String?);
+    }
     if (offline || balancesOffline) {
       throw DioException.connectionError(requestOptions: options, reason: 'offline', error: const HttpException('offline'));
     }
@@ -120,23 +130,62 @@ class FakeBalancesServer extends FakeExpensesServer {
       }
       return _list(options);
     }
-    if (options.method == 'DELETE') {
-      final current = settlements.where((s) => s['id'] == sid).firstOrNull;
-      final gate = holdNextSettlementDelete;
-      holdNextSettlementDelete = null;
-      if (gate != null) await gate.future;
-      if (current == null) return problemResponse(404, 'NOT_FOUND');
-      settlements.remove(current);
-      if (balancesAfterDelete != null) balances = balancesAfterDelete!;
-      return jsonOk(204, null);
-    }
+    final action = match.group(4);
+    if (options.method == 'POST' && action != null) return _transition(sid, action);
     return problemResponse(404, 'NOT_FOUND');
+  }
+
+  /// The state machine of B13 (A84) as far as the client depends on it. The balances are NOT recalculated: a test says
+  /// what the server answers afterwards ([balancesAfterAction]).
+  Future<ResponseBody> _transition(String sid, String action) async {
+    transitions.add('$action $sid');
+    final gate = holdNextSettlementAction;
+    holdNextSettlementAction = null;
+    if (gate != null) await gate.future;
+    final forced = forceNextTransition;
+    if (forced != null) {
+      forceNextTransition = null;
+      return problemResponse(forced.status, forced.code);
+    }
+    final current = settlements.where((s) => s['id'] == sid).firstOrNull;
+    if (current == null) return problemResponse(404, 'NOT_FOUND');
+    final isPayer = current['fromMemberId'] == you;
+    final isReceiver = current['toMemberId'] == you;
+    final allowed = switch (action) {
+      'confirm' => isReceiver || (_isAdmin && !isPayer),
+      'dispute' => isReceiver,
+      _ => isPayer || _isAdmin,
+    };
+    if (!allowed) return problemResponse(403, 'FORBIDDEN');
+    final from = current['status'] as String;
+    final to = switch (action) {
+      'confirm' => 'CONFIRMED',
+      'dispute' => 'DISPUTED',
+      _ => 'CANCELLED',
+    };
+    if (from == to) return jsonOk(200, current);
+    final ok = switch (action) {
+      'confirm' => from == 'PENDING' || from == 'DISPUTED',
+      'dispute' => from == 'PENDING',
+      _ => from == 'PENDING' || from == 'DISPUTED',
+    };
+    if (!ok) return problemResponse(409, 'INVALID_STATE_TRANSITION');
+    current['status'] = to;
+    current[switch (action) {
+      'confirm' => 'confirmedAt',
+      'dispute' => 'disputedAt',
+      _ => 'cancelledAt',
+    }] = '2026-11-10T13:00:00Z';
+    if (balancesAfterAction != null) balances = balancesAfterAction!;
+    return jsonOk(200, current);
   }
 
   ResponseBody _list(RequestOptions options) {
     final page = int.parse(options.uri.queryParameters['page'] ?? '0');
     final size = int.parse(options.uri.queryParameters['size'] ?? '20');
-    final all = settlements.toList()..sort((a, b) => '${b['settledOn']}${b['createdAt']}'.compareTo('${a['settledOn']}${a['createdAt']}'));
+    final statuses = options.uri.queryParametersAll['status'] ?? const <String>[];
+    final all = settlements.where((s) => statuses.isEmpty || statuses.contains(s['status'])).toList()
+      ..sort((a, b) => '${b['settledOn']}${b['createdAt']}'.compareTo('${a['settledOn']}${a['createdAt']}'));
     final pages = all.isEmpty ? 0 : (all.length + size - 1) ~/ size;
     return jsonOk(200, {'items': all.skip(page * size).take(size).toList(), 'page': page, 'size': size, 'totalElements': all.length, 'totalPages': pages});
   }
@@ -180,6 +229,30 @@ class FakeBalancesServer extends FakeExpensesServer {
         (note is String && note.runes.length > 200)) {
       return problemResponse(422, 'VALIDATION_ERROR');
     }
+    // A85: the status is the server's decision. The payer declaring to a member with an account = PENDING; the receiver
+    // recording = CONFIRMED; an Owner/Admin on behalf = CONFIRMED; a plain Member for anybody else, or paying a member
+    // without an account (nobody could confirm) = 403.
+    final receiverHasAccount = group.members.firstWhere((m) => m.id == to).hasAccount;
+    final String status;
+    var byAdmin = false;
+    if (from == you) {
+      if (receiverHasAccount) {
+        status = 'PENDING';
+      } else if (_isAdmin) {
+        status = 'CONFIRMED';
+        byAdmin = true;
+      } else {
+        return problemResponse(403, 'FORBIDDEN');
+      }
+    } else if (to == you) {
+      status = 'CONFIRMED';
+    } else if (_isAdmin) {
+      status = 'CONFIRMED';
+      byAdmin = true;
+    } else {
+      return problemResponse(403, 'FORBIDDEN');
+    }
+    final stamp = '2026-11-10T10:00:${(_n % 60).toString().padLeft(2, '0')}Z';
     final created = {
       'id': 'pay-${_n++}',
       'groupId': gid,
@@ -188,7 +261,12 @@ class FakeBalancesServer extends FakeExpensesServer {
       'amountMinor': amount,
       'settledOn': settledOn,
       if (note is String && note.trim().isNotEmpty) 'note': note.trim(),
-      'createdAt': '2026-11-10T10:00:${(_n % 60).toString().padLeft(2, '0')}Z',
+      'createdAt': stamp,
+      'declaredAt': stamp,
+      'status': status,
+      'recordedByAdmin': byAdmin,
+      'createdByMemberId': you,
+      if (status == 'CONFIRMED') 'confirmedAt': stamp,
     };
     settlements.add(created);
     _stored[key] = (body: canonical, response: created);
@@ -198,6 +276,38 @@ class FakeBalancesServer extends FakeExpensesServer {
       throw DioException.receiveTimeout(requestOptions: options, timeout: const Duration(seconds: 20));
     }
     return jsonOk(201, created);
+  }
+
+  /// Makes the signed-in person [name] with [role] (the members and their ids stay the captured ones).
+  void actAs(String name, {String role = 'MEMBER'}) {
+    final old = group.members.toList();
+    group.members.clear();
+    for (final m in old) {
+      final me = m.name == name;
+      group.members.add(FakeMember(
+        id: m.id,
+        name: m.name,
+        isYou: me,
+        sortOrder: m.sortOrder,
+        role: me ? role : (m.role == 'OWNER' ? 'MEMBER' : m.role),
+        linked: m.linked || me,
+      ));
+    }
+    group.yourRole = role;
+  }
+
+  /// Gives every member an account (a pending payment needs a payer and a receiver with one).
+  void linkAll() {
+    for (final m in group.members) {
+      m.linked = true;
+    }
+  }
+
+  /// Adds one of the settlements of `settlements_by_status.json` (pending, disputed, confirmed, cancelled, adminRecorded).
+  Map<String, dynamic> seedSettlement(String key) {
+    final s = (balancesMap('settlements_by_status')[key] as Map).cast<String, dynamic>();
+    settlements.add(s);
+    return s;
   }
 
   /// Loads the captured payment (8000 from Asem to you, "cash on the road") and the V2 balances the

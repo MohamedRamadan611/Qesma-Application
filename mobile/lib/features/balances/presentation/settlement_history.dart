@@ -8,23 +8,26 @@ import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../expenses/presentation/expense_blocks.dart';
 import '../../expenses/presentation/expense_ui.dart';
+import '../application/settlement_rules.dart';
 import '../application/settlements_controller.dart';
+import 'settlement_status_chip.dart';
 import '../../../core/theme/palette.dart';
 
-/// The recorded payments, newest first (the server's order), each with its own delete button.
+/// Every payment, newest first (the server's order), each with its status chip; a tap opens its detail (where the
+/// actions by role live). Cancelled payments stay in the list.
 class SettlementHistory extends StatelessWidget {
   const SettlementHistory({
     super.key,
     required this.state,
     required this.nameOf,
-    required this.onDelete,
+    required this.onOpen,
     required this.onLoadMore,
     required this.onRetry,
   });
 
   final SettlementsState state;
   final String Function(String memberId) nameOf;
-  final void Function(SettlementView payment) onDelete;
+  final void Function(SettlementView payment) onOpen;
   final VoidCallback onLoadMore;
   final VoidCallback onRetry;
 
@@ -57,9 +60,7 @@ class SettlementHistory extends StatelessWidget {
                     _PaymentRow(
                       payment: payment,
                       nameOf: nameOf,
-                      deleting: state.deletingId == payment.id,
-                      busy: state.deletingId != null,
-                      onDelete: () => onDelete(payment),
+                      onOpen: () => onOpen(payment),
                     ),
                   if (state.loadingMore)
                     const Padding(padding: EdgeInsets.all(QesmaSpacing.md), child: Center(child: CircularProgressIndicator()))
@@ -92,13 +93,11 @@ class SettlementHistory extends StatelessWidget {
 }
 
 class _PaymentRow extends StatelessWidget {
-  const _PaymentRow({required this.payment, required this.nameOf, required this.deleting, required this.busy, required this.onDelete});
+  const _PaymentRow({required this.payment, required this.nameOf, required this.onOpen});
 
   final SettlementView payment;
   final String Function(String) nameOf;
-  final bool deleting;
-  final bool busy;
-  final VoidCallback onDelete;
+  final VoidCallback onOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -106,51 +105,54 @@ class _PaymentRow extends StatelessWidget {
     final theme = Theme.of(context);
     final from = nameOf(payment.fromMemberId);
     final to = nameOf(payment.toMemberId);
+    final status = payment.statusKind;
     final note = payment.note;
     final hasNote = note != null && note.isNotEmpty;
     var spoken = l10n.balancesPaymentSpoken(from, moneySpoken(l10n, payment.amountMinor), to, spokenDate(context, payment.settledOn));
     if (hasNote) spoken = l10n.balancesPaymentNoteSpoken(spoken, note);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: QesmaSpacing.xs),
-      child: Row(
-        children: [
-          Expanded(
-            child: Semantics(
-              container: true,
-              label: spoken,
-              child: ExcludeSemantics(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(l10n.balancesPaymentTitle(fsIsolate(from), fsIsolate(to)), style: theme.textTheme.titleSmall),
-                    const SizedBox(height: 2),
-                    Text(moneyDisplay(l10n, payment.amountMinor), style: QesmaText.amountSmall().copyWith(color: context.colors.primary)),
-                    const SizedBox(height: 2),
-                    Text(
-                      hasNote ? '${dateText(payment.settledOn)} · $note' : dateText(payment.settledOn),
-                      style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper),
-                    ),
-                  ],
+    spoken = l10n.balancesPaymentNoteSpoken(spoken, l10n.settlementChipSpoken(settlementStatusLabel(l10n, status)));
+    return Semantics(
+      button: true,
+      excludeSemantics: true,
+      label: spoken,
+      onTap: onOpen,
+      child: InkWell(
+        onTap: onOpen,
+        borderRadius: BorderRadius.circular(QesmaRadii.control),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 48),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: QesmaSpacing.xs),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(l10n.balancesPaymentTitle(fsIsolate(from), fsIsolate(to)), style: theme.textTheme.titleSmall),
+                      const SizedBox(height: 2),
+                      Text(
+                        moneyDisplay(l10n, payment.amountMinor),
+                        style: QesmaText.amountSmall().copyWith(
+                          color: status == SettlementStatus.cancelled ? context.colors.textHelper : context.colors.primary,
+                          decoration: status == SettlementStatus.cancelled ? TextDecoration.lineThrough : null,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        hasNote ? '${dateText(payment.settledOn)} · $note' : dateText(payment.settledOn),
+                        style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper),
+                      ),
+                      const SizedBox(height: QesmaSpacing.xs),
+                      SettlementStatusChip(status),
+                    ],
+                  ),
                 ),
-              ),
+                Icon(Icons.chevron_left, color: context.colors.textHelper),
+              ],
             ),
           ),
-          Semantics(
-            button: true,
-            excludeSemantics: true,
-            label: l10n.balancesDeletePaymentSpoken(from, to, moneySpoken(l10n, payment.amountMinor)),
-            onTap: busy ? null : onDelete,
-            child: deleting
-                ? const SizedBox(width: 48, height: 48, child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))))
-                : IconButton(
-                    icon: const Icon(Icons.delete_outline),
-                    tooltip: l10n.balancesDeletePayment,
-                    color: context.colors.error,
-                    constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                    onPressed: busy ? null : onDelete,
-                  ),
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -24,7 +24,7 @@ abstract class Problem implements Built<Problem, ProblemBuilder> {
   /// Stable machine-readable error code.
   @BuiltValueField(wireName: r'code')
   ProblemCodeEnum get code;
-  // enum codeEnum {  VALIDATION_ERROR,  PAYERS_TOTAL_MISMATCH,  SPLIT_TOTAL_MISMATCH,  MEMBER_NOT_IN_GROUP,  IDEMPOTENCY_KEY_REUSED,  DUPLICATE_MEMBER_NAME,  MEMBER_HAS_TRANSACTIONS,  OWNER_MEMBER_PROTECTED,  VERSION_CONFLICT,  INVITE_EXPIRED,  INVITE_REVOKED,  ALREADY_MEMBER,  MEMBER_ALREADY_CLAIMED,  GROUP_NOT_EMPTY,  NOT_FOUND,  FORBIDDEN,  UNAUTHORIZED,  INTERNAL_ERROR,  RATE_LIMITED,  AUTH_PROVIDER_UNAVAILABLE,  USERNAME_TAKEN,  };
+  // enum codeEnum {  VALIDATION_ERROR,  PAYERS_TOTAL_MISMATCH,  SPLIT_TOTAL_MISMATCH,  MEMBER_NOT_IN_GROUP,  IDEMPOTENCY_KEY_REUSED,  DUPLICATE_MEMBER_NAME,  MEMBER_HAS_TRANSACTIONS,  OWNER_MEMBER_PROTECTED,  VERSION_CONFLICT,  INVITE_EXPIRED,  INVITE_REVOKED,  ALREADY_MEMBER,  MEMBER_ALREADY_CLAIMED,  MEMBER_INACTIVE,  OWNER_MUST_TRANSFER,  GROUP_NOT_EMPTY,  NOT_FOUND,  FORBIDDEN,  INVALID_STATE_TRANSITION,  UNAUTHORIZED,  INTERNAL_ERROR,  RATE_LIMITED,  AUTH_PROVIDER_UNAVAILABLE,  USERNAME_TAKEN,  };
 
   @BuiltValueField(wireName: r'detail')
   String? get detail;
@@ -253,6 +253,12 @@ class ProblemCodeEnum extends EnumClass {
   @BuiltValueEnumConst(wireName: r'MEMBER_ALREADY_CLAIMED')
   static const ProblemCodeEnum MEMBER_ALREADY_CLAIMED = _$problemCodeEnum_MEMBER_ALREADY_CLAIMED;
   /// Stable machine-readable error code.
+  @BuiltValueEnumConst(wireName: r'MEMBER_INACTIVE')
+  static const ProblemCodeEnum MEMBER_INACTIVE = _$problemCodeEnum_MEMBER_INACTIVE;
+  /// Stable machine-readable error code.
+  @BuiltValueEnumConst(wireName: r'OWNER_MUST_TRANSFER')
+  static const ProblemCodeEnum OWNER_MUST_TRANSFER = _$problemCodeEnum_OWNER_MUST_TRANSFER;
+  /// Stable machine-readable error code.
   @BuiltValueEnumConst(wireName: r'GROUP_NOT_EMPTY')
   static const ProblemCodeEnum GROUP_NOT_EMPTY = _$problemCodeEnum_GROUP_NOT_EMPTY;
   /// Stable machine-readable error code.
@@ -261,6 +267,9 @@ class ProblemCodeEnum extends EnumClass {
   /// Stable machine-readable error code.
   @BuiltValueEnumConst(wireName: r'FORBIDDEN')
   static const ProblemCodeEnum FORBIDDEN = _$problemCodeEnum_FORBIDDEN;
+  /// Stable machine-readable error code.
+  @BuiltValueEnumConst(wireName: r'INVALID_STATE_TRANSITION')
+  static const ProblemCodeEnum INVALID_STATE_TRANSITION = _$problemCodeEnum_INVALID_STATE_TRANSITION;
   /// Stable machine-readable error code.
   @BuiltValueEnumConst(wireName: r'UNAUTHORIZED')
   static const ProblemCodeEnum UNAUTHORIZED = _$problemCodeEnum_UNAUTHORIZED;

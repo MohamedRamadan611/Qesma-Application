@@ -79,7 +79,8 @@ settlements:       + status ('PENDING','CONFIRMED','DISPUTED','CANCELLED') NOT N
                    (V12 backfills every Phase 1 row to CONFIRMED, recorded_by_admin = true)
 payment_handles:   id uuid, user_id fk, type ('INSTAPAY','WALLET'), value text, created_at, updated_at; unique (user_id, type)
 group_events:      id uuid, group_id fk, actor_member_id fk NULL, type text, payload jsonb, created_at timestamptz  (index group_id, created_at DESC, id DESC)
-notifications:     id uuid, user_id fk, group_id fk NULL, type text, payload jsonb, read_at NULL, created_at  (index user_id, created_at DESC)
+notifications:     id uuid, user_id fk, event_id fk -> group_events ON DELETE CASCADE, created_at, read_at NULL; unique (event_id, user_id);
+                   index (user_id, created_at DESC, id DESC)   (B15, A96: it references the event instead of copying type/payload/group_id; migration V17)
 notification_prefs:user_id fk, group_id fk NULL (NULL = global), muted boolean NOT NULL; unique (user_id, group_id)
 remind_log:        group_id, from_member_id, to_member_id, created_at   (rate limit source of truth)
 device_tokens:     (B18, optional) id uuid, user_id fk, token text unique, platform text, last_seen_at
@@ -142,6 +143,7 @@ State machine (one table in code, one test per cell):
 
 - `GET /me/payment-handles`, `PUT /me/payment-handles` body `{ instapay: string|null, wallet: string|null }` (null removes). Validation: wallet = Egyptian mobile `01[0125]XXXXXXXX` normalised to digits (spec says the design shows `010XXXXXXXX`), InstaPay = `local@bank`-style address (3..60 chars, one `@`, no spaces). Both optional.
 - Visibility: a user's handles appear **only** (a) to the user themself and (b) on the transfer/member DTOs of groups they share with the viewer, where the viewer is an ACTIVE member. Never in group lists, activity, notifications, logs or error bodies. Integration tests: a non-member and a member of another group never see them; removal is immediate.
+- **Implemented in B14 (A90-A94), as narrowed there:** V16 (not V15). Handles are delivered only as transfers[].receiverHandles of GET /groups/{gid}/balances (to the payer of that transfer, and to Owner/Admin for every transfer) and never on MemberDto, because MemberDto is embedded in GroupDto. Wallet is normalised to 01XXXXXXXXX, InstaPay is stored lower case; null/blank removes. Lawyer review stays open.
 - The app only displays and copies them; it never initiates a transfer. Lawyer review noted in the decision log (personal data, PDPL No. 151/2020).
 
 ---
@@ -166,6 +168,7 @@ Event catalogue (type -> payload ids/amounts only -> who is notified; the actor 
 - `PUT /groups/{gid}/notification-prefs` `{ muted }`, `PUT /me/notification-prefs` `{ enabled }` (global). A muted/disabled recipient gets **no notification row** (events still go to the activity feed). `REMINDER` ignores group mute? **(decide) Recommended:** no, mute is respected.
 - **Remind** `POST /groups/{gid}/transfers/remind` body `{ fromMemberId, toMemberId }`, `Idempotency-Key`: caller must be the creditor's account (to member) or Admin/Owner; a suggested transfer between exactly that pair must currently exist; at most one per (group, debtor) per 24 h (**decide**, recommended) -> `429 REMIND_RATE_LIMITED` with `nextAllowedAt`; the transfers view returns `canRemindAt` per transfer so the UI can disable the button without guessing.
 - Retention: events/notifications older than 180 days are purged by a scheduled job (like `IdempotencyCleanupJob`); activity of expenses remains reconstructable from revisions.
+- **Implemented in B15 (A95-A103), as narrowed there:** migration V17 (V16 was taken by B14; B16 becomes V18). The catalogue above gains two types, `MEMBER_REACTIVATED` and `MEMBER_UNLINKED` (rule 2.4: every role/status change is an event); `MEMBER_LEFT` also covers removal by an admin, `INVITE_ACCEPTED` is the claim/new/rejoin path of a direct join and `MEMBER_JOINED` the approval path. `REMINDER` and the preferences/mute filter stay in B16. Payload is the single typed record `EventPayload` (ids, version, integer amounts, roles; no free text). Feed and center return `{items, nextBefore}` (keyset, limit 1..50, opaque `before`); `POST /notifications/read` returns `{marked, unreadCount}` and `GET /notifications/unread-count` returns `{count}`. Notifications reference their event (section 3), one statement writes all of an event's notifications, and a recorder failure rolls back the business write.
 
 ---
 

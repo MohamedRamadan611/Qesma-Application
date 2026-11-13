@@ -36,6 +36,7 @@ doc/LoginRequest.md
 doc/MeControllerApi.md
 doc/MemberControllerApi.md
 doc/MemberDto.md
+doc/MembershipControllerApi.md
 doc/Net.md
 doc/PageResponseExpenseView.md
 doc/PageResponseGroupSummaryDto.md
@@ -45,6 +46,7 @@ doc/PageResponseSettlementView.md
 doc/PasswordAuthControllerApi.md
 doc/PayerInput.md
 doc/PayerView.md
+doc/PaymentHandlesView.md
 doc/Problem.md
 doc/RefreshRequest.md
 doc/RegisterRequest.md
@@ -59,11 +61,13 @@ doc/ShareView.md
 doc/TaxCharge.md
 doc/TaxInput.md
 doc/TokenResponse.md
+doc/TransferOwnershipRequest.md
 doc/TransferView.md
 doc/Unclaimed.md
 doc/UpdateGroupRequest.md
 doc/UpdateMeRequest.md
 doc/UpdateMemberRequest.md
+doc/UpdatePaymentHandlesRequest.md
 doc/UserDto.md
 doc/VerifyEmailRequest.md
 lib/qesma_api.dart
@@ -77,6 +81,7 @@ lib/src/api/join_controller_api.dart
 lib/src/api/join_request_controller_api.dart
 lib/src/api/me_controller_api.dart
 lib/src/api/member_controller_api.dart
+lib/src/api/membership_controller_api.dart
 lib/src/api/password_auth_controller_api.dart
 lib/src/api/settlement_controller_api.dart
 lib/src/api_util.dart
@@ -120,6 +125,7 @@ lib/src/model/page_response_join_request_view.dart
 lib/src/model/page_response_settlement_view.dart
 lib/src/model/payer_input.dart
 lib/src/model/payer_view.dart
+lib/src/model/payment_handles_view.dart
 lib/src/model/problem.dart
 lib/src/model/refresh_request.dart
 lib/src/model/register_request.dart
@@ -133,11 +139,13 @@ lib/src/model/share_view.dart
 lib/src/model/tax_charge.dart
 lib/src/model/tax_input.dart
 lib/src/model/token_response.dart
+lib/src/model/transfer_ownership_request.dart
 lib/src/model/transfer_view.dart
 lib/src/model/unclaimed.dart
 lib/src/model/update_group_request.dart
 lib/src/model/update_me_request.dart
 lib/src/model/update_member_request.dart
+lib/src/model/update_payment_handles_request.dart
 lib/src/model/user_dto.dart
 lib/src/model/verify_email_request.dart
 lib/src/serializers.dart
@@ -176,6 +184,7 @@ test/login_request_test.dart
 test/me_controller_api_test.dart
 test/member_controller_api_test.dart
 test/member_dto_test.dart
+test/membership_controller_api_test.dart
 test/net_test.dart
 test/page_response_expense_view_test.dart
 test/page_response_group_summary_dto_test.dart
@@ -185,6 +194,7 @@ test/page_response_settlement_view_test.dart
 test/password_auth_controller_api_test.dart
 test/payer_input_test.dart
 test/payer_view_test.dart
+test/payment_handles_view_test.dart
 test/problem_test.dart
 test/refresh_request_test.dart
 test/register_request_test.dart
@@ -199,10 +209,12 @@ test/share_view_test.dart
 test/tax_charge_test.dart
 test/tax_input_test.dart
 test/token_response_test.dart
+test/transfer_ownership_request_test.dart
 test/transfer_view_test.dart
 test/unclaimed_test.dart
 test/update_group_request_test.dart
 test/update_me_request_test.dart
 test/update_member_request_test.dart
+test/update_payment_handles_request_test.dart
 test/user_dto_test.dart
 test/verify_email_request_test.dart
