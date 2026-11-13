@@ -37,7 +37,8 @@ import org.springframework.context.annotation.Configuration;
 public class OpenApiConfig {
 
     static final String PROBLEM = "Problem";
-    static final String BEARER = "bearerAuth";
+    static final String VERSION_CONFLICT_PROBLEM = "VersionConflictProblem";
+    static final String BEARER ="bearerAuth";
     static final String MONEY_NOTE = "Integer minor units (piasters: 1 EGP = 100). Never a decimal.";
     static final String BPS_NOTE = "Integer basis points: 1200 = 12.00%.";
 
@@ -57,6 +58,7 @@ public class OpenApiConfig {
                     new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT")
                             .description("Access token from POST /api/v1/auth/google or /auth/refresh (15 minutes)."));
             components.addSchemas(PROBLEM, problemSchema());
+            components.addSchemas(VERSION_CONFLICT_PROBLEM, versionConflictProblemSchema());
             openApi.addSecurityItem(new SecurityRequirement().addList(BEARER));
             describeUnits(components);
             typeRevisionSnapshot(components);
@@ -281,9 +283,10 @@ public class OpenApiConfig {
         errorsFor(path, method, op).forEach((status, codes) -> {
             String key = Integer.toString(status);
             String codeList = codes.stream().map(ErrorCode::name).reduce((a, b) -> a + ", " + b).orElse("");
+            String schemaName = status == 409 && carriesLatestState(path, method) ? VERSION_CONFLICT_PROBLEM : PROBLEM;
             ApiResponse response = new ApiResponse().description(describe(status) + " (code: " + codeList + ")")
                     .content(new Content().addMediaType("application/problem+json",
-                            new MediaType().schema(new Schema<>().$ref("#/components/schemas/" + PROBLEM))));
+                            new MediaType().schema(new Schema<>().$ref("#/components/schemas/" + schemaName))));
             ApiResponse existing = responses.get(key);
             if (existing == null) {
                 responses.addApiResponse(key, response);
@@ -292,6 +295,12 @@ public class OpenApiConfig {
                         + describe(status) + " (code: " + codeList + ")");
             }
         });
+    }
+
+    /** B17 (A113): the stale-If-Match conflicts of an expense edit/delete and a group edit carry the latest state. */
+    private static boolean carriesLatestState(String path, PathItem.HttpMethod method) {
+        return path.endsWith("/expenses/{eid}") && (method == PathItem.HttpMethod.PUT || method == PathItem.HttpMethod.DELETE)
+                || path.equals("/api/v1/groups/{gid}") && method == PathItem.HttpMethod.PATCH;
     }
 
     private static String describe(int status) {
@@ -329,6 +338,26 @@ public class OpenApiConfig {
                 "Only with REMIND_RATE_LIMITED: the earliest time a reminder for this member may be sent again (UTC)."));
         problem.setRequired(List.of("type", "title", "status", "code"));
         return problem;
+    }
+
+    /**
+     * The 409 of a stale If-Match: a Problem plus the latest version and state. Modelled as its own schema (allOf) so
+     * the generic Problem, and the Dart client's error type, do not change. {@code current} is deliberately a plain
+     * object (no oneOf, which generators handle badly): an ExpenseView for expense operations, a GroupDto for the group.
+     */
+    private static Schema<?> versionConflictProblemSchema() {
+        Schema<?> extra = new ObjectSchema();
+        extra.addProperty("currentVersion", new IntegerSchema().format("int32").description(
+                "The version now stored; re-send the edit with If-Match set to it to re-apply."));
+        extra.addProperty("current", new ObjectSchema().description(
+                "The latest state the caller may GET: an ExpenseView (expense operations) or a GroupDto (PATCH group). "
+                        + "Absent if it could not be read at the moment of the conflict."));
+        extra.setRequired(List.of("currentVersion"));
+        Schema<?> schema = new Schema<>();
+        schema.description("409 VERSION_CONFLICT of a stale If-Match: the problem plus the latest version and state.");
+        schema.addAllOfItem(new Schema<>().$ref("#/components/schemas/" + PROBLEM));
+        schema.addAllOfItem(extra);
+        return schema;
     }
 
     /** Money and percentage fields carry their unit in the schema so a generated client cannot misread them. */

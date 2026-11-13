@@ -1620,6 +1620,26 @@
         },
         "required" : [ "token" ],
         "type" : "object"
+      },
+      "VersionConflictProblem" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/Problem"
+        }, {
+          "properties" : {
+            "current" : {
+              "description" : "The latest state the caller may GET: an ExpenseView (expense operations) or a GroupDto (PATCH group). Absent if it could not be read at the moment of the conflict.",
+              "type" : "object"
+            },
+            "currentVersion" : {
+              "description" : "The version now stored; re-send the edit with If-Match set to it to re-apply.",
+              "format" : "int32",
+              "type" : "integer"
+            }
+          },
+          "required" : [ "currentVersion" ],
+          "type" : "object"
+        } ],
+        "description" : "409 VERSION_CONFLICT of a stale If-Match: the problem plus the latest version and state."
       }
     },
     "securitySchemes" : {
@@ -2799,7 +2819,7 @@
             "content" : {
               "application/problem+json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/Problem"
+                  "$ref" : "#/components/schemas/VersionConflictProblem"
                 }
               }
             },
@@ -3564,7 +3584,7 @@
             "content" : {
               "application/problem+json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/Problem"
+                  "$ref" : "#/components/schemas/VersionConflictProblem"
                 }
               }
             },
@@ -3853,7 +3873,7 @@
             "content" : {
               "application/problem+json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/Problem"
+                  "$ref" : "#/components/schemas/VersionConflictProblem"
                 }
               }
             },

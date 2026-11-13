@@ -34,6 +34,20 @@ public class ApiException extends RuntimeException {
                 "A reminder was sent recently; try again later", Map.of("nextAllowedAt", nextAllowedAt.toString()));
     }
 
+    /**
+     * 409 VERSION_CONFLICT that also carries the latest state, so a client can show "yours vs latest" without another
+     * request (B17, A113). {@code current} is only ever built for a caller who may already GET it; it may be null
+     * (omitted) when the latest state cannot be built here.
+     */
+    public static ApiException versionConflict(String message, int currentVersion, Object current) {
+        Map<String, Object> extra = new java.util.LinkedHashMap<>();
+        extra.put("currentVersion", currentVersion);
+        if (current != null) {
+            extra.put("current", current);
+        }
+        return new ApiException(ErrorCode.VERSION_CONFLICT, HttpStatus.CONFLICT, message, extra);
+    }
+
     public ErrorCode code() {
         return code;
     }

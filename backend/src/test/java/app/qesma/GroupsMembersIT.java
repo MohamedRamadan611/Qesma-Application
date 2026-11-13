@@ -322,6 +322,21 @@ class GroupsMembersIT extends AbstractApiIT {
         MvcResult stale = call(PATCH, GROUPS + "/" + gid, ali, Map.of("name", "late"), "If-Match", "\"1\"");
         assertThat(status(stale)).isEqualTo(409);
         assertThat(code(stale)).isEqualTo("VERSION_CONFLICT");
+        // B17: the body carries the latest version and the same GroupDto the caller would GET
+        JsonNode latest = body(call(GET, GROUPS + "/" + gid, ali, null));
+        assertThat(body(stale).get("currentVersion").asInt()).isEqualTo(2);
+        assertThat(body(stale).get("current")).isEqualTo(latest);
+
+        // a stranger is still a plain 404 without data; a plain member gets 403 before any version talk
+        Session stranger = newUser();
+        MvcResult hidden = call(PATCH, GROUPS + "/" + gid, stranger, Map.of("name", "x"), "If-Match", "\"1\"");
+        assertThat(status(hidden)).isEqualTo(404);
+        assertThat(body(hidden).has("current")).isFalse();
+        Session plain = newUser();
+        linkUser(gid, plain, "MEMBER", "ACTIVE", "Plain");
+        MvcResult forbidden = call(PATCH, GROUPS + "/" + gid, plain, Map.of("name", "x"), "If-Match", "\"1\"");
+        assertThat(status(forbidden)).isEqualTo(403);
+        assertThat(body(forbidden).has("current")).isFalse();
 
         MvcResult missing = call(PATCH, GROUPS + "/" + gid, ali, Map.of("name", "x"));
         assertThat(status(missing)).isEqualTo(428);

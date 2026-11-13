@@ -212,6 +212,10 @@ class GroupApiSliceTest {
     void staleVersionIs409VersionConflict() throws Exception {
         when(groups.update(any(), any(), any(Integer.class), any(), any()))
                 .thenThrow(ApiException.conflict(ErrorCode.VERSION_CONFLICT, "stale"));
+        ExpenseGroup latest = group(5);
+        Member kept = member(UUID.randomUUID(), "Ali", 1);   // built first: it is itself a mock
+        when(groups.get(me, gid)).thenReturn(new GroupService.GroupDetail(latest, List.of(kept),
+                500L, null, null, null, "OWNER", false));
 
         MvcResult r = mvc.perform(authed(patch("/api/v1/groups/" + gid)).header("If-Match", "\"1\"")
                 .content("{\"name\":\"New\"}")).andReturn();
@@ -219,6 +223,9 @@ class GroupApiSliceTest {
         assertThat(r.getResponse().getStatus()).isEqualTo(409);
         assertThat(r.getResponse().getContentType()).startsWith("application/problem+json");
         assertThat(body(r).get("code").asText()).isEqualTo("VERSION_CONFLICT");
+        // B17: the latest version and the GroupDto the caller may GET
+        assertThat(body(r).get("currentVersion").asInt()).isEqualTo(5);
+        assertThat(body(r).get("current").get("version").asInt()).isEqualTo(5);
     }
 
     @Test

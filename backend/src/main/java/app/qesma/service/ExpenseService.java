@@ -163,7 +163,7 @@ public class ExpenseService {
         GroupContext ctx = access.requireForUpdate(userId, groupId, Permission.READ_GROUP);
         Expense expense = expenses.findActive(expenseId, groupId).orElseThrow(ApiException::notFound);
         ctx.requireModify(expense.getCreatedByUserId(), Permission.EDIT_OWN_EXPENSE, Permission.EDIT_ANY_EXPENSE);
-        requireVersion(expense, expectedVersion);
+        requireVersion(expense, expectedVersion, ctx);
 
         ExpenseValidator.Valid request = ExpenseValidator.validate(command);
         List<Member> members = access.listMembers(ctx);
@@ -204,7 +204,7 @@ public class ExpenseService {
         GroupContext ctx = access.requireForUpdate(userId, groupId, Permission.READ_GROUP);
         Expense expense = expenses.findActive(expenseId, groupId).orElseThrow(ApiException::notFound);
         ctx.requireModify(expense.getCreatedByUserId(), Permission.EDIT_OWN_EXPENSE, Permission.EDIT_ANY_EXPENSE);
-        requireVersion(expense, expectedVersion);
+        requireVersion(expense, expectedVersion, ctx);
 
         Instant now = clock.instant().truncatedTo(ChronoUnit.MICROS);
         expense.markDeleted(now);
@@ -234,10 +234,12 @@ public class ExpenseService {
     }
 
     /** Called under the group lock, so the comparison and the write that follows cannot be interleaved. */
-    private void requireVersion(Expense expense, int expected) {
+    private void requireVersion(Expense expense, int expected, GroupContext ctx) {
         if (expense.getVersion() != expected) {
             metrics.counter("qesma.version_conflicts", "resource", "expense").increment();
-            throw ApiException.conflict(ErrorCode.VERSION_CONFLICT, "The expense was modified by someone else");
+            // The caller already passed membership (404) and the modify permission (403), so they may GET this view.
+            ExpenseView latest = new PageMapper(List.of(expense), access.listMembers(ctx)).view(expense);
+            throw ApiException.versionConflict("The expense was modified by someone else", expense.getVersion(), latest);
         }
     }
 

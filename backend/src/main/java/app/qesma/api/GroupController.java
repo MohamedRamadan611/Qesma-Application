@@ -81,7 +81,16 @@ public class GroupController {
                                            @RequestHeader(value = "If-Match", required = false) String ifMatch,
                                            @RequestBody UpdateGroupRequest request) {
         int expected = IfMatch.version(ifMatch);
-        groups.update(currentUser.id(), gid, expected, request.name(), request.type());
+        try {
+            groups.update(currentUser.id(), gid, expected, request.name(), request.type());
+        } catch (ApiException e) {
+            if (e.code() != ErrorCode.VERSION_CONFLICT) {
+                throw e;
+            }
+            // The caller is a member allowed to edit (checked before the version), so they may GET this body (B17, A113).
+            GroupDto latest = GroupDto.from(groups.get(currentUser.id(), gid), currentUser.id());
+            throw ApiException.versionConflict(e.getMessage(), latest.version(), latest);
+        }
         // Same body as GET (real members and totals), so a client can replace its copy with the response.
         GroupDto dto = GroupDto.from(groups.get(currentUser.id(), gid), currentUser.id());
         return ResponseEntity.ok().eTag(Integer.toString(dto.version())).body(dto);

@@ -176,6 +176,7 @@ Event catalogue (type -> payload ids/amounts only -> who is notified; the actor 
 ## 9. Concurrency UX and account deletion (B17)
 
 - `409 VERSION_CONFLICT` problem body gains `currentVersion` and the latest `ExpenseView` (`current`), so the conflict screen compares "yours" with "latest" without a second request and can re-apply by re-sending with the new `If-Match`.
+- **Implemented in B17, Part A (A113):** the stale-`If-Match` 409 of expense edit/delete and group edit carries `currentVersion` and `current` (`ExpenseView` / `GroupDto`, same as `GET` for that caller, built only after the 404/403 checks). OpenAPI `VersionConflictProblem`; the generic `Problem` is unchanged. The race path and other `VERSION_CONFLICT` uses stay plain.
 - `DELETE /me` body `{ confirm: "DELETE" }` (or password for password accounts, **decide**): the `users` row is anonymised (`display_name` -> "Deleted user", email/username/provider id nulled or replaced by a random tombstone, `deleted_at`), credentials, refresh tokens, handles, devices, prefs, notifications purged; member rows keep their ids and become `hasAccount = false`, displayed with the member's own name (not the account's); the ledger is untouched so **every other member's balances are identical before and after** (property/IT test). **(decide)** an Owner with other active members must transfer ownership first (`409 OWNER_MUST_TRANSFER`), a sole member's empty group is deleted. Returns `204`; all sessions end. Lawyer review of the retention approach is an open item.
 
 ---

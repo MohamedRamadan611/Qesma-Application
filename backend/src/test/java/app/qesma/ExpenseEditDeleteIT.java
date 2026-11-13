@@ -222,6 +222,49 @@ class ExpenseEditDeleteIT extends AbstractApiIT {
     }
 
     @Test
+    void aStaleEditOrDeleteReturnsTheLatestVersionAndTheSameViewAsGet() throws Exception {
+        Session ali = newUser();
+        List<String> g = abc(ali);
+        String eid = createExpense(ali, g.get(0), bill(g, 1200, 56179)).get("id").asText();
+        assertThat(status(put(ali, g.get(0), eid, 1, bill(g, 1000, 55176)))).isEqualTo(200);   // now v2
+        JsonNode latest = body(call(GET, url(g.get(0), eid), ali, null));
+
+        for (MvcResult stale : List.of(put(ali, g.get(0), eid, 1, bill(g, 500, 1)), del(ali, g.get(0), eid, 1))) {
+            assertThat(status(stale)).isEqualTo(409);
+            JsonNode problem = body(stale);
+            assertThat(problem.get("code").asText()).isEqualTo("VERSION_CONFLICT");
+            assertThat(problem.get("currentVersion").asInt()).isEqualTo(2);
+            assertThat(problem.get("current")).isEqualTo(latest);
+        }
+        assertThat(versionOf(eid)).isEqualTo(2);   // a conflict changes nothing
+    }
+
+    @Test
+    void aConflictNeverLeaksTheLatestStateToSomeoneWhoCouldNotGetIt() throws Exception {
+        Session ali = newUser();
+        Session stranger = newUser();
+        Session member = newUser();
+        List<String> g = abc(ali);
+        linkUser(g.get(0), member, "MEMBER", "ACTIVE", "Plain");
+        String eid = createExpense(ali, g.get(0), bill(g, 1200, 56179)).get("id").asText();
+        assertThat(status(put(ali, g.get(0), eid, 1, bill(g, 1000, 55176)))).isEqualTo(200);   // now v2
+
+        // not a member: identical to an unknown id, no data in the body
+        MvcResult hidden = put(stranger, g.get(0), eid, 1, bill(g, 500, 1));
+        assertThat(status(hidden)).isEqualTo(404);
+        assertThat(body(hidden).has("current")).isFalse();
+        assertThat(body(hidden).has("currentVersion")).isFalse();
+        // a plain member may not edit someone else's expense: 403 comes before any version talk
+        MvcResult forbidden = put(member, g.get(0), eid, 1, bill(g, 500, 1));
+        assertThat(status(forbidden)).isEqualTo(403);
+        assertThat(body(forbidden).has("current")).isFalse();
+        assertThat(body(forbidden).has("currentVersion")).isFalse();
+        MvcResult forbiddenDelete = del(member, g.get(0), eid, 1);
+        assertThat(status(forbiddenDelete)).isEqualTo(403);
+        assertThat(body(forbiddenDelete).has("current")).isFalse();
+    }
+
+    @Test
     void sixteenParallelEditsWithTheSameVersionHaveExactlyOneWinner() throws Exception {
         Session ali = newUser();
         List<String> g = abc(ali);
