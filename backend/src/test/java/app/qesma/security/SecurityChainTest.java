@@ -67,6 +67,7 @@ class SecurityChainTest {
     @MockitoBean AuthService auth;
     @MockitoBean PasswordAuthService passwordAuth;
     @MockitoBean PaymentHandleService paymentHandles;
+    @MockitoBean app.qesma.service.NotificationPrefService notificationPrefs;
 
     private static final String TEST_SECRET_B64 =
             "dGVzdC1vbmx5LXNlY3JldC1mb3ItaW50ZWdyYXRpb24tdGVzdHMtMDEyMzQ1Njc4OQ==";

@@ -1,5 +1,6 @@
 package app.qesma.service;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -14,6 +15,9 @@ import java.util.UUID;
  * <p>{@code receiverHandles} (B14, A91): the receiver's payment handles, only on the transfers the viewer pays (and on
  * every transfer when the viewer is Owner/Admin); null otherwise, or when the receiver has none or is not an active
  * linked member. The only place handles leave the backend besides {@code GET /me/payment-handles}.
+ *
+ * <p>{@code canRemindAt} (B16, A109): null when the debtor may be reminded now, else when the pair window ends. It only
+ * reflects the pair window, not the per-account cap or whether the viewer may remind (role, account and status decide).
  */
 public record BalanceView(List<Net> nets, List<TransferView> transfers) {
 
@@ -22,6 +26,6 @@ public record BalanceView(List<Net> nets, List<TransferView> transfers) {
 
     public record TransferView(UUID fromMemberId, UUID toMemberId, long amountMinor, long pendingMinor,
                                boolean hasDispute, List<UUID> openSettlementIds,
-                               PaymentHandlesView receiverHandles) {
+                               PaymentHandlesView receiverHandles, Instant canRemindAt) {
     }
 }

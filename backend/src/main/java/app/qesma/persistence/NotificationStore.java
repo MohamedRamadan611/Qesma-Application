@@ -69,7 +69,7 @@ public class NotificationStore {
     /**
      * Writes every notification of one event with ONE statement: the recipients are resolved inside the INSERT ... SELECT
      * (ACTIVE, linked members of the group; the listed members, plus Owner/Admins when {@code includeManagers}; never the
-     * actor's member). The unique {@code (event_id, user_id)} guards against a duplicate. Returns the rows written.
+     * actor's member), minus anybody who switched notifications off globally or for this group (B16, A104). The unique {@code (event_id, user_id)} guards against a duplicate. Returns the rows written.
      */
     public int insertFor(UUID eventId, UUID groupId, Collection<UUID> memberIds, boolean includeManagers,
                          UUID actorMemberId, Instant createdAt) {
@@ -82,6 +82,8 @@ public class NotificationStore {
                     where m.group_id = ? and m.status = 'ACTIVE' and m.user_id is not null
                       and (m.id = any(?) or (? and m.role in ('OWNER', 'ADMIN')))
                       and (?::uuid is null or m.id <> ?::uuid)
+                      and not exists (select 1 from notification_prefs p where p.user_id = m.user_id and p.muted
+                                      and (p.group_id is null or p.group_id = m.group_id))
                     """);
             ps.setObject(1, eventId);
             ps.setTimestamp(2, Timestamp.from(createdAt));

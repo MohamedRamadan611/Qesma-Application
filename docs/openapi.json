@@ -24,7 +24,7 @@
             "type" : "string"
           },
           "type" : {
-            "enum" : [ "EXPENSE_ADDED", "EXPENSE_EDITED", "EXPENSE_DELETED", "SETTLEMENT_PENDING", "SETTLEMENT_CONFIRMED", "SETTLEMENT_DISPUTED", "SETTLEMENT_CANCELLED", "INVITE_ACCEPTED", "JOIN_REQUESTED", "MEMBER_JOINED", "MEMBER_LEFT", "MEMBER_REACTIVATED", "MEMBER_UNLINKED", "ROLE_CHANGED", "OWNERSHIP_TRANSFERRED" ],
+            "enum" : [ "EXPENSE_ADDED", "EXPENSE_EDITED", "EXPENSE_DELETED", "SETTLEMENT_PENDING", "SETTLEMENT_CONFIRMED", "SETTLEMENT_DISPUTED", "SETTLEMENT_CANCELLED", "INVITE_ACCEPTED", "JOIN_REQUESTED", "MEMBER_JOINED", "MEMBER_LEFT", "MEMBER_REACTIVATED", "MEMBER_UNLINKED", "ROLE_CHANGED", "OWNERSHIP_TRANSFERRED", "REMINDER" ],
             "type" : "string"
           }
         },
@@ -439,6 +439,9 @@
             },
             "type" : "array"
           },
+          "muted" : {
+            "type" : "boolean"
+          },
           "name" : {
             "type" : "string"
           },
@@ -471,7 +474,16 @@
             "type" : "string"
           }
         },
-        "required" : [ "createdAt", "currencyCode", "id", "members", "name", "totalSpentMinor", "type", "updatedAt", "version", "yourMemberId", "yourNetMinor", "yourRole" ],
+        "required" : [ "createdAt", "currencyCode", "id", "members", "muted", "name", "totalSpentMinor", "type", "updatedAt", "version", "yourMemberId", "yourNetMinor", "yourRole" ],
+        "type" : "object"
+      },
+      "GroupNotificationPrefsView" : {
+        "properties" : {
+          "muted" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "muted" ],
         "type" : "object"
       },
       "GroupSummaryDto" : {
@@ -867,7 +879,7 @@
             "type" : "string"
           },
           "type" : {
-            "enum" : [ "EXPENSE_ADDED", "EXPENSE_EDITED", "EXPENSE_DELETED", "SETTLEMENT_PENDING", "SETTLEMENT_CONFIRMED", "SETTLEMENT_DISPUTED", "SETTLEMENT_CANCELLED", "INVITE_ACCEPTED", "JOIN_REQUESTED", "MEMBER_JOINED", "MEMBER_LEFT", "MEMBER_REACTIVATED", "MEMBER_UNLINKED", "ROLE_CHANGED", "OWNERSHIP_TRANSFERRED" ],
+            "enum" : [ "EXPENSE_ADDED", "EXPENSE_EDITED", "EXPENSE_DELETED", "SETTLEMENT_PENDING", "SETTLEMENT_CONFIRMED", "SETTLEMENT_DISPUTED", "SETTLEMENT_CANCELLED", "INVITE_ACCEPTED", "JOIN_REQUESTED", "MEMBER_JOINED", "MEMBER_LEFT", "MEMBER_REACTIVATED", "MEMBER_UNLINKED", "ROLE_CHANGED", "OWNERSHIP_TRANSFERRED", "REMINDER" ],
             "type" : "string"
           }
         },
@@ -888,6 +900,15 @@
           }
         },
         "required" : [ "items" ],
+        "type" : "object"
+      },
+      "NotificationPrefsView" : {
+        "properties" : {
+          "enabled" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "enabled" ],
         "type" : "object"
       },
       "PageResponseExpenseView" : {
@@ -1078,7 +1099,7 @@
         "properties" : {
           "code" : {
             "description" : "Stable machine-readable error code.",
-            "enum" : [ "VALIDATION_ERROR", "PAYERS_TOTAL_MISMATCH", "SPLIT_TOTAL_MISMATCH", "MEMBER_NOT_IN_GROUP", "IDEMPOTENCY_KEY_REUSED", "DUPLICATE_MEMBER_NAME", "MEMBER_HAS_TRANSACTIONS", "OWNER_MEMBER_PROTECTED", "VERSION_CONFLICT", "INVITE_EXPIRED", "INVITE_REVOKED", "ALREADY_MEMBER", "MEMBER_ALREADY_CLAIMED", "MEMBER_INACTIVE", "OWNER_MUST_TRANSFER", "GROUP_NOT_EMPTY", "NOT_FOUND", "FORBIDDEN", "INVALID_STATE_TRANSITION", "UNAUTHORIZED", "INTERNAL_ERROR", "RATE_LIMITED", "AUTH_PROVIDER_UNAVAILABLE", "USERNAME_TAKEN" ],
+            "enum" : [ "VALIDATION_ERROR", "PAYERS_TOTAL_MISMATCH", "SPLIT_TOTAL_MISMATCH", "MEMBER_NOT_IN_GROUP", "IDEMPOTENCY_KEY_REUSED", "DUPLICATE_MEMBER_NAME", "MEMBER_HAS_TRANSACTIONS", "OWNER_MEMBER_PROTECTED", "VERSION_CONFLICT", "INVITE_EXPIRED", "INVITE_REVOKED", "ALREADY_MEMBER", "MEMBER_ALREADY_CLAIMED", "MEMBER_INACTIVE", "OWNER_MUST_TRANSFER", "GROUP_NOT_EMPTY", "NOT_FOUND", "FORBIDDEN", "INVALID_STATE_TRANSITION", "UNAUTHORIZED", "INTERNAL_ERROR", "RATE_LIMITED", "AUTH_PROVIDER_UNAVAILABLE", "USERNAME_TAKEN", "REMIND_RATE_LIMITED" ],
             "type" : "string"
           },
           "detail" : {
@@ -1087,6 +1108,11 @@
           },
           "instance" : {
             "format" : "uri",
+            "type" : "string"
+          },
+          "nextAllowedAt" : {
+            "description" : "Only with REMIND_RATE_LIMITED: the earliest time a reminder for this member may be sent again (UTC).",
+            "format" : "date-time",
             "type" : "string"
           },
           "requestId" : {
@@ -1138,6 +1164,47 @@
           }
         },
         "required" : [ "password", "username" ],
+        "type" : "object"
+      },
+      "RemindCommand" : {
+        "properties" : {
+          "fromMemberId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "toMemberId" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        },
+        "required" : [ "fromMemberId", "toMemberId" ],
+        "type" : "object"
+      },
+      "ReminderView" : {
+        "properties" : {
+          "amountMinor" : {
+            "description" : "Integer minor units (piasters: 1 EGP = 100). Never a decimal.",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "canRemindAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "fromMemberId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "remindedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "toMemberId" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        },
+        "required" : [ "amountMinor", "canRemindAt", "fromMemberId", "remindedAt", "toMemberId" ],
         "type" : "object"
       },
       "ResetPasswordRequest" : {
@@ -1393,6 +1460,11 @@
             "format" : "int64",
             "type" : "integer"
           },
+          "canRemindAt" : {
+            "format" : "date-time",
+            "nullable" : true,
+            "type" : "string"
+          },
           "fromMemberId" : {
             "format" : "uuid",
             "type" : "string"
@@ -1445,6 +1517,15 @@
         "required" : [ "count" ],
         "type" : "object"
       },
+      "UpdateGroupNotificationPrefsRequest" : {
+        "properties" : {
+          "muted" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "muted" ],
+        "type" : "object"
+      },
       "UpdateGroupRequest" : {
         "properties" : {
           "name" : {
@@ -1479,6 +1560,15 @@
         },
         "type" : "object"
       },
+      "UpdateNotificationPrefsRequest" : {
+        "properties" : {
+          "enabled" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "enabled" ],
+        "type" : "object"
+      },
       "UpdatePaymentHandlesRequest" : {
         "properties" : {
           "instapay" : {
@@ -1509,12 +1599,15 @@
             "format" : "uuid",
             "type" : "string"
           },
+          "notificationsEnabled" : {
+            "type" : "boolean"
+          },
           "username" : {
             "nullable" : true,
             "type" : "string"
           }
         },
-        "required" : [ "displayName", "emailVerified", "hasPassword", "id" ],
+        "required" : [ "displayName", "emailVerified", "hasPassword", "id", "notificationsEnabled" ],
         "type" : "object"
       },
       "VerifyEmailRequest" : {
@@ -5017,6 +5110,105 @@
         "tags" : [ "member-controller" ]
       }
     },
+    "/api/v1/groups/{gid}/notification-prefs" : {
+      "put" : {
+        "description" : "muted=true: you get no new notification from this group, reminders and disputes included. The group activity feed still shows everything. Any active member may do this for themselves.",
+        "operationId" : "updateGroupNotificationPrefs",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "gid",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateGroupNotificationPrefsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GroupNotificationPrefsView"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Malformed request (code: VALIDATION_ERROR)"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
+          },
+          "413" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Request body too large (code: VALIDATION_ERROR)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "summary" : "Mute or unmute one group for yourself",
+        "tags" : [ "notification-prefs-controller" ]
+      }
+    },
     "/api/v1/groups/{gid}/settlements" : {
       "get" : {
         "description" : "Optional repeatable filter status=PENDING|CONFIRMED|DISPUTED|CANCELLED; without it every status is listed. Only CONFIRMED settlements move balances.",
@@ -5661,6 +5853,152 @@
         "tags" : [ "membership-controller" ]
       }
     },
+    "/api/v1/groups/{gid}/transfers/remind" : {
+      "post" : {
+        "description" : "Idempotency-Key (UUID) is required. fromMemberId (the debtor) and toMemberId (the creditor) must be a transfer of the current balances. The creditor may remind their own debtor; Owner/Admin may remind for any transfer (403 otherwise). The debtor must be an active member with an account. The amount is the one of the suggested transfer, set by the server. One reminder per debtor per group per 24 hours (any creditor), and a daily cap per sender: 429 REMIND_RATE_LIMITED with nextAllowedAt. A debtor who muted notifications still gets 201 (the mute is never revealed).",
+        "operationId" : "remindTransfer",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "gid",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "description" : "Client-generated UUID, one per create action. Reuse the same key when retrying the SAME action: the stored answer is returned (header Idempotency-Replayed: true). Keys are kept 24 hours.",
+          "in" : "header",
+          "name" : "Idempotency-Key",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "examples" : {
+                "Remind A about the transfer to M" : {
+                  "description" : "Remind A about the transfer to M",
+                  "value" : {
+                    "fromMemberId" : "22222222-2222-2222-2222-222222222222",
+                    "toMemberId" : "11111111-1111-1111-1111-111111111111"
+                  }
+                }
+              },
+              "schema" : {
+                "$ref" : "#/components/schemas/RemindCommand"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReminderView"
+                }
+              }
+            },
+            "description" : "Sent (or the stored answer of an identical earlier request: header Idempotency-Replayed: true)",
+            "headers" : {
+              "Idempotency-Replayed" : {
+                "description" : "true when this is the stored answer of an identical earlier request",
+                "schema" : {
+                  "type" : "string"
+                },
+                "style" : "simple"
+              }
+            }
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Malformed request (code: VALIDATION_ERROR)"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "You are a member of the group but your role does not allow this (code: FORBIDDEN)"
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
+          },
+          "413" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Request body too large (code: VALIDATION_ERROR)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR, IDEMPOTENCY_KEY_REUSED, MEMBER_NOT_IN_GROUP, MEMBER_INACTIVE)"
+          },
+          "429" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Too many requests (code: REMIND_RATE_LIMITED)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "summary" : "Remind a member of a suggested transfer they owe",
+        "tags" : [ "reminder-controller" ]
+      }
+    },
     "/api/v1/invites/{code}" : {
       "get" : {
         "description" : "Group name, who invited you, member count and the members nobody has claimed yet. No balances and no accounts. 404 for an unknown code, 410 when expired, used up or revoked.",
@@ -6027,6 +6365,86 @@
           }
         },
         "tags" : [ "me-controller" ]
+      }
+    },
+    "/api/v1/me/notification-prefs" : {
+      "put" : {
+        "description" : "enabled=false: you get no new notification from any group, reminders and disputes included. Activity feeds still show everything. Notifications you already have are kept; switching back on does not backfill what you missed.",
+        "operationId" : "updateNotificationPrefs",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateNotificationPrefsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NotificationPrefsView"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Malformed request (code: VALIDATION_ERROR)"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "413" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Request body too large (code: VALIDATION_ERROR)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "summary" : "Switch all your notifications on or off",
+        "tags" : [ "notification-prefs-controller" ]
       }
     },
     "/api/v1/me/password" : {

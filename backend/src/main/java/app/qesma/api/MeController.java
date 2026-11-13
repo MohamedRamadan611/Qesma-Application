@@ -1,6 +1,7 @@
 package app.qesma.api;
 
 import app.qesma.security.CurrentUser;
+import app.qesma.service.NotificationPrefService;
 import app.qesma.service.PasswordAuthService;
 import app.qesma.service.PaymentHandleService;
 import app.qesma.service.PaymentHandlesView;
@@ -49,10 +50,12 @@ public class MeController {
     private final UserService users;
     private final PasswordAuthService passwordAuth;
     private final PaymentHandleService paymentHandles;
+    private final NotificationPrefService prefs;
     private final CurrentUser currentUser;
 
     public MeController(UserService users, PasswordAuthService passwordAuth, PaymentHandleService paymentHandles,
-                        CurrentUser currentUser) {
+                        NotificationPrefService prefs, CurrentUser currentUser) {
+        this.prefs = prefs;
         this.users = users;
         this.passwordAuth = passwordAuth;
         this.paymentHandles = paymentHandles;
@@ -76,12 +79,12 @@ public class MeController {
 
     @GetMapping
     public UserDto me() {
-        return UserDto.from(users.get(currentUser.id()));
+        return UserDto.from(users.get(currentUser.id()), prefs.isEnabled(currentUser.id()));
     }
 
     @PatchMapping
     public UserDto update(@RequestBody UpdateMeRequest request) {
-        return UserDto.from(users.updateDisplayName(currentUser.id(), request.displayName()));
+        return UserDto.from(users.updateDisplayName(currentUser.id(), request.displayName()), prefs.isEnabled(currentUser.id()));
     }
 
     /** Changes the password of a password account. Other sessions end; the answer carries this session's new tokens. */

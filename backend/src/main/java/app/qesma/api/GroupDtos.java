@@ -63,15 +63,17 @@ public final class GroupDtos {
         }
     }
 
-    /** {@code yourMemberId} and {@code yourNetMinor} are null when the caller has no member in the group. */
+    /** {@code yourMemberId} and {@code yourNetMinor} are null when the caller has no member in the group. {@code muted}: the caller's own
+     * notification mute for this group (B16). */
     public record GroupDto(UUID id, String name, String type, String currencyCode, Instant createdAt,
                            Instant updatedAt, int version, long totalSpentMinor, Instant lastExpenseAt,
-                           UUID yourMemberId, Long yourNetMinor, String yourRole, List<MemberDto> members) {
+                           UUID yourMemberId, Long yourNetMinor, String yourRole, boolean muted,
+                           List<MemberDto> members) {
         static GroupDto from(GroupService.GroupDetail d, UUID callerUserId) {
             ExpenseGroup g = d.group();
             return new GroupDto(g.getId(), g.getName(), g.getType(), g.getCurrencyCode(), g.getCreatedAt(),
                     g.getUpdatedAt(), g.getVersion(), d.totalSpentMinor(), d.lastExpenseAt(), d.yourMemberId(),
-                    d.yourNetMinor(), d.yourRole(), d.members().stream().map(m -> MemberDto.from(m, callerUserId)).toList());
+                    d.yourNetMinor(), d.yourRole(), d.muted(), d.members().stream().map(m -> MemberDto.from(m, callerUserId)).toList());
         }
     }
 }

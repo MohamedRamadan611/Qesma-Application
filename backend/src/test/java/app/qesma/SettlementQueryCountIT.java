@@ -73,6 +73,11 @@ class SettlementQueryCountIT extends AbstractApiIT {
         for (int i = 1; i <= ghosts; i++) {                                    // alternate PENDING and DISPUTED rows
             insertSettlement(gid, owner, memberIds.get(i), ownerMid, 10L + i, i % 2 == 0 ? "PENDING" : "DISPUTED");
         }
+        for (int i = 1; i <= Math.min(ghosts, 5); i++) {                       // B16: recent reminders, read by ONE grouped statement
+            jdbc.update("insert into remind_log (id, group_id, from_member_id, to_member_id, sent_by_user_id, created_at) "
+                    + "values (?::uuid, ?::uuid, ?::uuid, ?::uuid, ?, now())", UUID.randomUUID().toString(), gid,
+                    memberIds.get(i), ownerMid, owner.userId());
+        }
         return gid;
     }
 
@@ -103,6 +108,11 @@ class SettlementQueryCountIT extends AbstractApiIT {
         assertThat(transfers).as("50 suggested transfers").hasSize(50);
         assertThat(transfers.get(0).get("pendingMinor").asLong() + transfers.get(1).get("pendingMinor").asLong())
                 .as("the pending sums are really there").isGreaterThan(0);
+        long withWindow = 0;
+        for (JsonNode t : transfers) {
+            withWindow += t.get("canRemindAt").isNull() ? 0 : 1;
+        }
+        assertThat(withWindow).as("canRemindAt comes from the grouped remind_log read").isEqualTo(5);
         assertThat(fifty.jpa()).as("JPA statements for 50 transfers").isEqualTo(one.jpa());
         assertThat(fifty.jdbc()).as("JDBC statements for 50 transfers").isEqualTo(one.jdbc());
         assertThat(oneTopLevel).as("the totals query and the pending-pairs query, once each").isEqualTo(2L);

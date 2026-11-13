@@ -89,6 +89,8 @@ class IdorMatrixIT extends AbstractApiIT {
                  "PUT /api/v1/groups/{gid}/expenses/{eid}" -> expense;
             case "POST /api/v1/groups/{gid}/settlements" -> Map.of("fromMemberId", ids.get("mid"),
                     "toMemberId", ids.get("mid2"), "amountMinor", 100L, "settledOn", "2026-10-20");
+            case "POST /api/v1/groups/{gid}/transfers/remind" -> Map.of("fromMemberId", ids.get("mid"), "toMemberId", ids.get("mid2"));
+            case "PUT /api/v1/groups/{gid}/notification-prefs" -> Map.of("muted", true);
             default -> null;
         };
     }
@@ -119,6 +121,8 @@ class IdorMatrixIT extends AbstractApiIT {
         s.put("requests", jdbc.queryForList("select id, status from join_requests where group_id = ?::uuid order by id", gid));
         s.put("revisions", jdbc.queryForObject("select count(*) from expense_revisions r join expenses e on e.id = r.expense_id "
                 + "where e.group_id = ?::uuid", Long.class, gid));
+        s.put("reminders", jdbc.queryForObject("select count(*) from remind_log where group_id = ?::uuid", Long.class, gid));
+        s.put("mutes", jdbc.queryForObject("select count(*) from notification_prefs where group_id = ?::uuid", Long.class, gid));
         s.put("keys", jdbc.queryForObject("select count(*) from idempotency_keys", Long.class));
         return s;
     }
@@ -149,7 +153,7 @@ class IdorMatrixIT extends AbstractApiIT {
         List<Op> ops = groupScopedOperations();
         Set<String> labels = new TreeSet<>();
         ops.forEach(o -> labels.add(o.label()));
-        assertThat(ops).as("group-scoped operations found in the OpenAPI document").hasSize(29);
+        assertThat(ops).as("group-scoped operations found in the OpenAPI document").hasSize(31);
 
         Map<String, Object> before = snapshot(gid);
         for (Op op : ops) {

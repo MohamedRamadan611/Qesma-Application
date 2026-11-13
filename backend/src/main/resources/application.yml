@@ -39,6 +39,9 @@ qesma:
   activity:
     retention: 180d       # B15 (A103): events and their notifications older than this are purged
     purge-interval: PT6H
+  remind:
+    window: 24h           # B16 (A108): one reminder per group + debtor per window
+    daily-cap-per-user: 20   # B16 (A110): soft abuse ceiling per sending account within the window
 
 management:
   endpoints:

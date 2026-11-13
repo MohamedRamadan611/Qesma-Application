@@ -31,5 +31,7 @@ public enum Permission {
     /** Remove a linked member from the group (status LEFT) or reactivate one (B12, Owner and Admin). */
     MANAGE_MEMBER_STATUS,
     /** See the payment handles of any transfer receiver of the group, not only of the transfers you pay (B14, Owner and Admin). */
-    VIEW_ALL_PAYMENT_HANDLES
+    VIEW_ALL_PAYMENT_HANDLES,
+    /** Remind any debtor of a suggested transfer, not only your own debtors (B16, Owner and Admin). */
+    REMIND_ANY
 }

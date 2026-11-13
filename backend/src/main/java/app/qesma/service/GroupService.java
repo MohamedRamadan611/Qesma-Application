@@ -9,6 +9,7 @@ import app.qesma.persistence.ExpenseRepository;
 import app.qesma.persistence.GroupSummaryRow;
 import app.qesma.persistence.GroupTotals;
 import app.qesma.persistence.MemberRepository;
+import app.qesma.persistence.NotificationPrefStore;
 import app.qesma.persistence.UserRepository;
 import app.qesma.persistence.YourNetQuery;
 import app.qesma.domain.User;
@@ -44,7 +45,7 @@ public class GroupService {
      * {@code yourRole} is the caller's role (OWNER, ADMIN or MEMBER).
      */
     public record GroupDetail(ExpenseGroup group, List<Member> members, long totalSpentMinor,
-                              java.time.Instant lastExpenseAt, UUID yourMemberId, Long yourNetMinor, String yourRole) {
+                              java.time.Instant lastExpenseAt, UUID yourMemberId, Long yourNetMinor, String yourRole, boolean muted) {
     }
 
     private final GroupAccessService access;
@@ -53,12 +54,13 @@ public class GroupService {
     private final ExpenseRepository expenses;
     private final UserRepository users;
     private final YourNetQuery yourNet;
+    private final NotificationPrefStore prefs;
     private final GroupUsageChecker usage;
     private final Clock clock;
     private final MeterRegistry metrics;
 
     public GroupService(GroupAccessService access, ExpenseGroupRepository groups, MemberRepository members,
-                        ExpenseRepository expenses, UserRepository users, YourNetQuery yourNet,
+                        ExpenseRepository expenses, UserRepository users, YourNetQuery yourNet, NotificationPrefStore prefs,
                         ObjectProvider<GroupUsageChecker> usage, Clock clock, MeterRegistry metrics) {
         this.access = access;
         this.groups = groups;
@@ -66,6 +68,7 @@ public class GroupService {
         this.expenses = expenses;
         this.users = users;
         this.yourNet = yourNet;
+        this.prefs = prefs;
         this.usage = usage.getIfAvailable(() -> GroupUsageChecker.EMPTY);
         this.clock = clock;
         this.metrics = metrics;
@@ -103,7 +106,8 @@ public class GroupService {
         GroupTotals totals = expenses.totals(groupId);
         YourNetQuery.YourTotals mine = yourNet.forGroups(userId, List.of(groupId)).get(groupId);
         return new GroupDetail(ctx.group(), access.listMembers(ctx), totals.totalSpentMinor(),
-                totals.lastExpenseAt(), ctx.me().getId(), netOf(mine), ctx.role().name());
+                totals.lastExpenseAt(), ctx.me().getId(), netOf(mine), ctx.role().name(),
+                prefs.isGroupMuted(userId, groupId));
     }
 
     /**

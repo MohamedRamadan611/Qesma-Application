@@ -2,7 +2,7 @@ package app.qesma.service;
 
 /**
  * The event catalogue (PHASE2_SPEC section 8, B15 A98). The names are stored in {@code group_events.type} (CHECK
- * {@code ck_group_events_type}) and sent to clients, so they are stable. B16 adds REMINDER with a new constraint.
+ * {@code ck_group_events_type}) and sent to clients, so they are stable. B16 added REMINDER with a widened constraint (V18).
  */
 public enum EventType {
     EXPENSE_ADDED,
@@ -21,5 +21,7 @@ public enum EventType {
     /** Added by B15: an account was detached from a member. Feed only, the account has no access any more. */
     MEMBER_UNLINKED,
     ROLE_CHANGED,
-    OWNERSHIP_TRANSFERRED
+    OWNERSHIP_TRANSFERRED,
+    /** B16 (A111): a creditor reminded a debtor. Payload: fromMemberId, toMemberId, amountMinor (server computed). */
+    REMINDER
 }

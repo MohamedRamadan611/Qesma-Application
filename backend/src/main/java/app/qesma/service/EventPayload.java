@@ -22,6 +22,11 @@ public record EventPayload(UUID expenseId, UUID settlementId, UUID memberId, UUI
                 amountMinor, null, null);
     }
 
+    public static EventPayload reminder(UUID fromMemberId, UUID toMemberId, long amountMinor) {
+        return new EventPayload(null, null, null, null, null, fromMemberId, toMemberId, null, null, amountMinor, null,
+                null);
+    }
+
     public static EventPayload member(UUID memberId) {
         return new EventPayload(null, null, memberId, null, null, null, null, null, null, null, null, null);
     }

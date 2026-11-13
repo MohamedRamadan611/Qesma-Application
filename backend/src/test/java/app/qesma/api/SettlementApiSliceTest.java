@@ -189,7 +189,7 @@ class SettlementApiSliceTest {
     void balancesReturnNetsAndTransfers() throws Exception {
         when(balances.balances(me, gid)).thenReturn(new BalanceView(
                 List.of(new BalanceView.Net(alice, -8000), new BalanceView.Net(bob, 8000)),
-                List.of(new BalanceView.TransferView(alice, bob, 8000, 3000, true, List.of(sid), null))));
+                List.of(new BalanceView.TransferView(alice, bob, 8000, 3000, true, List.of(sid), null, null))));
         MvcResult r = mvc.perform(authed(get("/api/v1/groups/" + gid + "/balances"))).andReturn();
         assertThat(r.getResponse().getStatus()).isEqualTo(200);
         JsonNode b = node(r);

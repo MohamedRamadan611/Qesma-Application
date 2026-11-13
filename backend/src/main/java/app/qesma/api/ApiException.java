@@ -1,5 +1,6 @@
 package app.qesma.api;
 
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 
 /** A deliberate, client-visible failure carrying a stable {@link ErrorCode}. The message is safe to show. */
@@ -9,11 +10,28 @@ public class ApiException extends RuntimeException {
 
     private final ErrorCode code;
     private final HttpStatus status;
+    private final Map<String, Object> properties;
 
     public ApiException(ErrorCode code, HttpStatus status, String message) {
+        this(code, status, message, Map.of());
+    }
+
+    /** {@code properties}: extra problem+json members (RFC 7807 extension members), e.g. nextAllowedAt. Never personal data. */
+    public ApiException(ErrorCode code, HttpStatus status, String message, Map<String, Object> properties) {
         super(message);
         this.code = code;
         this.status = status;
+        this.properties = Map.copyOf(properties);
+    }
+
+    public Map<String, Object> properties() {
+        return properties;
+    }
+
+    /** 429 REMIND_RATE_LIMITED; {@code nextAllowedAt} is an ISO-8601 UTC instant (B16, A108, A112). */
+    public static ApiException remindRateLimited(java.time.Instant nextAllowedAt) {
+        return new ApiException(ErrorCode.REMIND_RATE_LIMITED, HttpStatus.TOO_MANY_REQUESTS,
+                "A reminder was sent recently; try again later", Map.of("nextAllowedAt", nextAllowedAt.toString()));
     }
 
     public ErrorCode code() {

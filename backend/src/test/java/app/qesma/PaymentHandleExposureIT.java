@@ -98,12 +98,12 @@ class PaymentHandleExposureIT extends AbstractHandlesIT {
     void theTransferFieldSetIsExactlyTheDocumentedOne() throws Exception {
         Scenario s = scenario();
         JsonNode asPayer = transfer(s.payer(), s);
-        assertThat(keys(asPayer)).containsExactly("amountMinor", "fromMemberId", "hasDispute", "openSettlementIds",
-                "pendingMinor", "receiverHandles", "toMemberId");
+        assertThat(keys(asPayer)).containsExactly("amountMinor", "canRemindAt", "fromMemberId", "hasDispute",
+                "openSettlementIds", "pendingMinor", "receiverHandles", "toMemberId");
         assertThat(keys(asPayer.get("receiverHandles"))).containsExactly("instapay", "wallet");
         // the same keys for a viewer who may not see the values: the shape never reveals who may
-        assertThat(keys(transfer(s.member(), s))).containsExactly("amountMinor", "fromMemberId", "hasDispute",
-                "openSettlementIds", "pendingMinor", "receiverHandles", "toMemberId");
+        assertThat(keys(transfer(s.member(), s))).containsExactly("amountMinor", "canRemindAt", "fromMemberId",
+                "hasDispute", "openSettlementIds", "pendingMinor", "receiverHandles", "toMemberId");
 
         JsonNode me = body(call(GET, "/api/v1/groups/" + s.gid(), s.payer(), null));
         for (JsonNode m : me.get("members")) {

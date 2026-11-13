@@ -1,6 +1,7 @@
 package app.qesma.api;
 
 import app.qesma.service.AuthService;
+import app.qesma.service.NotificationPrefService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -47,15 +48,17 @@ public class AuthController {
     }
 
     private final AuthService auth;
+    private final NotificationPrefService prefs;
 
-    public AuthController(AuthService auth) {
+    public AuthController(AuthService auth, NotificationPrefService prefs) {
         this.auth = auth;
+        this.prefs = prefs;
     }
 
     @PostMapping("/google")
     public AuthResponse google(@Valid @RequestBody GoogleLoginRequest request) {
         AuthService.Login login = auth.loginWithGoogle(request.idToken());
-        return new AuthResponse(login.accessToken(), login.refreshToken(), UserDto.from(login.user()));
+        return new AuthResponse(login.accessToken(), login.refreshToken(), UserDto.from(login.user(), prefs.isEnabled(login.user().getId())));
     }
 
     @PostMapping("/refresh")

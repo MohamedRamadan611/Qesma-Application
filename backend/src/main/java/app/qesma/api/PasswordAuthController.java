@@ -2,6 +2,7 @@ package app.qesma.api;
 
 import app.qesma.api.AuthController.AuthResponse;
 import app.qesma.security.CurrentUser;
+import app.qesma.service.NotificationPrefService;
 import app.qesma.service.PasswordAuthService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -59,10 +60,12 @@ public class PasswordAuthController {
     }
 
     private final PasswordAuthService passwordAuth;
+    private final NotificationPrefService prefs;
     private final CurrentUser currentUser;
 
-    public PasswordAuthController(PasswordAuthService passwordAuth, CurrentUser currentUser) {
+    public PasswordAuthController(PasswordAuthService passwordAuth, NotificationPrefService prefs, CurrentUser currentUser) {
         this.passwordAuth = passwordAuth;
+        this.prefs = prefs;
         this.currentUser = currentUser;
     }
 
@@ -71,13 +74,13 @@ public class PasswordAuthController {
     @ResponseStatus(HttpStatus.CREATED)
     public AuthResponse register(@Valid @RequestBody RegisterRequest request) {
         PasswordAuthService.Session s = passwordAuth.register(request.username(), request.password(), request.displayName());
-        return new AuthResponse(s.accessToken(), s.refreshToken(), UserDto.from(s.user()));
+        return new AuthResponse(s.accessToken(), s.refreshToken(), UserDto.from(s.user(), prefs.isEnabled(s.user().getId())));
     }
 
     @PostMapping("/login")
     public AuthResponse login(@Valid @RequestBody LoginRequest request) {
         PasswordAuthService.Session s = passwordAuth.login(request.username(), request.password());
-        return new AuthResponse(s.accessToken(), s.refreshToken(), UserDto.from(s.user()));
+        return new AuthResponse(s.accessToken(), s.refreshToken(), UserDto.from(s.user(), prefs.isEnabled(s.user().getId())));
     }
 
     /** Always 204: it never says whether the address has an account. */

@@ -89,6 +89,10 @@ class RoleMatrixIT extends AbstractApiIT {
         // B12: leaving (everyone but the owner, who must transfer first: 409) and ownership transfer (Owner only)
         MATRIX.put("POST /api/v1/groups/{gid}/leave", new Row(409, 204, 204));
         MATRIX.put("POST /api/v1/groups/{gid}/transfer-ownership", new Row(204, 403, 403));
+        // B16: the target is the transfer member -> owner's member: the owner is the creditor, the admin a manager (REMIND_ANY),
+        // a plain member is neither. Every active member may mute the group for themselves.
+        MATRIX.put("POST /api/v1/groups/{gid}/transfers/remind", new Row(201, 201, 403));
+        MATRIX.put("PUT /api/v1/groups/{gid}/notification-prefs", new Row(200, 200, 200));
     }
 
     /** One group with one caller per role, an expense and a settlement created by the owner. */
@@ -109,6 +113,7 @@ class RoleMatrixIT extends AbstractApiIT {
         final String m1;
         final String m2;
         final String adminMember;
+        final String memberMid;
         final String eid;
         final String sid;       // confirmed, recorded by the owner on behalf (m1 -> m2)
         final String pid;       // PENDING, declared by the member to m1
@@ -125,7 +130,7 @@ class RoleMatrixIT extends AbstractApiIT {
             m1 = member(owner, gid, "A").get("id").asText();
             m2 = member(owner, gid, "B").get("id").asText();
             adminMember = linkUser(gid, admin, "ADMIN", "ACTIVE", "Admin");
-            String memberMid = linkUser(gid, member, "MEMBER", "ACTIVE", "Member");
+            memberMid = linkUser(gid, member, "MEMBER", "ACTIVE", "Member");
             linkUser(gid, left, "MEMBER", "LEFT", "Gone");
             eid = createExpense(owner, gid, equalBody("Dinner", 3000, null, m1, 3000L)).get("id").asText();
             sid = body(call(POST, "/api/v1/groups/" + gid + "/settlements", owner,
@@ -170,6 +175,8 @@ class RoleMatrixIT extends AbstractApiIT {
                 case "POST /api/v1/groups/{gid}/members" -> Map.of("displayName", "Newcomer");
                 case "POST /api/v1/groups/{gid}/invites" -> Map.of("requiresApproval", false);
                 case "POST /api/v1/groups/{gid}/transfer-ownership" -> Map.of("toMemberId", adminMember);
+                case "POST /api/v1/groups/{gid}/transfers/remind" -> Map.of("fromMemberId", memberMid, "toMemberId", m1);
+                case "PUT /api/v1/groups/{gid}/notification-prefs" -> Map.of("muted", true);
                 case "PATCH /api/v1/groups/{gid}/members/{mid}" -> Map.of("displayName", "Renamed B");
                 case "POST /api/v1/groups/{gid}/expenses", "POST /api/v1/groups/{gid}/expenses/preview",
                      "PUT /api/v1/groups/{gid}/expenses/{eid}" -> expense;
@@ -196,7 +203,7 @@ class RoleMatrixIT extends AbstractApiIT {
         String[] parts = label.split(" ", 2);
         List<String> headers = new ArrayList<>();
         if (label.equals("POST /api/v1/groups/{gid}/expenses") || label.equals("POST /api/v1/groups/{gid}/settlements")
-                || label.equals("POST /api/v1/groups/{gid}/invites")) {
+                || label.equals("POST /api/v1/groups/{gid}/invites") || label.equals("POST /api/v1/groups/{gid}/transfers/remind")) {
             headers.add("Idempotency-Key");
             headers.add(UUID.randomUUID().toString());
         }

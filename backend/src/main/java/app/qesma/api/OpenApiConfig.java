@@ -130,7 +130,11 @@ public class OpenApiConfig {
             Map.entry("GET /api/v1/groups/{gid}/activity", "listGroupActivity"),
             Map.entry("GET /api/v1/notifications", "listNotifications"),
             Map.entry("GET /api/v1/notifications/unread-count", "getUnreadNotificationCount"),
-            Map.entry("POST /api/v1/notifications/read", "markNotificationsRead"));
+            Map.entry("POST /api/v1/notifications/read", "markNotificationsRead"),
+            // B16: preferences and Remind
+            Map.entry("PUT /api/v1/me/notification-prefs", "updateNotificationPrefs"),
+            Map.entry("PUT /api/v1/groups/{gid}/notification-prefs", "updateGroupNotificationPrefs"),
+            Map.entry("POST /api/v1/groups/{gid}/transfers/remind", "remindTransfer"));
 
     static String operationId(String path, PathItem.HttpMethod method) {
         String id = OPERATION_IDS.get(method + " " + path);
@@ -149,7 +153,7 @@ public class OpenApiConfig {
             "POST /api/v1/groups/{gid}/expenses/preview", "GET /api/v1/groups/{gid}/expenses/{eid}",
             "GET /api/v1/groups/{gid}/expenses/{eid}/revisions", "GET /api/v1/groups/{gid}/balances",
             "GET /api/v1/groups/{gid}/settlements", "GET /api/v1/groups/{gid}/activity",
-            "POST /api/v1/groups/{gid}/leave");
+            "POST /api/v1/groups/{gid}/leave", "PUT /api/v1/groups/{gid}/notification-prefs");
 
     static Map<Integer, List<ErrorCode>> errorsFor(String path, PathItem.HttpMethod method, Operation op) {
         Map<Integer, List<ErrorCode>> errors = new TreeMap<>();
@@ -218,6 +222,11 @@ public class OpenApiConfig {
         if (path.endsWith("/settlements/{sid}/confirm") || path.endsWith("/settlements/{sid}/dispute")
                 || path.endsWith("/settlements/{sid}/cancel")) {
             add(errors, 409, ErrorCode.INVALID_STATE_TRANSITION);          // B13: the state machine refused it
+        }
+        if (path.endsWith("/transfers/remind")) {                              // B16
+            add(errors, 422, ErrorCode.MEMBER_NOT_IN_GROUP);
+            add(errors, 422, ErrorCode.MEMBER_INACTIVE);
+            add(errors, 429, ErrorCode.REMIND_RATE_LIMITED);
         }
         if (path.endsWith("/leave")) {
             add(errors, 409, ErrorCode.OWNER_MUST_TRANSFER);
@@ -316,6 +325,8 @@ public class OpenApiConfig {
         problem.addProperty("instance", new StringSchema().format("uri"));
         problem.addProperty("code", code);
         problem.addProperty("requestId", new StringSchema().description("Echoes the X-Request-Id response header."));
+        problem.addProperty("nextAllowedAt", new StringSchema().format("date-time").description(
+                "Only with REMIND_RATE_LIMITED: the earliest time a reminder for this member may be sent again (UTC)."));
         problem.setRequired(List.of("type", "title", "status", "code"));
         return problem;
     }
@@ -346,7 +357,8 @@ public class OpenApiConfig {
             "UserDto", "GroupDto", "GroupSummaryDto", "MemberDto", "ExpenseView", "ExpensePreview", "BalanceView", "Net",
             "TransferView", "SettlementView", "ExpenseRevisionView", "Charges", "ServiceCharge", "TaxCharge", "ItemView",
             "PayerView", "ShareView", "PaymentHandlesView", "ActivityPage", "ActivityItem", "NotificationPage",
-            "NotificationItem", "UnreadCount", "MarkReadResult", "EventPayload");
+            "NotificationItem", "UnreadCount", "MarkReadResult", "EventPayload", "ReminderView", "NotificationPrefsView",
+            "GroupNotificationPrefsView");
 
     /** Response fields that can be null (all other response fields are always present and non-null). */
     static final Map<String, java.util.Set<String>> NULLABLE = Map.ofEntries(
@@ -358,7 +370,7 @@ public class OpenApiConfig {
             Map.entry("GroupDto", java.util.Set.of("lastExpenseAt")),
             Map.entry("GroupSummaryDto", java.util.Set.of("lastExpenseAt")),
             Map.entry("UserDto", java.util.Set.of("email", "username")),
-            Map.entry("TransferView", java.util.Set.of("receiverHandles")),
+            Map.entry("TransferView", java.util.Set.of("receiverHandles", "canRemindAt")),
             Map.entry("PaymentHandlesView", java.util.Set.of("instapay", "wallet")),
             // B15: the feed shapes. Which payload fields are set depends on the event type, so none is required.
             Map.entry("ActivityPage", java.util.Set.of("nextBefore")),
@@ -379,6 +391,9 @@ public class OpenApiConfig {
             Map.entry("ResetPasswordRequest", List.of("token", "newPassword")),
             Map.entry("VerifyEmailRequest", List.of("token")),
             Map.entry("ChangePasswordRequest", List.of("currentPassword", "newPassword")),
+            Map.entry("RemindCommand", List.of("fromMemberId", "toMemberId")),
+            Map.entry("UpdateNotificationPrefsRequest", List.of("enabled")),
+            Map.entry("UpdateGroupNotificationPrefsRequest", List.of("muted")),
             Map.entry("SettlementCommand", List.of("fromMemberId", "toMemberId", "amountMinor", "settledOn")),
             Map.entry("ExpenseCommand", List.of("title", "expenseDate", "splitType")),
             Map.entry("PayerInput", List.of("memberId", "amountMinor")),

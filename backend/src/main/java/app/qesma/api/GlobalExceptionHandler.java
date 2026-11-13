@@ -78,7 +78,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<ProblemDetail> handleApi(ApiException ex) {
-        return respond(problem(ex.status(), ex.code(), ex.getMessage()));
+        ProblemDetail pd = problem(ex.status(), ex.code(), ex.getMessage());
+        ex.properties().forEach(pd::setProperty);
+        return respond(pd);
     }
 
     /** Lost an optimistic-locking race (JPA @Version): the same answer as a stale If-Match. */

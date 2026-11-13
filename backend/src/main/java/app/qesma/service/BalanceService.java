@@ -8,7 +8,10 @@ import app.qesma.engine.Simplifier;
 import app.qesma.engine.Transfer;
 import app.qesma.persistence.BalanceTotalsQuery;
 import app.qesma.persistence.PendingPairsQuery;
+import app.qesma.persistence.RemindLogStore;
 import io.micrometer.core.instrument.MeterRegistry;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -40,9 +43,16 @@ public class BalanceService {
     private final PendingPairsQuery pending;
     private final MeterRegistry metrics;
     private final PaymentHandleService paymentHandles;
+    private final RemindLogStore remindLog;
+    private final RemindProperties remindProps;
+    private final Clock clock;
 
     public BalanceService(GroupAccessService access, BalanceTotalsQuery totals, PendingPairsQuery pending,
-                          MeterRegistry metrics, PaymentHandleService paymentHandles) {
+                          MeterRegistry metrics, PaymentHandleService paymentHandles, RemindLogStore remindLog,
+                          RemindProperties remindProps, Clock clock) {
+        this.remindLog = remindLog;
+        this.remindProps = remindProps;
+        this.clock = clock;
         this.access = access;
         this.totals = totals;
         this.pending = pending;
@@ -57,7 +67,17 @@ public class BalanceService {
         return metrics.timer("qesma.balances.compute").record(() -> compute(ctx, groupId));
     }
 
-    private BalanceView compute(GroupContext ctx, UUID groupId) {
+    /** The members, the nets and the suggested transfers of one group, from one set of reads (shared with Remind, B16). */
+    record Suggestion(List<Member> members, Map<String, Long> nets, List<Transfer> transfers) {
+    }
+
+    /**
+     * Roster + one grouped totals statement + the engine (CONFIRMED settlements only, A83). The single place where the
+     * suggested transfers are derived, so Remind sees exactly what GET balances shows. If the zero-sum invariant is
+     * violated the call fails loudly (500).
+     */
+    Suggestion suggestion(GroupContext ctx) {
+        UUID groupId = ctx.groupId();
         List<Member> members = access.listMembers(ctx);
         List<MemberRef> roster = members.stream()
                 .map(m -> new MemberRef(m.getId().toString(), m.getSortOrder())).toList();
@@ -70,22 +90,37 @@ public class BalanceService {
                     .log("balance.invariant_violated groupId={} reason={}", groupId, e.getMessage());
             throw new IllegalStateException("Balance invariant violated for group " + groupId, e);
         }
+        return new Suggestion(members, nets, Simplifier.simplify(nets, roster));
+    }
+
+    private BalanceView compute(GroupContext ctx, UUID groupId) {
+        Suggestion s = suggestion(ctx);
+        Map<String, Long> nets = s.nets();
         List<BalanceView.Net> netViews = nets.entrySet().stream()
                 .map(e -> new BalanceView.Net(UUID.fromString(e.getKey()), e.getValue())).toList();
         Map<Pair, PendingPairsQuery.Pair> open = new HashMap<>();
         for (PendingPairsQuery.Pair p : pending.pairs(groupId)) {
             open.put(new Pair(p.fromMemberId(), p.toMemberId()), p);
         }
-        List<Transfer> suggested = Simplifier.simplify(nets, roster);
+        List<Transfer> suggested = s.transfers();
         Map<UUID, PaymentHandlesView> handles = handlesOf(ctx, suggested);
+        // B16 (A109): ONE grouped statement for the whole group, however many transfers
+        Instant now = clock.instant();
+        Map<UUID, Instant> lastReminded = remindLog.lastPerDebtor(groupId, now.minus(remindProps.window()));
         List<BalanceView.TransferView> transfers = suggested.stream().map(t -> {
             UUID from = UUID.fromString(t.fromMemberId());
             UUID to = UUID.fromString(t.toMemberId());
             PendingPairsQuery.Pair p = open.get(new Pair(from, to));
             PaymentHandlesView receiverHandles = handles.get(to);
-            return p == null ? new BalanceView.TransferView(from, to, t.amountMinor(), 0L, false, List.of(), receiverHandles)
+            Instant last = lastReminded.get(from);
+            Instant canRemindAt = last == null ? null : last.plus(remindProps.window());
+            if (canRemindAt != null && !canRemindAt.isAfter(now)) {
+                canRemindAt = null;
+            }
+            return p == null ? new BalanceView.TransferView(from, to, t.amountMinor(), 0L, false, List.of(),
+                    receiverHandles, canRemindAt)
                     : new BalanceView.TransferView(from, to, t.amountMinor(), p.pendingMinor(), p.hasDispute(),
-                            p.ids(), receiverHandles);
+                            p.ids(), receiverHandles, canRemindAt);
         }).toList();
         return new BalanceView(netViews, transfers);
     }

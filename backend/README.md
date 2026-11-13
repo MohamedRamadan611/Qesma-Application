@@ -182,8 +182,29 @@ curl -s -X POST localhost:8080/api/v1/notifications/read -H "Authorization: Bear
 - **Who sees what:** the feed shows the whole group history to every ACTIVE member; a stranger or a member who left gets `404`. A notification list is strictly the caller's own (foreign or unknown ids in `read` are ignored, with the same answer). A user who left a group still lists their old notifications, but `subject` and `actorName` are no longer resolved for them (`groupName` is).
 - **Errors:** a bad `limit` (not 1..50) or a malformed `before` is `422 VALIDATION_ERROR`; `read` needs exactly one of `ids` (1 to 100) or `all: true`.
 - **Retention:** `ActivityPurgeJob` deletes events older than `qesma.activity.retention` (default `180d`, notifications cascade) in chunks of 5000 every `qesma.activity.purge-interval` (`PT6H`, first run after `PT10M`), logging `event=activity.purge deletedEvents millis`. Metrics: `qesma.events{type}`, `qesma.notifications{type}`.
-- **Migration:** `V17__group_events_notifications.sql` (V16 was payment handles). B16's migration becomes V18.
+- **Migration:** `V17__group_events_notifications.sql` (V16 was payment handles). B16's migration is V18.
 - **Tests:** `GroupEventsIT` (one test per type, recipients, replays), `EventAtomicityIT`, `EventPayloadPrivacyIT`, `ActivityFeedIT`, `NotificationCenterIT`, `ActivityQueryCountIT`, `ActivityQueryPlanIT`, `ActivityPurgeJobIT`, plus `RoleMatrixIT`, `IdorMatrixIT`, `ApiContractCoverageIT`, `LayeringTest`. Client note: `mobile` must regenerate `qesma_api` (`listGroupActivity`, `listNotifications`, `getUnreadNotificationCount`, `markNotificationsRead`, new schemas).
+
+## Notification preferences and Remind (B16, A104-A112)
+Users can silence notifications and a creditor can nudge a debtor, without any spam path. Nothing here moves money: a reminder is an in-app notification (push comes in B18).
+```bash
+# switch ALL your notifications off / on (read back as notificationsEnabled in GET /me)
+curl -s -X PUT localhost:8080/api/v1/me/notification-prefs -H "Authorization: Bearer $TB" -H 'Content-Type: application/json' -d '{"enabled":false}'   # -> {"enabled":false}
+# mute / unmute ONE group for yourself (any active member; read back as muted in GET /groups/{gid})
+curl -s -X PUT localhost:8080/api/v1/groups/$G/notification-prefs -H "Authorization: Bearer $TB" -H 'Content-Type: application/json' -d '{"muted":true}'   # -> {"muted":true}
+
+# remind a debtor of a suggested transfer (the creditor, or an Owner/Admin); Idempotency-Key is required
+curl -s -X POST localhost:8080/api/v1/groups/$G/transfers/remind -H "Authorization: Bearer $TA" -H 'Content-Type: application/json' \
+  -H "Idempotency-Key: $(uuidgen)" -d '{"fromMemberId":"<debtor member>","toMemberId":"<creditor member>"}'
+#   -> 201 {"fromMemberId","toMemberId","amountMinor":1500,"remindedAt","canRemindAt"}
+#   again within 24 h -> 429 {"code":"REMIND_RATE_LIMITED","nextAllowedAt":"2026-11-14T10:00:00Z",...}
+```
+- **Mute semantics:** a muted or disabled user gets no new notification row for ANY event type, reminders and disputes included. The activity feed still shows everything, notifications that already exist are kept, and unmuting does not backfill. The filter is one `NOT EXISTS` inside the single notification `INSERT ... SELECT` (`NotificationStore.insertFor`).
+- **Remind rules:** the debtor must be an active member with an account and the pair must be a suggested transfer right now; the amount is the server's (same engine path as `GET balances`). One reminder per (group, debtor) per 24 h whoever sends it, plus 20 per sending account per 24 h across groups (`qesma.remind.window`, `qesma.remind.daily-cap-per-user`). A muted debtor still gets `201` (the mute is never revealed). A replay with the same key returns the stored `201` and uses no slot; a refused `429` stores nothing.
+- **Balances:** each suggested transfer carries `canRemindAt` (null = may remind now), read with one grouped query.
+- **Errors:** `403 FORBIDDEN` (not the creditor and not Owner/Admin), `404` (not a member), `422` (`VALIDATION_ERROR`, `MEMBER_NOT_IN_GROUP`, `MEMBER_INACTIVE`), `429 REMIND_RATE_LIMITED` with `nextAllowedAt`.
+- **Operations:** metric `qesma.reminders{result=sent|replayed|rate_limited_pair|rate_limited_user}`; log `remind.sent groupId fromMemberId toMemberId` (ids only). `remind_log` rows older than 7 days are purged by `ActivityPurgeJob`. Migration `V18__notification_prefs_remind.sql`.
+- **Tests:** `RemindIT` (rules, window, cap, replay, race), `NotificationPrefsIT`, `SettlementQueryCountIT` (constant statements), `RoleMatrixIT`, `ApiContractCoverageIT`, `EventPayloadPrivacyIT`. Client note: `mobile` must regenerate `qesma_api` (`updateNotificationPrefs`, `updateGroupNotificationPrefs`, `remindTransfer`, `canRemindAt`, `notificationsEnabled`, `muted`, `nextAllowedAt`).
 
 ## Smoke test (end to end, against a running backend)
 `scripts/smoke.sh` (bash + curl + jq) signs in two fake users, then walks the Phase 1 flow and asserts exact minor-unit values: group + 5 members, equal expense (V3), idempotent replay, user B gets 404, multi-payer (V4), itemized V5-V8 with preview parity, edit/ETag/stale ETag/delete/revisions, V1 balances and transfers, `yourNetMinor`, settlement and V2 balances, then the username + password accounts of ADR-008 (register with a lower-cased username, login, the identical 401 for a wrong password and an unknown name, `USERNAME_TAKEN`, a refused common password, owner-only 404 for a password user's group, change password with fresh tokens, the old password refused). `SMOKE_DAHAB=1` adds the seeded Dahab trip (profile `seed`): the documented nets and four transfers. It prints one `PASS`/`FAIL` line per check and exits non-zero on the first failure. Each run creates fresh users and groups, so it can be repeated.

@@ -66,6 +66,9 @@ class EventPayloadPrivacyIT extends AbstractActivityIT {
         call(POST, base + "/settlements/" + s3 + "/cancel", alice, null);
         call(POST, base + "/settlements", bob, Map.of("fromMemberId", aliceMid, "toMemberId", bobMid,
                 "amountMinor", 800L, "settledOn", "2026-10-20"), "Idempotency-Key", UUID.randomUUID().toString());
+        // B16: bob owes alice 1300 now; the owner reminds him (REMINDER event)
+        assertThat(status(call(POST, base + "/transfers/remind", owner, Map.of("fromMemberId", bobMid, "toMemberId", aliceMid),
+                "Idempotency-Key", UUID.randomUUID().toString()))).isEqualTo(201);
 
         JsonNode open = body(call(POST, base + "/invites", owner, Map.of("requiresApproval", false),
                 "Idempotency-Key", UUID.randomUUID().toString()));

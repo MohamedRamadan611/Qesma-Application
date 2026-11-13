@@ -40,7 +40,9 @@ public enum ErrorCode {
     INTERNAL_ERROR,
     RATE_LIMITED,
     AUTH_PROVIDER_UNAVAILABLE,
-    USERNAME_TAKEN;
+    USERNAME_TAKEN,
+    /** A reminder for this debtor was sent recently, or the sender hit the daily cap (429, B16). Carries nextAllowedAt. */
+    REMIND_RATE_LIMITED;
 
     /** RFC 7807 {@code type} URI for this code. */
     public URI type() {

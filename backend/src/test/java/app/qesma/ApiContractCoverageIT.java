@@ -223,6 +223,20 @@ class ApiContractCoverageIT extends AbstractApiIT {
         assertThat(status(hit(POST, g + "/settlements/" + second + "/cancel", plain, null))).isEqualTo(200);
         expect(hit(POST, g + "/settlements/" + first + "/cancel", plain, null), 409, ErrorCode.INVALID_STATE_TRANSITION);
         assertThat(status(hit(GET, g + "/settlements?status=CONFIRMED", me, null))).isEqualTo(200);
+        // ---- notification preferences and Remind (B16) ----------------------------------------------------------------
+        assertThat(status(hit(PUT, "/api/v1/me/notification-prefs", me, Map.of("enabled", true)))).isEqualTo(200);
+        assertThat(status(hit(PUT, g + "/notification-prefs", me, Map.of("muted", false)))).isEqualTo(200);
+        Session remindDebtor = newUser();
+        String remindGid = body(hit(POST, "/api/v1/groups", me, Map.of("name", "Remind walk", "type", "TRIP"))).get("id").asText();
+        String remindOwner = member(me, remindGid, "Creditor").get("id").asText();
+        String remindDebtorMid = linkUser(remindGid, remindDebtor, "MEMBER", "ACTIVE", "Debtor");
+        createExpense(me, remindGid, equalBody("Dinner", 2000, null, remindOwner, 2000L));
+        Map<String, Object> remindBody = Map.of("fromMemberId", remindDebtorMid, "toMemberId", remindOwner);
+        MvcResult reminded = hit(POST, "/api/v1/groups/" + remindGid + "/transfers/remind", me, remindBody, "Idempotency-Key", key());
+        assertThat(status(reminded)).isEqualTo(201);
+        assertThat(body(reminded).get("amountMinor").asLong()).isEqualTo(1000L);
+        expect(hit(POST, "/api/v1/groups/" + remindGid + "/transfers/remind", me, remindBody, "Idempotency-Key", key()), 429,
+                ErrorCode.REMIND_RATE_LIMITED);
         // ---- invitations and join (B11) -------------------------------------------------------------------------------
         MvcResult inv = hit(POST, g + "/invites", me, Map.of("expiresInDays", 7), "Idempotency-Key", key());
         assertThat(status(inv)).isEqualTo(201);
@@ -343,6 +357,7 @@ class ApiContractCoverageIT extends AbstractApiIT {
         assertThat(errors.get("VERSION_CONFLICT")).containsExactly(409);
         assertThat(errors.get("USERNAME_TAKEN")).containsExactly(409);
         assertThat(errors.get("RATE_LIMITED")).containsExactly(429);
+        assertThat(errors.get("REMIND_RATE_LIMITED")).containsExactly(429);
         assertThat(errors.get("AUTH_PROVIDER_UNAVAILABLE")).containsExactly(503);
         assertThat(errors.get("INTERNAL_ERROR")).containsExactly(500);
         assertThat(errors.get("NOT_FOUND")).containsExactly(404);
