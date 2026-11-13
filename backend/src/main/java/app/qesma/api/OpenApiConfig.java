@@ -111,7 +111,9 @@ public class OpenApiConfig {
             Map.entry("GET /api/v1/groups/{gid}/balances", "getBalances"),
             Map.entry("GET /api/v1/groups/{gid}/settlements", "listSettlements"),
             Map.entry("POST /api/v1/groups/{gid}/settlements", "createSettlement"),
-            Map.entry("DELETE /api/v1/groups/{gid}/settlements/{sid}", "deleteSettlement"),
+            Map.entry("POST /api/v1/groups/{gid}/settlements/{sid}/confirm", "confirmSettlement"),
+            Map.entry("POST /api/v1/groups/{gid}/settlements/{sid}/dispute", "disputeSettlement"),
+            Map.entry("POST /api/v1/groups/{gid}/settlements/{sid}/cancel", "cancelSettlement"),
             Map.entry("POST /api/v1/groups/{gid}/invites", "createInvite"),
             Map.entry("GET /api/v1/groups/{gid}/invites", "listInvites"),
             Map.entry("DELETE /api/v1/groups/{gid}/invites/{iid}", "revokeInvite"),
@@ -140,7 +142,7 @@ public class OpenApiConfig {
             "GET /api/v1/groups/{gid}", "GET /api/v1/groups/{gid}/expenses", "POST /api/v1/groups/{gid}/expenses",
             "POST /api/v1/groups/{gid}/expenses/preview", "GET /api/v1/groups/{gid}/expenses/{eid}",
             "GET /api/v1/groups/{gid}/expenses/{eid}/revisions", "GET /api/v1/groups/{gid}/balances",
-            "GET /api/v1/groups/{gid}/settlements", "POST /api/v1/groups/{gid}/settlements",
+            "GET /api/v1/groups/{gid}/settlements",
             "POST /api/v1/groups/{gid}/leave");
 
     static Map<Integer, List<ErrorCode>> errorsFor(String path, PathItem.HttpMethod method, Operation op) {
@@ -206,6 +208,10 @@ public class OpenApiConfig {
         if (path.endsWith("/members/{mid}/unlink")
                 || path.endsWith("/members/{mid}") && method == PathItem.HttpMethod.PATCH) {
             add(errors, 409, ErrorCode.OWNER_MEMBER_PROTECTED);
+        }
+        if (path.endsWith("/settlements/{sid}/confirm") || path.endsWith("/settlements/{sid}/dispute")
+                || path.endsWith("/settlements/{sid}/cancel")) {
+            add(errors, 409, ErrorCode.INVALID_STATE_TRANSITION);          // B13: the state machine refused it
         }
         if (path.endsWith("/leave")) {
             add(errors, 409, ErrorCode.OWNER_MUST_TRANSFER);
@@ -341,7 +347,7 @@ public class OpenApiConfig {
             "ShareView", java.util.Set.of("itemsMinor", "serviceMinor", "taxMinor", "adjustmentMinor"),
             "Charges", java.util.Set.of("service", "tax"),
             "ExpensePreview", java.util.Set.of("subtotalMinor", "serviceMinor", "taxMinor", "adjustmentMinor"),
-            "SettlementView", java.util.Set.of("note"),
+            "SettlementView", java.util.Set.of("note", "createdByMemberId", "confirmedAt", "disputedAt", "cancelledAt"),
             "GroupDto", java.util.Set.of("lastExpenseAt"),
             "GroupSummaryDto", java.util.Set.of("lastExpenseAt"),
             "UserDto", java.util.Set.of("email", "username"));

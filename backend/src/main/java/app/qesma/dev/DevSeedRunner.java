@@ -9,8 +9,16 @@ import app.qesma.service.ExpenseCommand.ItemInput;
 import app.qesma.service.ExpenseCommand.PayerInput;
 import app.qesma.service.ExpenseService;
 import app.qesma.service.GroupService;
+import app.qesma.service.IdempotencyService;
+import app.qesma.service.InviteCommand;
+import app.qesma.service.InviteService;
+import app.qesma.service.JoinCommand;
+import app.qesma.service.JoinService;
 import app.qesma.service.MemberService;
+import app.qesma.service.SettlementCommand;
+import app.qesma.service.SettlementService;
 import app.qesma.service.UserService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -44,6 +52,9 @@ public class DevSeedRunner implements ApplicationRunner {
     public static final List<String> MEMBER_NAMES = List.of("محمد", "عاصم", "محسن", "يوسف", "كريم");
     /** What a fake-auth client sends to POST /api/v1/auth/google to become the seeded owner. */
     public static final String FAKE_ID_TOKEN = "fake:" + SUBJECT + ":" + EMAIL + ":" + OWNER_NAME;
+    /** B12: عاصم joins with an account and is promoted to ADMIN; كريم joins and then leaves (a LEFT member with a balance). */
+    public static final String ASEM_ID_TOKEN = "fake:dahab-asem:asem@example.com:عاصم";
+    public static final String KARIM_ID_TOKEN = "fake:dahab-karim:karim@example.com:كريم";
 
     private static final Logger log = LoggerFactory.getLogger(DevSeedRunner.class);
 
@@ -51,12 +62,22 @@ public class DevSeedRunner implements ApplicationRunner {
     private final GroupService groups;
     private final MemberService members;
     private final ExpenseService expenses;
+    private final InviteService invites;
+    private final JoinService joins;
+    private final SettlementService settlements;
+    private final ObjectMapper mapper;
 
-    public DevSeedRunner(UserService users, GroupService groups, MemberService members, ExpenseService expenses) {
+    public DevSeedRunner(UserService users, GroupService groups, MemberService members, ExpenseService expenses,
+                         InviteService invites, JoinService joins, SettlementService settlements,
+                         ObjectMapper mapper) {
         this.users = users;
         this.groups = groups;
         this.members = members;
         this.expenses = expenses;
+        this.invites = invites;
+        this.joins = joins;
+        this.settlements = settlements;
+        this.mapper = mapper;
     }
 
     @Override
@@ -94,8 +115,60 @@ public class DevSeedRunner implements ApplicationRunner {
                         new ItemInput("باستا", 15000L, List.of(mohsen)),
                         new ItemInput("مشروبات", 9000L, List.of(mohamed, asem, mohsen))),
                 new ExpenseCommand.ServiceInput(1200), new ExpenseCommand.TaxInput(1400, "SUBTOTAL_PLUS_SERVICE"), null));
-        log.info("dev.seed created group {} with {} members and 3 expenses. Sign in with idToken {}", group.getId(),
-                ids.size(), FAKE_ID_TOKEN);
+        User asemUser = seedLifecycle(owner, group, asem, ids.get(4));
+        seedSettlements(owner, asemUser, group, mohamed, asem);
+        log.info("dev.seed created group {} with {} members and 3 expenses. Sign in with idToken {} "
+                + "(admin: {}, member who left: {}); 1 PENDING and 1 DISPUTED settlement", group.getId(), ids.size(), FAKE_ID_TOKEN, ASEM_ID_TOKEN,
+                KARIM_ID_TOKEN);
+    }
+
+    /** B12: two people claim their ghost through a real invite; the owner promotes one, the other leaves. */
+    private User seedLifecycle(User owner, ExpenseGroup group, UUID asemMember, UUID karimMember) {
+        User asem = users.upsertGoogleUser(new GoogleIdentity("dahab-asem", "asem@example.com", "عاصم"));
+        User karim = users.upsertGoogleUser(new GoogleIdentity("dahab-karim", "karim@example.com", "كريم"));
+        String code = inviteCode(owner, group);
+        join(asem, code, asemMember, 1);
+        join(karim, code, karimMember, 2);
+        members.update(owner.getId(), group.getId(), asemMember, new MemberService.MemberPatch(null, "ADMIN", null));
+        members.leave(karim.getId(), group.getId());
+        return asem;
+    }
+
+    /**
+     * B13: one PENDING and one DISPUTED payment from عاصم to محمد. Neither counts in the balances (A83), so the documented
+     * nets stay as they are; both show up as pending/dispute information on the suggested transfers they match.
+     */
+    private void seedSettlements(User owner, User asem, ExpenseGroup group, UUID mohamed, UUID asemMember) {
+        declare(asem, group, 1, new SettlementCommand(asemMember, mohamed, 5000L, LocalDate.of(2026, 10, 18), "تحويل إنستاباي"));
+        String disputed = declare(asem, group, 2,
+                new SettlementCommand(asemMember, mohamed, 3000L, LocalDate.of(2026, 10, 19), "كاش في الفندق"));
+        settlements.dispute(owner.getId(), group.getId(), UUID.fromString(disputed));
+    }
+
+    private String declare(User payer, ExpenseGroup group, int number, SettlementCommand command) {
+        UUID key = UUID.nameUUIDFromBytes(("qesma-dahab-seed-settlement-" + number).getBytes(StandardCharsets.UTF_8));
+        IdempotencyService.Outcome out = settlements.create(payer.getId(), group.getId(), key, command);
+        try {
+            return mapper.readTree(out.body()).get("id").asText();
+        } catch (java.io.IOException e) {
+            throw new IllegalStateException("dev.seed could not read the settlement it just created", e);
+        }
+    }
+
+    private String inviteCode(User owner, ExpenseGroup group) {
+        UUID key = UUID.nameUUIDFromBytes("qesma-dahab-seed-invite".getBytes(StandardCharsets.UTF_8));
+        IdempotencyService.Outcome out = invites.create(owner.getId(), group.getId(), key,
+                new InviteCommand(7, null, false));
+        try {
+            return mapper.readTree(out.body()).get("code").asText();
+        } catch (java.io.IOException e) {
+            throw new IllegalStateException("dev.seed could not read the invite it just created", e);
+        }
+    }
+
+    private void join(User user, String code, UUID memberId, int number) {
+        UUID key = UUID.nameUUIDFromBytes(("qesma-dahab-seed-join-" + number).getBytes(StandardCharsets.UTF_8));
+        joins.join(user.getId(), key, code, new JoinCommand(memberId, null));
     }
 
     private void create(User owner, ExpenseGroup group, int number, ExpenseCommand command) {

@@ -861,7 +861,7 @@
         "properties" : {
           "code" : {
             "description" : "Stable machine-readable error code.",
-            "enum" : [ "VALIDATION_ERROR", "PAYERS_TOTAL_MISMATCH", "SPLIT_TOTAL_MISMATCH", "MEMBER_NOT_IN_GROUP", "IDEMPOTENCY_KEY_REUSED", "DUPLICATE_MEMBER_NAME", "MEMBER_HAS_TRANSACTIONS", "OWNER_MEMBER_PROTECTED", "VERSION_CONFLICT", "INVITE_EXPIRED", "INVITE_REVOKED", "ALREADY_MEMBER", "MEMBER_ALREADY_CLAIMED", "MEMBER_INACTIVE", "OWNER_MUST_TRANSFER", "GROUP_NOT_EMPTY", "NOT_FOUND", "FORBIDDEN", "UNAUTHORIZED", "INTERNAL_ERROR", "RATE_LIMITED", "AUTH_PROVIDER_UNAVAILABLE", "USERNAME_TAKEN" ],
+            "enum" : [ "VALIDATION_ERROR", "PAYERS_TOTAL_MISMATCH", "SPLIT_TOTAL_MISMATCH", "MEMBER_NOT_IN_GROUP", "IDEMPOTENCY_KEY_REUSED", "DUPLICATE_MEMBER_NAME", "MEMBER_HAS_TRANSACTIONS", "OWNER_MEMBER_PROTECTED", "VERSION_CONFLICT", "INVITE_EXPIRED", "INVITE_REVOKED", "ALREADY_MEMBER", "MEMBER_ALREADY_CLAIMED", "MEMBER_INACTIVE", "OWNER_MUST_TRANSFER", "GROUP_NOT_EMPTY", "NOT_FOUND", "FORBIDDEN", "INVALID_STATE_TRANSITION", "UNAUTHORIZED", "INTERNAL_ERROR", "RATE_LIMITED", "AUTH_PROVIDER_UNAVAILABLE", "USERNAME_TAKEN" ],
             "type" : "string"
           },
           "detail" : {
@@ -999,8 +999,32 @@
             "format" : "int64",
             "type" : "integer"
           },
+          "cancelledAt" : {
+            "format" : "date-time",
+            "nullable" : true,
+            "type" : "string"
+          },
+          "confirmedAt" : {
+            "format" : "date-time",
+            "nullable" : true,
+            "type" : "string"
+          },
           "createdAt" : {
             "format" : "date-time",
+            "type" : "string"
+          },
+          "createdByMemberId" : {
+            "format" : "uuid",
+            "nullable" : true,
+            "type" : "string"
+          },
+          "declaredAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "disputedAt" : {
+            "format" : "date-time",
+            "nullable" : true,
             "type" : "string"
           },
           "fromMemberId" : {
@@ -1019,8 +1043,14 @@
             "nullable" : true,
             "type" : "string"
           },
+          "recordedByAdmin" : {
+            "type" : "boolean"
+          },
           "settledOn" : {
             "format" : "date",
+            "type" : "string"
+          },
+          "status" : {
             "type" : "string"
           },
           "toMemberId" : {
@@ -1028,7 +1058,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "amountMinor", "createdAt", "fromMemberId", "groupId", "id", "settledOn", "toMemberId" ],
+        "required" : [ "amountMinor", "createdAt", "declaredAt", "fromMemberId", "groupId", "id", "recordedByAdmin", "settledOn", "status", "toMemberId" ],
         "type" : "object"
       },
       "ShareInput" : {
@@ -1150,12 +1180,27 @@
             "format" : "uuid",
             "type" : "string"
           },
+          "hasDispute" : {
+            "type" : "boolean"
+          },
+          "openSettlementIds" : {
+            "items" : {
+              "format" : "uuid",
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "pendingMinor" : {
+            "description" : "Integer minor units (piasters: 1 EGP = 100). Never a decimal.",
+            "format" : "int64",
+            "type" : "integer"
+          },
           "toMemberId" : {
             "format" : "uuid",
             "type" : "string"
           }
         },
-        "required" : [ "amountMinor", "fromMemberId", "toMemberId" ],
+        "required" : [ "amountMinor", "fromMemberId", "hasDispute", "openSettlementIds", "pendingMinor", "toMemberId" ],
         "type" : "object"
       },
       "Unclaimed" : {
@@ -4639,6 +4684,7 @@
     },
     "/api/v1/groups/{gid}/settlements" : {
       "get" : {
+        "description" : "Optional repeatable filter status=PENDING|CONFIRMED|DISPUTED|CANCELLED; without it every status is listed. Only CONFIRMED settlements move balances.",
         "operationId" : "listSettlements",
         "parameters" : [ {
           "in" : "path",
@@ -4647,6 +4693,16 @@
           "schema" : {
             "format" : "uuid",
             "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
           }
         }, {
           "in" : "query",
@@ -4729,11 +4785,11 @@
             "description" : "Unexpected error (code: INTERNAL_ERROR)"
           }
         },
-        "summary" : "List settlements, newest first (deleted ones are not listed)",
+        "summary" : "List settlements, newest first (cancelled ones included)",
         "tags" : [ "settlement-controller" ]
       },
       "post" : {
-        "description" : "Idempotency-Key (UUID) is required. amountMinor is in piasters, 1 to 10^12.",
+        "description" : "Idempotency-Key (UUID) is required. amountMinor is in piasters, 1 to 10^12. The status is decided by the server: the payer declares (PENDING, to a member with an account); the receiver or an Owner/Admin recording it makes it CONFIRMED (Owner/Admin on behalf: recordedByAdmin). 403 for a member recording a payment between two others or to a member without an account.",
         "operationId" : "createSettlement",
         "parameters" : [ {
           "in" : "path",
@@ -4822,6 +4878,16 @@
             },
             "description" : "Not authenticated (code: UNAUTHORIZED)"
           },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "You are a member of the group but your role does not allow this (code: FORBIDDEN)"
+          },
           "404" : {
             "content" : {
               "application/problem+json" : {
@@ -4863,13 +4929,14 @@
             "description" : "Unexpected error (code: INTERNAL_ERROR)"
           }
         },
-        "summary" : "Record a settlement (a real-world payment between two members)",
+        "summary" : "Declare or record a settlement (a real-world payment between two members)",
         "tags" : [ "settlement-controller" ]
       }
     },
-    "/api/v1/groups/{gid}/settlements/{sid}" : {
-      "delete" : {
-        "operationId" : "deleteSettlement",
+    "/api/v1/groups/{gid}/settlements/{sid}/cancel" : {
+      "post" : {
+        "description" : "PENDING or DISPUTED -> CANCELLED; the row stays in the history. Repeating it returns the current settlement unchanged. 409 INVALID_STATE_TRANSITION from CONFIRMED.",
+        "operationId" : "cancelSettlement",
         "parameters" : [ {
           "in" : "path",
           "name" : "gid",
@@ -4888,8 +4955,15 @@
           }
         } ],
         "responses" : {
-          "204" : {
-            "description" : "Deleted"
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SettlementView"
+                }
+              }
+            },
+            "description" : "OK"
           },
           "401" : {
             "content" : {
@@ -4921,6 +4995,16 @@
             },
             "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
           },
+          "409" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Conflict (code: INVALID_STATE_TRANSITION)"
+          },
           "422" : {
             "content" : {
               "application/problem+json" : {
@@ -4942,7 +5026,201 @@
             "description" : "Unexpected error (code: INTERNAL_ERROR)"
           }
         },
-        "summary" : "Delete a settlement (soft delete; its effect on balances is reversed)",
+        "summary" : "Cancel (the payer, or an Owner/Admin); replaces the Phase 1 delete",
+        "tags" : [ "settlement-controller" ]
+      }
+    },
+    "/api/v1/groups/{gid}/settlements/{sid}/confirm" : {
+      "post" : {
+        "description" : "PENDING or DISPUTED -> CONFIRMED. Repeating it returns the current settlement unchanged. 409 INVALID_STATE_TRANSITION from CANCELLED.",
+        "operationId" : "confirmSettlement",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "gid",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "in" : "path",
+          "name" : "sid",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SettlementView"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "You are a member of the group but your role does not allow this (code: FORBIDDEN)"
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
+          },
+          "409" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Conflict (code: INVALID_STATE_TRANSITION)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "summary" : "Confirm \"received\" (the receiver, or an Owner/Admin who is not the payer)",
+        "tags" : [ "settlement-controller" ]
+      }
+    },
+    "/api/v1/groups/{gid}/settlements/{sid}/dispute" : {
+      "post" : {
+        "description" : "PENDING -> DISPUTED. Repeating it returns the current settlement unchanged. 409 INVALID_STATE_TRANSITION from CONFIRMED or CANCELLED.",
+        "operationId" : "disputeSettlement",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "gid",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "in" : "path",
+          "name" : "sid",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SettlementView"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "You are a member of the group but your role does not allow this (code: FORBIDDEN)"
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not found, or you are not a member of the group (identical answer) (code: NOT_FOUND)"
+          },
+          "409" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Conflict (code: INVALID_STATE_TRANSITION)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "summary" : "Dispute \"not received\" (the receiver only)",
         "tags" : [ "settlement-controller" ]
       }
     },

@@ -14,8 +14,8 @@ public enum Permission {
     EDIT_OWN_EXPENSE,
     /** Edit or delete an expense somebody else created. */
     EDIT_ANY_EXPENSE,
-    DELETE_OWN_SETTLEMENT,
-    DELETE_ANY_SETTLEMENT,
+    /** Record a settlement on behalf of two other members, cancel or confirm one that is not yours (B13, Owner and Admin). */
+    MANAGE_SETTLEMENTS,
     /** Create, list and revoke invitations (B11). */
     MANAGE_INVITES,
     /** Read and decide join requests (B11). */

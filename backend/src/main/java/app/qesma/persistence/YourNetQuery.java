@@ -22,7 +22,8 @@ public class YourNetQuery {
     public record YourTotals(UUID memberId, MemberTotals totals) {
     }
 
-    private static final String SQL = """
+    /** Public so the rule test can pin that it uses the one balance predicate. */
+    public static final String SQL = """
             with mine as (
               select m.id as member_id, m.group_id from members m
               where m.user_id = ? and m.group_id = any(?) and m.status = 'ACTIVE'
@@ -41,15 +42,15 @@ public class YourNetQuery {
               where e.deleted_at is null and e.group_id = any(?) and s.member_id in (select member_id from mine)
               union all
               select t.from_member_id, 0, 0, t.amount_minor, 0
-              from settlements t where t.deleted_at is null and t.group_id = any(?)
+              from settlements t where %1$s and t.group_id = any(?)
                 and t.from_member_id in (select member_id from mine)
               union all
               select t.to_member_id, 0, 0, 0, t.amount_minor
-              from settlements t where t.deleted_at is null and t.group_id = any(?)
+              from settlements t where %1$s and t.group_id = any(?)
                 and t.to_member_id in (select member_id from mine)
             ) l on l.member_id = mine.member_id
             group by mine.group_id, mine.member_id
-            """;
+            """.formatted(SettlementLedgerSql.COUNTS_IN_BALANCE);
 
     private final JdbcTemplate jdbc;
 

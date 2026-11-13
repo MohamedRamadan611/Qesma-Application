@@ -11,10 +11,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -45,8 +45,11 @@ public class SettlementController {
      * key with a different request is 422. Partial and larger-than-suggested amounts are allowed.
      */
     @PostMapping
-    @Operation(summary = "Record a settlement (a real-world payment between two members)",
-            description = "Idempotency-Key (UUID) is required. amountMinor is in piasters, 1 to 10^12.")
+    @Operation(summary = "Declare or record a settlement (a real-world payment between two members)",
+            description = "Idempotency-Key (UUID) is required. amountMinor is in piasters, 1 to 10^12. The status is "
+                    + "decided by the server: the payer declares (PENDING, to a member with an account); the receiver "
+                    + "or an Owner/Admin recording it makes it CONFIRMED (Owner/Admin on behalf: recordedByAdmin). "
+                    + "403 for a member recording a payment between two others or to a member without an account.")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = @ExampleObject(
             name = "A pays M 80.00", value = """
                     {"fromMemberId":"22222222-2222-2222-2222-222222222222",
@@ -76,21 +79,40 @@ public class SettlementController {
     }
 
     @GetMapping
-    @Operation(summary = "List settlements, newest first (deleted ones are not listed)")
+    @Operation(summary = "List settlements, newest first (cancelled ones included)",
+            description = "Optional repeatable filter status=PENDING|CONFIRMED|DISPUTED|CANCELLED; without it every status "
+                    + "is listed. Only CONFIRMED settlements move balances.")
     public PageResponse<SettlementView> list(@PathVariable UUID gid,
+                                             @RequestParam(required = false) List<String> status,
                                              @RequestParam(defaultValue = "0") int page,
                                              @RequestParam(defaultValue = "20") int size) {
-        return PageResponse.of(settlements.list(currentUser.id(), gid, page, size), view -> view);
+        return PageResponse.of(settlements.list(currentUser.id(), gid, status, page, size), view -> view);
     }
 
-    /** Soft delete: the payment no longer counts in balances. A second delete is a plain 404. */
-    @DeleteMapping("/{sid}")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "Deleted")
-    @Operation(summary = "Delete a settlement (soft delete; its effect on balances is reversed)")
-    public ResponseEntity<Void> delete(@PathVariable UUID gid, @PathVariable UUID sid) {
-        settlements.delete(currentUser.id(), gid, sid);
-        return ResponseEntity.noContent().build();
+    @PostMapping("/{sid}/confirm")
+    @Operation(summary = "Confirm \"received\" (the receiver, or an Owner/Admin who is not the payer)",
+            description = "PENDING or DISPUTED -> CONFIRMED. Repeating it returns the current settlement unchanged. "
+                    + "409 INVALID_STATE_TRANSITION from CANCELLED.")
+    public SettlementView confirm(@PathVariable UUID gid, @PathVariable UUID sid) {
+        return settlements.confirm(currentUser.id(), gid, sid);
     }
+
+    @PostMapping("/{sid}/dispute")
+    @Operation(summary = "Dispute \"not received\" (the receiver only)",
+            description = "PENDING -> DISPUTED. Repeating it returns the current settlement unchanged. "
+                    + "409 INVALID_STATE_TRANSITION from CONFIRMED or CANCELLED.")
+    public SettlementView dispute(@PathVariable UUID gid, @PathVariable UUID sid) {
+        return settlements.dispute(currentUser.id(), gid, sid);
+    }
+
+    @PostMapping("/{sid}/cancel")
+    @Operation(summary = "Cancel (the payer, or an Owner/Admin); replaces the Phase 1 delete",
+            description = "PENDING or DISPUTED -> CANCELLED; the row stays in the history. Repeating it returns the "
+                    + "current settlement unchanged. 409 INVALID_STATE_TRANSITION from CONFIRMED.")
+    public SettlementView cancel(@PathVariable UUID gid, @PathVariable UUID sid) {
+        return settlements.cancel(currentUser.id(), gid, sid);
+    }
+
 
     private String idOf(String body) {
         try {

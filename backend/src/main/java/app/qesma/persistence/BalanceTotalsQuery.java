@@ -8,7 +8,8 @@ import org.springframework.stereotype.Repository;
 
 /**
  * The one statement behind {@code GET /balances}: per member, the sums of what they paid and owe on live
- * (non-deleted) expenses and what they sent and received in live settlements. SQL only adds; the balance rule and
+ * (non-deleted) expenses and what they sent and received in CONFIRMED settlements only (A83, one predicate in
+ * {@link SettlementLedgerSql}). SQL only adds; the balance rule and
  * the zero-sum invariant live in the engine. A single statement reads one consistent snapshot, so concurrent
  * writes can never make the sums disagree with each other.
  */
@@ -28,13 +29,13 @@ public class BalanceTotalsQuery {
               where e.group_id = ? and e.deleted_at is null
               union all
               select t.from_member_id, 0, 0, t.amount_minor, 0
-              from settlements t where t.group_id = ? and t.deleted_at is null
+              from settlements t where t.group_id = ? and %1$s
               union all
               select t.to_member_id, 0, 0, 0, t.amount_minor
-              from settlements t where t.group_id = ? and t.deleted_at is null
+              from settlements t where t.group_id = ? and %1$s
             ) ledger
             group by member_id
-            """;
+            """.formatted(SettlementLedgerSql.COUNTS_IN_BALANCE);
 
     private final JdbcTemplate jdbc;
 

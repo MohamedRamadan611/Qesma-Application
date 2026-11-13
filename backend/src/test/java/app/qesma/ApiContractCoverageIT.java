@@ -172,7 +172,6 @@ class ApiContractCoverageIT extends AbstractApiIT {
         String sid = body(hit(POST, g + "/settlements", me, pay, "Idempotency-Key", key())).get("id").asText();
         assertThat(status(hit(GET, g + "/settlements", me, null))).isEqualTo(200);
         assertThat(status(hit(GET, g + "/balances", me, null))).isEqualTo(200);
-        assertThat(status(hit(DELETE, g + "/settlements/" + sid, me, null))).isEqualTo(204);
 
         // ---- every error code, on a real response ------------------------------------------------------------
         expect(hit(POST, "/api/v1/groups", me, Map.of("name", " ", "type", "TRIP")), 422, ErrorCode.VALIDATION_ERROR);
@@ -196,8 +195,21 @@ class ApiContractCoverageIT extends AbstractApiIT {
         expect(hit(GET, "/api/v1/groups/" + UUID.randomUUID(), me, null), 404, ErrorCode.NOT_FOUND);
         // a plain MEMBER may read but not edit the group: 403 FORBIDDEN (B10, A65)
         Session plain = newUser();
-        linkUser(g.substring(g.lastIndexOf('/') + 1), plain, "MEMBER", "ACTIVE", "Plain");
+        String plainMid = linkUser(g.substring(g.lastIndexOf('/') + 1), plain, "MEMBER", "ACTIVE", "Plain");
         expect(hit(PATCH, g, plain, Map.of("name", "Nope"), "If-Match", "\"1\""), 403, ErrorCode.FORBIDDEN);
+
+        // ---- two-sided settlements (B13): declare, confirm, dispute, cancel, INVALID_STATE_TRANSITION ----------------
+        Map<String, Object> declare = Map.of("fromMemberId", plainMid, "toMemberId", ownerMember, "amountMinor", 300L,
+                "settledOn", "2026-10-21");
+        String first = body(hit(POST, g + "/settlements", plain, declare, "Idempotency-Key", key())).get("id").asText();
+        String second = body(hit(POST, g + "/settlements", plain, declare, "Idempotency-Key", key())).get("id").asText();
+        assertThat(jdbc.queryForObject("select status from settlements where id = ?::uuid", String.class, first))
+                .isEqualTo("PENDING");
+        assertThat(status(hit(POST, g + "/settlements/" + first + "/confirm", me, null))).isEqualTo(200);
+        assertThat(status(hit(POST, g + "/settlements/" + second + "/dispute", me, null))).isEqualTo(200);
+        assertThat(status(hit(POST, g + "/settlements/" + second + "/cancel", plain, null))).isEqualTo(200);
+        expect(hit(POST, g + "/settlements/" + first + "/cancel", plain, null), 409, ErrorCode.INVALID_STATE_TRANSITION);
+        assertThat(status(hit(GET, g + "/settlements?status=CONFIRMED", me, null))).isEqualTo(200);
         // ---- invitations and join (B11) -------------------------------------------------------------------------------
         MvcResult inv = hit(POST, g + "/invites", me, Map.of("expiresInDays", 7), "Idempotency-Key", key());
         assertThat(status(inv)).isEqualTo(201);

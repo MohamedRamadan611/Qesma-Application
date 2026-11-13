@@ -113,7 +113,7 @@ class IdorMatrixIT extends AbstractApiIT {
                 + "order by sort_order", gid));
         s.put("expenses", jdbc.queryForList("select id, title, total_minor, version, deleted_at from expenses "
                 + "where group_id = ?::uuid order by id", gid));
-        s.put("settlements", jdbc.queryForList("select id, amount_minor, deleted_at from settlements "
+        s.put("settlements", jdbc.queryForList("select id, amount_minor, status, confirmed_at, cancelled_at, deleted_at from settlements "
                 + "where group_id = ?::uuid order by id", gid));
         s.put("invites", jdbc.queryForList("select id, use_count, revoked_at from group_invites where group_id = ?::uuid order by id", gid));
         s.put("requests", jdbc.queryForList("select id, status from join_requests where group_id = ?::uuid order by id", gid));
@@ -149,7 +149,7 @@ class IdorMatrixIT extends AbstractApiIT {
         List<Op> ops = groupScopedOperations();
         Set<String> labels = new TreeSet<>();
         ops.forEach(o -> labels.add(o.label()));
-        assertThat(ops).as("group-scoped operations found in the OpenAPI document").hasSize(26);
+        assertThat(ops).as("group-scoped operations found in the OpenAPI document").hasSize(28);
 
         Map<String, Object> before = snapshot(gid);
         for (Op op : ops) {

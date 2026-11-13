@@ -99,13 +99,16 @@ Two edits racing on the same version: exactly one wins, the other gets 409. A de
 ```bash
 curl -s localhost:8080/api/v1/groups/<gid>/balances -H "Authorization: Bearer $T"
 # -> {"nets":[{"memberId":"<m1>","netMinor":-8000},{"memberId":"<m2>","netMinor":8000}],
-#     "transfers":[{"fromMemberId":"<m1>","toMemberId":"<m2>","amountMinor":8000}]}   (positive net = is owed)
+#     "transfers":[{"fromMemberId":"<m1>","toMemberId":"<m2>","amountMinor":8000,"pendingMinor":0,"hasDispute":false,"openSettlementIds":[]}]}   (positive net = is owed)
 curl -si -X POST localhost:8080/api/v1/groups/<gid>/settlements -H "Authorization: Bearer $T" -H "$H" -H "Idempotency-Key: $(uuidgen)" \
      -d '{"fromMemberId":"<m1>","toMemberId":"<m2>","amountMinor":8000,"settledOn":"2026-10-20","note":"cash"}'   # 201; same key = same answer
 curl -s  "localhost:8080/api/v1/groups/<gid>/settlements?page=0&size=20" -H "Authorization: Bearer $T"
-curl -si -X DELETE localhost:8080/api/v1/groups/<gid>/settlements/<sid> -H "Authorization: Bearer $T"             # 204, soft delete
+curl -s  "localhost:8080/api/v1/groups/<gid>/settlements?status=PENDING&status=DISPUTED" -H "Authorization: Bearer $T"
+curl -si -X POST localhost:8080/api/v1/groups/<gid>/settlements/<sid>/confirm -H "Authorization: Bearer $T"   # also dispute, cancel
 ```
 Partial amounts and amounts above the suggested transfer are allowed. Amounts are limited to 1 000 000 000 000 piasters (10 billion EGP).
+
+**Two-sided settlements (B13, A83-A89).** The server decides the status: the payer declares a payment to a member with an account (`PENDING`); the receiver recording it, or an Owner/Admin recording it on behalf of two others (`recordedByAdmin`), is `CONFIRMED` at once; a Member cannot record a payment between two others or to a member without an account (403). `confirm` (receiver, or Owner/Admin who is not the payer), `dispute` (receiver) and `cancel` (payer, or Owner/Admin) are idempotent state transitions; a transition the table does not allow is `409 INVALID_STATE_TRANSITION`. **Only CONFIRMED settlements move nets, suggested transfers and `yourNetMinor`.** PENDING and DISPUTED ones only fill `pendingMinor`, `hasDispute` and `openSettlementIds` on the transfer between exactly that pair; the client never subtracts them. Settlements are never deleted: the Phase 1 `DELETE .../settlements/{sid}` is gone, `cancel` replaces it, and cancelled rows stay in the list. **Client note:** regenerate `mobile/packages/qesma_api`; the FL7 delete-payment UI must be replaced in FL13. V15 backfills every Phase 1 payment to `CONFIRMED` (soft-deleted ones to `CANCELLED`), so existing balances do not change. The seed adds one PENDING and one DISPUTED example.
 
 EXACT uses `"splitType":"EXACT"` and `"shares":[{"memberId":"<m1>","amountMinor":4000},{"memberId":"<m2>","amountMinor":6000}]`.
 Amounts are integer piasters (10000 = 100.00 EGP). Keys are kept 24 hours.
@@ -140,6 +143,12 @@ curl -s -X POST localhost:8080/api/v1/invites/K7HQ2M9X/join -H "Authorization: B
 ```
 Unknown code `404`; expired or used up `410 INVITE_EXPIRED`; revoked `410 INVITE_REVOKED`; already a member `409 ALREADY_MEMBER`; claimed by somebody else `409 MEMBER_ALREADY_CLAIMED`. Lookups are limited per IP (30/min on `/api/v1/invites/**`) and per user (10 lookups that find nothing per 15 minutes) with `429 RATE_LIMITED`; tune with `qesma.invites.*`. The deep-link (`qesma.invites.link-base`) and the Android App Links file are outside the backend. The code is a secret: it is not logged, but a reverse proxy that logs request paths would show it.
 
+## Member lifecycle (B12, A77-A82)
+- `PATCH /groups/{gid}/members/{mid}` takes `displayName`, `role` (`ADMIN`/`MEMBER`, Owner only) and `status` (`ACTIVE`/`LEFT`, Owner/Admin); each field is authorized on its own and nothing is applied if one is refused. An Admin never touches another Admin or the Owner (`403` / `409 OWNER_MEMBER_PROTECTED`).
+- `POST /groups/{gid}/leave` (any active member; the Owner gets `409 OWNER_MUST_TRANSFER`) and `POST /groups/{gid}/transfer-ownership {toMemberId}` (Owner only, target active with an account, one transaction: old owner demoted first, then the target promoted, so the one-OWNER index is never violated).
+- A member who left stays in history, balances and suggested transfers but cannot be used in new expenses, previews or settlements (`422 MEMBER_INACTIVE`); an existing expense that already has them can still be edited. They get `404` for the group, and a new invite reactivates their own row. A group with any linked non-owner member stays non-deletable.
+- Tests: `MemberLifecycleIT` (every transition-table cell), `RoleMatrixIT`, `IdorMatrixIT`, `RoleQueryCountIT`. Mobile must regenerate the client from `docs/openapi.json`.
+
 ## Smoke test (end to end, against a running backend)
 `scripts/smoke.sh` (bash + curl + jq) signs in two fake users, then walks the Phase 1 flow and asserts exact minor-unit values: group + 5 members, equal expense (V3), idempotent replay, user B gets 404, multi-payer (V4), itemized V5-V8 with preview parity, edit/ETag/stale ETag/delete/revisions, V1 balances and transfers, `yourNetMinor`, settlement and V2 balances, then the username + password accounts of ADR-008 (register with a lower-cased username, login, the identical 401 for a wrong password and an unknown name, `USERNAME_TAKEN`, a refused common password, owner-only 404 for a password user's group, change password with fresh tokens, the old password refused). `SMOKE_DAHAB=1` adds the seeded Dahab trip (profile `seed`): the documented nets and four transfers. It prints one `PASS`/`FAIL` line per check and exits non-zero on the first failure. Each run creates fresh users and groups, so it can be repeated.
 ```bash
@@ -159,7 +168,7 @@ The container runs as a non-root user.
 ```bash
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=local,fake-auth,seed
 ```
-Creates the group "رحلة دهب" with 5 members and the three expenses from `docs/STITCH_PROMPTS.md` (documented balances: محمد +1,014.01, عاصم +1,114.02, محسن −688.03, يوسف −720.00, كريم −720.00). Sign in with the fake token printed in the log: `fake:dahab:mohamed@example.com:محمد`. Running it again changes nothing. The `seed` profile only works together with `local`.
+Creates the group "رحلة دهب" with 5 members and the three expenses (B12: عاصم is linked and an ADMIN, كريم is linked and has left, so `memberCount` is 4 while all five stay in history and balances) from `docs/STITCH_PROMPTS.md` (documented balances: محمد +1,014.01, عاصم +1,114.02, محسن −688.03, يوسف −720.00, كريم −720.00). Sign in with the fake token printed in the log: `fake:dahab:mohamed@example.com:محمد` (owner), `fake:dahab-asem:asem@example.com:عاصم` (admin) or `fake:dahab-karim:karim@example.com:كريم` (left: sees 404). Running it again changes nothing. The `seed` profile only works together with `local`.
 
 ## OpenAPI and the mobile client
 `../docs/openapi.json` is generated by the app (`OpenApiExportIT`); the build fails if the committed file is stale. Regeneration and the Dart client command are in `../docs/mobile-client.md`. While running with `local`, Swagger UI is at `/swagger-ui.html`.

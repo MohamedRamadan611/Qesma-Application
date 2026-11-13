@@ -34,6 +34,8 @@ public enum ErrorCode {
     NOT_FOUND,
     /** A member of the group lacks the role permission for this action (Phase 2, Decision A65). */
     FORBIDDEN,
+    /** A settlement action is not allowed from its current state (409, Phase 2 B13). */
+    INVALID_STATE_TRANSITION,
     UNAUTHORIZED,
     INTERNAL_ERROR,
     RATE_LIMITED,

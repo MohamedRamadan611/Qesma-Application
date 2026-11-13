@@ -144,27 +144,29 @@ class BalancesSettlementsIT extends AbstractApiIT {
     // ---- soft deletes, edits, partial and excess ----------------------------------------------------------------
 
     @Test
-    void deletingASettlementOrAnExpenseOrEditingOneMovesTheBalancesAccordingly() throws Exception {
+    void aConfirmedSettlementCannotBeUndoneButDeletingOrEditingAnExpenseMovesTheBalances() throws Exception {
         Session ali = newUser();
         List<String> g = mas(ali);
         List<String> e = v1(ali, g);
         String sid = settleOk(ali, g.get(0), g.get(2), g.get(1), 8000).get("id").asText();
         assertThat(netsOf(balances(ali, g.get(0))).get(g.get(2))).isZero();
 
-        assertThat(status(call(DELETE, GROUPS + g.get(0) + "/settlements/" + sid, ali, null))).isEqualTo(204);
-        assertThat(netsOf(balances(ali, g.get(0))).get(g.get(2))).as("settlement reversed").isEqualTo(-8000L);
+        MvcResult undo = call(POST, GROUPS + g.get(0) + "/settlements/" + sid + "/cancel", ali, null);   // B13: no delete
+        assertThat(status(undo)).isEqualTo(409);
+        assertThat(code(undo)).isEqualTo("INVALID_STATE_TRANSITION");
+        assertThat(netsOf(balances(ali, g.get(0))).get(g.get(2))).as("a confirmed settlement stays").isZero();
 
         assertThat(status(call(DELETE, GROUPS + g.get(0) + "/expenses/" + e.get(0), ali, null,
                 "If-Match", "\"1\""))).isEqualTo(204);
-        JsonNode afterDelete = balances(ali, g.get(0));                              // only E2 left: S paid 30, A owes 30
-        assertThat(netsOf(afterDelete)).containsExactly(Map.entry(g.get(1), 0L), Map.entry(g.get(2), -3000L),
+        JsonNode afterDelete = balances(ali, g.get(0));                              // only E2 left, plus the confirmed 80.00 payment
+        assertThat(netsOf(afterDelete)).containsExactly(Map.entry(g.get(1), -8000L), Map.entry(g.get(2), 5000L),
                 Map.entry(g.get(3), 3000L));
 
         MvcResult edit = call(PUT, GROUPS + g.get(0) + "/expenses/" + e.get(1), ali,
                 exactBody("E2", 3000, List.of(g.get(1), 1000L, g.get(2), 2000L), g.get(3), 3000L), "If-Match", "\"1\"");
         assertThat(status(edit)).isEqualTo(200);
-        assertThat(netsOf(balances(ali, g.get(0)))).containsExactly(Map.entry(g.get(1), -1000L),
-                Map.entry(g.get(2), -2000L), Map.entry(g.get(3), 3000L));
+        assertThat(netsOf(balances(ali, g.get(0)))).containsExactly(Map.entry(g.get(1), -9000L),
+                Map.entry(g.get(2), 6000L), Map.entry(g.get(3), 3000L));
     }
 
     @Test
@@ -185,7 +187,7 @@ class BalancesSettlementsIT extends AbstractApiIT {
     }
 
     @Test
-    void listIsPagedNewestFirstAndExcludesDeleted() throws Exception {
+    void listIsPagedNewestFirstShowsCancelledOnesAndFiltersByStatus() throws Exception {
         Session ali = newUser();
         List<String> g = mas(ali);
         String first = settleOk(ali, g.get(0), g.get(2), g.get(1), 100).get("id").asText();
@@ -194,14 +196,18 @@ class BalancesSettlementsIT extends AbstractApiIT {
                 "Idempotency-Key", UUID.randomUUID().toString());
         assertThat(status(later)).isEqualTo(201);
         String gone = settleOk(ali, g.get(0), g.get(2), g.get(3), 300).get("id").asText();
-        call(DELETE, GROUPS + g.get(0) + "/settlements/" + gone, ali, null);
+        jdbc.update("update settlements set status = 'CANCELLED', confirmed_at = null, cancelled_at = now() where id = ?::uuid", gone);
 
         JsonNode page = body(call(GET, GROUPS + g.get(0) + "/settlements?size=10", ali, null));
 
-        assertThat(page.get("items")).hasSize(2);
-        assertThat(page.get("totalElements").asLong()).isEqualTo(2);
+        assertThat(page.get("items")).hasSize(3);                                  // the cancelled one stays in the history
+        assertThat(page.get("totalElements").asLong()).isEqualTo(3);
+        JsonNode live = body(call(GET, GROUPS + g.get(0) + "/settlements?status=CONFIRMED&size=10", ali, null));
+        assertThat(live.get("items")).hasSize(2);
+        assertThat(body(call(GET, GROUPS + g.get(0) + "/settlements?status=CANCELLED", ali, null)).get("items")).hasSize(1);
+        assertThat(status(call(GET, GROUPS + g.get(0) + "/settlements?status=BOGUS", ali, null))).isEqualTo(422);
         assertThat(page.get("items").get(0).get("settledOn").asText()).isEqualTo("2026-11-01");   // newest date first
-        assertThat(page.get("items").get(1).get("id").asText()).isEqualTo(first);
+        assertThat(live.get("items").get(1).get("id").asText()).isEqualTo(first);
         assertThat(body(call(GET, GROUPS + g.get(0) + "/settlements?size=1&page=1", ali, null)).get("items")).hasSize(1);
         assertThat(status(call(GET, GROUPS + g.get(0) + "/settlements?size=101", ali, null))).isEqualTo(422);
     }
@@ -325,44 +331,44 @@ class BalancesSettlementsIT extends AbstractApiIT {
                         call(GET, GROUPS + ghostGroup + "/settlements", bob, null)},
                 new MvcResult[] {settle(bob, g.get(0), key, g.get(2), g.get(1), 100),
                         settle(bob, ghostGroup, key, g.get(2), g.get(1), 100)},
-                new MvcResult[] {call(DELETE, GROUPS + g.get(0) + "/settlements/" + sid, bob, null),
-                        call(DELETE, GROUPS + ghostGroup + "/settlements/" + ghost, bob, null)});
+                new MvcResult[] {call(POST, GROUPS + g.get(0) + "/settlements/" + sid + "/cancel", bob, null),
+                        call(POST, GROUPS + ghostGroup + "/settlements/" + ghost + "/cancel", bob, null)});
         for (MvcResult[] pair : pairs) {
             assertThat(status(pair[0])).isEqualTo(404);
             assertThat(problemWithoutRequestId(pair[0])).isEqualTo(problemWithoutRequestId(pair[1]));
         }
         assertThat(status(call(GET, GROUPS + g.get(0) + "/balances", null, null))).isEqualTo(401);
-        assertThat(jdbc.queryForObject("select count(*) from settlements where group_id = ?::uuid and deleted_at is null",
+        assertThat(jdbc.queryForObject("select count(*) from settlements where group_id = ?::uuid and status = 'CONFIRMED'",
                 Long.class, g.get(0))).isEqualTo(1L);
         assertThat(jdbc.queryForObject("select count(*) from idempotency_keys where user_id = ? and key = ?", Long.class,
                 bob.userId(), key)).isZero();
     }
 
     @Test
-    void aSettlementOfAnotherGroupOfTheSameOwnerIsNotReachableAndDoubleDeleteIs404() throws Exception {
+    void aSettlementOfAnotherGroupOfTheSameOwnerIsNotReachableAndThereIsNoDelete() throws Exception {
         Session ali = newUser();
         List<String> g1 = mas(ali);
         List<String> g2 = mas(ali);
         String sid = settleOk(ali, g1.get(0), g1.get(2), g1.get(1), 100).get("id").asText();
 
-        assertThat(status(call(DELETE, GROUPS + g2.get(0) + "/settlements/" + sid, ali, null))).isEqualTo(404);
-        assertThat(status(call(DELETE, GROUPS + g1.get(0) + "/settlements/" + sid, ali, null))).isEqualTo(204);
-        MvcResult again = call(DELETE, GROUPS + g1.get(0) + "/settlements/" + sid, ali, null);
-        assertThat(status(again)).isEqualTo(404);
-        assertThat(code(again)).isEqualTo("NOT_FOUND");
-        assertThat(jdbc.queryForObject("select deleted_at is not null from settlements where id = ?::uuid", Boolean.class,
-                sid)).as("soft delete keeps the row").isTrue();
+        assertThat(status(call(POST, GROUPS + g2.get(0) + "/settlements/" + sid + "/cancel", ali, null))).isEqualTo(404);
+        MvcResult undo = call(POST, GROUPS + g1.get(0) + "/settlements/" + sid + "/cancel", ali, null);
+        assertThat(status(undo)).as("a confirmed settlement is final").isEqualTo(409);
+        assertThat(code(undo)).isEqualTo("INVALID_STATE_TRANSITION");
+        assertThat(status(call(DELETE, GROUPS + g1.get(0) + "/settlements/" + sid, ali, null))).as("no delete route").isIn(404, 405);
+        assertThat(jdbc.queryForObject("select status from settlements where id = ?::uuid", String.class, sid))
+                .as("the row is untouched").isEqualTo("CONFIRMED");
     }
 
     // ---- delete rules -----------------------------------------------------------------------------------------
 
     @Test
-    void aMemberInASettlementEvenADeletedOneAndAGroupWithSettlementsCannotBeDeleted() throws Exception {
+    void aMemberInASettlementEvenACancelledOneAndAGroupWithSettlementsCannotBeDeleted() throws Exception {
         Session ali = newUser();
         List<String> g = new java.util.ArrayList<>(mas(ali));
         g.add(member(ali, g.get(0), "X").get("id").asText());
         String sid = settleOk(ali, g.get(0), g.get(2), g.get(3), 100).get("id").asText();
-        call(DELETE, GROUPS + g.get(0) + "/settlements/" + sid, ali, null);
+        jdbc.update("update settlements set status = 'CANCELLED', confirmed_at = null, cancelled_at = now() where id = ?::uuid", sid);
 
         MvcResult member = call(DELETE, GROUPS + g.get(0) + "/members/" + g.get(2), ali, null);
         assertThat(status(member)).isEqualTo(409);
@@ -429,7 +435,8 @@ class BalancesSettlementsIT extends AbstractApiIT {
         List<String> g = mas(ali);
         String user = ali.userId().toString();
         String insert = "insert into settlements (id, group_id, from_member_id, to_member_id, amount_minor, settled_on, "
-                + "note, created_by_user_id) values (?::uuid, ?::uuid, ?::uuid, ?::uuid, ?, date '2026-10-20', ?, ?::uuid)";
+                + "note, created_by_user_id, status, declared_at, confirmed_at) values (?::uuid, ?::uuid, ?::uuid, ?::uuid, ?, "
+                + "date '2026-10-20', ?, ?::uuid, 'CONFIRMED', now(), now())";
 
         assertThat(jdbc.update(insert, UUID.randomUUID().toString(), g.get(0), g.get(1), g.get(2),
                 Limits.MAX_AMOUNT_MINOR, "ok", user)).isEqualTo(1);                          // control
@@ -506,8 +513,8 @@ class BalancesSettlementsIT extends AbstractApiIT {
                 int to = (from + 1 + rnd.nextInt(ids.size() - 1)) % ids.size();
                 liveSettlements.add(settleOk(ali, gid, ids.get(from), ids.get(to), 1 + rnd.nextInt(100000)).get("id").asText());
             } else if (!liveSettlements.isEmpty()) {
-                String sid = liveSettlements.remove(rnd.nextInt(liveSettlements.size()));
-                assertThat(status(call(DELETE, GROUPS + gid + "/settlements/" + sid, ali, null))).as(ctx).isEqualTo(204);
+                String sid = liveSettlements.get(rnd.nextInt(liveSettlements.size()));
+                assertThat(status(call(POST, GROUPS + gid + "/settlements/" + sid + "/cancel", ali, null))).as(ctx).isEqualTo(409);
             }
             JsonNode b = balances(ali, gid);
             Map<String, Long> nets = netsOf(b);
@@ -543,7 +550,7 @@ class BalancesSettlementsIT extends AbstractApiIT {
             expenses.add(new BalanceCalculator.ExpenseLedgerEntry(payers, owed));
         }
         List<BalanceCalculator.SettlementEntry> settlements = new ArrayList<>();
-        for (JsonNode s : body(call(GET, GROUPS + gid + "/settlements?size=100", as, null)).get("items")) {
+        for (JsonNode s : body(call(GET, GROUPS + gid + "/settlements?status=CONFIRMED&size=100", as, null)).get("items")) {
             settlements.add(new BalanceCalculator.SettlementEntry(s.get("fromMemberId").asText(),
                     s.get("toMemberId").asText(), s.get("amountMinor").asLong()));
         }

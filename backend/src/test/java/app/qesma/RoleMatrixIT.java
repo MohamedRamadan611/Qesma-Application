@@ -70,8 +70,13 @@ class RoleMatrixIT extends AbstractApiIT {
         MATRIX.put("GET /api/v1/groups/{gid}/expenses/{eid}/revisions", new Row(200, 200, 200));
         MATRIX.put("GET /api/v1/groups/{gid}/balances", new Row(200, 200, 200));
         MATRIX.put("GET /api/v1/groups/{gid}/settlements", new Row(200, 200, 200));
-        MATRIX.put("POST /api/v1/groups/{gid}/settlements", new Row(201, 201, 201));
-        MATRIX.put("DELETE /api/v1/groups/{gid}/settlements/{sid}", new Row(204, 204, 403));
+        // B13: recording a payment between two OTHER members is for Owner/Admin only (403 for a member)
+        MATRIX.put("POST /api/v1/groups/{gid}/settlements", new Row(201, 201, 403));
+        // the target is a PENDING settlement declared by the member to the owner's member: the owner is the receiver, the member
+        // the payer, the admin a manager. The payer never confirms their own payment; only the receiver disputes.
+        MATRIX.put("POST /api/v1/groups/{gid}/settlements/{sid}/confirm", new Row(200, 200, 403));
+        MATRIX.put("POST /api/v1/groups/{gid}/settlements/{sid}/dispute", new Row(200, 403, 403));
+        MATRIX.put("POST /api/v1/groups/{gid}/settlements/{sid}/cancel", new Row(200, 200, 200));
         // B11: invitations, join requests and unlink (Owner and Admin only)
         MATRIX.put("POST /api/v1/groups/{gid}/invites", new Row(201, 201, 403));
         MATRIX.put("GET /api/v1/groups/{gid}/invites", new Row(200, 200, 403));
@@ -104,7 +109,8 @@ class RoleMatrixIT extends AbstractApiIT {
         final String m2;
         final String adminMember;
         final String eid;
-        final String sid;
+        final String sid;       // confirmed, recorded by the owner on behalf (m1 -> m2)
+        final String pid;       // PENDING, declared by the member to m1
         final String iid;
         final String rid;
 
@@ -118,11 +124,14 @@ class RoleMatrixIT extends AbstractApiIT {
             m1 = member(owner, gid, "A").get("id").asText();
             m2 = member(owner, gid, "B").get("id").asText();
             adminMember = linkUser(gid, admin, "ADMIN", "ACTIVE", "Admin");
-            linkUser(gid, member, "MEMBER", "ACTIVE", "Member");
+            String memberMid = linkUser(gid, member, "MEMBER", "ACTIVE", "Member");
             linkUser(gid, left, "MEMBER", "LEFT", "Gone");
             eid = createExpense(owner, gid, equalBody("Dinner", 3000, null, m1, 3000L)).get("id").asText();
             sid = body(call(POST, "/api/v1/groups/" + gid + "/settlements", owner,
                     Map.of("fromMemberId", m1, "toMemberId", m2, "amountMinor", 100L, "settledOn", "2026-10-20"),
+                    "Idempotency-Key", UUID.randomUUID().toString())).get("id").asText();
+            pid = body(call(POST, "/api/v1/groups/" + gid + "/settlements", member,
+                    Map.of("fromMemberId", memberMid, "toMemberId", m1, "amountMinor", 70L, "settledOn", "2026-10-20"),
                     "Idempotency-Key", UUID.randomUUID().toString())).get("id").asText();
             JsonNode invite = body(call(POST, "/api/v1/groups/" + gid + "/invites", owner, Map.of("requiresApproval", true),
                     "Idempotency-Key", UUID.randomUUID().toString()));
@@ -144,7 +153,8 @@ class RoleMatrixIT extends AbstractApiIT {
         }
 
         String url(String path) {
-            return path.replace("{gid}", gid).replace("{mid}", m2).replace("{eid}", eid).replace("{sid}", sid).replace("{iid}", iid).replace("{rid}", rid);
+            String target = path.endsWith("/confirm") || path.endsWith("/dispute") || path.endsWith("/cancel") ? pid : sid;
+            return path.replace("{gid}", gid).replace("{mid}", m2).replace("{eid}", eid).replace("{sid}", target).replace("{iid}", iid).replace("{rid}", rid);
         }
 
         Object requestBody(String label) {
@@ -227,21 +237,18 @@ class RoleMatrixIT extends AbstractApiIT {
         Fixture f = new Fixture(cast());
         String base = "/api/v1/groups/" + f.gid;
         String mine = createExpense(f.member, f.gid, equalBody("Mine", 2000, null, f.m1, 2000L)).get("id").asText();
-        String mySettlement = body(call(POST, base + "/settlements", f.member,
-                Map.of("fromMemberId", f.m1, "toMemberId", f.m2, "amountMinor", 50L, "settledOn", "2026-10-21"),
-                "Idempotency-Key", UUID.randomUUID().toString())).get("id").asText();
 
         Map<String, Object> edit = equalBody("Mine edited", 2500, null, f.m1, 2500L);
         assertThat(status(call(PUT, base + "/expenses/" + mine, f.member, edit, "If-Match", "\"1\""))).isEqualTo(200);
         assertThat(status(call(PUT, base + "/expenses/" + f.eid, f.member, edit, "If-Match", "\"1\""))).isEqualTo(403);
         assertThat(status(call(DELETE, base + "/expenses/" + f.eid, f.member, null, "If-Match", "\"1\""))).isEqualTo(403);
-        assertThat(status(call(DELETE, base + "/settlements/" + f.sid, f.member, null))).isEqualTo(403);
-        assertThat(status(call(DELETE, base + "/settlements/" + mySettlement, f.member, null))).isEqualTo(204);
+        assertThat(status(call(POST, base + "/settlements/" + f.sid + "/cancel", f.member, null))).isEqualTo(403);   // not theirs
+        assertThat(status(call(POST, base + "/settlements/" + f.pid + "/cancel", f.member, null))).isEqualTo(200);   // their own declaration
         // an admin may touch the member's expense, the owner too
         assertThat(status(call(DELETE, base + "/expenses/" + mine, f.admin, null, "If-Match", "\"2\""))).isEqualTo(204);
         // nothing of the owner's changed by the refused calls
         assertThat(jdbc.queryForObject("select title from expenses where id = ?::uuid", String.class, f.eid)).isEqualTo("Dinner");
-        assertThat(jdbc.queryForObject("select deleted_at is null from settlements where id = ?::uuid", Boolean.class, f.sid)).isTrue();
+        assertThat(jdbc.queryForObject("select status from settlements where id = ?::uuid", String.class, f.sid)).isEqualTo("CONFIRMED");
     }
 
     @Test

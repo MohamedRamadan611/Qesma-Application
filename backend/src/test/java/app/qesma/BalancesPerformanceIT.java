@@ -74,8 +74,8 @@ class BalancesPerformanceIT extends AbstractApiIT {
         }
         jdbc.update("""
                 insert into settlements (id, group_id, from_member_id, to_member_id, amount_minor, settled_on,
-                                         created_by_user_id)
-                select gen_random_uuid(), ?::uuid, f.id, t.id, 100 + g, date '2026-02-01' + (g % 200), ?::uuid
+                                         created_by_user_id, status, declared_at, confirmed_at)
+                select gen_random_uuid(), ?::uuid, f.id, t.id, 100 + g, date '2026-02-01' + (g % 200), ?::uuid, 'CONFIRMED', now(), now()
                 from generate_series(1, 200) g
                 join members f on f.group_id = ?::uuid and f.sort_order = 1 + (g % 15)
                 join members t on t.group_id = ?::uuid and t.sort_order = 1 + ((g + 1 + g % 13) % 15)""",

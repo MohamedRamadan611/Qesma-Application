@@ -38,7 +38,7 @@ class DevSeedIT extends AbstractApiIT {
         assertThat(groups).hasSize(1);
         JsonNode summary = groups.get(0);
         assertThat(summary.get("name").asText()).isEqualTo("رحلة دهب");
-        assertThat(summary.get("memberCount").asInt()).isEqualTo(5);
+        assertThat(summary.get("memberCount").asInt()).isEqualTo(4);   // كريم left (B12): not counted, still listed
         assertThat(summary.get("totalSpentMinor").asLong()).isEqualTo(60000 + 300000 + 56179);
         String gid = summary.get("id").asText();
 
@@ -46,6 +46,12 @@ class DevSeedIT extends AbstractApiIT {
         Map<String, String> nameById = new LinkedHashMap<>();
         group.get("members").forEach(m -> nameById.put(m.get("id").asText(), m.get("displayName").asText()));
         assertThat(nameById.values()).containsExactly("محمد", "عاصم", "محسن", "يوسف", "كريم");
+
+        Map<String, String> roleAndStatus = new LinkedHashMap<>();
+        group.get("members").forEach(m -> roleAndStatus.put(m.get("displayName").asText(),
+                m.get("role").asText() + "/" + m.get("status").asText()));
+        assertThat(roleAndStatus).containsEntry("محمد", "OWNER/ACTIVE").containsEntry("عاصم", "ADMIN/ACTIVE")
+                .containsEntry("كريم", "MEMBER/LEFT").containsEntry("محسن", "MEMBER/ACTIVE");
 
         JsonNode balances = body(call(GET, "/api/v1/groups/" + gid + "/balances", owner, null));
         Map<String, Long> nets = new LinkedHashMap<>();
@@ -57,6 +63,12 @@ class DevSeedIT extends AbstractApiIT {
                 + nameById.get(t.get("toMemberId").asText()) + ":" + t.get("amountMinor").asLong()));
         assertThat(transfers).containsExactlyInAnyOrder("يوسف>عاصم:72000", "كريم>محمد:72000", "محسن>عاصم:39402",
                 "محسن>محمد:29401");
+
+        // B13: one PENDING and one DISPUTED example, neither of which moved the nets asserted above
+        assertThat(jdbc.queryForList("select status from settlements where group_id = ?::uuid order by amount_minor desc",
+                String.class, gid)).containsExactly("PENDING", "DISPUTED");
+        assertThat(jdbc.queryForObject("select count(*) from settlements where group_id = ?::uuid and status = 'CONFIRMED'",
+                Long.class, gid)).isZero();
 
         JsonNode dinner = null;
         for (JsonNode e : body(call(GET, "/api/v1/groups/" + gid + "/expenses", owner, null)).get("items")) {

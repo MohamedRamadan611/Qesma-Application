@@ -87,7 +87,8 @@ class SettlementApiSliceTest {
 
     private SettlementView view() {
         return new SettlementView(sid, gid, alice, bob, 8000, LocalDate.of(2026, 10, 20), "cash",
-                Instant.parse("2026-10-20T10:00:00Z"));
+                Instant.parse("2026-10-20T10:00:00Z"), "PENDING", false, alice,
+                Instant.parse("2026-10-20T10:00:00Z"), null, null, null);
     }
 
     private JsonNode node(MvcResult r) throws Exception {
@@ -149,32 +150,46 @@ class SettlementApiSliceTest {
 
     @Test
     void listIsPaged() throws Exception {
-        when(settlements.list(me, gid, 1, 10))
+        when(settlements.list(me, gid, List.of("PENDING", "DISPUTED"), 1, 10))
                 .thenReturn(new PageImpl<>(List.of(view()), PageRequest.of(1, 10), 11));
-        MvcResult r = mvc.perform(authed(get("/api/v1/groups/" + gid + "/settlements?page=1&size=10"))).andReturn();
+        MvcResult r = mvc.perform(authed(get("/api/v1/groups/" + gid + "/settlements?status=PENDING&status=DISPUTED&page=1&size=10"))).andReturn();
         assertThat(r.getResponse().getStatus()).isEqualTo(200);
         assertThat(node(r).get("items")).hasSize(1);
         assertThat(node(r).get("totalElements").asLong()).isEqualTo(11);
     }
 
     @Test
-    void deleteIs204AndAMissingOneIs404() throws Exception {
-        MvcResult ok = mvc.perform(authed(delete("/api/v1/groups/" + gid + "/settlements/" + sid))).andReturn();
-        assertThat(ok.getResponse().getStatus()).isEqualTo(204);
-        verify(settlements).delete(me, gid, sid);
+    void theThreeActionsAreWiredAndAnInvalidTransitionIsProblemJson409() throws Exception {
+        when(settlements.confirm(me, gid, sid)).thenReturn(view());
+        when(settlements.dispute(me, gid, sid)).thenReturn(view());
+        when(settlements.cancel(me, gid, sid)).thenThrow(new ApiException(ErrorCode.INVALID_STATE_TRANSITION,
+                org.springframework.http.HttpStatus.CONFLICT, "x"));
 
-        org.mockito.Mockito.doThrow(ApiException.notFound()).when(settlements).delete(any(), any(), any());
-        MvcResult nf = mvc.perform(authed(delete("/api/v1/groups/" + gid + "/settlements/" + UUID.randomUUID())))
+        for (String action : List.of("confirm", "dispute")) {
+            MvcResult ok = mvc.perform(authed(post("/api/v1/groups/" + gid + "/settlements/" + sid + "/" + action)))
+                    .andReturn();
+            assertThat(ok.getResponse().getStatus()).as(action).isEqualTo(200);
+            assertThat(node(ok).get("id").asText()).isEqualTo(sid.toString());
+        }
+        MvcResult bad = mvc.perform(authed(post("/api/v1/groups/" + gid + "/settlements/" + sid + "/cancel")))
                 .andReturn();
-        assertThat(nf.getResponse().getStatus()).isEqualTo(404);
-        assertThat(node(nf).get("code").asText()).isEqualTo("NOT_FOUND");
+        assertThat(bad.getResponse().getStatus()).isEqualTo(409);
+        assertThat(bad.getResponse().getContentType()).startsWith("application/problem+json");
+        assertThat(node(bad).get("code").asText()).isEqualTo("INVALID_STATE_TRANSITION");
+    }
+
+    @Test
+    void thePhase1DeleteRouteIsGone() throws Exception {
+        MvcResult r = mvc.perform(authed(delete("/api/v1/groups/" + gid + "/settlements/" + sid))).andReturn();
+        assertThat(r.getResponse().getStatus()).isIn(404, 405);
+        verifyNoInteractions(settlements);
     }
 
     @Test
     void balancesReturnNetsAndTransfers() throws Exception {
         when(balances.balances(me, gid)).thenReturn(new BalanceView(
                 List.of(new BalanceView.Net(alice, -8000), new BalanceView.Net(bob, 8000)),
-                List.of(new BalanceView.TransferView(alice, bob, 8000))));
+                List.of(new BalanceView.TransferView(alice, bob, 8000, 3000, true, List.of(sid)))));
         MvcResult r = mvc.perform(authed(get("/api/v1/groups/" + gid + "/balances"))).andReturn();
         assertThat(r.getResponse().getStatus()).isEqualTo(200);
         JsonNode b = node(r);
@@ -182,13 +197,19 @@ class SettlementApiSliceTest {
         assertThat(b.get("nets").get(0).get("netMinor").asLong()).isEqualTo(-8000);
         assertThat(b.get("transfers").get(0).get("fromMemberId").asText()).isEqualTo(alice.toString());
         assertThat(b.get("transfers").get(0).get("amountMinor").asLong()).isEqualTo(8000);
+        assertThat(b.get("transfers").get(0).get("pendingMinor").asLong()).isEqualTo(3000);
+        assertThat(b.get("transfers").get(0).get("hasDispute").asBoolean()).isTrue();
+        assertThat(b.get("transfers").get(0).get("openSettlementIds").get(0).asText()).isEqualTo(sid.toString());
     }
 
     @Test
     void everyEndpointRequiresAuthentication() throws Exception {
         for (MockHttpServletRequestBuilder call : List.of(post("/api/v1/groups/" + gid + "/settlements"),
                 get("/api/v1/groups/" + gid + "/settlements"),
-                delete("/api/v1/groups/" + gid + "/settlements/" + sid), get("/api/v1/groups/" + gid + "/balances"))) {
+                post("/api/v1/groups/" + gid + "/settlements/" + sid + "/confirm"),
+                post("/api/v1/groups/" + gid + "/settlements/" + sid + "/dispute"),
+                post("/api/v1/groups/" + gid + "/settlements/" + sid + "/cancel"),
+                get("/api/v1/groups/" + gid + "/balances"))) {
             MvcResult r = mvc.perform(call.contentType(MediaType.APPLICATION_JSON).content("{}")
                     .header("Idempotency-Key", key.toString())).andReturn();
             assertThat(r.getResponse().getStatus()).isEqualTo(401);
