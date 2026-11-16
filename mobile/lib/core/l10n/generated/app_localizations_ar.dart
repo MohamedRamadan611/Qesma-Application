@@ -2252,4 +2252,91 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get detailConfirm => 'تأكيد واستلام الدفعة';
+
+  @override
+  String get profilePaymentDetails => 'بيانات الدفع';
+
+  @override
+  String get handlesPrivacy => 'بتظهر لأعضاء مجموعاتك بس';
+
+  @override
+  String get handlesIntro =>
+      'اكتب عنوان إنستا باي أو رقم المحفظة أو الاتنين، وزمايلك هيشوفوهم لما يحبّوا يحوّلولك. التطبيق مبيحوّلش فلوس.';
+
+  @override
+  String get handlesInstapayHint => 'مثال: username@instapay';
+
+  @override
+  String get handlesWalletHint =>
+      'فودافون كاش، أورنج، وي، اتصالات أو محفظة بنكية';
+
+  @override
+  String get handlesInstapayInvalid =>
+      'العنوان لازم يبقى بالشكل ده: name@bank، حروف إنجليزي وأرقام من غير مسافات (من 3 لـ 60 حرف).';
+
+  @override
+  String get handlesWalletInvalid =>
+      'رقم المحفظة لازم يبقى 11 رقم ويبدأ بـ 010 أو 011 أو 012 أو 015.';
+
+  @override
+  String get handlesEmpty =>
+      'لسه مفيش بيانات دفع. اكتب واحدة على الأقل عشان زمايلك يعرفوا يحوّلولك.';
+
+  @override
+  String get handlesDiscardBody => 'التعديلات على بيانات الدفع مش هتتحفظ.';
+
+  @override
+  String get handlesSave => 'حفظ بيانات الدفع';
+
+  @override
+  String get handlesSaved => 'اتحفظت بيانات الدفع';
+
+  @override
+  String handlesRemoveTitle(String what) {
+    return 'هتمسح $what؟';
+  }
+
+  @override
+  String get handlesRemoveBody => 'زمايلك مش هيشوفوه تاني.';
+
+  @override
+  String get handlesRemoveConfirm => 'امسح واحفظ';
+
+  @override
+  String get handlesSaveFailed =>
+      'معرفناش نحفظ بيانات الدفع. اتأكد من الاتصال وجرّب تاني.';
+
+  @override
+  String get handlesRejected =>
+      'السيرفر مقبلش البيانات دي. راجع الرقم والعنوان وجرّب تاني.';
+
+  @override
+  String get remindButton => 'ذكّره';
+
+  @override
+  String remindButtonSpoken(String name) {
+    return 'ذكّر $name بالتحويل';
+  }
+
+  @override
+  String get remindSentToday => 'اتبعت تذكير النهاردة';
+
+  @override
+  String remindNextAt(String time) {
+    return 'تقدر تبعت تاني بعد $time';
+  }
+
+  @override
+  String remindNoAccount(String name) {
+    return '$name مالوش حساب على التطبيق، فمش هينفع نبعتله تذكير.';
+  }
+
+  @override
+  String get remindSent => 'اتبعت التذكير';
+
+  @override
+  String get remindGone => 'التحويل ده اتغيّر. حدّثنا الأرصدة.';
+
+  @override
+  String get remindRetry => 'معرفناش نبعت التذكير. جرّب تاني.';
 }

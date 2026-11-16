@@ -10,6 +10,8 @@ class _$TransferView extends TransferView {
   @override
   final int amountMinor;
   @override
+  final DateTime? canRemindAt;
+  @override
   final String fromMemberId;
   @override
   final bool hasDispute;
@@ -27,6 +29,7 @@ class _$TransferView extends TransferView {
 
   _$TransferView._(
       {required this.amountMinor,
+      this.canRemindAt,
       required this.fromMemberId,
       required this.hasDispute,
       required this.openSettlementIds,
@@ -46,6 +49,7 @@ class _$TransferView extends TransferView {
     if (identical(other, this)) return true;
     return other is TransferView &&
         amountMinor == other.amountMinor &&
+        canRemindAt == other.canRemindAt &&
         fromMemberId == other.fromMemberId &&
         hasDispute == other.hasDispute &&
         openSettlementIds == other.openSettlementIds &&
@@ -58,6 +62,7 @@ class _$TransferView extends TransferView {
   int get hashCode {
     var _$hash = 0;
     _$hash = $jc(_$hash, amountMinor.hashCode);
+    _$hash = $jc(_$hash, canRemindAt.hashCode);
     _$hash = $jc(_$hash, fromMemberId.hashCode);
     _$hash = $jc(_$hash, hasDispute.hashCode);
     _$hash = $jc(_$hash, openSettlementIds.hashCode);
@@ -72,6 +77,7 @@ class _$TransferView extends TransferView {
   String toString() {
     return (newBuiltValueToStringHelper(r'TransferView')
           ..add('amountMinor', amountMinor)
+          ..add('canRemindAt', canRemindAt)
           ..add('fromMemberId', fromMemberId)
           ..add('hasDispute', hasDispute)
           ..add('openSettlementIds', openSettlementIds)
@@ -89,6 +95,10 @@ class TransferViewBuilder
   int? _amountMinor;
   int? get amountMinor => _$this._amountMinor;
   set amountMinor(int? amountMinor) => _$this._amountMinor = amountMinor;
+
+  DateTime? _canRemindAt;
+  DateTime? get canRemindAt => _$this._canRemindAt;
+  set canRemindAt(DateTime? canRemindAt) => _$this._canRemindAt = canRemindAt;
 
   String? _fromMemberId;
   String? get fromMemberId => _$this._fromMemberId;
@@ -126,6 +136,7 @@ class TransferViewBuilder
     final $v = _$v;
     if ($v != null) {
       _amountMinor = $v.amountMinor;
+      _canRemindAt = $v.canRemindAt;
       _fromMemberId = $v.fromMemberId;
       _hasDispute = $v.hasDispute;
       _openSettlementIds = $v.openSettlementIds.toBuilder();
@@ -157,6 +168,7 @@ class TransferViewBuilder
           _$TransferView._(
             amountMinor: BuiltValueNullFieldError.checkNotNull(
                 amountMinor, r'TransferView', 'amountMinor'),
+            canRemindAt: canRemindAt,
             fromMemberId: BuiltValueNullFieldError.checkNotNull(
                 fromMemberId, r'TransferView', 'fromMemberId'),
             hasDispute: BuiltValueNullFieldError.checkNotNull(

@@ -34,8 +34,8 @@ Future<void> confirmSignOut(BuildContext context, WidgetRef ref) async {
 
 /// The Account tab (P10-01): who you are (name, the connected Google account), how many groups you
 /// are in, your net across groups when the groups list can say it, the language, the legal pages,
-/// the version, and sign out. No role badge, avatar photo, notifications, currency, payment handles,
-/// export, devices or account deletion: Phase 1 has no data or backend for them.
+/// the version, the payment details (FL14) and sign out. No role badge, avatar photo, notifications, currency,
+/// export, devices or account deletion: no data or backend for them yet (or ever).
 class ProfileHubScreen extends ConsumerWidget {
   const ProfileHubScreen({super.key});
 
@@ -115,6 +115,7 @@ class ProfileHubScreen extends ConsumerWidget {
           ProfileSection(
             title: l10n.profileSectionPrefs,
             children: [
+              ProfileRow(icon: Icons.account_balance_wallet_outlined, title: l10n.profilePaymentDetails, onTap: () => context.push(Routes.paymentHandles)),
               ProfileRow(
                 icon: Icons.language,
                 title: l10n.profileLanguage,

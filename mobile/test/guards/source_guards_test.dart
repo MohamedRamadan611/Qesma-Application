@@ -44,6 +44,7 @@ List<String> _scan(
 }
 
 void main() {
+  _fl14TimeGuard();
   test('no money arithmetic or floating point outside core/money', () {
     final hits = <String>[
       // Floating point types and conversions: allowed only for pixel sizes in theme/widgets.
@@ -240,5 +241,33 @@ void main() {
     expect(debug, contains('10.0.2.2'));
     expect(Directory('android/app/src/main/res/xml').existsSync(), isFalse,
         reason: 'a network security config in main would apply to release builds');
+  });
+}
+
+// FL14: Remind is enabled from the server's timestamp (`canRemindAt`, `nextAllowedAt`) and nothing else. The 24-hour window is
+// the server's rule: the client must not work out a window, add a duration or take a difference of times.
+void _fl14TimeGuard() {
+  test('Remind and payment-details code do no date or duration arithmetic and no money arithmetic', () {
+    final hits = <String>[];
+    for (final file in _dartFiles()) {
+      final path = _rel(file);
+      final isRemind = path.contains('/remind_') || path == 'lib/features/balances/presentation/transfer_card.dart';
+      final isHandles = path.contains('/payment_handles');
+      if (!isRemind && !isHandles) continue;
+      for (final line in _codeLines(file)) {
+        if (RegExp(r'\bDuration\(|\.difference\(|\.subtract\(|\.add\(\s*(const\s+)?Duration|\bhours\s*:|\binHours\b|\b24\b').hasMatch(line.value)) {
+          hits.add('$path:${line.key}: ${line.value}');
+        }
+        if (RegExp(r'\b(amountMinor|pendingMinor|netMinor)\b\s*[-+*/%]|[-+*/%]\s*\w*\.?\b(amountMinor|pendingMinor|netMinor)\b').hasMatch(line.value)) {
+          hits.add('$path:${line.key}: ${line.value}');
+        }
+      }
+    }
+    expect(hits, isEmpty, reason: 'Compare the server timestamps with now; never derive a window.\n${hits.join('\n')}');
+  });
+
+  test('the guard is alive: the Remind files exist and are scanned', () {
+    final scanned = _dartFiles().map(_rel).where((p) => p.contains('/remind_') || p.contains('/payment_handles')).toList();
+    expect(scanned.length, greaterThanOrEqualTo(4), reason: scanned.join('\n'));
   });
 }

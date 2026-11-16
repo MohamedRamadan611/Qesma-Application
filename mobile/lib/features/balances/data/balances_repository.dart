@@ -70,6 +70,18 @@ class BalancesRepository {
         if (body == null) throw const ApiUnexpected();
         return body;
       });
+
+  /// Sends a reminder for the suggested transfer [fromId] -> [toId] (B16). [key] is the `Idempotency-Key` of this user action.
+  /// The server picks the amount; the client sends none.
+  Future<ReminderView> remind(String gid, String fromId, String toId, String key) => _run(() async {
+        final command = RemindCommand((b) {
+          b.fromMemberId = fromId;
+          b.toMemberId = toId;
+        });
+        final body = (await _api.getReminderControllerApi().remindTransfer(gid: gid, idempotencyKey: key, remindCommand: command)).data;
+        if (body == null) throw const ApiUnexpected();
+        return body;
+      });
 }
 
 final balancesRepositoryProvider = Provider<BalancesRepository>((ref) => BalancesRepository(ref.watch(qesmaApiProvider)));

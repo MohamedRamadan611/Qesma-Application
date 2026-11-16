@@ -9,6 +9,7 @@ import 'package:qesma_api/src/auth/api_key_auth.dart';
 import 'package:qesma_api/src/auth/basic_auth.dart';
 import 'package:qesma_api/src/auth/bearer_auth.dart';
 import 'package:qesma_api/src/auth/oauth.dart';
+import 'package:qesma_api/src/api/activity_controller_api.dart';
 import 'package:qesma_api/src/api/auth_controller_api.dart';
 import 'package:qesma_api/src/api/balance_controller_api.dart';
 import 'package:qesma_api/src/api/expense_controller_api.dart';
@@ -19,7 +20,10 @@ import 'package:qesma_api/src/api/join_request_controller_api.dart';
 import 'package:qesma_api/src/api/me_controller_api.dart';
 import 'package:qesma_api/src/api/member_controller_api.dart';
 import 'package:qesma_api/src/api/membership_controller_api.dart';
+import 'package:qesma_api/src/api/notification_controller_api.dart';
+import 'package:qesma_api/src/api/notification_prefs_controller_api.dart';
 import 'package:qesma_api/src/api/password_auth_controller_api.dart';
+import 'package:qesma_api/src/api/reminder_controller_api.dart';
 import 'package:qesma_api/src/api/settlement_controller_api.dart';
 
 class QesmaApi {
@@ -74,6 +78,12 @@ class QesmaApi {
     if (this.dio.interceptors.any((i) => i is ApiKeyAuthInterceptor)) {
       (this.dio.interceptors.firstWhere((element) => element is ApiKeyAuthInterceptor) as ApiKeyAuthInterceptor).apiKeys[name] = apiKey;
     }
+  }
+
+  /// Get ActivityControllerApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  ActivityControllerApi getActivityControllerApi() {
+    return ActivityControllerApi(dio, serializers);
   }
 
   /// Get AuthControllerApi instance, base route and serializer can be overridden by a given but be careful,
@@ -136,10 +146,28 @@ class QesmaApi {
     return MembershipControllerApi(dio, serializers);
   }
 
+  /// Get NotificationControllerApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  NotificationControllerApi getNotificationControllerApi() {
+    return NotificationControllerApi(dio, serializers);
+  }
+
+  /// Get NotificationPrefsControllerApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  NotificationPrefsControllerApi getNotificationPrefsControllerApi() {
+    return NotificationPrefsControllerApi(dio, serializers);
+  }
+
   /// Get PasswordAuthControllerApi instance, base route and serializer can be overridden by a given but be careful,
   /// by doing that all interceptors will not be executed
   PasswordAuthControllerApi getPasswordAuthControllerApi() {
     return PasswordAuthControllerApi(dio, serializers);
+  }
+
+  /// Get ReminderControllerApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  ReminderControllerApi getReminderControllerApi() {
+    return ReminderControllerApi(dio, serializers);
   }
 
   /// Get SettlementControllerApi instance, base route and serializer can be overridden by a given but be careful,

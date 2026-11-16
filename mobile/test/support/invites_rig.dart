@@ -19,6 +19,7 @@ import 'groups_rig.dart';
 
 final UserDto testUser = UserDto((b) => b
   ..hasPassword = false
+  ..notificationsEnabled = true
   ..emailVerified = true
   ..id = 'u1'
   ..displayName = 'Test User'

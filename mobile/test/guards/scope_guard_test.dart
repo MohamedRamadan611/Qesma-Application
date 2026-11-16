@@ -14,6 +14,8 @@ import 'package:flutter_test/flutter_test.dart';
 const enabledFeatures = <String>{
   'invites', // FL11: invite sheet, join screen, code entry
   'settlements', // FL13: two-sided settlement (dispute, pending, confirm)
+  'handles', // FL14: payment details screen (InstaPay address, wallet number)
+  'reminders', // FL14: Remind button on a transfer
 };
 
 /// Words, Arabic words, phrases, icons and routes of one Phase 2 feature.
@@ -68,7 +70,7 @@ const _permanentRoutes = <String>["'/guest"];
 
 /// key -> reason, for strings that contain a forbidden word legitimately
 const _allowedKeys = <String, String>{
-  // FL13: the transfer card names the receiver's payment details. The 'handles' feature (the profile screen, FL14) stays off.
+  // FL13: the transfer card names the receiver's payment details; kept for the case where FL14's features are switched off.
   'payNoMoveNote': 'P13-01 fixed note "transfer from your bank or wallet app"',
   'payInstapayLabel': 'label of the receiver\x27s InstaPay address on the transfer card',
   'payWalletLabel': 'label of the receiver\x27s mobile wallet number on the transfer card',

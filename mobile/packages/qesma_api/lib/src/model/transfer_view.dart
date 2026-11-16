@@ -14,6 +14,7 @@ part 'transfer_view.g.dart';
 ///
 /// Properties:
 /// * [amountMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
+/// * [canRemindAt] 
 /// * [fromMemberId] 
 /// * [hasDispute] 
 /// * [openSettlementIds] 
@@ -25,6 +26,9 @@ abstract class TransferView implements Built<TransferView, TransferViewBuilder> 
   /// Integer minor units (piasters: 1 EGP = 100). Never a decimal.
   @BuiltValueField(wireName: r'amountMinor')
   int get amountMinor;
+
+  @BuiltValueField(wireName: r'canRemindAt')
+  DateTime? get canRemindAt;
 
   @BuiltValueField(wireName: r'fromMemberId')
   String get fromMemberId;
@@ -73,6 +77,13 @@ class _$TransferViewSerializer implements PrimitiveSerializer<TransferView> {
       object.amountMinor,
       specifiedType: const FullType(int),
     );
+    if (object.canRemindAt != null) {
+      yield r'canRemindAt';
+      yield serializers.serialize(
+        object.canRemindAt,
+        specifiedType: const FullType.nullable(DateTime),
+      );
+    }
     yield r'fromMemberId';
     yield serializers.serialize(
       object.fromMemberId,
@@ -134,6 +145,14 @@ class _$TransferViewSerializer implements PrimitiveSerializer<TransferView> {
             specifiedType: const FullType(int),
           ) as int;
           result.amountMinor = valueDes;
+          break;
+        case r'canRemindAt':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(DateTime),
+          ) as DateTime?;
+          if (valueDes == null) continue;
+          result.canRemindAt = valueDes;
           break;
         case r'fromMemberId':
           final valueDes = serializers.deserialize(

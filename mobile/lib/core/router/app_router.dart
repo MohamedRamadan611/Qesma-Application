@@ -24,6 +24,7 @@ import '../../features/invites/presentation/enter_code_screen.dart';
 import '../../features/invites/presentation/join_screen.dart';
 import '../../features/profile/presentation/account_settings_screen.dart';
 import '../../features/profile/presentation/edit_profile_screen.dart';
+import '../../features/profile/presentation/payment_handles_screen.dart';
 import '../../features/profile/presentation/profile_hub_screen.dart';
 import '../widgets/main_shell.dart';
 import '../widgets/catalogue/component_catalogue.dart';
@@ -35,6 +36,7 @@ abstract final class Routes {
   static const String account = '/account';
   static const String editProfile = '/account/edit';
   static const String accountSettings = '/account/settings';
+  static const String paymentHandles = '/account/payment-handles';
   static String group(String gid) => '/groups/$gid';
   static String editGroup(String gid) => '/groups/$gid/edit';
   static String joinRequests(String gid) => '/groups/$gid/join-requests';
@@ -156,6 +158,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: Routes.editProfile, builder: (context, state) => const EditProfileScreen()),
       GoRoute(path: Routes.accountSettings, builder: (context, state) => const AccountSettingsScreen()),
+      GoRoute(path: Routes.paymentHandles, builder: (context, state) => const PaymentHandlesScreen()),
       GoRoute(path: Routes.newGroup, builder: (context, state) => const CreateGroupScreen()),
       GoRoute(
         path: '/groups/:gid',

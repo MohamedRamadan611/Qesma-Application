@@ -158,6 +158,7 @@ class FakeGroupsServer extends FakeBackend {
         'totalSpentMinor': g.totalSpentMinor,
         'yourNetMinor': g.yourNetMinor,
         'yourRole': g.yourRole,
+        'muted': false,
         'yourMemberId': g.members.firstWhere((m) => m.isYou).id,
         if (g.lastExpenseAt != null) 'lastExpenseAt': g.lastExpenseAt!.toUtc().toIso8601String(),
         'members': [for (final m in g.members) _member(m)],
@@ -229,7 +230,7 @@ class FakeGroupsServer extends FakeBackend {
       if (name.isEmpty || name.runes.length > 60) return problemResponse(422, 'VALIDATION_ERROR');
       meName = name;
     }
-    return jsonOk(200, {'id': 'u1', 'displayName': meName, 'email': 'test@example.com', 'hasPassword': false, 'emailVerified': true});
+    return jsonOk(200, {'id': 'u1', 'displayName': meName, 'email': 'test@example.com', 'hasPassword': false, 'notificationsEnabled': true, 'emailVerified': true});
   }
 
   @override

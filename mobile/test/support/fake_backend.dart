@@ -105,7 +105,7 @@ class FakeBackend implements HttpClientAdapter {
         jsonEncode({
           'accessToken': session.access,
           'refreshToken': session.refresh,
-          'user': {'id': 'u1', 'displayName': 'Test User', 'email': 'test@example.com', 'hasPassword': false, 'emailVerified': true},
+          'user': {'id': 'u1', 'displayName': 'Test User', 'email': 'test@example.com', 'hasPassword': false, 'notificationsEnabled': true, 'emailVerified': true},
         }),
       );
     }
@@ -143,7 +143,7 @@ class FakeBackend implements HttpClientAdapter {
         jsonEncode({
           'accessToken': session.access,
           'refreshToken': session.refresh,
-          'user': {'id': 'u2', 'displayName': name, 'email': null, 'username': email, 'hasPassword': true, 'emailVerified': false},
+          'user': {'id': 'u2', 'displayName': name, 'email': null, 'username': email, 'hasPassword': true, 'notificationsEnabled': true, 'emailVerified': false},
         }),
       );
     }
@@ -170,7 +170,7 @@ class FakeBackend implements HttpClientAdapter {
       return _json(200, jsonEncode({'accessToken': session.access, 'refreshToken': session.refresh}));
     }
     if (path.endsWith('/me')) {
-      return _json(200, jsonEncode({'id': 'u1', 'displayName': 'Test User', 'email': 'test@example.com', 'hasPassword': false, 'emailVerified': true}));
+      return _json(200, jsonEncode({'id': 'u1', 'displayName': 'Test User', 'email': 'test@example.com', 'hasPassword': false, 'notificationsEnabled': true, 'emailVerified': true}));
     }
     return _json(200, jsonEncode({'ok': true}));
   }

@@ -13,6 +13,7 @@ Name | Type | Description | Notes
 **id** | **String** |  | 
 **lastExpenseAt** | [**DateTime**](DateTime.md) |  | [optional] 
 **members** | [**BuiltList&lt;MemberDto&gt;**](MemberDto.md) |  | 
+**muted** | **bool** |  | 
 **name** | **String** |  | 
 **totalSpentMinor** | **int** | Integer minor units (piasters: 1 EGP = 100). Never a decimal. | 
 **type** | **String** |  | 

@@ -51,14 +51,16 @@ Please follow the [installation procedure](#installation--usage) and then run th
 import 'package:qesma_api/qesma_api.dart';
 
 
-final api = QesmaApi().getAuthControllerApi();
-final RefreshRequest refreshRequest = ; // RefreshRequest | 
+final api = QesmaApi().getActivityControllerApi();
+final String gid = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final int limit = 56; // int | 
+final String before = before_example; // String | 
 
 try {
-    final response = await api.refreshSession(refreshRequest);
+    final response = await api.listGroupActivity(gid, limit, before);
     print(response);
 } catch on DioException (e) {
-    print("Exception when calling AuthControllerApi->refreshSession: $e\n");
+    print("Exception when calling ActivityControllerApi->listGroupActivity: $e\n");
 }
 
 ```
@@ -69,6 +71,7 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+[*ActivityControllerApi*](doc/ActivityControllerApi.md) | [**listGroupActivity**](doc/ActivityControllerApi.md#listgroupactivity) | **GET** /api/v1/groups/{gid}/activity | The group&#39;s activity feed, newest first (keyset pagination)
 [*AuthControllerApi*](doc/AuthControllerApi.md) | [**refreshSession**](doc/AuthControllerApi.md#refreshsession) | **POST** /api/v1/auth/refresh | 
 [*AuthControllerApi*](doc/AuthControllerApi.md) | [**signInWithGoogle**](doc/AuthControllerApi.md#signinwithgoogle) | **POST** /api/v1/auth/google | 
 [*AuthControllerApi*](doc/AuthControllerApi.md) | [**signOut**](doc/AuthControllerApi.md#signout) | **POST** /api/v1/auth/logout | 
@@ -94,6 +97,7 @@ Class | Method | HTTP request | Description
 [*JoinRequestControllerApi*](doc/JoinRequestControllerApi.md) | [**listJoinRequests**](doc/JoinRequestControllerApi.md#listjoinrequests) | **GET** /api/v1/groups/{gid}/join-requests | List the requests waiting for a decision, oldest first (the requester by display name only)
 [*JoinRequestControllerApi*](doc/JoinRequestControllerApi.md) | [**rejectJoinRequest**](doc/JoinRequestControllerApi.md#rejectjoinrequest) | **POST** /api/v1/groups/{gid}/join-requests/{rid}/reject | Reject a join request
 [*MeControllerApi*](doc/MeControllerApi.md) | [**changePassword**](doc/MeControllerApi.md#changepassword) | **POST** /api/v1/me/password | 
+[*MeControllerApi*](doc/MeControllerApi.md) | [**deleteMe**](doc/MeControllerApi.md#deleteme) | **DELETE** /api/v1/me | Delete your account
 [*MeControllerApi*](doc/MeControllerApi.md) | [**getMe**](doc/MeControllerApi.md#getme) | **GET** /api/v1/me | 
 [*MeControllerApi*](doc/MeControllerApi.md) | [**getPaymentHandles**](doc/MeControllerApi.md#getpaymenthandles) | **GET** /api/v1/me/payment-handles | Your own InstaPay address and mobile-wallet number
 [*MeControllerApi*](doc/MeControllerApi.md) | [**updateMe**](doc/MeControllerApi.md#updateme) | **PATCH** /api/v1/me | 
@@ -104,12 +108,18 @@ Class | Method | HTTP request | Description
 [*MemberControllerApi*](doc/MemberControllerApi.md) | [**unlinkMember**](doc/MemberControllerApi.md#unlinkmember) | **POST** /api/v1/groups/{gid}/members/{mid}/unlink | Unlink the account from a member (the member, its history and balance stay)
 [*MembershipControllerApi*](doc/MembershipControllerApi.md) | [**leaveGroup**](doc/MembershipControllerApi.md#leavegroup) | **POST** /api/v1/groups/{gid}/leave | Leave the group
 [*MembershipControllerApi*](doc/MembershipControllerApi.md) | [**transferOwnership**](doc/MembershipControllerApi.md#transferownership) | **POST** /api/v1/groups/{gid}/transfer-ownership | Make another member the owner (the old owner becomes ADMIN)
+[*NotificationControllerApi*](doc/NotificationControllerApi.md) | [**getUnreadNotificationCount**](doc/NotificationControllerApi.md#getunreadnotificationcount) | **GET** /api/v1/notifications/unread-count | How many of your notifications are unread
+[*NotificationControllerApi*](doc/NotificationControllerApi.md) | [**listNotifications**](doc/NotificationControllerApi.md#listnotifications) | **GET** /api/v1/notifications | Your notifications, newest first (keyset pagination)
+[*NotificationControllerApi*](doc/NotificationControllerApi.md) | [**markNotificationsRead**](doc/NotificationControllerApi.md#marknotificationsread) | **POST** /api/v1/notifications/read | Mark your notifications read
+[*NotificationPrefsControllerApi*](doc/NotificationPrefsControllerApi.md) | [**updateGroupNotificationPrefs**](doc/NotificationPrefsControllerApi.md#updategroupnotificationprefs) | **PUT** /api/v1/groups/{gid}/notification-prefs | Mute or unmute one group for yourself
+[*NotificationPrefsControllerApi*](doc/NotificationPrefsControllerApi.md) | [**updateNotificationPrefs**](doc/NotificationPrefsControllerApi.md#updatenotificationprefs) | **PUT** /api/v1/me/notification-prefs | Switch all your notifications on or off
 [*PasswordAuthControllerApi*](doc/PasswordAuthControllerApi.md) | [**forgotPassword**](doc/PasswordAuthControllerApi.md#forgotpassword) | **POST** /api/v1/auth/password/forgot | 
 [*PasswordAuthControllerApi*](doc/PasswordAuthControllerApi.md) | [**registerWithPassword**](doc/PasswordAuthControllerApi.md#registerwithpassword) | **POST** /api/v1/auth/register | 
 [*PasswordAuthControllerApi*](doc/PasswordAuthControllerApi.md) | [**resendEmailVerification**](doc/PasswordAuthControllerApi.md#resendemailverification) | **POST** /api/v1/auth/email/verify/resend | 
 [*PasswordAuthControllerApi*](doc/PasswordAuthControllerApi.md) | [**resetPassword**](doc/PasswordAuthControllerApi.md#resetpassword) | **POST** /api/v1/auth/password/reset | 
 [*PasswordAuthControllerApi*](doc/PasswordAuthControllerApi.md) | [**signInWithPassword**](doc/PasswordAuthControllerApi.md#signinwithpassword) | **POST** /api/v1/auth/login | 
 [*PasswordAuthControllerApi*](doc/PasswordAuthControllerApi.md) | [**verifyEmail**](doc/PasswordAuthControllerApi.md#verifyemail) | **POST** /api/v1/auth/email/verify | 
+[*ReminderControllerApi*](doc/ReminderControllerApi.md) | [**remindTransfer**](doc/ReminderControllerApi.md#remindtransfer) | **POST** /api/v1/groups/{gid}/transfers/remind | Remind a member of a suggested transfer they owe
 [*SettlementControllerApi*](doc/SettlementControllerApi.md) | [**cancelSettlement**](doc/SettlementControllerApi.md#cancelsettlement) | **POST** /api/v1/groups/{gid}/settlements/{sid}/cancel | Cancel (the payer, or an Owner/Admin); replaces the Phase 1 delete
 [*SettlementControllerApi*](doc/SettlementControllerApi.md) | [**confirmSettlement**](doc/SettlementControllerApi.md#confirmsettlement) | **POST** /api/v1/groups/{gid}/settlements/{sid}/confirm | Confirm \&quot;received\&quot; (the receiver, or an Owner/Admin who is not the payer)
 [*SettlementControllerApi*](doc/SettlementControllerApi.md) | [**createSettlement**](doc/SettlementControllerApi.md#createsettlement) | **POST** /api/v1/groups/{gid}/settlements | Declare or record a settlement (a real-world payment between two members)
@@ -119,12 +129,16 @@ Class | Method | HTTP request | Description
 
 ## Documentation For Models
 
+ - [ActivityItem](doc/ActivityItem.md)
+ - [ActivityPage](doc/ActivityPage.md)
  - [AuthResponse](doc/AuthResponse.md)
  - [BalanceView](doc/BalanceView.md)
  - [ChangePasswordRequest](doc/ChangePasswordRequest.md)
  - [Charges](doc/Charges.md)
  - [CreateGroupRequest](doc/CreateGroupRequest.md)
  - [CreateMemberRequest](doc/CreateMemberRequest.md)
+ - [DeleteAccountRequest](doc/DeleteAccountRequest.md)
+ - [EventPayload](doc/EventPayload.md)
  - [ExpenseCommand](doc/ExpenseCommand.md)
  - [ExpensePreview](doc/ExpensePreview.md)
  - [ExpenseRevisionView](doc/ExpenseRevisionView.md)
@@ -132,6 +146,7 @@ Class | Method | HTTP request | Description
  - [ForgotPasswordRequest](doc/ForgotPasswordRequest.md)
  - [GoogleLoginRequest](doc/GoogleLoginRequest.md)
  - [GroupDto](doc/GroupDto.md)
+ - [GroupNotificationPrefsView](doc/GroupNotificationPrefsView.md)
  - [GroupSummaryDto](doc/GroupSummaryDto.md)
  - [InviteCommand](doc/InviteCommand.md)
  - [InvitePreview](doc/InvitePreview.md)
@@ -143,8 +158,13 @@ Class | Method | HTTP request | Description
  - [JoinView](doc/JoinView.md)
  - [JoinedMember](doc/JoinedMember.md)
  - [LoginRequest](doc/LoginRequest.md)
+ - [MarkReadRequest](doc/MarkReadRequest.md)
+ - [MarkReadResult](doc/MarkReadResult.md)
  - [MemberDto](doc/MemberDto.md)
  - [Net](doc/Net.md)
+ - [NotificationItem](doc/NotificationItem.md)
+ - [NotificationPage](doc/NotificationPage.md)
+ - [NotificationPrefsView](doc/NotificationPrefsView.md)
  - [PageResponseExpenseView](doc/PageResponseExpenseView.md)
  - [PageResponseGroupSummaryDto](doc/PageResponseGroupSummaryDto.md)
  - [PageResponseInviteView](doc/PageResponseInviteView.md)
@@ -154,8 +174,11 @@ Class | Method | HTTP request | Description
  - [PayerView](doc/PayerView.md)
  - [PaymentHandlesView](doc/PaymentHandlesView.md)
  - [Problem](doc/Problem.md)
+ - [ProblemGroupsInner](doc/ProblemGroupsInner.md)
  - [RefreshRequest](doc/RefreshRequest.md)
  - [RegisterRequest](doc/RegisterRequest.md)
+ - [RemindCommand](doc/RemindCommand.md)
+ - [ReminderView](doc/ReminderView.md)
  - [ResetPasswordRequest](doc/ResetPasswordRequest.md)
  - [ServiceCharge](doc/ServiceCharge.md)
  - [ServiceInput](doc/ServiceInput.md)
@@ -169,12 +192,16 @@ Class | Method | HTTP request | Description
  - [TransferOwnershipRequest](doc/TransferOwnershipRequest.md)
  - [TransferView](doc/TransferView.md)
  - [Unclaimed](doc/Unclaimed.md)
+ - [UnreadCount](doc/UnreadCount.md)
+ - [UpdateGroupNotificationPrefsRequest](doc/UpdateGroupNotificationPrefsRequest.md)
  - [UpdateGroupRequest](doc/UpdateGroupRequest.md)
  - [UpdateMeRequest](doc/UpdateMeRequest.md)
  - [UpdateMemberRequest](doc/UpdateMemberRequest.md)
+ - [UpdateNotificationPrefsRequest](doc/UpdateNotificationPrefsRequest.md)
  - [UpdatePaymentHandlesRequest](doc/UpdatePaymentHandlesRequest.md)
  - [UserDto](doc/UserDto.md)
  - [VerifyEmailRequest](doc/VerifyEmailRequest.md)
+ - [VersionConflictProblem](doc/VersionConflictProblem.md)
 
 
 ## Documentation For Authorization

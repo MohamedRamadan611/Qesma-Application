@@ -16,8 +16,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../groups/application/group_permissions.dart';
+import '../../../core/format/clock.dart';
 import '../application/balances_controller.dart';
 import '../application/incoming_settlements.dart';
+import '../application/remind_controller.dart';
+import '../application/remind_rules.dart';
 import '../application/settlement_rules.dart';
 import 'receiver_card.dart';
 import '../application/record_payment_state.dart';
@@ -89,6 +92,26 @@ class _BalancesTabState extends ConsumerState<BalancesTab> {
     }
   }
 
+  Future<void> _remind(String fromId, String toId) async {
+    final l10n = AppLocalizations.of(context);
+    final result = await ref.read(remindControllerProvider(_gid).notifier).remind(fromId, toId);
+    if (!mounted) return;
+    final text = switch (result.outcome) {
+      RemindOutcome.sent => l10n.remindSent,
+      RemindOutcome.rateLimited => l10n.remindSentToday,
+      RemindOutcome.gone => l10n.remindGone,
+      RemindOutcome.forbidden => l10n.errorForbidden,
+      RemindOutcome.failed => result.failure == null
+          ? null
+          : (result.failure!.retryable || result.failure is ApiNoConnection || result.failure is ApiTimeout
+              ? l10n.remindRetry
+              : errorCopyFor(l10n, result.failure!).message),
+    };
+    if (text == null) return;
+    final canRetry = result.outcome == RemindOutcome.failed;
+    showAppSnackBar(context, text, actionLabel: canRetry ? l10n.commonRetry : null, onAction: canRetry ? () => _remind(fromId, toId) : null);
+  }
+
   Widget _ready(BalanceView balances) {
     final l10n = AppLocalizations.of(context);
     final group = widget.group;
@@ -96,7 +119,10 @@ class _BalancesTabState extends ConsumerState<BalancesTab> {
     final settlements = ref.watch(settlementsControllerProvider(_gid));
     final members = {for (final m in group.members) m.id: m};
     final transfers = balances.transfers.toList();
-    final canRecordForOthers = ref.watch(groupPermissionsProvider(_gid)).canManageMembers;
+    final permissions = ref.watch(groupPermissionsProvider(_gid));
+    final canRecordForOthers = permissions.canManageMembers;
+    final remindState = ref.watch(remindControllerProvider(_gid));
+    final now = ref.watch(clockProvider)();
 
     return RefreshIndicator(
       onRefresh: _refresh,
@@ -121,7 +147,23 @@ class _BalancesTabState extends ConsumerState<BalancesTab> {
                   children: [
                     for (var i = 0; i < transfers.length; i++) ...[
                       if (i > 0) const SizedBox(height: QesmaSpacing.sm + 4),
-                      _transferCard(transfers[i], nameOf, group.yourMemberId, canRecordForOthers),
+                      _transferCard(
+                        transfers[i],
+                        nameOf,
+                        group.yourMemberId,
+                        canRecordForOthers,
+                        remind: remindStateFor(
+                          isCreditor: transfers[i].toMemberId == group.yourMemberId,
+                          isDebtor: transfers[i].fromMemberId == group.yourMemberId,
+                          canRemindAny: permissions.canRemindAny,
+                          debtorHasAccount: members[transfers[i].fromMemberId]?.hasAccount ?? false,
+                          debtorStatus: members[transfers[i].fromMemberId]?.status ?? 'UNKNOWN',
+                          canRemindAt: transfers[i].canRemindAt,
+                          lockedUntil: remindState.lockedUntil[remindPairKey(transfers[i].fromMemberId, transfers[i].toMemberId)],
+                          now: now,
+                        ),
+                        remindBusy: remindState.busy,
+                      ),
                     ],
                   ],
                 ),
@@ -165,7 +207,14 @@ class _BalancesTabState extends ConsumerState<BalancesTab> {
 /// A suggested transfer with the controls this person's role allows: the payer pays, the receiver can record cash received,
 /// an Owner/Admin can record on behalf, anyone else only reads it.
 extension on _BalancesTabState {
-  Widget _transferCard(TransferView t, String Function(String) nameOf, String you, bool canRecordForOthers) {
+  Widget _transferCard(
+    TransferView t,
+    String Function(String) nameOf,
+    String you,
+    bool canRecordForOthers, {
+    required RemindState remind,
+    required bool remindBusy,
+  }) {
     final role = t.fromMemberId == you ? TransferRole.payer : (t.toMemberId == you ? TransferRole.receiver : TransferRole.other);
     final seed = PaymentSeed(fromId: t.fromMemberId, toId: t.toMemberId, amountMinor: t.amountMinor);
     return TransferCard(
@@ -173,6 +222,9 @@ extension on _BalancesTabState {
       nameOf: nameOf,
       role: role,
       onRecord: role == TransferRole.other && !canRecordForOthers ? null : () => _record(seed),
+      remind: remind,
+      remindBusy: remindBusy,
+      onRemind: () => _remind(t.fromMemberId, t.toMemberId),
     );
   }
 }

@@ -16,6 +16,7 @@ part 'user_dto.g.dart';
 /// * [emailVerified] 
 /// * [hasPassword] 
 /// * [id] 
+/// * [notificationsEnabled] 
 /// * [username] 
 @BuiltValue()
 abstract class UserDto implements Built<UserDto, UserDtoBuilder> {
@@ -33,6 +34,9 @@ abstract class UserDto implements Built<UserDto, UserDtoBuilder> {
 
   @BuiltValueField(wireName: r'id')
   String get id;
+
+  @BuiltValueField(wireName: r'notificationsEnabled')
+  bool get notificationsEnabled;
 
   @BuiltValueField(wireName: r'username')
   String? get username;
@@ -86,6 +90,11 @@ class _$UserDtoSerializer implements PrimitiveSerializer<UserDto> {
     yield serializers.serialize(
       object.id,
       specifiedType: const FullType(String),
+    );
+    yield r'notificationsEnabled';
+    yield serializers.serialize(
+      object.notificationsEnabled,
+      specifiedType: const FullType(bool),
     );
     if (object.username != null) {
       yield r'username';
@@ -152,6 +161,13 @@ class _$UserDtoSerializer implements PrimitiveSerializer<UserDto> {
             specifiedType: const FullType(String),
           ) as String;
           result.id = valueDes;
+          break;
+        case r'notificationsEnabled':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(bool),
+          ) as bool;
+          result.notificationsEnabled = valueDes;
           break;
         case r'username':
           final valueDes = serializers.deserialize(

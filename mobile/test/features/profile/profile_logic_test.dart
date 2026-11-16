@@ -19,6 +19,8 @@ import '../../support/groups_rig.dart';
 
 UserDto _user(String name) => UserDto((b) => b
   ..hasPassword = false
+  ..notificationsEnabled = true
+  ..notificationsEnabled = true
   ..emailVerified = true
   ..id = 'u1'
   ..displayName = name

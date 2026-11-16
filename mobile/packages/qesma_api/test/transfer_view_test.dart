@@ -13,6 +13,11 @@ void main() {
       // TODO
     });
 
+    // DateTime canRemindAt
+    test('to test the property `canRemindAt`', () async {
+      // TODO
+    });
+
     // String fromMemberId
     test('to test the property `fromMemberId`', () async {
       // TODO

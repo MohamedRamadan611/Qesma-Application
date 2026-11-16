@@ -14,6 +14,7 @@ import 'package:qesma_api/src/model/group_dto.dart';
 import 'package:qesma_api/src/model/page_response_group_summary_dto.dart';
 import 'package:qesma_api/src/model/problem.dart';
 import 'package:qesma_api/src/model/update_group_request.dart';
+import 'package:qesma_api/src/model/version_conflict_problem.dart';
 
 class GroupControllerApi {
 

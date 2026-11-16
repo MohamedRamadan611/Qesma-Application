@@ -45,6 +45,9 @@ class Permissions {
   /// Leave the group: everybody except the owner, who must transfer ownership first (FL12).
   bool get canLeave => !_isOwner;
 
+  /// Remind the debtor of any suggested transfer (the creditor may always remind their own debtor; FL14).
+  bool get canRemindAny => _isAdminOrOwner;
+
   /// Add expenses and record payments: every member (the same for all roles).
   bool get canAddExpense => true;
 

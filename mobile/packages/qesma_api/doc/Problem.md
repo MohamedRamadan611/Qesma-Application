@@ -10,7 +10,9 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **code** | **String** | Stable machine-readable error code. | 
 **detail** | **String** |  | [optional] 
+**groups** | [**BuiltList&lt;ProblemGroupsInner&gt;**](ProblemGroupsInner.md) | Only with OWNER_MUST_TRANSFER on DELETE /me: your groups that still depend on you as Owner. | [optional] 
 **instance** | **String** |  | [optional] 
+**nextAllowedAt** | [**DateTime**](DateTime.md) | Only with REMIND_RATE_LIMITED: the earliest time a reminder for this member may be sent again (UTC). | [optional] 
 **requestId** | **String** | Echoes the X-Request-Id response header. | [optional] 
 **status** | **int** |  | 
 **title** | **String** |  | 

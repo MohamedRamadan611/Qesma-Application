@@ -75,6 +75,132 @@ class FakeBalancesServer extends FakeExpensesServer {
 
   bool get _isAdmin => group.yourRole == 'OWNER' || group.yourRole == 'ADMIN';
 
+  // ---- FL14: payment handles (B14) and Remind (B16) ----
+
+  /// The signed-in person's own handles, as the server stores them (normalised).
+  Map<String, String?> myHandles = {'instapay': null, 'wallet': null};
+
+  /// Every `PUT /me/payment-handles` body, in arrival order.
+  final List<Map<String, dynamic>> handlePuts = [];
+
+  bool failNextHandlesGet = false;
+  bool failNextHandlesPut = false;
+  bool rejectNextHandlesPut = false;
+
+  /// Every remind request that reached the door (replays included): the key and the body.
+  final List<({String? key, Map<String, dynamic> body})> remindRequests = [];
+
+  /// The Idempotency-Key of every remind attempt, including ones never answered (offline / lost).
+  final List<String?> remindAttemptKeys = [];
+
+  /// What the server stores after a reminder: the "may remind again" time (far in the future, so a real clock never passes it).
+  static final DateTime remindWindowEnd = DateTime.utc(2099, 1, 1, 12);
+
+  /// Answer the next remind with this status / code (429 carries [nextAllowedAt]), then forget it.
+  ({int status, String code, String? nextAllowedAt})? forceNextRemind;
+  bool loseNextRemindResponse = false;
+  final Map<String, Map<String, dynamic>> _remindStored = {};
+
+  static final RegExp _handlesPath = RegExp(r'/api/v1/me/payment-handles$');
+  static final RegExp _remindPath = RegExp(r'/api/v1/groups/([^/]+)/transfers/remind$');
+
+  /// The server's normalisation and validation of a wallet (A90) and an InstaPay address, mirrored just enough for the contract the client depends on.
+  static String? _wallet(String raw) {
+    const ar = '٠١٢٣٤٥٦٧٨٩';
+    var s = raw.runes.map(String.fromCharCode).map((c) => ar.contains(c) ? '${ar.indexOf(c)}' : c).join().replaceAll(RegExp(r'[\s \-]'), '');
+    if (s.startsWith('+20')) s = '0${s.substring(3)}';
+    if (s.startsWith('0020')) s = '0${s.substring(4)}';
+    return RegExp(r'^01[0125][0-9]{8}$').hasMatch(s) ? s : null;
+  }
+
+  static String? _instapay(String raw) {
+    final s = raw.trim().toLowerCase();
+    return s.length >= 3 && s.length <= 60 && RegExp(r'^[a-z0-9._-]+@[a-z0-9.-]+$').hasMatch(s) ? s : null;
+  }
+
+  Future<ResponseBody> _handles(RequestOptions options, Stream<Uint8List>? requestStream) async {
+    requests.add('${options.method} ${options.uri.path}');
+    if (offline) throw DioException.connectionError(requestOptions: options, reason: 'offline', error: const HttpException('offline'));
+    if (options.method == 'GET') {
+      if (failNextHandlesGet) {
+        failNextHandlesGet = false;
+        return problemResponse(500, 'INTERNAL_ERROR');
+      }
+      return jsonOk(200, myHandles);
+    }
+    if (rejectNextHandlesPut) {
+      rejectNextHandlesPut = false;
+      return problemResponse(422, 'VALIDATION_ERROR');
+    }
+    if (failNextHandlesPut) {
+      failNextHandlesPut = false;
+      return problemResponse(500, 'INTERNAL_ERROR');
+    }
+    final body = await _readBody(options, requestStream);
+    handlePuts.add(copyJson(body));
+    String? next(String field, String? Function(String) normalise) {
+      final raw = body[field];
+      if (raw == null || (raw is String && raw.trim().isEmpty)) return null;
+      return raw is String ? (normalise(raw) ?? 'INVALID') : 'INVALID';
+    }
+
+    final instapay = next('instapay', _instapay);
+    final wallet = next('wallet', _wallet);
+    if (instapay == 'INVALID' || wallet == 'INVALID') return problemResponse(422, 'VALIDATION_ERROR');
+    myHandles = {'instapay': instapay, 'wallet': wallet};
+    return jsonOk(200, myHandles);
+  }
+
+  Future<ResponseBody> _remind(RequestOptions options, Stream<Uint8List>? requestStream) async {
+    requests.add('${options.method} ${options.uri.path}');
+    final key = options.headers['Idempotency-Key'] as String?;
+    remindAttemptKeys.add(key);
+    if (offline || balancesOffline) throw DioException.connectionError(requestOptions: options, reason: 'offline', error: const HttpException('offline'));
+    final body = await _readBody(options, requestStream);
+    remindRequests.add((key: key, body: copyJson(body)));
+    final forced = forceNextRemind;
+    if (forced != null) {
+      forceNextRemind = null;
+      final json = {'type': 'https://qesma.app/problems/x', 'title': 'x', 'status': forced.status, 'code': forced.code, 'requestId': 'req-${forced.status}', 'nextAllowedAt': ?forced.nextAllowedAt};
+      return ResponseBody.fromString(jsonEncode(json), forced.status, headers: {
+        Headers.contentTypeHeader: ['application/problem+json'],
+      });
+    }
+    final canonical = _canon(body);
+    final stored = key == null ? null : _remindStored[key];
+    if (stored != null) {
+      return jsonOk(201, stored);
+    }
+    final transfers = (balances['transfers'] as List).cast<Map<String, dynamic>>();
+    final match = transfers.where((t) => t['fromMemberId'] == body['fromMemberId'] && t['toMemberId'] == body['toMemberId']);
+    if (match.isEmpty) return problemResponse(422, 'VALIDATION_ERROR');
+    final t = match.first;
+    if (t['canRemindAt'] != null && DateTime.parse(t['canRemindAt'] as String).isAfter(DateTime.now())) {
+      return ResponseBody.fromString(
+        jsonEncode({'type': 'https://qesma.app/problems/x', 'title': 'x', 'status': 429, 'code': 'REMIND_RATE_LIMITED', 'requestId': 'req-429', 'nextAllowedAt': t['canRemindAt']}),
+        429,
+        headers: {
+          Headers.contentTypeHeader: ['application/problem+json'],
+        },
+      );
+    }
+    t['canRemindAt'] = remindWindowEnd.toIso8601String();
+    final view = {
+      'fromMemberId': body['fromMemberId'],
+      'toMemberId': body['toMemberId'],
+      'amountMinor': t['amountMinor'],
+      'remindedAt': DateTime.utc(2026, 11, 13, 12).toIso8601String(),
+      'canRemindAt': remindWindowEnd.toIso8601String(),
+    };
+    if (key != null) _remindStored[key] = view;
+    assert(canonical.isNotEmpty);
+    if (loseNextRemindResponse) {
+      loseNextRemindResponse = false;
+      throw DioException.receiveTimeout(requestOptions: options, timeout: const Duration(seconds: 20));
+    }
+    return jsonOk(201, view);
+  }
+
   static final RegExp _path = RegExp(r'/api/v1/groups/([^/]+)/(balances|settlements)(?:/([^/]+)(?:/(confirm|dispute|cancel))?)?$');
 
   Future<Map<String, dynamic>> _readBody(RequestOptions options, Stream<Uint8List>? stream) async {
@@ -98,6 +224,8 @@ class FakeBalancesServer extends FakeExpensesServer {
 
   @override
   Future<ResponseBody> fetch(RequestOptions options, Stream<Uint8List>? requestStream, Future<void>? cancelFuture) async {
+    if (_handlesPath.hasMatch(options.uri.path)) return _handles(options, requestStream);
+    if (options.method == 'POST' && _remindPath.hasMatch(options.uri.path)) return _remind(options, requestStream);
     final match = _path.firstMatch(options.uri.path);
     if (match == null) return super.fetch(options, requestStream, cancelFuture);
 

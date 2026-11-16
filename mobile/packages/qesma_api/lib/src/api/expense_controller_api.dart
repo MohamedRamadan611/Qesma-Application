@@ -17,6 +17,7 @@ import 'package:qesma_api/src/model/expense_revision_view.dart';
 import 'package:qesma_api/src/model/expense_view.dart';
 import 'package:qesma_api/src/model/page_response_expense_view.dart';
 import 'package:qesma_api/src/model/problem.dart';
+import 'package:qesma_api/src/model/version_conflict_problem.dart';
 
 class ExpenseControllerApi {
 

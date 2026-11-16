@@ -21,6 +21,33 @@ class ProfileRepository {
       throw mapApiError(error);
     }
   }
+
+  /// `GET /me/payment-handles`: the caller's own handles (null = not set).
+  Future<PaymentHandlesView> paymentHandles() async {
+    try {
+      final body = (await _api.getMeControllerApi().getPaymentHandles()).data;
+      if (body == null) throw const ApiUnexpected();
+      return body;
+    } catch (error) {
+      throw mapApiError(error);
+    }
+  }
+
+  /// `PUT /me/payment-handles` is a full replace (A93): a null field removes that handle. Returns what the server stored
+  /// (wallet as `01XXXXXXXXX`, InstaPay lower case). No Idempotency-Key: a repeat of the same PUT is harmless.
+  Future<PaymentHandlesView> savePaymentHandles({String? instapay, String? wallet}) async {
+    try {
+      final request = UpdatePaymentHandlesRequest((b) {
+        b.instapay = instapay;
+        b.wallet = wallet;
+      });
+      final body = (await _api.getMeControllerApi().updatePaymentHandles(updatePaymentHandlesRequest: request)).data;
+      if (body == null) throw const ApiUnexpected();
+      return body;
+    } catch (error) {
+      throw mapApiError(error);
+    }
+  }
 }
 
 final profileRepositoryProvider = Provider<ProfileRepository>((ref) => ProfileRepository(ref.watch(qesmaApiProvider)));

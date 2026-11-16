@@ -9,6 +9,7 @@ import 'package:qesma_api/api.dart';
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **amountMinor** | **int** | Integer minor units (piasters: 1 EGP = 100). Never a decimal. | 
+**canRemindAt** | [**DateTime**](DateTime.md) |  | [optional] 
 **fromMemberId** | **String** |  | 
 **hasDispute** | **bool** |  | 
 **openSettlementIds** | **BuiltList&lt;String&gt;** |  | 

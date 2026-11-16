@@ -18,6 +18,8 @@ class _$GroupDto extends GroupDto {
   @override
   final BuiltList<MemberDto> members;
   @override
+  final bool muted;
+  @override
   final String name;
   @override
   final int totalSpentMinor;
@@ -43,6 +45,7 @@ class _$GroupDto extends GroupDto {
       required this.id,
       this.lastExpenseAt,
       required this.members,
+      required this.muted,
       required this.name,
       required this.totalSpentMinor,
       required this.type,
@@ -68,6 +71,7 @@ class _$GroupDto extends GroupDto {
         id == other.id &&
         lastExpenseAt == other.lastExpenseAt &&
         members == other.members &&
+        muted == other.muted &&
         name == other.name &&
         totalSpentMinor == other.totalSpentMinor &&
         type == other.type &&
@@ -86,6 +90,7 @@ class _$GroupDto extends GroupDto {
     _$hash = $jc(_$hash, id.hashCode);
     _$hash = $jc(_$hash, lastExpenseAt.hashCode);
     _$hash = $jc(_$hash, members.hashCode);
+    _$hash = $jc(_$hash, muted.hashCode);
     _$hash = $jc(_$hash, name.hashCode);
     _$hash = $jc(_$hash, totalSpentMinor.hashCode);
     _$hash = $jc(_$hash, type.hashCode);
@@ -106,6 +111,7 @@ class _$GroupDto extends GroupDto {
           ..add('id', id)
           ..add('lastExpenseAt', lastExpenseAt)
           ..add('members', members)
+          ..add('muted', muted)
           ..add('name', name)
           ..add('totalSpentMinor', totalSpentMinor)
           ..add('type', type)
@@ -142,6 +148,10 @@ class GroupDtoBuilder implements Builder<GroupDto, GroupDtoBuilder> {
   ListBuilder<MemberDto> get members =>
       _$this._members ??= ListBuilder<MemberDto>();
   set members(ListBuilder<MemberDto>? members) => _$this._members = members;
+
+  bool? _muted;
+  bool? get muted => _$this._muted;
+  set muted(bool? muted) => _$this._muted = muted;
 
   String? _name;
   String? get name => _$this._name;
@@ -188,6 +198,7 @@ class GroupDtoBuilder implements Builder<GroupDto, GroupDtoBuilder> {
       _id = $v.id;
       _lastExpenseAt = $v.lastExpenseAt;
       _members = $v.members.toBuilder();
+      _muted = $v.muted;
       _name = $v.name;
       _totalSpentMinor = $v.totalSpentMinor;
       _type = $v.type;
@@ -226,6 +237,8 @@ class GroupDtoBuilder implements Builder<GroupDto, GroupDtoBuilder> {
             id: BuiltValueNullFieldError.checkNotNull(id, r'GroupDto', 'id'),
             lastExpenseAt: lastExpenseAt,
             members: members.build(),
+            muted: BuiltValueNullFieldError.checkNotNull(
+                muted, r'GroupDto', 'muted'),
             name: BuiltValueNullFieldError.checkNotNull(
                 name, r'GroupDto', 'name'),
             totalSpentMinor: BuiltValueNullFieldError.checkNotNull(

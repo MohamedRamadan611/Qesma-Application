@@ -2,22 +2,10 @@
 /// (PHASE2_SPEC section 4). Pure functions, no I/O.
 library;
 
+import 'package:qesma/core/format/western_digits.dart';
+
 const String inviteAlphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const int inviteCodeLength = 8;
-
-const String _arabicIndic = '٠١٢٣٤٥٦٧٨٩';
-const String _easternArabicIndic = '۰۱۲۳۴۵۶۷۸۹';
-
-String _westernDigits(String input) {
-  final out = StringBuffer();
-  for (final rune in input.runes) {
-    final char = String.fromCharCode(rune);
-    final a = _arabicIndic.indexOf(char);
-    final e = _easternArabicIndic.indexOf(char);
-    out.write(a >= 0 ? '$a' : e >= 0 ? '$e' : char);
-  }
-  return out.toString();
-}
 
 /// Zero-width and direction marks that a paste may carry (U+200B..200F, U+202A..202E, U+2066..2069, U+FEFF).
 bool _isInvisible(int r) => (r >= 0x200B && r <= 0x200F) || (r >= 0x202A && r <= 0x202E) || (r >= 0x2066 && r <= 0x2069) || r == 0xFEFF;
@@ -35,7 +23,7 @@ String? normaliseInviteCode(String? input) {
   if (slash >= 0) text = text.substring(slash + 1);
   final question = text.indexOf(RegExp(r'[?#]'));
   if (question >= 0) text = text.substring(0, question);
-  final cleaned = _westernDigits(text).toUpperCase().runes.where((r) => !_isInvisible(r) && !_isSeparator(r)).map(String.fromCharCode).join();
+  final cleaned = westernDigits(text).toUpperCase().runes.where((r) => !_isInvisible(r) && !_isSeparator(r)).map(String.fromCharCode).join();
   if (cleaned.length != inviteCodeLength) return null;
   for (final rune in cleaned.runes) {
     if (!inviteAlphabet.contains(String.fromCharCode(rune))) return null;

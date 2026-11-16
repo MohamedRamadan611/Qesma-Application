@@ -3,7 +3,7 @@ import 'package:qesma_api/qesma_api.dart';
 
 // tests for Problem
 void main() {
-  final instance = ProblemBuilder();
+  //final instance = ProblemBuilder();
   // TODO add properties to the builder and call build()
 
   group(Problem, () {
@@ -18,8 +18,20 @@ void main() {
       // TODO
     });
 
+    // Only with OWNER_MUST_TRANSFER on DELETE /me: your groups that still depend on you as Owner.
+    // BuiltList<ProblemGroupsInner> groups
+    test('to test the property `groups`', () async {
+      // TODO
+    });
+
     // String instance
     test('to test the property `instance`', () async {
+      // TODO
+    });
+
+    // Only with REMIND_RATE_LIMITED: the earliest time a reminder for this member may be sent again (UTC).
+    // DateTime nextAllowedAt
+    test('to test the property `nextAllowedAt`', () async {
       // TODO
     });
 

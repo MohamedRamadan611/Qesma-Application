@@ -7,12 +7,20 @@ part of 'serializers.dart';
 // **************************************************************************
 
 Serializers _$serializers = (Serializers().toBuilder()
+      ..add($Problem.serializer)
+      ..add(ActivityItem.serializer)
+      ..add(ActivityItemTypeEnum.serializer)
+      ..add(ActivityPage.serializer)
       ..add(AuthResponse.serializer)
       ..add(BalanceView.serializer)
       ..add(ChangePasswordRequest.serializer)
       ..add(Charges.serializer)
       ..add(CreateGroupRequest.serializer)
       ..add(CreateMemberRequest.serializer)
+      ..add(DeleteAccountRequest.serializer)
+      ..add(EventPayload.serializer)
+      ..add(EventPayloadPreviousRoleEnum.serializer)
+      ..add(EventPayloadRoleEnum.serializer)
       ..add(ExpenseCommand.serializer)
       ..add(ExpensePreview.serializer)
       ..add(ExpenseRevisionView.serializer)
@@ -20,6 +28,7 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(ForgotPasswordRequest.serializer)
       ..add(GoogleLoginRequest.serializer)
       ..add(GroupDto.serializer)
+      ..add(GroupNotificationPrefsView.serializer)
       ..add(GroupSummaryDto.serializer)
       ..add(InviteCommand.serializer)
       ..add(InvitePreview.serializer)
@@ -31,8 +40,14 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(JoinView.serializer)
       ..add(JoinedMember.serializer)
       ..add(LoginRequest.serializer)
+      ..add(MarkReadRequest.serializer)
+      ..add(MarkReadResult.serializer)
       ..add(MemberDto.serializer)
       ..add(Net.serializer)
+      ..add(NotificationItem.serializer)
+      ..add(NotificationItemTypeEnum.serializer)
+      ..add(NotificationPage.serializer)
+      ..add(NotificationPrefsView.serializer)
       ..add(PageResponseExpenseView.serializer)
       ..add(PageResponseGroupSummaryDto.serializer)
       ..add(PageResponseInviteView.serializer)
@@ -41,10 +56,12 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(PayerInput.serializer)
       ..add(PayerView.serializer)
       ..add(PaymentHandlesView.serializer)
-      ..add(Problem.serializer)
       ..add(ProblemCodeEnum.serializer)
+      ..add(ProblemGroupsInner.serializer)
       ..add(RefreshRequest.serializer)
       ..add(RegisterRequest.serializer)
+      ..add(RemindCommand.serializer)
+      ..add(ReminderView.serializer)
       ..add(ResetPasswordRequest.serializer)
       ..add(ServiceCharge.serializer)
       ..add(ServiceInput.serializer)
@@ -58,12 +75,19 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(TransferOwnershipRequest.serializer)
       ..add(TransferView.serializer)
       ..add(Unclaimed.serializer)
+      ..add(UnreadCount.serializer)
+      ..add(UpdateGroupNotificationPrefsRequest.serializer)
       ..add(UpdateGroupRequest.serializer)
       ..add(UpdateMeRequest.serializer)
       ..add(UpdateMemberRequest.serializer)
+      ..add(UpdateNotificationPrefsRequest.serializer)
       ..add(UpdatePaymentHandlesRequest.serializer)
       ..add(UserDto.serializer)
       ..add(VerifyEmailRequest.serializer)
+      ..add(VersionConflictProblem.serializer)
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(ActivityItem)]),
+          () => ListBuilder<ActivityItem>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(ExpenseView)]),
           () => ListBuilder<ExpenseView>())
@@ -107,11 +131,23 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(BuiltList, const [const FullType(TransferView)]),
           () => ListBuilder<TransferView>())
       ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(NotificationItem)]),
+          () => ListBuilder<NotificationItem>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(ProblemGroupsInner)]),
+          () => ListBuilder<ProblemGroupsInner>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(ProblemGroupsInner)]),
+          () => ListBuilder<ProblemGroupsInner>())
+      ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(SettlementView)]),
           () => ListBuilder<SettlementView>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(ShareView)]),
           () => ListBuilder<ShareView>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => ListBuilder<String>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(String)]),
           () => ListBuilder<String>())

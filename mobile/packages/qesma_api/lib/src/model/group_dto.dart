@@ -18,6 +18,7 @@ part 'group_dto.g.dart';
 /// * [id] 
 /// * [lastExpenseAt] 
 /// * [members] 
+/// * [muted] 
 /// * [name] 
 /// * [totalSpentMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
 /// * [type] 
@@ -42,6 +43,9 @@ abstract class GroupDto implements Built<GroupDto, GroupDtoBuilder> {
 
   @BuiltValueField(wireName: r'members')
   BuiltList<MemberDto> get members;
+
+  @BuiltValueField(wireName: r'muted')
+  bool get muted;
 
   @BuiltValueField(wireName: r'name')
   String get name;
@@ -118,6 +122,11 @@ class _$GroupDtoSerializer implements PrimitiveSerializer<GroupDto> {
     yield serializers.serialize(
       object.members,
       specifiedType: const FullType(BuiltList, [FullType(MemberDto)]),
+    );
+    yield r'muted';
+    yield serializers.serialize(
+      object.muted,
+      specifiedType: const FullType(bool),
     );
     yield r'name';
     yield serializers.serialize(
@@ -217,6 +226,13 @@ class _$GroupDtoSerializer implements PrimitiveSerializer<GroupDto> {
             specifiedType: const FullType(BuiltList, [FullType(MemberDto)]),
           ) as BuiltList<MemberDto>;
           result.members.replace(valueDes);
+          break;
+        case r'muted':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(bool),
+          ) as bool;
+          result.muted = valueDes;
           break;
         case r'name':
           final valueDes = serializers.deserialize(

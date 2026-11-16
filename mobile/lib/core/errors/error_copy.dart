@@ -66,6 +66,7 @@ ErrorCopy _forCode(AppLocalizations l10n, ApiErrorCode code, String? memberName)
     ApiErrorCode.memberInactive => ErrorCopy(message: l10n.errorMemberInactive),
     ApiErrorCode.ownerMustTransfer => ErrorCopy(title: l10n.errorOwnerMustTransferTitle, message: l10n.errorOwnerMustTransferMessage),
     ApiErrorCode.invalidStateTransition => ErrorCopy(message: l10n.settlementStateChanged),
+    ApiErrorCode.remindRateLimited => ErrorCopy(message: l10n.remindSentToday),
     ApiErrorCode.unknown => ErrorCopy(message: l10n.errorUnexpected),
   };
 }

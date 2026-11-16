@@ -2281,4 +2281,93 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get detailConfirm => 'Confirm and receive the payment';
+
+  @override
+  String get profilePaymentDetails => 'Payment details';
+
+  @override
+  String get handlesPrivacy => 'Shown only to the members of your groups';
+
+  @override
+  String get handlesIntro =>
+      'Add your InstaPay address, your wallet number or both, and your friends will see them when they want to pay you. The app does not move money.';
+
+  @override
+  String get handlesInstapayHint => 'Example: username@instapay';
+
+  @override
+  String get handlesWalletHint =>
+      'Vodafone Cash, Orange, WE, Etisalat or a bank wallet';
+
+  @override
+  String get handlesInstapayInvalid =>
+      'Use the form name@bank: English letters and digits, no spaces (3 to 60 characters).';
+
+  @override
+  String get handlesWalletInvalid =>
+      'The wallet number must have 11 digits and start with 010, 011, 012 or 015.';
+
+  @override
+  String get handlesEmpty =>
+      'No payment details yet. Add at least one so your friends can pay you.';
+
+  @override
+  String get handlesDiscardBody =>
+      'Your changes to the payment details will not be saved.';
+
+  @override
+  String get handlesSave => 'Save payment details';
+
+  @override
+  String get handlesSaved => 'Payment details saved';
+
+  @override
+  String handlesRemoveTitle(String what) {
+    return 'Remove $what?';
+  }
+
+  @override
+  String get handlesRemoveBody => 'Your friends will no longer see it.';
+
+  @override
+  String get handlesRemoveConfirm => 'Remove and save';
+
+  @override
+  String get handlesSaveFailed =>
+      'We could not save your payment details. Check your connection and try again.';
+
+  @override
+  String get handlesRejected =>
+      'The server did not accept these details. Check the number and the address and try again.';
+
+  @override
+  String get remindButton => 'Remind';
+
+  @override
+  String remindButtonSpoken(String name) {
+    return 'Remind $name about the transfer';
+  }
+
+  @override
+  String get remindSentToday => 'Reminder sent today';
+
+  @override
+  String remindNextAt(String time) {
+    return 'You can remind again after $time';
+  }
+
+  @override
+  String remindNoAccount(String name) {
+    return '$name has no account in the app, so we cannot send a reminder.';
+  }
+
+  @override
+  String get remindSent => 'Reminder sent';
+
+  @override
+  String get remindGone =>
+      'That transfer has changed. We refreshed the balances.';
+
+  @override
+  String get remindRetry => 'We could not send the reminder. Try again.';
 }

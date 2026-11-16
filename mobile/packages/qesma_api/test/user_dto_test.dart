@@ -32,6 +32,11 @@ void main() {
       // TODO
     });
 
+    // bool notificationsEnabled
+    test('to test the property `notificationsEnabled`', () async {
+      // TODO
+    });
+
     // String username
     test('to test the property `username`', () async {
       // TODO

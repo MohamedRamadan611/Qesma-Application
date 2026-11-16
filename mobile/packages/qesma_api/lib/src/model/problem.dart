@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:qesma_api/src/model/problem_groups_inner.dart';
 import 'package:built_collection/built_collection.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
@@ -14,23 +15,33 @@ part 'problem.g.dart';
 /// Properties:
 /// * [code] - Stable machine-readable error code.
 /// * [detail] 
+/// * [groups] - Only with OWNER_MUST_TRANSFER on DELETE /me: your groups that still depend on you as Owner.
 /// * [instance] 
+/// * [nextAllowedAt] - Only with REMIND_RATE_LIMITED: the earliest time a reminder for this member may be sent again (UTC).
 /// * [requestId] - Echoes the X-Request-Id response header.
 /// * [status] 
 /// * [title] 
 /// * [type] 
-@BuiltValue()
-abstract class Problem implements Built<Problem, ProblemBuilder> {
+@BuiltValue(instantiable: false)
+abstract class Problem  {
   /// Stable machine-readable error code.
   @BuiltValueField(wireName: r'code')
   ProblemCodeEnum get code;
-  // enum codeEnum {  VALIDATION_ERROR,  PAYERS_TOTAL_MISMATCH,  SPLIT_TOTAL_MISMATCH,  MEMBER_NOT_IN_GROUP,  IDEMPOTENCY_KEY_REUSED,  DUPLICATE_MEMBER_NAME,  MEMBER_HAS_TRANSACTIONS,  OWNER_MEMBER_PROTECTED,  VERSION_CONFLICT,  INVITE_EXPIRED,  INVITE_REVOKED,  ALREADY_MEMBER,  MEMBER_ALREADY_CLAIMED,  MEMBER_INACTIVE,  OWNER_MUST_TRANSFER,  GROUP_NOT_EMPTY,  NOT_FOUND,  FORBIDDEN,  INVALID_STATE_TRANSITION,  UNAUTHORIZED,  INTERNAL_ERROR,  RATE_LIMITED,  AUTH_PROVIDER_UNAVAILABLE,  USERNAME_TAKEN,  };
+  // enum codeEnum {  VALIDATION_ERROR,  PAYERS_TOTAL_MISMATCH,  SPLIT_TOTAL_MISMATCH,  MEMBER_NOT_IN_GROUP,  IDEMPOTENCY_KEY_REUSED,  DUPLICATE_MEMBER_NAME,  MEMBER_HAS_TRANSACTIONS,  OWNER_MEMBER_PROTECTED,  VERSION_CONFLICT,  INVITE_EXPIRED,  INVITE_REVOKED,  ALREADY_MEMBER,  MEMBER_ALREADY_CLAIMED,  MEMBER_INACTIVE,  OWNER_MUST_TRANSFER,  GROUP_NOT_EMPTY,  NOT_FOUND,  FORBIDDEN,  INVALID_STATE_TRANSITION,  UNAUTHORIZED,  INTERNAL_ERROR,  RATE_LIMITED,  AUTH_PROVIDER_UNAVAILABLE,  USERNAME_TAKEN,  REMIND_RATE_LIMITED,  };
 
   @BuiltValueField(wireName: r'detail')
   String? get detail;
 
+  /// Only with OWNER_MUST_TRANSFER on DELETE /me: your groups that still depend on you as Owner.
+  @BuiltValueField(wireName: r'groups')
+  BuiltList<ProblemGroupsInner>? get groups;
+
   @BuiltValueField(wireName: r'instance')
   String? get instance;
+
+  /// Only with REMIND_RATE_LIMITED: the earliest time a reminder for this member may be sent again (UTC).
+  @BuiltValueField(wireName: r'nextAllowedAt')
+  DateTime? get nextAllowedAt;
 
   /// Echoes the X-Request-Id response header.
   @BuiltValueField(wireName: r'requestId')
@@ -45,20 +56,13 @@ abstract class Problem implements Built<Problem, ProblemBuilder> {
   @BuiltValueField(wireName: r'type')
   String get type;
 
-  Problem._();
-
-  factory Problem([void updates(ProblemBuilder b)]) = _$Problem;
-
-  @BuiltValueHook(initializeBuilder: true)
-  static void _defaults(ProblemBuilder b) => b;
-
   @BuiltValueSerializer(custom: true)
   static Serializer<Problem> get serializer => _$ProblemSerializer();
 }
 
 class _$ProblemSerializer implements PrimitiveSerializer<Problem> {
   @override
-  final Iterable<Type> types = const [Problem, _$Problem];
+  final Iterable<Type> types = const [Problem];
 
   @override
   final String wireName = r'Problem';
@@ -80,11 +84,25 @@ class _$ProblemSerializer implements PrimitiveSerializer<Problem> {
         specifiedType: const FullType.nullable(String),
       );
     }
+    if (object.groups != null) {
+      yield r'groups';
+      yield serializers.serialize(
+        object.groups,
+        specifiedType: const FullType(BuiltList, [FullType(ProblemGroupsInner)]),
+      );
+    }
     if (object.instance != null) {
       yield r'instance';
       yield serializers.serialize(
         object.instance,
         specifiedType: const FullType(String),
+      );
+    }
+    if (object.nextAllowedAt != null) {
+      yield r'nextAllowedAt';
+      yield serializers.serialize(
+        object.nextAllowedAt,
+        specifiedType: const FullType(DateTime),
       );
     }
     if (object.requestId != null) {
@@ -120,6 +138,46 @@ class _$ProblemSerializer implements PrimitiveSerializer<Problem> {
     return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
   }
 
+  @override
+  Problem deserialize(
+    Serializers serializers,
+    Object serialized, {
+    FullType specifiedType = FullType.unspecified,
+  }) {
+    return serializers.deserialize(serialized, specifiedType: FullType($Problem)) as $Problem;
+  }
+}
+
+/// a concrete implementation of [Problem], since [Problem] is not instantiable
+@BuiltValue(instantiable: true)
+abstract class $Problem implements Problem, Built<$Problem, $ProblemBuilder> {
+  $Problem._();
+
+  factory $Problem([void Function($ProblemBuilder)? updates]) = _$$Problem;
+
+  @BuiltValueHook(initializeBuilder: true)
+  static void _defaults($ProblemBuilder b) => b;
+
+  @BuiltValueSerializer(custom: true)
+  static Serializer<$Problem> get serializer => _$$ProblemSerializer();
+}
+
+class _$$ProblemSerializer implements PrimitiveSerializer<$Problem> {
+  @override
+  final Iterable<Type> types = const [$Problem, _$$Problem];
+
+  @override
+  final String wireName = r'$Problem';
+
+  @override
+  Object serialize(
+    Serializers serializers,
+    $Problem object, {
+    FullType specifiedType = FullType.unspecified,
+  }) {
+    return serializers.serialize(object, specifiedType: FullType(Problem))!;
+  }
+
   void _deserializeProperties(
     Serializers serializers,
     Object serialized, {
@@ -147,12 +205,26 @@ class _$ProblemSerializer implements PrimitiveSerializer<Problem> {
           if (valueDes == null) continue;
           result.detail = valueDes;
           break;
+        case r'groups':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(BuiltList, [FullType(ProblemGroupsInner)]),
+          ) as BuiltList<ProblemGroupsInner>;
+          result.groups.replace(valueDes);
+          break;
         case r'instance':
           final valueDes = serializers.deserialize(
             value,
             specifiedType: const FullType(String),
           ) as String;
           result.instance = valueDes;
+          break;
+        case r'nextAllowedAt':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(DateTime),
+          ) as DateTime;
+          result.nextAllowedAt = valueDes;
           break;
         case r'requestId':
           final valueDes = serializers.deserialize(
@@ -191,12 +263,12 @@ class _$ProblemSerializer implements PrimitiveSerializer<Problem> {
   }
 
   @override
-  Problem deserialize(
+  $Problem deserialize(
     Serializers serializers,
     Object serialized, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    final result = ProblemBuilder();
+    final result = $ProblemBuilder();
     final serializedList = (serialized as Iterable<Object?>).toList();
     final unhandled = <Object?>[];
     _deserializeProperties(
@@ -285,6 +357,9 @@ class ProblemCodeEnum extends EnumClass {
   /// Stable machine-readable error code.
   @BuiltValueEnumConst(wireName: r'USERNAME_TAKEN')
   static const ProblemCodeEnum USERNAME_TAKEN = _$problemCodeEnum_USERNAME_TAKEN;
+  /// Stable machine-readable error code.
+  @BuiltValueEnumConst(wireName: r'REMIND_RATE_LIMITED')
+  static const ProblemCodeEnum REMIND_RATE_LIMITED = _$problemCodeEnum_REMIND_RATE_LIMITED;
 
   static Serializer<ProblemCodeEnum> get serializer => _$problemCodeEnumSerializer;
 

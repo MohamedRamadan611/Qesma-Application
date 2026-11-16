@@ -14,12 +14,16 @@ import 'package:built_value/iso_8601_date_time_serializer.dart';
 import 'package:qesma_api/src/date_serializer.dart';
 import 'package:qesma_api/src/model/date.dart';
 
+import 'package:qesma_api/src/model/activity_item.dart';
+import 'package:qesma_api/src/model/activity_page.dart';
 import 'package:qesma_api/src/model/auth_response.dart';
 import 'package:qesma_api/src/model/balance_view.dart';
 import 'package:qesma_api/src/model/change_password_request.dart';
 import 'package:qesma_api/src/model/charges.dart';
 import 'package:qesma_api/src/model/create_group_request.dart';
 import 'package:qesma_api/src/model/create_member_request.dart';
+import 'package:qesma_api/src/model/delete_account_request.dart';
+import 'package:qesma_api/src/model/event_payload.dart';
 import 'package:qesma_api/src/model/expense_command.dart';
 import 'package:qesma_api/src/model/expense_preview.dart';
 import 'package:qesma_api/src/model/expense_revision_view.dart';
@@ -27,6 +31,7 @@ import 'package:qesma_api/src/model/expense_view.dart';
 import 'package:qesma_api/src/model/forgot_password_request.dart';
 import 'package:qesma_api/src/model/google_login_request.dart';
 import 'package:qesma_api/src/model/group_dto.dart';
+import 'package:qesma_api/src/model/group_notification_prefs_view.dart';
 import 'package:qesma_api/src/model/group_summary_dto.dart';
 import 'package:qesma_api/src/model/invite_command.dart';
 import 'package:qesma_api/src/model/invite_preview.dart';
@@ -38,8 +43,13 @@ import 'package:qesma_api/src/model/join_request_view.dart';
 import 'package:qesma_api/src/model/join_view.dart';
 import 'package:qesma_api/src/model/joined_member.dart';
 import 'package:qesma_api/src/model/login_request.dart';
+import 'package:qesma_api/src/model/mark_read_request.dart';
+import 'package:qesma_api/src/model/mark_read_result.dart';
 import 'package:qesma_api/src/model/member_dto.dart';
 import 'package:qesma_api/src/model/net.dart';
+import 'package:qesma_api/src/model/notification_item.dart';
+import 'package:qesma_api/src/model/notification_page.dart';
+import 'package:qesma_api/src/model/notification_prefs_view.dart';
 import 'package:qesma_api/src/model/page_response_expense_view.dart';
 import 'package:qesma_api/src/model/page_response_group_summary_dto.dart';
 import 'package:qesma_api/src/model/page_response_invite_view.dart';
@@ -49,8 +59,11 @@ import 'package:qesma_api/src/model/payer_input.dart';
 import 'package:qesma_api/src/model/payer_view.dart';
 import 'package:qesma_api/src/model/payment_handles_view.dart';
 import 'package:qesma_api/src/model/problem.dart';
+import 'package:qesma_api/src/model/problem_groups_inner.dart';
 import 'package:qesma_api/src/model/refresh_request.dart';
 import 'package:qesma_api/src/model/register_request.dart';
+import 'package:qesma_api/src/model/remind_command.dart';
+import 'package:qesma_api/src/model/reminder_view.dart';
 import 'package:qesma_api/src/model/reset_password_request.dart';
 import 'package:qesma_api/src/model/service_charge.dart';
 import 'package:qesma_api/src/model/service_input.dart';
@@ -64,22 +77,30 @@ import 'package:qesma_api/src/model/token_response.dart';
 import 'package:qesma_api/src/model/transfer_ownership_request.dart';
 import 'package:qesma_api/src/model/transfer_view.dart';
 import 'package:qesma_api/src/model/unclaimed.dart';
+import 'package:qesma_api/src/model/unread_count.dart';
+import 'package:qesma_api/src/model/update_group_notification_prefs_request.dart';
 import 'package:qesma_api/src/model/update_group_request.dart';
 import 'package:qesma_api/src/model/update_me_request.dart';
 import 'package:qesma_api/src/model/update_member_request.dart';
+import 'package:qesma_api/src/model/update_notification_prefs_request.dart';
 import 'package:qesma_api/src/model/update_payment_handles_request.dart';
 import 'package:qesma_api/src/model/user_dto.dart';
 import 'package:qesma_api/src/model/verify_email_request.dart';
+import 'package:qesma_api/src/model/version_conflict_problem.dart';
 
 part 'serializers.g.dart';
 
 @SerializersFor([
+  ActivityItem,
+  ActivityPage,
   AuthResponse,
   BalanceView,
   ChangePasswordRequest,
   Charges,
   CreateGroupRequest,
   CreateMemberRequest,
+  DeleteAccountRequest,
+  EventPayload,
   ExpenseCommand,
   ExpensePreview,
   ExpenseRevisionView,
@@ -87,6 +108,7 @@ part 'serializers.g.dart';
   ForgotPasswordRequest,
   GoogleLoginRequest,
   GroupDto,
+  GroupNotificationPrefsView,
   GroupSummaryDto,
   InviteCommand,
   InvitePreview,
@@ -98,8 +120,13 @@ part 'serializers.g.dart';
   JoinView,
   JoinedMember,
   LoginRequest,
+  MarkReadRequest,
+  MarkReadResult,
   MemberDto,
   Net,
+  NotificationItem,
+  NotificationPage,
+  NotificationPrefsView,
   PageResponseExpenseView,
   PageResponseGroupSummaryDto,
   PageResponseInviteView,
@@ -108,9 +135,12 @@ part 'serializers.g.dart';
   PayerInput,
   PayerView,
   PaymentHandlesView,
-  Problem,
+  Problem,$Problem,
+  ProblemGroupsInner,
   RefreshRequest,
   RegisterRequest,
+  RemindCommand,
+  ReminderView,
   ResetPasswordRequest,
   ServiceCharge,
   ServiceInput,
@@ -124,12 +154,16 @@ part 'serializers.g.dart';
   TransferOwnershipRequest,
   TransferView,
   Unclaimed,
+  UnreadCount,
+  UpdateGroupNotificationPrefsRequest,
   UpdateGroupRequest,
   UpdateMeRequest,
   UpdateMemberRequest,
+  UpdateNotificationPrefsRequest,
   UpdatePaymentHandlesRequest,
   UserDto,
   VerifyEmailRequest,
+  VersionConflictProblem,
 ])
 Serializers serializers = (_$serializers.toBuilder()
       ..addBuilderFactory(
@@ -140,6 +174,7 @@ Serializers serializers = (_$serializers.toBuilder()
         const FullType(BuiltList, [FullType(String)]),
         () => ListBuilder<String>(),
       )
+      ..add(Problem.serializer)
       ..add(const OneOfSerializer())
       ..add(const AnyOfSerializer())
       ..add(const DateSerializer())

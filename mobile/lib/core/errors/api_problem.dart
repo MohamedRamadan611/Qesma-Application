@@ -32,6 +32,8 @@ enum ApiErrorCode {
   ownerMustTransfer('OWNER_MUST_TRANSFER'),
   // B13 (FL13)
   invalidStateTransition('INVALID_STATE_TRANSITION'),
+  // B16 (FL14): one reminder per debtor per 24 h; the body carries nextAllowedAt.
+  remindRateLimited('REMIND_RATE_LIMITED'),
   unknown('');
 
   const ApiErrorCode(this.wire);
@@ -57,6 +59,7 @@ class ApiProblem {
     required this.status,
     this.rawCode,
     this.requestId,
+    this.nextAllowedAt,
   });
 
   final ApiErrorCode code;
@@ -69,6 +72,9 @@ class ApiProblem {
 
   /// Server request id, safe to show to the user for support.
   final String? requestId;
+
+  /// Only with `REMIND_RATE_LIMITED`: when a reminder may be sent again (the server's time, never derived here).
+  final DateTime? nextAllowedAt;
 
   /// Parses a response body (already decoded JSON map, or a raw JSON string).
   /// Returns null when the body is not a problem document (e.g. an HTML 502 page).
@@ -86,11 +92,13 @@ class ApiProblem {
     if (rawCode is! String) return null;
     final status = decoded['status'];
     final requestId = decoded['requestId'];
+    final next = decoded['nextAllowedAt'];
     return ApiProblem(
       code: ApiErrorCode.fromWire(rawCode),
       rawCode: rawCode,
       status: status is int ? status : fallbackStatus,
       requestId: requestId is String ? requestId : null,
+      nextAllowedAt: next is String ? DateTime.tryParse(next) : null,
     );
   }
 

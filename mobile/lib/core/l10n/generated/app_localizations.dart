@@ -3907,6 +3907,150 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تأكيد واستلام الدفعة'**
   String get detailConfirm;
+
+  /// Profile hub row and title of the payment details screen (FL14).
+  ///
+  /// In ar, this message translates to:
+  /// **'بيانات الدفع'**
+  String get profilePaymentDetails;
+
+  /// Privacy note, always visible on the payment details screen.
+  ///
+  /// In ar, this message translates to:
+  /// **'بتظهر لأعضاء مجموعاتك بس'**
+  String get handlesPrivacy;
+
+  /// One line under the privacy note: what the details are for and that the app moves no money.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب عنوان إنستا باي أو رقم المحفظة أو الاتنين، وزمايلك هيشوفوهم لما يحبّوا يحوّلولك. التطبيق مبيحوّلش فلوس.'**
+  String get handlesIntro;
+
+  /// Hint of the InstaPay field.
+  ///
+  /// In ar, this message translates to:
+  /// **'مثال: username@instapay'**
+  String get handlesInstapayHint;
+
+  /// Hint of the wallet field.
+  ///
+  /// In ar, this message translates to:
+  /// **'فودافون كاش، أورنج، وي، اتصالات أو محفظة بنكية'**
+  String get handlesWalletHint;
+
+  /// Inline error of the InstaPay field.
+  ///
+  /// In ar, this message translates to:
+  /// **'العنوان لازم يبقى بالشكل ده: name@bank، حروف إنجليزي وأرقام من غير مسافات (من 3 لـ 60 حرف).'**
+  String get handlesInstapayInvalid;
+
+  /// Inline error of the wallet field.
+  ///
+  /// In ar, this message translates to:
+  /// **'رقم المحفظة لازم يبقى 11 رقم ويبدأ بـ 010 أو 011 أو 012 أو 015.'**
+  String get handlesWalletInvalid;
+
+  /// Shown while both fields are empty.
+  ///
+  /// In ar, this message translates to:
+  /// **'لسه مفيش بيانات دفع. اكتب واحدة على الأقل عشان زمايلك يعرفوا يحوّلولك.'**
+  String get handlesEmpty;
+
+  /// Body of the discard question when leaving with unsaved changes.
+  ///
+  /// In ar, this message translates to:
+  /// **'التعديلات على بيانات الدفع مش هتتحفظ.'**
+  String get handlesDiscardBody;
+
+  /// Save button.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ بيانات الدفع'**
+  String get handlesSave;
+
+  /// Snackbar after a successful save.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتحفظت بيانات الدفع'**
+  String get handlesSaved;
+
+  /// Confirm before saving with an emptied field.
+  ///
+  /// In ar, this message translates to:
+  /// **'هتمسح {what}؟'**
+  String handlesRemoveTitle(String what);
+
+  /// Body of the remove confirmation.
+  ///
+  /// In ar, this message translates to:
+  /// **'زمايلك مش هيشوفوه تاني.'**
+  String get handlesRemoveBody;
+
+  /// Confirm button of the remove confirmation.
+  ///
+  /// In ar, this message translates to:
+  /// **'امسح واحفظ'**
+  String get handlesRemoveConfirm;
+
+  /// Banner when a save failed because of the connection or the server.
+  ///
+  /// In ar, this message translates to:
+  /// **'معرفناش نحفظ بيانات الدفع. اتأكد من الاتصال وجرّب تاني.'**
+  String get handlesSaveFailed;
+
+  /// Banner when the server answered 422 although the client check passed.
+  ///
+  /// In ar, this message translates to:
+  /// **'السيرفر مقبلش البيانات دي. راجع الرقم والعنوان وجرّب تاني.'**
+  String get handlesRejected;
+
+  /// Remind button on a transfer you are owed.
+  ///
+  /// In ar, this message translates to:
+  /// **'ذكّره'**
+  String get remindButton;
+
+  /// Screen-reader label of the remind button.
+  ///
+  /// In ar, this message translates to:
+  /// **'ذكّر {name} بالتحويل'**
+  String remindButtonSpoken(String name);
+
+  /// Disabled remind button: a reminder was already sent (also the rate-limit message).
+  ///
+  /// In ar, this message translates to:
+  /// **'اتبعت تذكير النهاردة'**
+  String get remindSentToday;
+
+  /// Under the disabled button: the server's next-allowed time.
+  ///
+  /// In ar, this message translates to:
+  /// **'تقدر تبعت تاني بعد {time}'**
+  String remindNextAt(String time);
+
+  /// Caption instead of the button when the debtor has no account.
+  ///
+  /// In ar, this message translates to:
+  /// **'{name} مالوش حساب على التطبيق، فمش هينفع نبعتله تذكير.'**
+  String remindNoAccount(String name);
+
+  /// Snackbar after a reminder was sent.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتبعت التذكير'**
+  String get remindSent;
+
+  /// Snackbar when the transfer no longer exists (the balances are re-read).
+  ///
+  /// In ar, this message translates to:
+  /// **'التحويل ده اتغيّر. حدّثنا الأرصدة.'**
+  String get remindGone;
+
+  /// Snackbar when the reminder could not be sent (offline, server error).
+  ///
+  /// In ar, this message translates to:
+  /// **'معرفناش نبعت التذكير. جرّب تاني.'**
+  String get remindRetry;
 }
 
 class _AppLocalizationsDelegate

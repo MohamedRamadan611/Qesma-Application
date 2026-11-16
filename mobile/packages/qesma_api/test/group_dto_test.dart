@@ -32,6 +32,11 @@ void main() {
       // TODO
     });
 
+    // bool muted
+    test('to test the property `muted`', () async {
+      // TODO
+    });
+
     // String name
     test('to test the property `name`', () async {
       // TODO

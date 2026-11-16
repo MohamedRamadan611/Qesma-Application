@@ -19,6 +19,7 @@ import 'fake_expenses_server.dart';
 
 final UserDto _user = UserDto((b) => b
   ..hasPassword = false
+  ..notificationsEnabled = true
   ..emailVerified = true
   ..id = 'u1'
   ..displayName = 'Test User'

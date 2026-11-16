@@ -10,6 +10,7 @@ All URIs are relative to *http://localhost*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**changePassword**](MeControllerApi.md#changepassword) | **POST** /api/v1/me/password | 
+[**deleteMe**](MeControllerApi.md#deleteme) | **DELETE** /api/v1/me | Delete your account
 [**getMe**](MeControllerApi.md#getme) | **GET** /api/v1/me | 
 [**getPaymentHandles**](MeControllerApi.md#getpaymenthandles) | **GET** /api/v1/me/payment-handles | Your own InstaPay address and mobile-wallet number
 [**updateMe**](MeControllerApi.md#updateme) | **PATCH** /api/v1/me | 
@@ -54,6 +55,48 @@ Name | Type | Description  | Notes
 
  - **Content-Type**: application/json
  - **Accept**: application/json, application/problem+json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **deleteMe**
+> deleteMe(deleteAccountRequest)
+
+Delete your account
+
+Body {confirm: \"DELETE\", password}: password accounts must send the current password. 409 OWNER_MUST_TRANSFER (with the groups) while you own a group that has history or other active members.
+
+### Example
+```dart
+import 'package:qesma_api/api.dart';
+
+final api = QesmaApi().getMeControllerApi();
+final DeleteAccountRequest deleteAccountRequest = ; // DeleteAccountRequest | 
+
+try {
+    api.deleteMe(deleteAccountRequest);
+} catch on DioException (e) {
+    print('Exception when calling MeControllerApi->deleteMe: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **deleteAccountRequest** | [**DeleteAccountRequest**](DeleteAccountRequest.md)|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/problem+json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qesma_api/qesma_api.dart';
 
+import '../../../core/format/date_format.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/theme/balance_colors.dart';
 import '../../../core/theme/palette.dart';
 import '../../../core/theme/qesma_text.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
+import '../application/remind_rules.dart';
 
 /// Whose transfer this is for the signed-in person.
 enum TransferRole {
@@ -31,6 +33,9 @@ class TransferCard extends StatelessWidget {
     required this.nameOf,
     required this.role,
     required this.onRecord,
+    this.remind = const RemindState(RemindKind.hidden),
+    this.onRemind,
+    this.remindBusy = false,
   });
 
   final TransferView transfer;
@@ -39,6 +44,15 @@ class TransferCard extends StatelessWidget {
 
   /// Opens the payment sheet for exactly this transfer; null = no button (a plain member on somebody else's transfer).
   final VoidCallback? onRecord;
+
+  /// The Remind control of this transfer (FL14): decided by [remindStateFor] from the server's data.
+  final RemindState remind;
+
+  /// Sends the reminder; only used while [remind] is enabled.
+  final VoidCallback? onRemind;
+
+  /// A send is in flight (this or another transfer): the button cannot be tapped again.
+  final bool remindBusy;
 
   @override
   Widget build(BuildContext context) {
@@ -123,6 +137,14 @@ class TransferCard extends StatelessWidget {
               ),
             ),
           ],
+          if (remind.showsButton) ...[
+            const SizedBox(height: QesmaSpacing.sm),
+            _RemindControl(remind: remind, debtorName: from, onRemind: onRemind, busy: remindBusy),
+          ],
+          if (remind.kind == RemindKind.noAccount) ...[
+            const SizedBox(height: QesmaSpacing.sm),
+            Text(l10n.remindNoAccount(fsIsolate(from)), style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper)),
+          ],
           if (role == TransferRole.payer && (instapay != null || wallet != null)) ...[
             const SizedBox(height: QesmaSpacing.sm),
             AppButton(
@@ -134,6 +156,52 @@ class TransferCard extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+/// "Remind" for the creditor / an admin. Enabled, or disabled with "reminder sent today" and the server's time for the
+/// next one. Nothing here knows the 24-hour window: it only shows the timestamp the server gave.
+class _RemindControl extends StatelessWidget {
+  const _RemindControl({required this.remind, required this.debtorName, required this.onRemind, required this.busy});
+
+  final RemindState remind;
+  final String debtorName;
+  final VoidCallback? onRemind;
+  final bool busy;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final enabled = remind.kind == RemindKind.enabled;
+    final until = remind.until;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Semantics(
+          button: true,
+          enabled: enabled && !busy,
+          excludeSemantics: true,
+          label: enabled ? l10n.remindButtonSpoken(debtorName) : l10n.remindSentToday,
+          onTap: enabled && !busy ? onRemind : null,
+          child: AppButton(
+            label: enabled ? l10n.remindButton : l10n.remindSentToday,
+            icon: enabled ? Icons.alarm_outlined : Icons.check,
+            variant: AppButtonVariant.secondary,
+            loading: enabled && busy,
+            onPressed: enabled && !busy ? onRemind : null,
+          ),
+        ),
+        if (!enabled && until != null) ...[
+          const SizedBox(height: QesmaSpacing.xs),
+          Text(
+            l10n.remindNextAt(ltrIsolate(isoDateTime(until))),
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper),
+          ),
+        ],
+      ],
     );
   }
 }

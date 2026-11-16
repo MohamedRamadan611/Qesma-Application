@@ -12,6 +12,15 @@ void main() {
       // TODO
     });
 
+    // Delete your account
+    //
+    // Body {confirm: \"DELETE\", password}: password accounts must send the current password. 409 OWNER_MUST_TRANSFER (with the groups) while you own a group that has history or other active members.
+    //
+    //Future deleteMe(DeleteAccountRequest deleteAccountRequest) async
+    test('test deleteMe', () async {
+      // TODO
+    });
+
     //Future<UserDto> getMe() async
     test('test getMe', () async {
       // TODO

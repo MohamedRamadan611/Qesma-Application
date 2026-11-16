@@ -17,6 +17,7 @@ String _t(Config c, String ar, String en) => c.locale.languageCode == 'ar' ? ar 
 
 final UserDto _user = UserDto((b) => b
   ..hasPassword = false
+  ..notificationsEnabled = true
   ..emailVerified = true
   ..id = 'u1'
   ..displayName = 'Test User');

@@ -1,0 +1,24 @@
+# qesma_api.model.NotificationItem
+
+## Load the model package
+```dart
+import 'package:qesma_api/api.dart';
+```
+
+## Properties
+Name | Type | Description | Notes
+------------ | ------------- | ------------- | -------------
+**actorMemberId** | **String** |  | [optional] 
+**actorName** | **String** |  | [optional] 
+**createdAt** | [**DateTime**](DateTime.md) |  | 
+**groupId** | **String** |  | 
+**groupName** | **String** |  | 
+**id** | **String** |  | 
+**payload** | [**EventPayload**](EventPayload.md) |  | 
+**readAt** | [**DateTime**](DateTime.md) |  | [optional] 
+**subject** | **String** |  | [optional] 
+**type** | **String** |  | 
+
+[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+
+

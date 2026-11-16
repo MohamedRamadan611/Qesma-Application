@@ -18,6 +18,8 @@ class _$UserDto extends UserDto {
   @override
   final String id;
   @override
+  final bool notificationsEnabled;
+  @override
   final String? username;
 
   factory _$UserDto([void Function(UserDtoBuilder)? updates]) =>
@@ -29,6 +31,7 @@ class _$UserDto extends UserDto {
       required this.emailVerified,
       required this.hasPassword,
       required this.id,
+      required this.notificationsEnabled,
       this.username})
       : super._();
   @override
@@ -47,6 +50,7 @@ class _$UserDto extends UserDto {
         emailVerified == other.emailVerified &&
         hasPassword == other.hasPassword &&
         id == other.id &&
+        notificationsEnabled == other.notificationsEnabled &&
         username == other.username;
   }
 
@@ -58,6 +62,7 @@ class _$UserDto extends UserDto {
     _$hash = $jc(_$hash, emailVerified.hashCode);
     _$hash = $jc(_$hash, hasPassword.hashCode);
     _$hash = $jc(_$hash, id.hashCode);
+    _$hash = $jc(_$hash, notificationsEnabled.hashCode);
     _$hash = $jc(_$hash, username.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
@@ -71,6 +76,7 @@ class _$UserDto extends UserDto {
           ..add('emailVerified', emailVerified)
           ..add('hasPassword', hasPassword)
           ..add('id', id)
+          ..add('notificationsEnabled', notificationsEnabled)
           ..add('username', username))
         .toString();
   }
@@ -100,6 +106,11 @@ class UserDtoBuilder implements Builder<UserDto, UserDtoBuilder> {
   String? get id => _$this._id;
   set id(String? id) => _$this._id = id;
 
+  bool? _notificationsEnabled;
+  bool? get notificationsEnabled => _$this._notificationsEnabled;
+  set notificationsEnabled(bool? notificationsEnabled) =>
+      _$this._notificationsEnabled = notificationsEnabled;
+
   String? _username;
   String? get username => _$this._username;
   set username(String? username) => _$this._username = username;
@@ -116,6 +127,7 @@ class UserDtoBuilder implements Builder<UserDto, UserDtoBuilder> {
       _emailVerified = $v.emailVerified;
       _hasPassword = $v.hasPassword;
       _id = $v.id;
+      _notificationsEnabled = $v.notificationsEnabled;
       _username = $v.username;
       _$v = null;
     }
@@ -146,6 +158,8 @@ class UserDtoBuilder implements Builder<UserDto, UserDtoBuilder> {
           hasPassword: BuiltValueNullFieldError.checkNotNull(
               hasPassword, r'UserDto', 'hasPassword'),
           id: BuiltValueNullFieldError.checkNotNull(id, r'UserDto', 'id'),
+          notificationsEnabled: BuiltValueNullFieldError.checkNotNull(
+              notificationsEnabled, r'UserDto', 'notificationsEnabled'),
           username: username,
         );
     replace(_$result);

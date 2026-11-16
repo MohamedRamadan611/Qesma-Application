@@ -7,6 +7,7 @@ import 'package:qesma_api/qesma_api.dart';
 void main() {
   final user = UserDto((b) => b
   ..hasPassword = false
+  ..notificationsEnabled = true
   ..emailVerified = true
     ..id = 'u1'
     ..displayName = 'Test');

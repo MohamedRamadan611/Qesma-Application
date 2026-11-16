@@ -54,6 +54,8 @@ const ProblemCodeEnum _$problemCodeEnum_AUTH_PROVIDER_UNAVAILABLE =
     const ProblemCodeEnum._('AUTH_PROVIDER_UNAVAILABLE');
 const ProblemCodeEnum _$problemCodeEnum_USERNAME_TAKEN =
     const ProblemCodeEnum._('USERNAME_TAKEN');
+const ProblemCodeEnum _$problemCodeEnum_REMIND_RATE_LIMITED =
+    const ProblemCodeEnum._('REMIND_RATE_LIMITED');
 
 ProblemCodeEnum _$problemCodeEnumValueOf(String name) {
   switch (name) {
@@ -105,6 +107,8 @@ ProblemCodeEnum _$problemCodeEnumValueOf(String name) {
       return _$problemCodeEnum_AUTH_PROVIDER_UNAVAILABLE;
     case 'USERNAME_TAKEN':
       return _$problemCodeEnum_USERNAME_TAKEN;
+    case 'REMIND_RATE_LIMITED':
+      return _$problemCodeEnum_REMIND_RATE_LIMITED;
     default:
       throw ArgumentError(name);
   }
@@ -136,6 +140,7 @@ final BuiltSet<ProblemCodeEnum> _$problemCodeEnumValues =
   _$problemCodeEnum_RATE_LIMITED,
   _$problemCodeEnum_AUTH_PROVIDER_UNAVAILABLE,
   _$problemCodeEnum_USERNAME_TAKEN,
+  _$problemCodeEnum_REMIND_RATE_LIMITED,
 ]);
 
 Serializer<ProblemCodeEnum> _$problemCodeEnumSerializer =
@@ -168,6 +173,7 @@ class _$ProblemCodeEnumSerializer
     'RATE_LIMITED': 'RATE_LIMITED',
     'AUTH_PROVIDER_UNAVAILABLE': 'AUTH_PROVIDER_UNAVAILABLE',
     'USERNAME_TAKEN': 'USERNAME_TAKEN',
+    'REMIND_RATE_LIMITED': 'REMIND_RATE_LIMITED',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
     'VALIDATION_ERROR': 'VALIDATION_ERROR',
@@ -194,6 +200,7 @@ class _$ProblemCodeEnumSerializer
     'RATE_LIMITED': 'RATE_LIMITED',
     'AUTH_PROVIDER_UNAVAILABLE': 'AUTH_PROVIDER_UNAVAILABLE',
     'USERNAME_TAKEN': 'USERNAME_TAKEN',
+    'REMIND_RATE_LIMITED': 'REMIND_RATE_LIMITED',
   };
 
   @override
@@ -213,13 +220,48 @@ class _$ProblemCodeEnumSerializer
           _fromWire[serialized] ?? (serialized is String ? serialized : ''));
 }
 
-class _$Problem extends Problem {
+abstract class ProblemBuilder {
+  void replace(Problem other);
+  void update(void Function(ProblemBuilder) updates);
+  ProblemCodeEnum? get code;
+  set code(ProblemCodeEnum? code);
+
+  String? get detail;
+  set detail(String? detail);
+
+  ListBuilder<ProblemGroupsInner> get groups;
+  set groups(ListBuilder<ProblemGroupsInner>? groups);
+
+  String? get instance;
+  set instance(String? instance);
+
+  DateTime? get nextAllowedAt;
+  set nextAllowedAt(DateTime? nextAllowedAt);
+
+  String? get requestId;
+  set requestId(String? requestId);
+
+  int? get status;
+  set status(int? status);
+
+  String? get title;
+  set title(String? title);
+
+  String? get type;
+  set type(String? type);
+}
+
+class _$$Problem extends $Problem {
   @override
   final ProblemCodeEnum code;
   @override
   final String? detail;
   @override
+  final BuiltList<ProblemGroupsInner>? groups;
+  @override
   final String? instance;
+  @override
+  final DateTime? nextAllowedAt;
   @override
   final String? requestId;
   @override
@@ -229,32 +271,36 @@ class _$Problem extends Problem {
   @override
   final String type;
 
-  factory _$Problem([void Function(ProblemBuilder)? updates]) =>
-      (ProblemBuilder()..update(updates))._build();
+  factory _$$Problem([void Function($ProblemBuilder)? updates]) =>
+      ($ProblemBuilder()..update(updates))._build();
 
-  _$Problem._(
+  _$$Problem._(
       {required this.code,
       this.detail,
+      this.groups,
       this.instance,
+      this.nextAllowedAt,
       this.requestId,
       required this.status,
       required this.title,
       required this.type})
       : super._();
   @override
-  Problem rebuild(void Function(ProblemBuilder) updates) =>
+  $Problem rebuild(void Function($ProblemBuilder) updates) =>
       (toBuilder()..update(updates)).build();
 
   @override
-  ProblemBuilder toBuilder() => ProblemBuilder()..replace(this);
+  $ProblemBuilder toBuilder() => $ProblemBuilder()..replace(this);
 
   @override
   bool operator ==(Object other) {
     if (identical(other, this)) return true;
-    return other is Problem &&
+    return other is $Problem &&
         code == other.code &&
         detail == other.detail &&
+        groups == other.groups &&
         instance == other.instance &&
+        nextAllowedAt == other.nextAllowedAt &&
         requestId == other.requestId &&
         status == other.status &&
         title == other.title &&
@@ -266,7 +312,9 @@ class _$Problem extends Problem {
     var _$hash = 0;
     _$hash = $jc(_$hash, code.hashCode);
     _$hash = $jc(_$hash, detail.hashCode);
+    _$hash = $jc(_$hash, groups.hashCode);
     _$hash = $jc(_$hash, instance.hashCode);
+    _$hash = $jc(_$hash, nextAllowedAt.hashCode);
     _$hash = $jc(_$hash, requestId.hashCode);
     _$hash = $jc(_$hash, status.hashCode);
     _$hash = $jc(_$hash, title.hashCode);
@@ -277,10 +325,12 @@ class _$Problem extends Problem {
 
   @override
   String toString() {
-    return (newBuiltValueToStringHelper(r'Problem')
+    return (newBuiltValueToStringHelper(r'$Problem')
           ..add('code', code)
           ..add('detail', detail)
+          ..add('groups', groups)
           ..add('instance', instance)
+          ..add('nextAllowedAt', nextAllowedAt)
           ..add('requestId', requestId)
           ..add('status', status)
           ..add('title', title)
@@ -289,47 +339,61 @@ class _$Problem extends Problem {
   }
 }
 
-class ProblemBuilder implements Builder<Problem, ProblemBuilder> {
-  _$Problem? _$v;
+class $ProblemBuilder
+    implements Builder<$Problem, $ProblemBuilder>, ProblemBuilder {
+  _$$Problem? _$v;
 
   ProblemCodeEnum? _code;
   ProblemCodeEnum? get code => _$this._code;
-  set code(ProblemCodeEnum? code) => _$this._code = code;
+  set code(covariant ProblemCodeEnum? code) => _$this._code = code;
 
   String? _detail;
   String? get detail => _$this._detail;
-  set detail(String? detail) => _$this._detail = detail;
+  set detail(covariant String? detail) => _$this._detail = detail;
+
+  ListBuilder<ProblemGroupsInner>? _groups;
+  ListBuilder<ProblemGroupsInner> get groups =>
+      _$this._groups ??= ListBuilder<ProblemGroupsInner>();
+  set groups(covariant ListBuilder<ProblemGroupsInner>? groups) =>
+      _$this._groups = groups;
 
   String? _instance;
   String? get instance => _$this._instance;
-  set instance(String? instance) => _$this._instance = instance;
+  set instance(covariant String? instance) => _$this._instance = instance;
+
+  DateTime? _nextAllowedAt;
+  DateTime? get nextAllowedAt => _$this._nextAllowedAt;
+  set nextAllowedAt(covariant DateTime? nextAllowedAt) =>
+      _$this._nextAllowedAt = nextAllowedAt;
 
   String? _requestId;
   String? get requestId => _$this._requestId;
-  set requestId(String? requestId) => _$this._requestId = requestId;
+  set requestId(covariant String? requestId) => _$this._requestId = requestId;
 
   int? _status;
   int? get status => _$this._status;
-  set status(int? status) => _$this._status = status;
+  set status(covariant int? status) => _$this._status = status;
 
   String? _title;
   String? get title => _$this._title;
-  set title(String? title) => _$this._title = title;
+  set title(covariant String? title) => _$this._title = title;
 
   String? _type;
   String? get type => _$this._type;
-  set type(String? type) => _$this._type = type;
+  set type(covariant String? type) => _$this._type = type;
 
-  ProblemBuilder() {
-    Problem._defaults(this);
+  $ProblemBuilder() {
+    $Problem._defaults(this);
   }
 
-  ProblemBuilder get _$this {
+  $ProblemBuilder get _$this {
     final $v = _$v;
     if ($v != null) {
       _code = $v.code;
       _detail = $v.detail;
+      _groups = $v.groups?.toBuilder();
       _instance = $v.instance;
+      _nextAllowedAt = $v.nextAllowedAt;
       _requestId = $v.requestId;
       _status = $v.status;
       _title = $v.title;
@@ -340,31 +404,48 @@ class ProblemBuilder implements Builder<Problem, ProblemBuilder> {
   }
 
   @override
-  void replace(Problem other) {
-    _$v = other as _$Problem;
+  void replace(covariant $Problem other) {
+    _$v = other as _$$Problem;
   }
 
   @override
-  void update(void Function(ProblemBuilder)? updates) {
+  void update(void Function($ProblemBuilder)? updates) {
     if (updates != null) updates(this);
   }
 
   @override
-  Problem build() => _build();
+  $Problem build() => _build();
 
-  _$Problem _build() {
-    final _$result = _$v ??
-        _$Problem._(
-          code: BuiltValueNullFieldError.checkNotNull(code, r'Problem', 'code'),
-          detail: detail,
-          instance: instance,
-          requestId: requestId,
-          status: BuiltValueNullFieldError.checkNotNull(
-              status, r'Problem', 'status'),
-          title:
-              BuiltValueNullFieldError.checkNotNull(title, r'Problem', 'title'),
-          type: BuiltValueNullFieldError.checkNotNull(type, r'Problem', 'type'),
-        );
+  _$$Problem _build() {
+    _$$Problem _$result;
+    try {
+      _$result = _$v ??
+          _$$Problem._(
+            code: BuiltValueNullFieldError.checkNotNull(
+                code, r'$Problem', 'code'),
+            detail: detail,
+            groups: _groups?.build(),
+            instance: instance,
+            nextAllowedAt: nextAllowedAt,
+            requestId: requestId,
+            status: BuiltValueNullFieldError.checkNotNull(
+                status, r'$Problem', 'status'),
+            title: BuiltValueNullFieldError.checkNotNull(
+                title, r'$Problem', 'title'),
+            type: BuiltValueNullFieldError.checkNotNull(
+                type, r'$Problem', 'type'),
+          );
+    } catch (_) {
+      late String _$failedField;
+      try {
+        _$failedField = 'groups';
+        _groups?.build();
+      } catch (e) {
+        throw BuiltValueNestedFieldError(
+            r'$Problem', _$failedField, e.toString());
+      }
+      rethrow;
+    }
     replace(_$result);
     return _$result;
   }
