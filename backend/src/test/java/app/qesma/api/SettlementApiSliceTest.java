@@ -66,6 +66,7 @@ class SettlementApiSliceTest {
     @Autowired MockMvc mvc;
     @Autowired AccessTokenService accessTokens;
     @Autowired ObjectMapper json;
+    @MockitoBean app.qesma.service.UserService users;
     @MockitoBean SettlementService settlements;
     @MockitoBean BalanceService balances;
 

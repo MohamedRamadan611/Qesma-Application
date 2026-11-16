@@ -98,6 +98,12 @@ public class ActivityService {
         return new UnreadCount(notifications.unreadCount(userId));
     }
 
+    /** Account deletion (B17): removes the user's notification rows; the group events themselves stay. */
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
+    public void deleteNotificationsOf(UUID userId) {
+        notifications.deleteAllOfUser(userId);
+    }
+
     /**
      * Marks the caller's own notifications read: the given ids, or all. Ids that are unknown or belong to somebody else
      * match nothing, so the answer is the same for both. Idempotent by state (already-read rows are not counted again).

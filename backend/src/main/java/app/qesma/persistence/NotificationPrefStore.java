@@ -52,4 +52,9 @@ public class NotificationPrefStore {
                 "select muted from notification_prefs where user_id = ? and group_id = ?", Boolean.class, userId, groupId);
         return !rows.isEmpty() && rows.get(0);
     }
+
+    /** Account deletion (B17): the global and every per-group preference of the user. */
+    public int deleteAllOfUser(UUID userId) {
+        return jdbc.update("delete from notification_prefs where user_id = ?", userId);
+    }
 }

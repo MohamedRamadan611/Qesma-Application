@@ -48,6 +48,15 @@ public class ApiException extends RuntimeException {
         return new ApiException(ErrorCode.VERSION_CONFLICT, HttpStatus.CONFLICT, message, extra);
     }
 
+    /**
+     * 409 OWNER_MUST_TRANSFER for account deletion (B17): {@code groups} lists the caller's own groups (id, name) that
+     * still depend on them as Owner. The caller is the owner of each, so nothing is revealed that they cannot see.
+     */
+    public static ApiException ownerMustTransfer(java.util.List<Map<String, String>> groups) {
+        return new ApiException(ErrorCode.OWNER_MUST_TRANSFER, HttpStatus.CONFLICT,
+                "Transfer ownership of these groups before deleting the account", Map.of("groups", groups));
+    }
+
     public ErrorCode code() {
         return code;
     }

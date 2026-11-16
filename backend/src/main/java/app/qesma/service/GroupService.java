@@ -8,6 +8,8 @@ import app.qesma.persistence.ExpenseGroupRepository;
 import app.qesma.persistence.ExpenseRepository;
 import app.qesma.persistence.GroupSummaryRow;
 import app.qesma.persistence.GroupTotals;
+import app.qesma.persistence.InviteStore;
+import app.qesma.persistence.JoinRequestStore;
 import app.qesma.persistence.MemberRepository;
 import app.qesma.persistence.NotificationPrefStore;
 import app.qesma.persistence.UserRepository;
@@ -56,12 +58,17 @@ public class GroupService {
     private final YourNetQuery yourNet;
     private final NotificationPrefStore prefs;
     private final GroupUsageChecker usage;
+    private final InviteStore invites;
+    private final JoinRequestStore joinRequests;
     private final Clock clock;
     private final MeterRegistry metrics;
 
     public GroupService(GroupAccessService access, ExpenseGroupRepository groups, MemberRepository members,
                         ExpenseRepository expenses, UserRepository users, YourNetQuery yourNet, NotificationPrefStore prefs,
-                        ObjectProvider<GroupUsageChecker> usage, Clock clock, MeterRegistry metrics) {
+                        ObjectProvider<GroupUsageChecker> usage, InviteStore invites, JoinRequestStore joinRequests,
+                        Clock clock, MeterRegistry metrics) {
+        this.invites = invites;
+        this.joinRequests = joinRequests;
         this.access = access;
         this.groups = groups;
         this.members = members;
@@ -141,9 +148,51 @@ public class GroupService {
         if (members.hasLinkedNonOwner(groupId)) {                // B12 (A23): people who joined, even if they left, keep it
             throw ApiException.conflict(ErrorCode.GROUP_NOT_EMPTY, "The group has other members with an account");
         }
-        members.deleteAllByGroup(groupId);
-        groups.delete(group);
+        removeEmptyGroup(group);
         record("deleted", userId, groupId);
+    }
+
+    /**
+     * Removes a group that holds no ledger data. Join requests and invites reference the group and its members without
+     * a cascade, so they go first (a group that ever had an invite could not be deleted before B17).
+     */
+    private void removeEmptyGroup(ExpenseGroup group) {
+        joinRequests.deleteAllOfGroup(group.getId());
+        invites.deleteAllOfGroup(group.getId());
+        members.deleteAllByGroup(group.getId());
+        groups.delete(group);
+    }
+
+    /**
+     * Account deletion (B17, A116), inside the caller's transaction: frees every group from the account. Groups the
+     * account owns that still depend on it (ledger history, or another ACTIVE linked member) are refused as
+     * OWNER_MUST_TRANSFER, all of them listed; owned groups with no ledger data and nobody else active are deleted (a LEFT
+     * member of such a group has no history to keep); every other member of the account is detached, keeping name and
+     * history, so no balance changes. Groups are locked in id order.
+     */
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
+    public void releaseUser(UUID userId) {
+        List<Member> linked = members.findAllLinkedTo(userId);
+        List<UUID> ownedGroupIds = linked.stream().filter(m -> "OWNER".equals(m.getRole()))
+                .map(Member::getGroupId).sorted().toList();
+        List<Map<String, String>> blocked = new java.util.ArrayList<>();
+        List<ExpenseGroup> deletable = new java.util.ArrayList<>();
+        for (UUID groupId : ownedGroupIds) {
+            ExpenseGroup group = groups.findByIdForUpdate(groupId).orElseThrow(() -> new IllegalStateException("Owner group missing"));
+            if (usage.hasLedgerData(groupId) || members.hasOtherActiveLinked(groupId, userId)) {
+                blocked.add(Map.of("id", group.getId().toString(), "name", group.getName()));
+            } else {
+                deletable.add(group);
+            }
+        }
+        if (!blocked.isEmpty()) {
+            throw ApiException.ownerMustTransfer(blocked);
+        }
+        for (ExpenseGroup group : deletable) {
+            removeEmptyGroup(group);
+            record("deleted", userId, group.getId());
+        }
+        members.unlinkAllOf(userId);
     }
 
     private static Long netOf(YourNetQuery.YourTotals mine) {

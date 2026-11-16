@@ -65,6 +65,7 @@ class ExpenseApiSliceTest {
     @Autowired MockMvc mvc;
     @Autowired AccessTokenService accessTokens;
     @Autowired ObjectMapper json;
+    @MockitoBean app.qesma.service.UserService users;
     @MockitoBean ExpenseService expenses;
 
     private final UUID me = UUID.randomUUID();

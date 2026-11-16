@@ -135,6 +135,8 @@ public class OpenApiConfig {
             Map.entry("POST /api/v1/notifications/read", "markNotificationsRead"),
             // B16: preferences and Remind
             Map.entry("PUT /api/v1/me/notification-prefs", "updateNotificationPrefs"),
+            // B17: account deletion
+            Map.entry("DELETE /api/v1/me", "deleteMe"),
             Map.entry("PUT /api/v1/groups/{gid}/notification-prefs", "updateGroupNotificationPrefs"),
             Map.entry("POST /api/v1/groups/{gid}/transfers/remind", "remindTransfer"));
 
@@ -229,6 +231,9 @@ public class OpenApiConfig {
             add(errors, 422, ErrorCode.MEMBER_NOT_IN_GROUP);
             add(errors, 422, ErrorCode.MEMBER_INACTIVE);
             add(errors, 429, ErrorCode.REMIND_RATE_LIMITED);
+        }
+        if (path.equals("/api/v1/me") && method == PathItem.HttpMethod.DELETE) {   // B17
+            add(errors, 409, ErrorCode.OWNER_MUST_TRANSFER);
         }
         if (path.endsWith("/leave")) {
             add(errors, 409, ErrorCode.OWNER_MUST_TRANSFER);
@@ -336,6 +341,12 @@ public class OpenApiConfig {
         problem.addProperty("requestId", new StringSchema().description("Echoes the X-Request-Id response header."));
         problem.addProperty("nextAllowedAt", new StringSchema().format("date-time").description(
                 "Only with REMIND_RATE_LIMITED: the earliest time a reminder for this member may be sent again (UTC)."));
+        ObjectSchema group = new ObjectSchema();
+        group.addProperty("id", new StringSchema().format("uuid"));
+        group.addProperty("name", new StringSchema());
+        group.setRequired(List.of("id", "name"));
+        problem.addProperty("groups", new io.swagger.v3.oas.models.media.ArraySchema().items(group).description(
+                "Only with OWNER_MUST_TRANSFER on DELETE /me: your groups that still depend on you as Owner."));
         problem.setRequired(List.of("type", "title", "status", "code"));
         return problem;
     }

@@ -142,6 +142,21 @@
         "required" : [ "displayName" ],
         "type" : "object"
       },
+      "DeleteAccountRequest" : {
+        "properties" : {
+          "confirm" : {
+            "maxLength" : 256,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "password" : {
+            "maxLength" : 256,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "EventPayload" : {
         "properties" : {
           "amountMinor" : {
@@ -1105,6 +1120,23 @@
           "detail" : {
             "nullable" : true,
             "type" : "string"
+          },
+          "groups" : {
+            "description" : "Only with OWNER_MUST_TRANSFER on DELETE /me: your groups that still depend on you as Owner.",
+            "items" : {
+              "properties" : {
+                "id" : {
+                  "format" : "uuid",
+                  "type" : "string"
+                },
+                "name" : {
+                  "type" : "string"
+                }
+              },
+              "required" : [ "id", "name" ],
+              "type" : "object"
+            },
+            "type" : "array"
           },
           "instance" : {
             "format" : "uri",
@@ -6264,6 +6296,87 @@
       }
     },
     "/api/v1/me" : {
+      "delete" : {
+        "description" : "Body {confirm: \"DELETE\", password}: password accounts must send the current password. 409 OWNER_MUST_TRANSFER (with the groups) while you own a group that has history or other active members.",
+        "operationId" : "deleteMe",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DeleteAccountRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Malformed request (code: VALIDATION_ERROR)"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not authenticated (code: UNAUTHORIZED)"
+          },
+          "409" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Conflict (code: OWNER_MUST_TRANSFER)"
+          },
+          "413" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Request body too large (code: VALIDATION_ERROR)"
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Rejected (code: VALIDATION_ERROR)"
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unexpected error (code: INTERNAL_ERROR)"
+          }
+        },
+        "summary" : "Delete your account",
+        "tags" : [ "me-controller" ]
+      },
       "get" : {
         "operationId" : "getMe",
         "responses" : {

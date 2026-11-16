@@ -11,6 +11,11 @@ import org.springframework.data.repository.query.Param;
 
 public interface UserPasswordRepository extends JpaRepository<UserPassword, UUID> {
 
+    /** Account deletion (B17). */
+    @org.springframework.data.jpa.repository.Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("delete from UserPassword p where p.userId = :userId")
+    int deleteAllOfUser(@Param("userId") UUID userId);
+
     /** Row lock (SELECT ... FOR UPDATE): concurrent sign-in attempts on one account update the failure counter in turn. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from UserPassword p where p.userId = :userId")

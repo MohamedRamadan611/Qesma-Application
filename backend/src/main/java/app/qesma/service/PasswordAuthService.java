@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 /**
@@ -163,8 +164,9 @@ public class PasswordAuthService {
     private Session checkPasswordAndOpenSession(UUID userId, String password) {
         Credential credential = tx.execute(status -> passwords.findById(userId)
                 .map(p -> new Credential(p.getPasswordHash(), p.isLocked(clock.instant()))).orElse(null));
-        if (credential == null) {
-            throw new IllegalStateException("Password account without credential");
+        if (credential == null) {                       // the account was deleted in between (B17): an ordinary failed sign-in
+            loginFailed("bad_credentials");
+            return null;
         }
         if (credential.locked()) {
             hasher.spendTime(password);
@@ -173,8 +175,11 @@ public class PasswordAuthService {
         }
         boolean matches = hasher.matches(password, credential.hash());
         return tx.execute(status -> {
-            UserPassword locked = passwords.findByUserIdForUpdate(userId)
-                    .orElseThrow(() -> new IllegalStateException("Password account without credential"));
+            UserPassword locked = passwords.findByUserIdForUpdate(userId).orElse(null);
+            if (locked == null) {                       // deleted while the password was being checked (B17)
+                loginFailed("bad_credentials");
+                return null;
+            }
             Instant now = clock.instant();
             if (!matches) {
                 boolean wasLocked = locked.isLocked(now);
@@ -237,6 +242,45 @@ public class PasswordAuthService {
         log.atInfo().addKeyValue("event", "auth.password.changed").addKeyValue("userId", userId)
                 .log("auth.password.changed userId={}", userId);
         return session;
+    }
+
+    /**
+     * Account deletion (B17): checks the typed password of the signed-in password account, like change-password: a wrong
+     * one counts toward the lockout (the counter commits) and is a 422, never a 401, so the app keeps the session.
+     */
+    public void requireCurrentPassword(UUID userId, String password) {
+        boolean ok = Boolean.TRUE.equals(tx.execute(status -> {
+            UserPassword credential = passwords.findByUserIdForUpdate(userId).orElse(null);
+            if (credential == null) {
+                return false;
+            }
+            Instant now = clock.instant();
+            if (credential.isLocked(now)) {
+                hasher.spendTime(password);
+                return false;
+            }
+            if (!hasher.matches(password, credential.getPasswordHash())) {
+                credential.recordFailure(now, props.password().lockoutThreshold(), now.plus(props.password().lockoutDuration()));
+                return false;
+            }
+            credential.recordSuccess();
+            return true;
+        }));
+        if (!ok) {
+            metrics.counter("qesma.account.delete", "result", "wrong_password").increment();
+            throw ApiException.validation("current password is wrong");
+        }
+    }
+
+    /**
+     * Account deletion (B17): removes the password hash and the emailed-link tokens. The credential row is locked first,
+     * the same order as sign-in (credential, then user), so a parallel sign-in and the deletion cannot deadlock.
+     */
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
+    public void purgeCredentialsOf(UUID userId) {
+        passwords.findByUserIdForUpdate(userId);
+        passwords.deleteAllOfUser(userId);
+        emailTokens.deleteAllOfUser(userId);
     }
 
     // ---- forgot / reset -----------------------------------------------------------------------------------

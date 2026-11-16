@@ -29,16 +29,22 @@ public class UserService {
                 .orElseThrow(() -> new IllegalStateException("User missing right after upsert"));
     }
 
+    /** True for a deleted (anonymised) account: its tokens are refused (B17, A115). One primary-key probe. */
+    @Transactional(readOnly = true)
+    public boolean isDeleted(UUID userId) {
+        return users.isDeleted(userId);
+    }
+
     @Transactional(readOnly = true)
     public User get(UUID userId) {
-        // A valid token for a user that no longer exists is treated as unauthenticated.
-        return users.findById(userId).orElseThrow(ApiException::unauthorized);
+        // A valid token for a user that no longer exists, or was deleted, is treated as unauthenticated.
+        return users.findById(userId).filter(u -> !u.isDeleted()).orElseThrow(ApiException::unauthorized);
     }
 
     @Transactional
     public User updateDisplayName(UUID userId, String rawDisplayName) {
         String name = DisplayNames.validated(rawDisplayName);
-        User user = users.findById(userId).orElseThrow(ApiException::unauthorized);
+        User user = users.findById(userId).filter(u -> !u.isDeleted()).orElseThrow(ApiException::unauthorized);
         user.setDisplayName(name);
         return user;
     }

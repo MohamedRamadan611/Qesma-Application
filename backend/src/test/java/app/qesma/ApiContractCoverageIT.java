@@ -294,6 +294,12 @@ class ApiContractCoverageIT extends AbstractApiIT {
         assertThat(status(hit(POST, g2Path + "/transfer-ownership", me, Map.of("toMemberId", heirMember)))).isEqualTo(204);
         assertThat(g2Ghost).isNotBlank();
 
+        // account deletion (B17): `me` still owns groups with history, so it must transfer first; a fresh account just goes
+        expect(hit(DELETE, "/api/v1/me", me, Map.of("confirm", "DELETE")), 409, ErrorCode.OWNER_MUST_TRANSFER);
+        expect(hit(DELETE, "/api/v1/me", me, Map.of("confirm", "nope")), 422, ErrorCode.VALIDATION_ERROR);
+        Session goner = newUser();
+        assertThat(status(hit(DELETE, "/api/v1/me", goner, Map.of("confirm", "DELETE")))).isEqualTo(204);
+
         expect(hit(GET, "/api/v1/me", null, null), 401, ErrorCode.UNAUTHORIZED);
 
         doThrow(new GoogleIdTokenVerifier.AuthProviderUnavailableException(new RuntimeException("jwks down")))

@@ -134,7 +134,18 @@ curl -s -X PUT localhost:8080/api/v1/me/payment-handles -H "Authorization: Beare
 - **Validation:** wallet = Egyptian mobile (`01[0125]XXXXXXXX`; Arabic digits, spaces, dashes and `+20` accepted, stored as 11 digits). InstaPay = `name@bank`, ASCII, 3 to 60 characters, stored lower case. `null`, absent or blank removes that handle (PUT replaces both). A bad value is `422 VALIDATION_ERROR` naming the field, never echoing the value.
 - **Who sees a receiver's handles:** only in `GET /groups/{gid}/balances` as `transfers[].receiverHandles`, and only to the **payer of that transfer**, or to an **Owner/Admin** (every transfer). Everyone else gets `null`, and so does a ghost, LEFT or unlinked receiver. They are never in `GroupDto`/`MemberDto`, group lists, activity, notifications, invite previews, errors or logs. One batched query serves all transfers.
 - **Client note:** `mobile` must regenerate `qesma_api` (`getPaymentHandles`, `updatePaymentHandles`, `PaymentHandlesView`, `TransferView.receiverHandles`).
-- **Account deletion (B17):** call `PaymentHandleService.deleteAllFor(userId)`.
+- **Account deletion (B17):** `AccountDeletionService` calls `PaymentHandleService.deleteAllFor(userId)`; see "Account deletion" below.
+
+## Account deletion (B17, A113-A120)
+```bash
+# Google account: confirm only. Password account: also send the current password (a wrong one is 422, counts toward the lockout)
+curl -s -X DELETE localhost:8080/api/v1/me -H "Authorization: Bearer $T" -H "Content-Type: application/json" -d '{"confirm":"DELETE"}'   # 204
+```
+- **What happens:** the `users` row is anonymised (`Deleted user`, random `deleted:` subject, no email, `deleted_at`), so the old address/username/Google subject can register again as a new account; credentials, refresh tokens, payment handles, notification prefs and notifications, reminders sent, idempotency keys and join requests are deleted; every member linked to the account keeps its row, name and history and becomes an ordinary unclaimed member (`hasAccount` false). **No other member's balance and no ledger row changes.**
+- **Sessions:** refresh tokens are deleted in the same transaction; the 15-minute access token is refused at once (the JWT validator checks `users.deleted_at`). A repeated call is 401.
+- **Ownership:** an Owner of a group with ledger history or other active members gets `409 OWNER_MUST_TRANSFER` with `groups: [{id, name}]` and nothing changes; transfer ownership (or add someone and transfer) first. An owned group with no ledger data and nobody else active is deleted with the account.
+- **Not covered here (open items, spec A120):** lawyer review of the retention approach; Google Play also requires a public web page where deletion can be requested without the app; `device_tokens` (B18) must be purged in the same transaction.
+- **Client note:** `mobile` must regenerate `qesma_api` (`deleteMe`, `Problem.groups`, `VersionConflictProblem`).
 
 ## Roles and authorization (B10, ADR-009)
 A caller reaches a group only through an ACTIVE member linked to their account (`members.role` = `OWNER`, `ADMIN` or `MEMBER`). A stranger, a LEFT member or an unknown id gets the same `404 NOT_FOUND`; a member whose role lacks the permission gets `403 FORBIDDEN`. All checks are in `GroupAccessService` (`Role`, `Permission`, `GroupContext`); the operation-to-permission table is Decision A67 and `RoleMatrixIT` tests every operation for every role. `GET /groups` lists every group where you are an active member and shows `yourRole`. Until invitations exist (B11) there is no API to add a non-owner account to a group; tests insert member rows directly (`AbstractApiIT.linkUser`). Migration V12 stops with a clear error if a group has no member linked to its creator (groups created before B9): delete or re-seed that local data first.

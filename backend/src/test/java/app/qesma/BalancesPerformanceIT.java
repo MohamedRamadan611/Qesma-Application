@@ -105,8 +105,8 @@ class BalancesPerformanceIT extends AbstractApiIT {
         assertThat(b.get("nets")).hasSize(15);
         assertThat(b.get("nets").findValues("netMinor").stream().mapToLong(JsonNode::asLong).sum()).isZero();
         assertThat(millis).as("balances on the maximum dataset, ms (bound %d)", BOUND_MILLIS).isLessThan(BOUND_MILLIS);
-        assertThat(jpaStatements).as("JPA statements: group + members (the totals are one JDBC statement)")
-                .isLessThanOrEqualTo(3);
+        assertThat(jpaStatements).as("JPA statements: deleted-account probe + group + members (the totals are one JDBC statement)")
+                .isLessThanOrEqualTo(4);
         System.out.println("PERF balances(15 members, 500 expenses, 200 settlements) = " + millis + " ms, JPA statements = "
                 + jpaStatements);
 

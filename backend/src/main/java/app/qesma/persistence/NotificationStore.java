@@ -125,4 +125,9 @@ public class NotificationStore {
         return jdbc.update("update notifications set read_at = greatest(?, created_at) "
                 + "where user_id = ? and read_at is null", Timestamp.from(now), userId);
     }
+
+    /** Account deletion (B17): the user's own notification rows. The events they point at stay (group history). */
+    public int deleteAllOfUser(UUID userId) {
+        return jdbc.update("delete from notifications where user_id = ?", userId);
+    }
 }

@@ -135,6 +135,6 @@ class SettlementQueryCountIT extends AbstractApiIT {
 
         assertThat(fifty).as("50 rows vs 1 row").isEqualTo(one);
         assertThat(filtered.jpa()).as("a short page may skip the count query, never add one").isLessThanOrEqualTo(one.jpa());
-        assertThat(one.jpa()).as("group + caller's member + page + count").isLessThanOrEqualTo(4);
+        assertThat(one.jpa()).as("deleted-account probe + group + caller's member + page + count").isLessThanOrEqualTo(5);
     }
 }

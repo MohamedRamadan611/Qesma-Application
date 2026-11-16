@@ -26,7 +26,7 @@ import org.springframework.test.web.servlet.MvcResult;
 class ExpenseListQueryCountIT extends AbstractApiIT {
 
     /** group lookup + caller's member row (B10 authorization) + page + count + payers + splits + members. */
-    private static final int EXPECTED_STATEMENTS = 7;
+    private static final int EXPECTED_STATEMENTS = 8;   // 7 + the deleted-account probe the JWT validator runs once per authenticated request (B17, A115)
 
     @Autowired EntityManagerFactory emf;
 
@@ -104,7 +104,7 @@ class ExpenseListQueryCountIT extends AbstractApiIT {
         long one = statementsFor(ali, url + "?size=1");
         long thirty = statementsFor(ali, url + "?size=30");
         assertThat(thirty).as("statements for 30 settlements").isEqualTo(one);
-        assertThat(one).as("group lookup + caller member + page + count").isLessThanOrEqualTo(4);
+        assertThat(one).as("deleted-account probe + group lookup + caller member + page + count").isLessThanOrEqualTo(5);
     }
 
     @Test
@@ -129,8 +129,8 @@ class ExpenseListQueryCountIT extends AbstractApiIT {
 
         assertThat(statementsFor(ali, revisions)).as("revisions: 13 entries cost the same as 1").isEqualTo(revisionsFew);
         assertThat(statementsFor(ali, detail)).as("group detail: 15 members cost the same as 1").isEqualTo(detailFew);
-        assertThat(detailFew).isLessThanOrEqualTo(4);
-        assertThat(revisionsFew).isLessThanOrEqualTo(3);
+        assertThat(detailFew).isLessThanOrEqualTo(5);
+        assertThat(revisionsFew).isLessThanOrEqualTo(4);
     }
 
     @Test
@@ -143,6 +143,6 @@ class ExpenseListQueryCountIT extends AbstractApiIT {
         long few = statementsFor(ali, "/api/v1/groups?size=1");
         long many = statementsFor(ali, "/api/v1/groups?size=12");
         assertThat(many).isEqualTo(few);
-        assertThat(many).isLessThanOrEqualTo(2); // page select (members and totals are subqueries) + count
+        assertThat(many).isLessThanOrEqualTo(3); // deleted-account probe + page select (members and totals are subqueries) + count
     }
 }

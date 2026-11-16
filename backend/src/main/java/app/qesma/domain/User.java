@@ -39,6 +39,10 @@ public class User {
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private Instant createdAt;
 
+    /** Set by account deletion (B17), which anonymises the row with a native UPDATE; never written through JPA. */
+    @Column(name = "deleted_at", insertable = false, updatable = false)
+    private Instant deletedAt;
+
     protected User() {
     }
 
@@ -79,5 +83,9 @@ public class User {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public boolean isDeleted() {
+        return deletedAt != null;
     }
 }

@@ -63,6 +63,7 @@ class GroupApiSliceTest {
     @Autowired MockMvc mvc;
     @Autowired AccessTokenService accessTokens;
     @Autowired ObjectMapper json;
+    @MockitoBean app.qesma.service.UserService users;
     @MockitoBean GroupService groups;
     @MockitoBean MemberService members;
 

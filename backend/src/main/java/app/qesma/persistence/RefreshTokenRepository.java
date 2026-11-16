@@ -13,6 +13,13 @@ import org.springframework.data.repository.query.Param;
 
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID> {
 
+    /**
+     * The owner of a token, read without a lock and as a scalar on purpose: rotation locks the user row first and only
+     * then the token, and an entity loaded here would be served stale by the locked read that follows.
+     */
+    @Query("select t.userId from RefreshToken t where t.tokenHash = :hash")
+    Optional<UUID> findUserIdByTokenHash(@Param("hash") byte[] hash);
+
     /** Row lock (SELECT ... FOR UPDATE) so two simultaneous uses of one token are serialized. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select t from RefreshToken t where t.tokenHash = :hash")
@@ -22,6 +29,11 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("update RefreshToken t set t.revokedAt = :now where t.userId = :userId and t.revokedAt is null")
     int revokeAllOfUser(@Param("userId") UUID userId, @Param("now") Instant now);
+
+    /** Account deletion (B17): the rows go, not just the revocation (they only identify a session of the user). */
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("delete from RefreshToken t where t.userId = :userId")
+    int deleteAllOfUser(@Param("userId") UUID userId);
 
     /** Revokes every still-active token of a login session. */
     @Modifying(flushAutomatically = true, clearAutomatically = true)

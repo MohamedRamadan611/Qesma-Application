@@ -97,4 +97,14 @@ public class JoinRequestStore {
                 rs.getObject(4, UUID.class), rs.getString(5), rs.getString(6), rs.getTimestamp(7).toInstant(),
                 rs.getTimestamp(8) == null ? null : rs.getTimestamp(8).toInstant()), requestId).stream().findFirst();
     }
+
+    /** Group deletion (B17): requests reference the group, invite and members without a cascade. Run before the invites. */
+    public int deleteAllOfGroup(UUID groupId) {
+        return jdbc.update("delete from join_requests where group_id = ?", groupId);
+    }
+
+    /** Account deletion (B17): the requester's own requests (free-text names included), decided or not. */
+    public int deleteAllOfUser(UUID userId) {
+        return jdbc.update("delete from join_requests where user_id = ?", userId);
+    }
 }

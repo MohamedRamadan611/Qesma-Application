@@ -77,4 +77,23 @@ public interface MemberRepository extends JpaRepository<Member, UUID> {
     @Modifying
     @Query("delete from Member m where m.groupId = :groupId")
     int deleteAllByGroup(@Param("groupId") UUID groupId);
+
+    /** Every member row linked to the account, ACTIVE or LEFT, in any group (account deletion, B17). */
+    @Query("select m from Member m where m.userId = :userId")
+    List<Member> findAllLinkedTo(@Param("userId") UUID userId);
+
+    /** Is there an ACTIVE linked member in the group other than this account (a possible new owner)? */
+    @Query("select count(m) > 0 from Member m where m.groupId = :groupId and m.userId is not null "
+            + "and m.userId <> :userId and m.status = 'ACTIVE'")
+    boolean hasOtherActiveLinked(@Param("groupId") UUID groupId, @Param("userId") UUID userId);
+
+    /**
+     * Account deletion: detaches every remaining member of the account. The member, its name and all history stay, so
+     * no balance changes; like {@link #unlink} a LEFT row becomes an ACTIVE ghost (V14) and the role resets (V12). Run
+     * only after the account's owner groups were deleted or refused: an OWNER row would violate the owner CHECK.
+     */
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query(nativeQuery = true, value = "UPDATE members SET user_id = NULL, role = 'MEMBER', status = 'ACTIVE', "
+            + "left_at = NULL WHERE user_id = :userId")
+    int unlinkAllOf(@Param("userId") UUID userId);
 }

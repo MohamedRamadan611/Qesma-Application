@@ -64,4 +64,9 @@ public class IdempotencyKeyStore {
     public int deleteOlderThan(Instant cutoff) {
         return jdbc.update("delete from idempotency_keys where created_at < ?", Timestamp.from(cutoff));
     }
+
+    /** Account deletion (B17): stored create responses can hold names and amounts of the user's groups. */
+    public int deleteAllOfUser(UUID userId) {
+        return jdbc.update("delete from idempotency_keys where user_id = ?", userId);
+    }
 }

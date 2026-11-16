@@ -46,6 +46,12 @@ public class IdempotencyService {
     }
 
     /** Serializes concurrent requests that carry the same key (released at commit/rollback). */
+    /** Account deletion (B17): stored create responses of the user can hold names and amounts of their groups. */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void deleteAllOf(UUID userId) {
+        store.deleteAllOfUser(userId);
+    }
+
     @Transactional(propagation = Propagation.MANDATORY)
     public void lock(UUID userId, String key) {
         store.lock(userId, key);

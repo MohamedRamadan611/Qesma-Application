@@ -64,6 +64,7 @@ class SecurityChainTest {
     @Autowired AccessTokenService accessTokens;
     @Autowired ObjectMapper json;
     @MockitoBean UserService users;
+    @MockitoBean app.qesma.service.AccountDeletionService accountDeletion;
     @MockitoBean AuthService auth;
     @MockitoBean PasswordAuthService passwordAuth;
     @MockitoBean PaymentHandleService paymentHandles;

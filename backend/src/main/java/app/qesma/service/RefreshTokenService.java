@@ -1,7 +1,9 @@
 package app.qesma.service;
 
 import app.qesma.domain.RefreshToken;
+import app.qesma.api.ApiException;
 import app.qesma.persistence.RefreshTokenRepository;
+import app.qesma.persistence.UserRepository;
 import app.qesma.security.AuthProperties;
 import app.qesma.security.RefreshTokens;
 import java.time.Clock;
@@ -25,11 +27,13 @@ public class RefreshTokenService {
     }
 
     private final RefreshTokenRepository tokens;
+    private final UserRepository users;
     private final AuthProperties props;
     private final Clock clock;
 
-    public RefreshTokenService(RefreshTokenRepository tokens, AuthProperties props, Clock clock) {
+    public RefreshTokenService(RefreshTokenRepository tokens, UserRepository users, AuthProperties props, Clock clock) {
         this.tokens = tokens;
+        this.users = users;
         this.props = props;
         this.clock = clock;
     }
@@ -37,6 +41,7 @@ public class RefreshTokenService {
     /** Starts a new login session and returns its first raw token (shown once, never stored). */
     @Transactional
     public String issueNewFamily(UUID userId) {
+        requireActive(userId);
         return insert(userId, UUID.randomUUID(), clock.instant()).raw();
     }
 
@@ -47,6 +52,11 @@ public class RefreshTokenService {
     @Transactional
     public Rotation rotate(String rawToken) {
         Instant now = clock.instant();
+        // Lock order user, then token (the same as account deletion): peek, lock the user row, then lock the token.
+        Optional<UUID> owner = tokens.findUserIdByTokenHash(RefreshTokens.hash(rawToken));
+        if (owner.isPresent() && users.lockActive(owner.get()).isEmpty()) {
+            return new Rotation(Outcome.REVOKED, owner.get(), null);   // the account was deleted meanwhile (B17)
+        }
         Optional<RefreshToken> found = tokens.findByTokenHashForUpdate(RefreshTokens.hash(rawToken));
         if (found.isEmpty()) {
             return new Rotation(Outcome.UNKNOWN, null, null);
@@ -67,11 +77,24 @@ public class RefreshTokenService {
         return new Rotation(Outcome.ROTATED, old.getUserId(), next.raw());
     }
 
+    /** Account deletion (B17): ends and removes every session of the user. */
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
+    public void deleteAllOf(UUID userId) {
+        tokens.deleteAllOfUser(userId);
+    }
+
     /** Ends the login session the token belongs to. Idempotent; unknown tokens are silently ignored. */
     @Transactional
     public void revokeFamilyOf(String rawToken) {
         tokens.findByTokenHashForUpdate(RefreshTokens.hash(rawToken))
                 .ifPresent(t -> tokens.revokeFamily(t.getFamilyId(), clock.instant()));
+    }
+
+    /** Shared lock on the live account, or the generic 401: a deleted account cannot start a session (B17, A119). */
+    private void requireActive(UUID userId) {
+        if (users.lockActive(userId).isEmpty()) {
+            throw ApiException.unauthorized();
+        }
     }
 
     private Inserted insert(UUID userId, UUID familyId, Instant now) {

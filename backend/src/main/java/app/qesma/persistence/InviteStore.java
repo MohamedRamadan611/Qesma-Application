@@ -119,4 +119,9 @@ public class InviteStore {
                 + "and status = 'ACTIVE' order by sort_order", (rs, i) -> new Ghost(rs.getObject(1, UUID.class),
                 rs.getString(2)), groupId);
     }
+
+    /** Group deletion (B17): invites reference the group and their creator member without a cascade. */
+    public int deleteAllOfGroup(UUID groupId) {
+        return jdbc.update("delete from group_invites where group_id = ?", groupId);
+    }
 }

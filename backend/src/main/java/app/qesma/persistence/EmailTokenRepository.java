@@ -11,6 +11,11 @@ import org.springframework.data.repository.query.Param;
 
 public interface EmailTokenRepository extends JpaRepository<EmailToken, UUID> {
 
+    /** Account deletion (B17). */
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("delete from EmailToken t where t.userId = :userId")
+    int deleteAllOfUser(@Param("userId") UUID userId);
+
     /**
      * Uses a token exactly once: one statement marks it used and returns its user only if it was unused, of this
      * purpose and not expired, so two parallel uses give one success. Empty = unknown, used, expired or wrong purpose.

@@ -1,6 +1,7 @@
 package app.qesma.api;
 
 import app.qesma.security.CurrentUser;
+import app.qesma.service.AccountDeletionService;
 import app.qesma.service.NotificationPrefService;
 import app.qesma.service.PasswordAuthService;
 import app.qesma.service.PaymentHandleService;
@@ -10,12 +11,15 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /** The signed-in user's own profile. No id in the path: it always acts on the token's subject. */
@@ -36,6 +40,14 @@ public class MeController {
         }
     }
 
+    /** {@code confirm} must be "DELETE"; {@code password} is required for password accounts. Never printed. */
+    public record DeleteAccountRequest(@Size(max = 256) String confirm, @Size(max = 256) String password) {
+        @Override
+        public String toString() {
+            return "DeleteAccountRequest[***]";
+        }
+    }
+
     /**
      * Both fields are optional: null, absent or blank removes that handle (PUT replaces both). Personal data, so the
      * record never prints its values (A51 style, A92).
@@ -47,14 +59,16 @@ public class MeController {
         }
     }
 
+    private final AccountDeletionService accountDeletion;
     private final UserService users;
     private final PasswordAuthService passwordAuth;
     private final PaymentHandleService paymentHandles;
     private final NotificationPrefService prefs;
     private final CurrentUser currentUser;
 
-    public MeController(UserService users, PasswordAuthService passwordAuth, PaymentHandleService paymentHandles,
+    public MeController(AccountDeletionService accountDeletion, UserService users, PasswordAuthService passwordAuth, PaymentHandleService paymentHandles,
                         NotificationPrefService prefs, CurrentUser currentUser) {
+        this.accountDeletion = accountDeletion;
         this.prefs = prefs;
         this.users = users;
         this.passwordAuth = passwordAuth;
@@ -85,6 +99,19 @@ public class MeController {
     @PatchMapping
     public UserDto update(@RequestBody UpdateMeRequest request) {
         return UserDto.from(users.updateDisplayName(currentUser.id(), request.displayName()), prefs.isEnabled(currentUser.id()));
+    }
+
+    /**
+     * Deletes the signed-in account (B17). All sessions end; the access token is refused from the next request. Members
+     * linked to the account keep their history and become ordinary unclaimed members; nobody else's balance changes.
+     */
+    @DeleteMapping
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Delete your account",
+            description = "Body {confirm: \"DELETE\", password}: password accounts must send the current password. "
+                    + "409 OWNER_MUST_TRANSFER (with the groups) while you own a group that has history or other active members.")
+    public void deleteAccount(@Valid @RequestBody DeleteAccountRequest request) {
+        accountDeletion.delete(currentUser.id(), request.confirm(), request.password());
     }
 
     /** Changes the password of a password account. Other sessions end; the answer carries this session's new tokens. */

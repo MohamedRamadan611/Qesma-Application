@@ -55,7 +55,7 @@ class RoleQueryCountIT extends AbstractApiIT {
         long one = statementsFor(me, "/api/v1/groups?size=1");
         long fifty = statementsFor(me, "/api/v1/groups?size=50");
         assertThat(fifty).as("statements for 50 groups").isEqualTo(one);
-        assertThat(one).as("page + count").isLessThanOrEqualTo(2);
+        assertThat(one).as("deleted-account probe + page + count").isLessThanOrEqualTo(3);
     }
 
     @Test

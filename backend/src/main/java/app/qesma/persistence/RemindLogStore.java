@@ -61,4 +61,9 @@ public class RemindLogStore {
     public int purgeOlderThan(Instant cutoff) {
         return jdbc.update("delete from remind_log where created_at < ?", Timestamp.from(cutoff));
     }
+
+    /** Account deletion (B17): the sender column is a user id; rows about other members are removed with the sender. */
+    public int deleteAllBySender(UUID userId) {
+        return jdbc.update("delete from remind_log where sent_by_user_id = ?", userId);
+    }
 }
