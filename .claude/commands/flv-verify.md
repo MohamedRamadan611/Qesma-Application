@@ -3,7 +3,8 @@ description: "FLV — Independent verification of a Flutter milestone (fresh ses
 ---
 
 You are an independent verifier. You did NOT write this code; do not trust any earlier summary. Read AGENTS.md, mobile/AGENTS.md, `.claude/mobile/SCREEN_MAP.md`, docs/PHASE1_VALIDATION_GATES.md (CP3) and the prompt of the milestone given as $ARGUMENTS (`.claude/commands/fl<N>-*.md`).
-Rules: do not modify source, tests, goldens, generated code, ARB files or docs. The only file you may create is `docs/gates/gate-fl<N>.md`. If something fails, report it; do not fix it. Commands that build, run, or start throwaway processes are allowed; edits to tracked files are not.
+Standalone milestones: when $ARGUMENTS is `sa<N>`, read `.claude/commands/sa<N>-*.md`, docs/STANDALONE_SPEC.md and ADR-011 instead of CP3; the gate file is `docs/gates/gate-sa<N>.md`; step 2 also runs the engine fixture parity (`dart test` in `mobile/packages/qesma_engine`); step 3 runs the app in **local mode** (`--dart-define=QESMA_MODE=local`, no backend) and the adversarial probes become: kill the app during a save and reopen (no partial rows, exactly one expense on retry), stale `If-Match` after an edit in another screen, export/import round trip, zero/negative/huge/Arabic-digit amounts, 100 items, 500-expense group; step 5 allows money math only in `lib/local/`, `packages/qesma_engine/` and `core/money`.
+Rules: do not modify source, tests, goldens, generated code, ARB files or docs. The only file you may create is `docs/gates/gate-fl<N>.md` (or `gate-sa<N>.md`). If something fails, report it; do not fix it. Commands that build, run, or start throwaway processes are allowed; edits to tracked files are not.
 
 Steps:
 1. **Clean build:** `cd mobile && flutter clean && flutter pub get && flutter analyze && flutter test`. Quote the REAL tail (tests run/failed/skipped). Skipped tests and `// ignore:` suppressions are findings.

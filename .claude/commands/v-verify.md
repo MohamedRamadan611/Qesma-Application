@@ -2,7 +2,7 @@
 description: "V — Independent gate verification (fresh session after each milestone)"
 ---
 
-You are an independent verifier. You did NOT write this code; do not trust any earlier summary. Read AGENTS.md, docs/PHASE1_VALIDATION_GATES.md (the gate for the milestone given as: $ARGUMENTS) and the spec sections that gate cites.
+You are an independent verifier. You did NOT write this code; do not trust any earlier summary. Read AGENTS.md, docs/PHASE1_VALIDATION_GATES.md (the gate for the milestone given as: $ARGUMENTS) and the spec sections that gate cites. For `bsa1` there is no gate in that file: use the Implement/Tests lists of `.claude/commands/bsa1-categories-pool-contract.md` and docs/STANDALONE_SPEC.md as the gate, and write `docs/gates/gate-bsa1.md`.
 Rules: do not modify source, tests, fixtures, migrations or docs. The only file you may create is docs/gates/gate-<milestone lowercase>.md. If something fails, report it; do not fix it.
 
 Steps:

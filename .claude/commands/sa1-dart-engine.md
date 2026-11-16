@@ -1,0 +1,17 @@
+---
+description: "SA1 — Pure Dart split engine (qesma_engine package) with exact parity to the Java engine on the shared fixtures"
+---
+
+Read AGENTS.md, mobile/AGENTS.md, docs/STANDALONE_SPEC.md, ADR-011, docs/PROJECT_SPEC.md sections 7.1-7.8 and Decision Log A1-A12 and A121+, `fixtures/README.md`, every file in `fixtures/engine/`, and **all** of `backend/src/main/java/app/qesma/engine/` (`Lrm`, `SplitCalculator`, `ItemizedCalculator`, `BalanceCalculator`, `Simplifier`, `PayerValidator`, `Bps`, `Limits`, `Exact`, `EngineErrorCode`, records) and its tests (`FixtureTest`, `LrmTest`, `SplitCalculatorTest`, `ItemizedCalculatorTest`, `BalanceAndSimplifierTest`, `EnginePropertyTest`, `EnginePurityTest`). Prerequisite: SA0 merged. Skills (max 4): think-before-coding, test-driven-development, testing-with-discernment.
+
+This is the money core of the standalone app. **Tests first.** The Java engine is the reference: same inputs, same outputs, same error codes, same ordering.
+
+Step 0 (plan, wait for approval): (1) package layout `mobile/packages/qesma_engine/` (pure Dart, no Flutter, no I/O; `pubspec.yaml` with only `test` as dev dependency); (2) the Dart API mirroring the Java entry points (`Lrm.allocate`, `SplitCalculator.equal/exact`, `ItemizedCalculator.calculate`, `PayerValidator.validate`, `BalanceCalculator.nets/netsFromTotals/memberNet`, `Simplifier.simplify`, `Bps.percentOf`) and the immutable value types; (3) integer strategy: Dart `int` is 64-bit on Android/iOS/desktop VM — intermediate products that can exceed 2^63 (LRM `total * weight`, bps products) use `BigInt` exactly where Java uses BigInteger; overflow checks like `Exact`; state that web is not a supported target; (4) ordering guarantees (LinkedHashMap order by sortOrder, tie-breaks: largest remainder, then lower sortOrder, then lower index; Simplifier greedy with the same tie rules); (5) how the fixture runner reads `../../../fixtures/engine/*.json` and checks only the keys present under `expected`.
+
+Implement:
+1. The package with every engine class ported 1:1 (names may be Dart-idiomatic; behaviour identical), `EngineException` with `EngineErrorCode` (VALIDATION_ERROR, SPLIT_TOTAL_MISMATCH, PAYERS_TOTAL_MISMATCH, MEMBER_NOT_IN_GROUP).
+2. Fixture runner test over all V1-V8 vectors.
+3. A `parity` note in `fixtures/README.md`: both engines must pass every vector; a new vector is added for any behaviour change, in the same commit for both engines when Java changes.
+
+Tests: fixture parity V1-V8 (exact owed maps, totals, subtotal/service/tax, nets, ordered transfers); unit tests ported from `LrmTest`, `SplitCalculatorTest`, `ItemizedCalculatorTest`, `BalanceAndSimplifierTest` (same cases, same expected numbers); property tests with a seeded random generator (no new dependency): shares sum to total, nets sum to 0, results deterministic for the same input, negative totals allocate symmetrically, no member owes a negative amount in ITEMIZED; boundary tests at 10^12 per amount and 100 members/items; a purity test (the package imports only `dart:core`/`dart:collection`/`dart:math` and its own files).
+Constraints: no `double`/`num` for money, no rounding helpers other than the ported ones, no Flutter imports, no new dependencies besides `test`. Do not wire the engine into the app here (SA3). Done when `dart test` passes in the package and `dart analyze` is clean. Then Stop protocol; do NOT start SA2.
