@@ -64,6 +64,12 @@ public class Expense implements Persistable<UUID> {
     @Column(name = "adjustment_minor")
     private Long adjustmentMinor;
 
+    @Column(name = "category", nullable = false)
+    private String category = "OTHER";
+
+    @Column(name = "paid_from_pool", nullable = false)
+    private boolean paidFromPool;
+
     @Column(name = "created_by_user_id", nullable = false, updatable = false)
     private UUID createdByUserId;
 
@@ -115,6 +121,13 @@ public class Expense implements Persistable<UUID> {
         return e;
     }
 
+    /** BSA1: category and pool flag (validated by the service). */
+    public Expense withPool(String category, boolean paidFromPool) {
+        this.category = category;
+        this.paidFromPool = paidFromPool;
+        return this;
+    }
+
     /**
      * Edit (spec 7.9): takes over everything the user can change from {@code next} (a freshly computed expense
      * for the same group), bumps the version by one and stamps {@code updated_at}. Identity, group, creator and
@@ -132,6 +145,8 @@ public class Expense implements Persistable<UUID> {
         this.taxMinor = next.taxMinor;
         this.taxBase = next.taxBase;
         this.adjustmentMinor = next.adjustmentMinor;
+        this.category = next.category;
+        this.paidFromPool = next.paidFromPool;
         this.updatedAt = now;
         this.version++;
     }
@@ -205,6 +220,14 @@ public class Expense implements Persistable<UUID> {
 
     public Long getAdjustmentMinor() {
         return adjustmentMinor;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public boolean isPaidFromPool() {
+        return paidFromPool;
     }
 
     public UUID getCreatedByUserId() {

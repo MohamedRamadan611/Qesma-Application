@@ -5,6 +5,7 @@ import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../application/expense_view_model.dart';
+import '../data/expense_category.dart';
 import '../data/split_type.dart';
 import 'expense_ui.dart';
 import '../../../core/theme/palette.dart';
@@ -25,13 +26,15 @@ class ExpenseCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final split = SplitType.fromWire(expense.splitType);
+    final category = ExpenseCategory.fromWire(expense.category);
+    final (catBg, catFg) = category.colors;
     final payers = payersText(l10n, expense, nameOf);
     final payersSaid = payersSpoken(l10n, expense, nameOf);
     final splitSaid = split?.label(l10n) ?? l10n.expenseSplitUnknown;
     final participants = participantsText(l10n, participantCount(expense));
     final share = yourShareMinor(expense, yourMemberId);
     final shareText = share == null ? null : l10n.expenseYourShare(moneyDisplay(l10n, share));
-    final spoken = shareText == null
+    final baseSpoken = shareText == null
         ? l10n.expenseCardSpoken(expense.title, moneySpoken(l10n, expense.totalMinor), splitSaid, payersSaid, participants)
         : l10n.expenseCardSpokenWithShare(
             expense.title,
@@ -41,6 +44,7 @@ class ExpenseCard extends StatelessWidget {
             participants,
             l10n.expenseYourShare(moneySpoken(l10n, share!)),
           );
+    final spoken = '${category.label(l10n)}: $baseSpoken';
 
     // At large text sizes the amount drops under the title instead of squeezing it.
     final stacked = MediaQuery.textScalerOf(context).scale(1) > 1.3;
@@ -66,8 +70,8 @@ class ExpenseCard extends StatelessWidget {
               Container(
                 width: 44,
                 height: 44,
-                decoration: BoxDecoration(color: context.colors.primaryContainer, borderRadius: BorderRadius.circular(QesmaRadii.control)),
-                child: Icon(split?.icon ?? Icons.receipt_long, color: context.colors.onPrimaryContainer),
+                decoration: BoxDecoration(color: catBg, borderRadius: BorderRadius.circular(QesmaRadii.control)),
+                child: Icon(category.icon, color: catFg),
               ),
               const SizedBox(width: QesmaSpacing.md),
               Expanded(

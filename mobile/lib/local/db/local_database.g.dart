@@ -2273,6 +2273,18 @@ class Expenses extends Table with TableInfo<Expenses, ExpenseRow> {
     $customConstraints: 'NOT NULL DEFAULT 1 CHECK (version >= 1)',
     defaultValue: const CustomExpression('1'),
   );
+  static const VerificationMeta _categoryMeta = const VerificationMeta(
+    'category',
+  );
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+    'category',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'OTHER\' CHECK (category IN (\'FOOD\', \'TRANSPORT\', \'FUEL\', \'ACCOMMODATION\', \'GROCERIES\', \'SHOPPING\', \'ENTERTAINMENT\', \'BILLS\', \'OTHER\'))',
+    defaultValue: const CustomExpression('\'OTHER\''),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2293,6 +2305,7 @@ class Expenses extends Table with TableInfo<Expenses, ExpenseRow> {
     updatedAt,
     deletedAt,
     version,
+    category,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2444,6 +2457,12 @@ class Expenses extends Table with TableInfo<Expenses, ExpenseRow> {
         version.isAcceptableOrUnknown(data['version']!, _versionMeta),
       );
     }
+    if (data.containsKey('category')) {
+      context.handle(
+        _categoryMeta,
+        category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
+      );
+    }
     return context;
   }
 
@@ -2525,6 +2544,10 @@ class Expenses extends Table with TableInfo<Expenses, ExpenseRow> {
         DriftSqlType.int,
         data['${effectivePrefix}version'],
       )!,
+      category: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category'],
+      )!,
     );
   }
 
@@ -2563,6 +2586,7 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
   final int updatedAt;
   final int? deletedAt;
   final int version;
+  final String category;
   const ExpenseRow({
     required this.id,
     required this.groupId,
@@ -2582,6 +2606,7 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
     required this.updatedAt,
     this.deletedAt,
     required this.version,
+    required this.category,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2620,6 +2645,7 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
       map['deleted_at'] = Variable<int>(deletedAt);
     }
     map['version'] = Variable<int>(version);
+    map['category'] = Variable<String>(category);
     return map;
   }
 
@@ -2659,6 +2685,7 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
           ? const Value.absent()
           : Value(deletedAt),
       version: Value(version),
+      category: Value(category),
     );
   }
 
@@ -2686,6 +2713,7 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
       updatedAt: serializer.fromJson<int>(json['updated_at']),
       deletedAt: serializer.fromJson<int?>(json['deleted_at']),
       version: serializer.fromJson<int>(json['version']),
+      category: serializer.fromJson<String>(json['category']),
     );
   }
   @override
@@ -2710,6 +2738,7 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
       'updated_at': serializer.toJson<int>(updatedAt),
       'deleted_at': serializer.toJson<int?>(deletedAt),
       'version': serializer.toJson<int>(version),
+      'category': serializer.toJson<String>(category),
     };
   }
 
@@ -2732,6 +2761,7 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
     int? updatedAt,
     Value<int?> deletedAt = const Value.absent(),
     int? version,
+    String? category,
   }) => ExpenseRow(
     id: id ?? this.id,
     groupId: groupId ?? this.groupId,
@@ -2755,6 +2785,7 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
     version: version ?? this.version,
+    category: category ?? this.category,
   );
   ExpenseRow copyWithCompanion(ExpensesCompanion data) {
     return ExpenseRow(
@@ -2790,6 +2821,7 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       version: data.version.present ? data.version.value : this.version,
+      category: data.category.present ? data.category.value : this.category,
     );
   }
 
@@ -2813,7 +2845,8 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
-          ..write('version: $version')
+          ..write('version: $version, ')
+          ..write('category: $category')
           ..write(')'))
         .toString();
   }
@@ -2838,6 +2871,7 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
     updatedAt,
     deletedAt,
     version,
+    category,
   );
   @override
   bool operator ==(Object other) =>
@@ -2860,7 +2894,8 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
-          other.version == this.version);
+          other.version == this.version &&
+          other.category == this.category);
 }
 
 class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
@@ -2882,6 +2917,7 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
   final Value<int> updatedAt;
   final Value<int?> deletedAt;
   final Value<int> version;
+  final Value<String> category;
   final Value<int> rowid;
   const ExpensesCompanion({
     this.id = const Value.absent(),
@@ -2902,6 +2938,7 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.version = const Value.absent(),
+    this.category = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ExpensesCompanion.insert({
@@ -2923,6 +2960,7 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     required int updatedAt,
     this.deletedAt = const Value.absent(),
     this.version = const Value.absent(),
+    this.category = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        groupId = Value(groupId),
@@ -2952,6 +2990,7 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     Expression<int>? updatedAt,
     Expression<int>? deletedAt,
     Expression<int>? version,
+    Expression<String>? category,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2973,6 +3012,7 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (version != null) 'version': version,
+      if (category != null) 'category': category,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2996,6 +3036,7 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     Value<int>? updatedAt,
     Value<int?>? deletedAt,
     Value<int>? version,
+    Value<String>? category,
     Value<int>? rowid,
   }) {
     return ExpensesCompanion(
@@ -3017,6 +3058,7 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
       version: version ?? this.version,
+      category: category ?? this.category,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3078,6 +3120,9 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     if (version.present) {
       map['version'] = Variable<int>(version.value);
     }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3105,6 +3150,7 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
           ..write('version: $version, ')
+          ..write('category: $category, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -6815,6 +6861,10 @@ abstract class _$LocalDatabase extends GeneratedDatabase {
     'ix_expenses_group_list',
     'CREATE INDEX ix_expenses_group_list ON expenses (group_id, expense_date DESC, created_at DESC, id DESC) WHERE deleted_at IS NULL',
   );
+  late final Index ixExpensesGroupCategory = Index(
+    'ix_expenses_group_category',
+    'CREATE INDEX ix_expenses_group_category ON expenses (group_id, category) WHERE deleted_at IS NULL',
+  );
   late final Index ixExpensesGroup = Index(
     'ix_expenses_group',
     'CREATE INDEX ix_expenses_group ON expenses (group_id)',
@@ -6894,6 +6944,7 @@ abstract class _$LocalDatabase extends GeneratedDatabase {
     uxMembersGroupOwner,
     expenses,
     ixExpensesGroupList,
+    ixExpensesGroupCategory,
     ixExpensesGroup,
     expensePayers,
     ixExpensePayersMember,
@@ -9419,6 +9470,7 @@ typedef $ExpensesCreateCompanionBuilder = ExpensesCompanion Function({
   required int updatedAt,
   Value<int?> deletedAt,
   Value<int> version,
+  Value<String> category,
   Value<int> rowid,
 });
 typedef $ExpensesUpdateCompanionBuilder = ExpensesCompanion Function({
@@ -9440,6 +9492,7 @@ typedef $ExpensesUpdateCompanionBuilder = ExpensesCompanion Function({
   Value<int> updatedAt,
   Value<int?> deletedAt,
   Value<int> version,
+  Value<String> category,
   Value<int> rowid,
 });
 
@@ -9643,6 +9696,11 @@ class $ExpensesFilterComposer extends Composer<_$LocalDatabase, Expenses> {
 
   ColumnFilters<int> get version => $composableBuilder(
     column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get category => $composableBuilder(
+    column: $table.category,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9881,6 +9939,11 @@ class $ExpensesOrderingComposer extends Composer<_$LocalDatabase, Expenses> {
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $ExpenseGroupsOrderingComposer get groupId {
     final $ExpenseGroupsOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -9995,6 +10058,9 @@ class $ExpensesAnnotationComposer extends Composer<_$LocalDatabase, Expenses> {
 
   GeneratedColumn<int> get version =>
       $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
 
   $ExpenseGroupsAnnotationComposer get groupId {
     final $ExpenseGroupsAnnotationComposer composer = $composerBuilder(
@@ -10196,6 +10262,7 @@ class $ExpensesTableManager
                 Value<int> updatedAt = const Value.absent(),
                 Value<int?> deletedAt = const Value.absent(),
                 Value<int> version = const Value.absent(),
+                Value<String> category = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExpensesCompanion(
                 id: id,
@@ -10216,6 +10283,7 @@ class $ExpensesTableManager
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
                 version: version,
+                category: category,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -10238,6 +10306,7 @@ class $ExpensesTableManager
                 required int updatedAt,
                 Value<int?> deletedAt = const Value.absent(),
                 Value<int> version = const Value.absent(),
+                Value<String> category = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExpensesCompanion.insert(
                 id: id,
@@ -10258,6 +10327,7 @@ class $ExpensesTableManager
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
                 version: version,
+                category: category,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

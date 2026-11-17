@@ -58,7 +58,7 @@ class LocalDatabase extends _$LocalDatabase {
   final int Function() _clock;
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -73,6 +73,11 @@ class LocalDatabase extends _$LocalDatabase {
           // SA5: the backup reminder can be snoozed (local_meta.backup_reminder_snoozed_until, nullable).
           from1To2: (m, schema) async {
             await m.addColumn(schema.localMeta, schema.localMeta.backupReminderSnoozedUntil);
+          },
+          // SA6: expense category (expenses.category, NOT NULL DEFAULT 'OTHER' + CHECK + index).
+          from2To3: (m, schema) async {
+            await m.addColumn(schema.expenses, schema.expenses.category);
+            await m.createIndex(schema.ixExpensesGroupCategory);
           },
         ),
         beforeOpen: (details) async {

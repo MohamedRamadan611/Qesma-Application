@@ -358,6 +358,11 @@ class ExpenseFormController extends Notifier<ExpenseFormView> {
     if (f != null) _set(f.copyWith(date: value));
   }
 
+  void setCategory(String value) {
+    final f = form;
+    if (f != null) _set(f.copyWith(category: value));
+  }
+
   /// Switches the tab. The restaurant bill starts with one empty item so the editor shows something to fill.
   void setSplitMode(SplitMode mode) {
     final f = form;

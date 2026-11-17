@@ -12,11 +12,15 @@ part 'update_group_request.g.dart';
 ///
 /// Properties:
 /// * [name] 
+/// * [treasurerMemberId] 
 /// * [type] 
 @BuiltValue()
 abstract class UpdateGroupRequest implements Built<UpdateGroupRequest, UpdateGroupRequestBuilder> {
   @BuiltValueField(wireName: r'name')
   String? get name;
+
+  @BuiltValueField(wireName: r'treasurerMemberId')
+  String? get treasurerMemberId;
 
   @BuiltValueField(wireName: r'type')
   String? get type;
@@ -48,6 +52,13 @@ class _$UpdateGroupRequestSerializer implements PrimitiveSerializer<UpdateGroupR
       yield r'name';
       yield serializers.serialize(
         object.name,
+        specifiedType: const FullType(String),
+      );
+    }
+    if (object.treasurerMemberId != null) {
+      yield r'treasurerMemberId';
+      yield serializers.serialize(
+        object.treasurerMemberId,
         specifiedType: const FullType(String),
       );
     }
@@ -87,6 +98,13 @@ class _$UpdateGroupRequestSerializer implements PrimitiveSerializer<UpdateGroupR
             specifiedType: const FullType(String),
           ) as String;
           result.name = valueDes;
+          break;
+        case r'treasurerMemberId':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.treasurerMemberId = valueDes;
           break;
         case r'type':
           final valueDes = serializers.deserialize(

@@ -219,6 +219,9 @@ public class OpenApiConfig {
         if (path.endsWith("/groups/{gid}") && method == PathItem.HttpMethod.DELETE) {
             add(errors, 409, ErrorCode.GROUP_NOT_EMPTY);
         }
+        if (path.endsWith("/groups/{gid}") && method == PathItem.HttpMethod.PATCH) {
+            add(errors, 409, ErrorCode.INVALID_STATE_TRANSITION);          // BSA1: treasurer locked once the pool is used
+        }
         if (path.endsWith("/members/{mid}/unlink")
                 || path.endsWith("/members/{mid}") && method == PathItem.HttpMethod.PATCH) {
             add(errors, 409, ErrorCode.OWNER_MEMBER_PROTECTED);

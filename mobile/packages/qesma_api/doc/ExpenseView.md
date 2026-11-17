@@ -8,12 +8,14 @@ import 'package:qesma_api/api.dart';
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**category** | **String** |  | 
 **charges** | [**Charges**](Charges.md) |  | [optional] 
 **createdAt** | [**DateTime**](DateTime.md) |  | 
 **expenseDate** | [**Date**](Date.md) |  | 
 **groupId** | **String** |  | 
 **id** | **String** |  | 
 **items** | [**BuiltList&lt;ItemView&gt;**](ItemView.md) |  | [optional] 
+**paidFromPool** | **bool** |  | 
 **payers** | [**BuiltList&lt;PayerView&gt;**](PayerView.md) |  | 
 **shares** | [**BuiltList&lt;ShareView&gt;**](ShareView.md) |  | 
 **splitType** | **String** |  | 

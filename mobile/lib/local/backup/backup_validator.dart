@@ -165,6 +165,10 @@ abstract final class BackupValidator {
         updatedAt: r.timestamp('updated_at'),
         deletedAt: r.optTimestamp('deleted_at'),
         version: r.integer('version', min: 1, max: _maxCount),
+        category: r.optOneOf('category', const {
+              'FOOD', 'TRANSPORT', 'FUEL', 'ACCOMMODATION', 'GROCERIES', 'SHOPPING', 'ENTERTAINMENT', 'BILLS', 'OTHER'
+            }) ??
+            'OTHER',
       );
 
   static PayerRow _payer(_Reader r) =>

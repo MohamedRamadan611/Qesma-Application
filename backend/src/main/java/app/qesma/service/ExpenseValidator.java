@@ -20,6 +20,9 @@ final class ExpenseValidator {
     static final int MAX_ITEM_NAME = 100;
     static final int MAX_LIST = 100;
     static final int MAX_BPS = 10_000;
+    static final String DEFAULT_CATEGORY = "OTHER";
+    static final java.util.Set<String> CATEGORIES = java.util.Set.of("FOOD", "TRANSPORT", "FUEL", "ACCOMMODATION",
+            "GROCERIES", "SHOPPING", "ENTERTAINMENT", "BILLS", DEFAULT_CATEGORY);
     static final String SUBTOTAL = "SUBTOTAL";
     static final String SUBTOTAL_PLUS_SERVICE = "SUBTOTAL_PLUS_SERVICE";
     static final LocalDate MIN_DATE = LocalDate.of(2000, 1, 1);
@@ -38,7 +41,22 @@ final class ExpenseValidator {
     record Valid(String title, LocalDate expenseDate, String splitType, long totalMinor,
                  List<ExpenseCommand.PayerInput> payers, List<UUID> participantMemberIds,
                  List<ExpenseCommand.ShareInput> shares, List<ExpenseCommand.ItemInput> items, Integer serviceBps,
-                 Integer taxBps, String taxBase, long adjustmentMinor) {
+                 Integer taxBps, String taxBase, long adjustmentMinor, String category,
+                 boolean paidFromPool) {
+
+        /** Itemized shape without category / pool flag. */
+        Valid(String title, LocalDate expenseDate, String splitType, long totalMinor,
+              List<ExpenseCommand.PayerInput> payers, List<UUID> participantMemberIds,
+              List<ExpenseCommand.ShareInput> shares, List<ExpenseCommand.ItemInput> items, Integer serviceBps,
+              Integer taxBps, String taxBase, long adjustmentMinor) {
+            this(title, expenseDate, splitType, totalMinor, payers, participantMemberIds, shares, items, serviceBps,
+                    taxBps, taxBase, adjustmentMinor, DEFAULT_CATEGORY, false);
+        }
+
+        Valid withPoolFields(String newCategory, boolean newPaidFromPool) {
+            return new Valid(title, expenseDate, splitType, totalMinor, payers, participantMemberIds, shares, items,
+                    serviceBps, taxBps, taxBase, adjustmentMinor, newCategory, newPaidFromPool);
+        }
 
         /** EQUAL/EXACT shape. */
         Valid(String title, LocalDate expenseDate, String splitType, long totalMinor,
@@ -109,11 +127,40 @@ final class ExpenseValidator {
             capped(p.amountMinor(), "payer amountMinor");
         }
 
-        return switch (type) {
+        Valid shape = switch (type) {
             case "EQUAL" -> equal(c, title, date, total, payers);
             case "EXACT" -> exact(c, title, date, total, payers);
             default -> itemized(c, title, date, total, payers);
         };
+        return shape.withPoolFields(category(c.category()), c.paidFromPool() != null && c.paidFromPool());
+    }
+
+    /** Null or blank = OTHER; anything outside the enum is a validation error (never silently coerced). */
+    static String category(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return DEFAULT_CATEGORY;
+        }
+        String value = raw.strip().toUpperCase(Locale.ROOT);
+        if (!CATEGORIES.contains(value)) {
+            throw ApiException.validation("category must be one of " + new java.util.TreeSet<>(CATEGORIES));
+        }
+        return value;
+    }
+
+    /**
+     * BSA1: paidFromPool is valid only when the group has a treasurer and the expense has exactly one payer, who is
+     * the treasurer. Needs the group, so the service calls it after {@link #validate}.
+     */
+    static void requirePoolRules(Valid v, UUID treasurerMemberId) {
+        if (!v.paidFromPool()) {
+            return;
+        }
+        if (treasurerMemberId == null) {
+            throw ApiException.validation("paidFromPool needs a group treasurer");
+        }
+        if (v.payers().size() != 1 || !treasurerMemberId.equals(v.payers().get(0).memberId())) {
+            throw ApiException.validation("A pool expense must have exactly one payer: the treasurer");
+        }
     }
 
     private static Valid equal(ExpenseCommand c, String title, LocalDate date, long total,

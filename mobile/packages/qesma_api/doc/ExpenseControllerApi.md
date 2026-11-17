@@ -200,7 +200,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **listExpenses**
-> PageResponseExpenseView listExpenses(gid, page, size, fromDate, toDate, memberId)
+> PageResponseExpenseView listExpenses(gid, page, size, fromDate, toDate, memberId, category)
 
 
 
@@ -215,9 +215,10 @@ final int size = 56; // int |
 final Date fromDate = 2013-10-20; // Date | 
 final Date toDate = 2013-10-20; // Date | 
 final String memberId = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final String category = category_example; // String | 
 
 try {
-    final response = api.listExpenses(gid, page, size, fromDate, toDate, memberId);
+    final response = api.listExpenses(gid, page, size, fromDate, toDate, memberId, category);
     print(response);
 } catch on DioException (e) {
     print('Exception when calling ExpenseControllerApi->listExpenses: $e\n');
@@ -234,6 +235,7 @@ Name | Type | Description  | Notes
  **fromDate** | **Date**|  | [optional] 
  **toDate** | **Date**|  | [optional] 
  **memberId** | **String**|  | [optional] 
+ **category** | **String**|  | [optional] 
 
 ### Return type
 

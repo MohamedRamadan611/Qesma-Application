@@ -29,6 +29,7 @@ ExpenseFormState formFromExpense(
     title: expense.title,
     amountText: Money.formatPlain(expense.totalMinor),
     date: expense.expenseDate,
+    category: expense.category,
     singlePayerId: single ? payers.first.memberId : fallbackPayerId,
     splitMode: itemized
         ? SplitMode.itemized

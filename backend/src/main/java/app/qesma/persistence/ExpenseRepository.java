@@ -59,6 +59,50 @@ public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
     Page<Expense> findPageForMember(@Param("groupId") UUID groupId, @Param("from") LocalDate from,
                                     @Param("to") LocalDate to, @Param("memberId") UUID memberId, Pageable pageable);
 
+    /** Category filter (BSA1). */
+    @Query(value = """
+            select e from Expense e
+            where e.groupId = :groupId and e.deletedAt is null and e.category = :category
+              and e.expenseDate >= :from and e.expenseDate <= :to
+            order by e.expenseDate desc, e.createdAt desc, e.id desc
+            """,
+            countQuery = """
+            select count(e) from Expense e
+            where e.groupId = :groupId and e.deletedAt is null and e.category = :category
+              and e.expenseDate >= :from and e.expenseDate <= :to
+            """)
+    Page<Expense> findPageByCategory(@Param("groupId") UUID groupId, @Param("from") LocalDate from,
+                                     @Param("to") LocalDate to, @Param("category") String category,
+                                     Pageable pageable);
+
+    /** Category filter restricted to a member (payer or participant). */
+    @Query(value = """
+            select e from Expense e
+            where e.groupId = :groupId and e.deletedAt is null and e.category = :category
+              and e.expenseDate >= :from and e.expenseDate <= :to
+              and (exists (select 1 from ExpensePayer p where p.expenseId = e.id and p.memberId = :memberId)
+                   or exists (select 1 from ExpenseSplit s where s.expenseId = e.id and s.memberId = :memberId))
+            order by e.expenseDate desc, e.createdAt desc, e.id desc
+            """,
+            countQuery = """
+            select count(e) from Expense e
+            where e.groupId = :groupId and e.deletedAt is null and e.category = :category
+              and e.expenseDate >= :from and e.expenseDate <= :to
+              and (exists (select 1 from ExpensePayer p where p.expenseId = e.id and p.memberId = :memberId)
+                   or exists (select 1 from ExpenseSplit s where s.expenseId = e.id and s.memberId = :memberId))
+            """)
+    Page<Expense> findPageForMemberByCategory(@Param("groupId") UUID groupId, @Param("from") LocalDate from,
+                                              @Param("to") LocalDate to, @Param("memberId") UUID memberId,
+                                              @Param("category") String category, Pageable pageable);
+
+    /** BSA1 treasurer lock (A137): any pool expense, soft-deleted included. */
+    @Query("select count(e) > 0 from Expense e where e.groupId = :groupId and e.paidFromPool = true")
+    boolean existsPoolExpense(@Param("groupId") UUID groupId);
+
+    /** BSA1 pool meter: live (not deleted) pool expenses. */
+    @Query("select coalesce(sum(e.totalMinor), 0L) from Expense e where e.groupId = :groupId and e.paidFromPool = true and e.deletedAt is null")
+    long poolSpentMinor(@Param("groupId") UUID groupId);
+
     @Query("""
             select new app.qesma.persistence.GroupTotals(coalesce(sum(e.totalMinor), 0L), max(e.createdAt))
             from Expense e where e.groupId = :groupId and e.deletedAt is null

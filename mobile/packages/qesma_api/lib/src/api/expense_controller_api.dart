@@ -367,6 +367,7 @@ class ExpenseControllerApi {
   /// * [fromDate] 
   /// * [toDate] 
   /// * [memberId] 
+  /// * [category] 
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -383,6 +384,7 @@ class ExpenseControllerApi {
     Date? fromDate,
     Date? toDate,
     String? memberId,
+    String? category,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -415,6 +417,7 @@ class ExpenseControllerApi {
       if (fromDate != null) r'fromDate': encodeQueryParameter(_serializers, fromDate, const FullType(Date)),
       if (toDate != null) r'toDate': encodeQueryParameter(_serializers, toDate, const FullType(Date)),
       if (memberId != null) r'memberId': encodeQueryParameter(_serializers, memberId, const FullType(String)),
+      if (category != null) r'category': encodeQueryParameter(_serializers, category, const FullType(String)),
     };
 
     final _response = await _dio.request<Object>(

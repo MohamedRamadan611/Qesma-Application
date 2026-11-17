@@ -208,7 +208,7 @@ class ExpenseApiSliceTest {
     @Test
     void listIsPagedAndPassesFiltersToTheService() throws Exception {
         UUID member = UUID.randomUUID();
-        when(expenses.list(me, gid, 1, 10, LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31), member))
+        when(expenses.list(me, gid, 1, 10, LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31), member, null))
                 .thenReturn(new PageImpl<>(List.of(view()), PageRequest.of(1, 10), 11));
 
         MvcResult r = mvc.perform(authed(get("/api/v1/groups/" + gid + "/expenses"
@@ -224,7 +224,7 @@ class ExpenseApiSliceTest {
 
     @Test
     void listDefaultsAndBadFilterFormatsBehave() throws Exception {
-        when(expenses.list(me, gid, 0, 20, null, null, null))
+        when(expenses.list(me, gid, 0, 20, null, null, null, null))
                 .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 20), 0));
         assertThat(mvc.perform(authed(get("/api/v1/groups/" + gid + "/expenses"))).andReturn().getResponse().getStatus())
                 .isEqualTo(200);

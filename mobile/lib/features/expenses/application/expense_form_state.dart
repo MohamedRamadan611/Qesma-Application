@@ -167,6 +167,7 @@ class ExpenseFormState {
     required this.amountText,
     required this.date,
     required this.singlePayerId,
+    this.category = 'OTHER',
     this.splitMode = SplitMode.all,
     this.selectedIds = const {},
     this.exactTexts = const {},
@@ -181,6 +182,7 @@ class ExpenseFormState {
   /// The total exactly as typed ("500", "1,000.50", Arabic digits all fine). Not used for a restaurant bill.
   final String amountText;
   final Date date;
+  final String category;
   final SplitMode splitMode;
 
   /// Members who share the expense in Selected and Exact mode (All means every member).
@@ -207,6 +209,7 @@ class ExpenseFormState {
     String? title,
     String? amountText,
     Date? date,
+    String? category,
     SplitMode? splitMode,
     Set<String>? selectedIds,
     Map<String, String>? exactTexts,
@@ -221,6 +224,7 @@ class ExpenseFormState {
         title: title ?? this.title,
         amountText: amountText ?? this.amountText,
         date: date ?? this.date,
+        category: category ?? this.category,
         splitMode: splitMode ?? this.splitMode,
         selectedIds: selectedIds ?? this.selectedIds,
         exactTexts: exactTexts ?? this.exactTexts,

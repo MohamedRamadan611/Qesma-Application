@@ -15,6 +15,7 @@ import '../../groups/presentation/group_dialogs.dart';
 import '../../groups/presentation/group_ui.dart';
 import '../application/expense_detail_controller.dart';
 import '../application/expenses_list_controller.dart';
+import '../data/expense_category.dart';
 import '../data/split_type.dart';
 import 'expense_blocks.dart';
 import 'expense_ui.dart';
@@ -144,6 +145,8 @@ class _Content extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final split = SplitType.fromWire(expense.splitType);
+    final category = ExpenseCategory.fromWire(expense.category);
+    final (catBg, catFg) = category.colors;
     final yourMemberId = group?.yourMemberId;
     final hasItems = (expense.items?.isNotEmpty ?? false);
     const gap = SizedBox(height: QesmaSpacing.md);
@@ -161,8 +164,8 @@ class _Content extends StatelessWidget {
                   Container(
                     width: 48,
                     height: 48,
-                    decoration: BoxDecoration(color: context.colors.primaryContainer, borderRadius: BorderRadius.circular(QesmaRadii.control)),
-                    child: Icon(split?.icon ?? Icons.receipt_long, color: context.colors.onPrimaryContainer),
+                    decoration: BoxDecoration(color: catBg, borderRadius: BorderRadius.circular(QesmaRadii.control)),
+                    child: Icon(category.icon, color: catFg),
                   ),
                   const SizedBox(width: QesmaSpacing.md),
                   Expanded(
@@ -188,6 +191,7 @@ class _Content extends StatelessWidget {
                     label: spokenDate(context, expense.expenseDate),
                     child: ExcludeSemantics(child: AppTag(label: dateText(expense.expenseDate), icon: Icons.calendar_today_outlined)),
                   ),
+                  AppTag(label: category.label(l10n), icon: category.icon),
                   if (split != null) AppTag(label: split.label(l10n), tone: split == SplitType.itemized ? AppTagTone.warning : AppTagTone.primary),
                   if (expense.version > 1) AppTag(label: l10n.expenseEditedBadge('${expense.version}'), tone: AppTagTone.info, icon: Icons.history),
                 ],

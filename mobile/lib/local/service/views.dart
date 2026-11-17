@@ -78,6 +78,8 @@ ExpenseView expenseView(ExpenseGraph g, Map<String, int> sortOrders) {
       ..expenseDate = dateOf(e.expenseDate)
       ..createdAt = utc(e.createdAt)
       ..version = e.version
+      ..category = e.category
+      ..paidFromPool = false
       ..payers = ListBuilder([
         for (final p in payers)
           PayerView((v) => v

@@ -10,8 +10,12 @@ final class SettlementValidator {
     static final int MAX_NOTE = 200;
 
     /** A request that passed validation; the note is trimmed and blank becomes null. */
-    record Valid(UUID fromMemberId, UUID toMemberId, long amountMinor, LocalDate settledOn, String note) {
+    record Valid(UUID fromMemberId, UUID toMemberId, long amountMinor, LocalDate settledOn, String note,
+                 String kind) {
     }
+
+    static final String PAYMENT = "PAYMENT";
+    static final String POOL_DEPOSIT = "POOL_DEPOSIT";
 
     private SettlementValidator() {
     }
@@ -39,6 +43,10 @@ final class SettlementValidator {
                     + ExpenseValidator.MAX_DATE);
         }
         String note = c.note() == null || c.note().isBlank() ? null : FieldRules.name(c.note(), MAX_NOTE, "note");
-        return new Valid(c.fromMemberId(), c.toMemberId(), c.amountMinor(), date, note);
+        String kind = c.kind() == null || c.kind().isBlank() ? PAYMENT : c.kind().strip().toUpperCase(java.util.Locale.ROOT);
+        if (!kind.equals(PAYMENT) && !kind.equals(POOL_DEPOSIT)) {
+            throw ApiException.validation("kind must be PAYMENT or POOL_DEPOSIT");
+        }
+        return new Valid(c.fromMemberId(), c.toMemberId(), c.amountMinor(), date, note, kind);
     }
 }

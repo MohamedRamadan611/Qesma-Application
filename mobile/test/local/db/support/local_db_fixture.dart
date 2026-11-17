@@ -47,6 +47,7 @@ ExpenseGraph equalExpense(String id, {int total = 10000}) => ExpenseGraph(
         createdAt: t0,
         updatedAt: t0,
         version: 1,
+        category: 'TRANSPORT',
       ),
       payers: [PayerRow(expenseId: id, memberId: youId, amountMinor: total)],
       splits: [
@@ -79,6 +80,7 @@ ExpenseGraph itemizedExpense(String id) {
       createdAt: t0,
       updatedAt: t0,
       version: 1,
+      category: 'FOOD',
     ),
     payers: [PayerRow(expenseId: id, memberId: youId, amountMinor: 12768)],
     splits: [

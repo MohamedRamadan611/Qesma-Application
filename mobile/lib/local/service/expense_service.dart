@@ -129,8 +129,8 @@ final class ExpenseService {
         return expenseView(await _liveGraph(groupId, expenseId), access.sortOrders);
       });
 
-  /// Live expenses, newest `expenseDate` first, then `createdAt`, then id; optional inclusive date range and a member
-  /// filter (payer or share row).
+  /// Live expenses, newest `expenseDate` first, then `createdAt`, then id; optional inclusive date range, member
+  /// filter (payer or share row), and category filter.
   Future<PageResponseExpenseView> list(
     String groupId, {
     required int page,
@@ -138,9 +138,11 @@ final class ExpenseService {
     String? fromDate,
     String? toDate,
     String? memberId,
+    String? category,
   }) =>
       _db.transaction(() async {
         FieldRules.page(page, size);
+        final cat = category == null || category.trim().isEmpty ? null : ExpenseValidator.category(category);
         if (fromDate != null && toDate != null && fromDate.compareTo(toDate) > 0) {
           throw LocalApiException.validation('fromDate must not be after toDate');
         }
@@ -154,6 +156,10 @@ final class ExpenseService {
         if (toDate != null) {
           where.write(' AND e.expense_date <= ?');
           vars.add(Variable.withString(toDate));
+        }
+        if (cat != null) {
+          where.write(' AND e.category = ?');
+          vars.add(Variable.withString(cat));
         }
         if (memberId != null) {
           where.write(' AND (EXISTS (SELECT 1 FROM expense_payers p WHERE p.expense_id = e.id AND p.member_id = ?)'
@@ -312,6 +318,7 @@ final class ExpenseService {
         createdAt: createdAt,
         updatedAt: updatedAt,
         version: version,
+        category: request.category,
       ),
       payers: [for (final p in calc.payers) PayerRow(expenseId: id, memberId: p.memberId, amountMinor: p.amountMinor)],
       splits: [

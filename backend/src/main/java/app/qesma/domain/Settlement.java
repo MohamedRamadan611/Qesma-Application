@@ -75,6 +75,9 @@ public class Settlement implements Persistable<UUID> {
     @Column(name = "recorded_by_admin", nullable = false, updatable = false)
     private boolean recordedByAdmin;
 
+    @Column(name = "kind", nullable = false, updatable = false)
+    private String kind = "PAYMENT";
+
     @Transient
     private boolean isNew = true;
 
@@ -99,6 +102,16 @@ public class Settlement implements Persistable<UUID> {
         this.status = confirmed ? CONFIRMED : PENDING;
         this.confirmedAt = confirmed ? createdAt : null;
         this.recordedByAdmin = recordedByAdmin;
+    }
+
+    /** BSA1: marks the settlement as a pool deposit (PAYMENT by default). */
+    public Settlement withKind(String kind) {
+        this.kind = kind;
+        return this;
+    }
+
+    public String getKind() {
+        return kind;
     }
 
     @Override

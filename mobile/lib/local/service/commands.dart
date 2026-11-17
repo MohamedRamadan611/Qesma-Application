@@ -47,6 +47,7 @@ final class ExpenseIn {
     this.hasService = false,
     this.tax,
     this.adjustmentMinor,
+    this.category,
   });
 
   final String? title;
@@ -65,6 +66,7 @@ final class ExpenseIn {
   final int? serviceBps;
   final TaxIn? tax;
   final int? adjustmentMinor;
+  final String? category;
 
   static ExpenseIn read(JsonFields f) {
     final service = f.obj('service');
@@ -82,6 +84,7 @@ final class ExpenseIn {
       serviceBps: service?.integer('bps'),
       tax: tax == null ? null : TaxIn(tax.integer('bps'), tax.str('base')),
       adjustmentMinor: f.integer('adjustmentMinor'),
+      category: f.str('category'),
     );
   }
 }

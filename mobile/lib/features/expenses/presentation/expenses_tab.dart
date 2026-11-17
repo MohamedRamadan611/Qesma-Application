@@ -75,7 +75,15 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
     if (choice == null || !mounted) return;
     await ref
         .read(expensesListControllerProvider(_gid).notifier)
-        .applyFilters(ExpenseFilters(from: current.from, to: current.to, memberId: choice.isEmpty ? null : choice));
+        .applyFilters(current.copyWith(memberId: choice.isEmpty ? null : choice, clearMember: choice.isEmpty));
+  }
+
+  Future<void> _pickCategory(ExpenseFilters current) async {
+    final choice = await showCategoryFilterSheet(context, selectedCategory: current.category);
+    if (choice == null || !mounted) return;
+    await ref
+        .read(expensesListControllerProvider(_gid).notifier)
+        .applyFilters(current.copyWith(category: choice.isEmpty ? null : choice, clearCategory: choice.isEmpty));
   }
 
   @override
@@ -112,8 +120,10 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
             nameOf: nameOf,
             onDate: () => _pickDates(state.filters),
             onMember: () => _pickMember(state.filters),
-            onClearDate: () => controller.applyFilters(ExpenseFilters(memberId: state.filters.memberId)),
-            onClearMember: () => controller.applyFilters(ExpenseFilters(from: state.filters.from, to: state.filters.to)),
+            onCategory: () => _pickCategory(state.filters),
+            onClearDate: () => controller.applyFilters(state.filters.copyWith(clearDates: true)),
+            onClearMember: () => controller.applyFilters(state.filters.copyWith(clearMember: true)),
+            onClearCategory: () => controller.applyFilters(state.filters.copyWith(clearCategory: true)),
           ),
         ),
         Expanded(child: body),

@@ -20,7 +20,8 @@ public final class GroupDtos {
     public record CreateGroupRequest(String name, String type, String currencyCode) {
     }
 
-    public record UpdateGroupRequest(String name, String type) {
+    /** {@code treasurerMemberId}: optional; sets the pool treasurer (A137: only while the pool has no deposits or pool expenses). */
+    public record UpdateGroupRequest(String name, String type, UUID treasurerMemberId) {
     }
 
     public record CreateMemberRequest(String displayName) {
@@ -68,12 +69,13 @@ public final class GroupDtos {
     public record GroupDto(UUID id, String name, String type, String currencyCode, Instant createdAt,
                            Instant updatedAt, int version, long totalSpentMinor, Instant lastExpenseAt,
                            UUID yourMemberId, Long yourNetMinor, String yourRole, boolean muted,
-                           List<MemberDto> members) {
+                           List<MemberDto> members, UUID treasurerMemberId, Long poolBalanceMinor) {
         static GroupDto from(GroupService.GroupDetail d, UUID callerUserId) {
             ExpenseGroup g = d.group();
             return new GroupDto(g.getId(), g.getName(), g.getType(), g.getCurrencyCode(), g.getCreatedAt(),
                     g.getUpdatedAt(), g.getVersion(), d.totalSpentMinor(), d.lastExpenseAt(), d.yourMemberId(),
-                    d.yourNetMinor(), d.yourRole(), d.muted(), d.members().stream().map(m -> MemberDto.from(m, callerUserId)).toList());
+                    d.yourNetMinor(), d.yourRole(), d.muted(), d.members().stream().map(m -> MemberDto.from(m, callerUserId)).toList(),
+                    g.getTreasurerMemberId(), d.poolBalanceMinor());
         }
     }
 }

@@ -22,7 +22,11 @@ class _$GroupDto extends GroupDto {
   @override
   final String name;
   @override
+  final int poolBalanceMinor;
+  @override
   final int totalSpentMinor;
+  @override
+  final String treasurerMemberId;
   @override
   final String type;
   @override
@@ -47,7 +51,9 @@ class _$GroupDto extends GroupDto {
       required this.members,
       required this.muted,
       required this.name,
+      required this.poolBalanceMinor,
       required this.totalSpentMinor,
+      required this.treasurerMemberId,
       required this.type,
       required this.updatedAt,
       required this.version,
@@ -73,7 +79,9 @@ class _$GroupDto extends GroupDto {
         members == other.members &&
         muted == other.muted &&
         name == other.name &&
+        poolBalanceMinor == other.poolBalanceMinor &&
         totalSpentMinor == other.totalSpentMinor &&
+        treasurerMemberId == other.treasurerMemberId &&
         type == other.type &&
         updatedAt == other.updatedAt &&
         version == other.version &&
@@ -92,7 +100,9 @@ class _$GroupDto extends GroupDto {
     _$hash = $jc(_$hash, members.hashCode);
     _$hash = $jc(_$hash, muted.hashCode);
     _$hash = $jc(_$hash, name.hashCode);
+    _$hash = $jc(_$hash, poolBalanceMinor.hashCode);
     _$hash = $jc(_$hash, totalSpentMinor.hashCode);
+    _$hash = $jc(_$hash, treasurerMemberId.hashCode);
     _$hash = $jc(_$hash, type.hashCode);
     _$hash = $jc(_$hash, updatedAt.hashCode);
     _$hash = $jc(_$hash, version.hashCode);
@@ -113,7 +123,9 @@ class _$GroupDto extends GroupDto {
           ..add('members', members)
           ..add('muted', muted)
           ..add('name', name)
+          ..add('poolBalanceMinor', poolBalanceMinor)
           ..add('totalSpentMinor', totalSpentMinor)
+          ..add('treasurerMemberId', treasurerMemberId)
           ..add('type', type)
           ..add('updatedAt', updatedAt)
           ..add('version', version)
@@ -157,10 +169,20 @@ class GroupDtoBuilder implements Builder<GroupDto, GroupDtoBuilder> {
   String? get name => _$this._name;
   set name(String? name) => _$this._name = name;
 
+  int? _poolBalanceMinor;
+  int? get poolBalanceMinor => _$this._poolBalanceMinor;
+  set poolBalanceMinor(int? poolBalanceMinor) =>
+      _$this._poolBalanceMinor = poolBalanceMinor;
+
   int? _totalSpentMinor;
   int? get totalSpentMinor => _$this._totalSpentMinor;
   set totalSpentMinor(int? totalSpentMinor) =>
       _$this._totalSpentMinor = totalSpentMinor;
+
+  String? _treasurerMemberId;
+  String? get treasurerMemberId => _$this._treasurerMemberId;
+  set treasurerMemberId(String? treasurerMemberId) =>
+      _$this._treasurerMemberId = treasurerMemberId;
 
   String? _type;
   String? get type => _$this._type;
@@ -200,7 +222,9 @@ class GroupDtoBuilder implements Builder<GroupDto, GroupDtoBuilder> {
       _members = $v.members.toBuilder();
       _muted = $v.muted;
       _name = $v.name;
+      _poolBalanceMinor = $v.poolBalanceMinor;
       _totalSpentMinor = $v.totalSpentMinor;
+      _treasurerMemberId = $v.treasurerMemberId;
       _type = $v.type;
       _updatedAt = $v.updatedAt;
       _version = $v.version;
@@ -241,8 +265,12 @@ class GroupDtoBuilder implements Builder<GroupDto, GroupDtoBuilder> {
                 muted, r'GroupDto', 'muted'),
             name: BuiltValueNullFieldError.checkNotNull(
                 name, r'GroupDto', 'name'),
+            poolBalanceMinor: BuiltValueNullFieldError.checkNotNull(
+                poolBalanceMinor, r'GroupDto', 'poolBalanceMinor'),
             totalSpentMinor: BuiltValueNullFieldError.checkNotNull(
                 totalSpentMinor, r'GroupDto', 'totalSpentMinor'),
+            treasurerMemberId: BuiltValueNullFieldError.checkNotNull(
+                treasurerMemberId, r'GroupDto', 'treasurerMemberId'),
             type: BuiltValueNullFieldError.checkNotNull(
                 type, r'GroupDto', 'type'),
             updatedAt: BuiltValueNullFieldError.checkNotNull(

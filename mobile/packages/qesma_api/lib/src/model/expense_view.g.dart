@@ -8,6 +8,8 @@ part of 'expense_view.dart';
 
 class _$ExpenseView extends ExpenseView {
   @override
+  final String category;
+  @override
   final Charges? charges;
   @override
   final DateTime createdAt;
@@ -19,6 +21,8 @@ class _$ExpenseView extends ExpenseView {
   final String id;
   @override
   final BuiltList<ItemView>? items;
+  @override
+  final bool paidFromPool;
   @override
   final BuiltList<PayerView> payers;
   @override
@@ -36,12 +40,14 @@ class _$ExpenseView extends ExpenseView {
       (ExpenseViewBuilder()..update(updates))._build();
 
   _$ExpenseView._(
-      {this.charges,
+      {required this.category,
+      this.charges,
       required this.createdAt,
       required this.expenseDate,
       required this.groupId,
       required this.id,
       this.items,
+      required this.paidFromPool,
       required this.payers,
       required this.shares,
       required this.splitType,
@@ -60,12 +66,14 @@ class _$ExpenseView extends ExpenseView {
   bool operator ==(Object other) {
     if (identical(other, this)) return true;
     return other is ExpenseView &&
+        category == other.category &&
         charges == other.charges &&
         createdAt == other.createdAt &&
         expenseDate == other.expenseDate &&
         groupId == other.groupId &&
         id == other.id &&
         items == other.items &&
+        paidFromPool == other.paidFromPool &&
         payers == other.payers &&
         shares == other.shares &&
         splitType == other.splitType &&
@@ -77,12 +85,14 @@ class _$ExpenseView extends ExpenseView {
   @override
   int get hashCode {
     var _$hash = 0;
+    _$hash = $jc(_$hash, category.hashCode);
     _$hash = $jc(_$hash, charges.hashCode);
     _$hash = $jc(_$hash, createdAt.hashCode);
     _$hash = $jc(_$hash, expenseDate.hashCode);
     _$hash = $jc(_$hash, groupId.hashCode);
     _$hash = $jc(_$hash, id.hashCode);
     _$hash = $jc(_$hash, items.hashCode);
+    _$hash = $jc(_$hash, paidFromPool.hashCode);
     _$hash = $jc(_$hash, payers.hashCode);
     _$hash = $jc(_$hash, shares.hashCode);
     _$hash = $jc(_$hash, splitType.hashCode);
@@ -96,12 +106,14 @@ class _$ExpenseView extends ExpenseView {
   @override
   String toString() {
     return (newBuiltValueToStringHelper(r'ExpenseView')
+          ..add('category', category)
           ..add('charges', charges)
           ..add('createdAt', createdAt)
           ..add('expenseDate', expenseDate)
           ..add('groupId', groupId)
           ..add('id', id)
           ..add('items', items)
+          ..add('paidFromPool', paidFromPool)
           ..add('payers', payers)
           ..add('shares', shares)
           ..add('splitType', splitType)
@@ -114,6 +126,10 @@ class _$ExpenseView extends ExpenseView {
 
 class ExpenseViewBuilder implements Builder<ExpenseView, ExpenseViewBuilder> {
   _$ExpenseView? _$v;
+
+  String? _category;
+  String? get category => _$this._category;
+  set category(String? category) => _$this._category = category;
 
   ChargesBuilder? _charges;
   ChargesBuilder get charges => _$this._charges ??= ChargesBuilder();
@@ -138,6 +154,10 @@ class ExpenseViewBuilder implements Builder<ExpenseView, ExpenseViewBuilder> {
   ListBuilder<ItemView>? _items;
   ListBuilder<ItemView> get items => _$this._items ??= ListBuilder<ItemView>();
   set items(ListBuilder<ItemView>? items) => _$this._items = items;
+
+  bool? _paidFromPool;
+  bool? get paidFromPool => _$this._paidFromPool;
+  set paidFromPool(bool? paidFromPool) => _$this._paidFromPool = paidFromPool;
 
   ListBuilder<PayerView>? _payers;
   ListBuilder<PayerView> get payers =>
@@ -172,12 +192,14 @@ class ExpenseViewBuilder implements Builder<ExpenseView, ExpenseViewBuilder> {
   ExpenseViewBuilder get _$this {
     final $v = _$v;
     if ($v != null) {
+      _category = $v.category;
       _charges = $v.charges?.toBuilder();
       _createdAt = $v.createdAt;
       _expenseDate = $v.expenseDate;
       _groupId = $v.groupId;
       _id = $v.id;
       _items = $v.items?.toBuilder();
+      _paidFromPool = $v.paidFromPool;
       _payers = $v.payers.toBuilder();
       _shares = $v.shares.toBuilder();
       _splitType = $v.splitType;
@@ -207,6 +229,8 @@ class ExpenseViewBuilder implements Builder<ExpenseView, ExpenseViewBuilder> {
     try {
       _$result = _$v ??
           _$ExpenseView._(
+            category: BuiltValueNullFieldError.checkNotNull(
+                category, r'ExpenseView', 'category'),
             charges: _charges?.build(),
             createdAt: BuiltValueNullFieldError.checkNotNull(
                 createdAt, r'ExpenseView', 'createdAt'),
@@ -216,6 +240,8 @@ class ExpenseViewBuilder implements Builder<ExpenseView, ExpenseViewBuilder> {
                 groupId, r'ExpenseView', 'groupId'),
             id: BuiltValueNullFieldError.checkNotNull(id, r'ExpenseView', 'id'),
             items: _items?.build(),
+            paidFromPool: BuiltValueNullFieldError.checkNotNull(
+                paidFromPool, r'ExpenseView', 'paidFromPool'),
             payers: payers.build(),
             shares: shares.build(),
             splitType: BuiltValueNullFieldError.checkNotNull(
@@ -235,6 +261,7 @@ class ExpenseViewBuilder implements Builder<ExpenseView, ExpenseViewBuilder> {
 
         _$failedField = 'items';
         _items?.build();
+
         _$failedField = 'payers';
         payers.build();
         _$failedField = 'shares';

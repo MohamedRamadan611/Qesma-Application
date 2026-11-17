@@ -17,6 +17,7 @@ const enabledFeatures = <String>{
   'handles', // FL14: payment details screen (InstaPay address, wallet number)
   'reminders', // FL14: Remind button on a transfer
   'backup', // SA5: export / restore the local data, reminder banner
+  'categories', // SA6: expense categories
 };
 
 /// Words, Arabic words, phrases, icons and routes of one Phase 2 feature.

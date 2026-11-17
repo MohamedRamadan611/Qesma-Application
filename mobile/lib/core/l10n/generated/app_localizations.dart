@@ -4213,6 +4213,90 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تجاهل'**
   String get backupBannerDismiss;
+
+  /// تصنيف: طعام ومشروبات
+  ///
+  /// In ar, this message translates to:
+  /// **'طعام ومشروبات'**
+  String get categoryFood;
+
+  /// تصنيف: مواصلات
+  ///
+  /// In ar, this message translates to:
+  /// **'مواصلات'**
+  String get categoryTransport;
+
+  /// تصنيف: بنزين
+  ///
+  /// In ar, this message translates to:
+  /// **'بنزين'**
+  String get categoryFuel;
+
+  /// تصنيف: سكن وإقامة
+  ///
+  /// In ar, this message translates to:
+  /// **'سكن وإقامة'**
+  String get categoryAccommodation;
+
+  /// تصنيف: بقالة وسوبرماركت
+  ///
+  /// In ar, this message translates to:
+  /// **'بقالة وسوبرماركت'**
+  String get categoryGroceries;
+
+  /// تصنيف: تسوق ومشتريات
+  ///
+  /// In ar, this message translates to:
+  /// **'تسوق ومشتريات'**
+  String get categoryShopping;
+
+  /// تصنيف: ترفيه وخروجات
+  ///
+  /// In ar, this message translates to:
+  /// **'ترفيه وخروجات'**
+  String get categoryEntertainment;
+
+  /// تصنيف: فواتير وخدمات
+  ///
+  /// In ar, this message translates to:
+  /// **'فواتير وخدمات'**
+  String get categoryBills;
+
+  /// تصنيف: أخرى
+  ///
+  /// In ar, this message translates to:
+  /// **'أخرى'**
+  String get categoryOther;
+
+  /// عنوان زر تصفية التصنيف
+  ///
+  /// In ar, this message translates to:
+  /// **'التصنيف'**
+  String get expenseFilterCategory;
+
+  /// عنوان صفحة اختيار تصنيف التصفية
+  ///
+  /// In ar, this message translates to:
+  /// **'تصفية حسب التصنيف'**
+  String get expenseFilterCategoryTitle;
+
+  /// وصف صفحة اختيار تصنيف التصفية
+  ///
+  /// In ar, this message translates to:
+  /// **'عرض مصاريف تصنيف واحد فقط'**
+  String get expenseFilterCategoryHint;
+
+  /// خيار عرض كل التصنيفات
+  ///
+  /// In ar, this message translates to:
+  /// **'كل التصنيفات'**
+  String get expenseFilterAllCategories;
+
+  /// عنوان اختيار التصنيف في نموذج المصروف
+  ///
+  /// In ar, this message translates to:
+  /// **'التصنيف'**
+  String get expenseCategoryPickerTitle;
 }
 
 class _AppLocalizationsDelegate

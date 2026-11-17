@@ -12,6 +12,8 @@ class _$SettlementCommand extends SettlementCommand {
   @override
   final String fromMemberId;
   @override
+  final String? kind;
+  @override
   final String? note;
   @override
   final Date settledOn;
@@ -25,6 +27,7 @@ class _$SettlementCommand extends SettlementCommand {
   _$SettlementCommand._(
       {required this.amountMinor,
       required this.fromMemberId,
+      this.kind,
       this.note,
       required this.settledOn,
       required this.toMemberId})
@@ -43,6 +46,7 @@ class _$SettlementCommand extends SettlementCommand {
     return other is SettlementCommand &&
         amountMinor == other.amountMinor &&
         fromMemberId == other.fromMemberId &&
+        kind == other.kind &&
         note == other.note &&
         settledOn == other.settledOn &&
         toMemberId == other.toMemberId;
@@ -53,6 +57,7 @@ class _$SettlementCommand extends SettlementCommand {
     var _$hash = 0;
     _$hash = $jc(_$hash, amountMinor.hashCode);
     _$hash = $jc(_$hash, fromMemberId.hashCode);
+    _$hash = $jc(_$hash, kind.hashCode);
     _$hash = $jc(_$hash, note.hashCode);
     _$hash = $jc(_$hash, settledOn.hashCode);
     _$hash = $jc(_$hash, toMemberId.hashCode);
@@ -65,6 +70,7 @@ class _$SettlementCommand extends SettlementCommand {
     return (newBuiltValueToStringHelper(r'SettlementCommand')
           ..add('amountMinor', amountMinor)
           ..add('fromMemberId', fromMemberId)
+          ..add('kind', kind)
           ..add('note', note)
           ..add('settledOn', settledOn)
           ..add('toMemberId', toMemberId))
@@ -83,6 +89,10 @@ class SettlementCommandBuilder
   String? _fromMemberId;
   String? get fromMemberId => _$this._fromMemberId;
   set fromMemberId(String? fromMemberId) => _$this._fromMemberId = fromMemberId;
+
+  String? _kind;
+  String? get kind => _$this._kind;
+  set kind(String? kind) => _$this._kind = kind;
 
   String? _note;
   String? get note => _$this._note;
@@ -105,6 +115,7 @@ class SettlementCommandBuilder
     if ($v != null) {
       _amountMinor = $v.amountMinor;
       _fromMemberId = $v.fromMemberId;
+      _kind = $v.kind;
       _note = $v.note;
       _settledOn = $v.settledOn;
       _toMemberId = $v.toMemberId;
@@ -133,6 +144,7 @@ class SettlementCommandBuilder
               amountMinor, r'SettlementCommand', 'amountMinor'),
           fromMemberId: BuiltValueNullFieldError.checkNotNull(
               fromMemberId, r'SettlementCommand', 'fromMemberId'),
+          kind: kind,
           note: note,
           settledOn: BuiltValueNullFieldError.checkNotNull(
               settledOn, r'SettlementCommand', 'settledOn'),

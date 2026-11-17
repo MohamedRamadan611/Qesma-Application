@@ -231,6 +231,9 @@
             "format" : "int64",
             "type" : "integer"
           },
+          "category" : {
+            "type" : "string"
+          },
           "expenseDate" : {
             "format" : "date",
             "type" : "string"
@@ -240,6 +243,9 @@
               "$ref" : "#/components/schemas/ItemInput"
             },
             "type" : "array"
+          },
+          "paidFromPool" : {
+            "type" : "boolean"
           },
           "participantMemberIds" : {
             "items" : {
@@ -351,6 +357,9 @@
       },
       "ExpenseView" : {
         "properties" : {
+          "category" : {
+            "type" : "string"
+          },
           "charges" : {
             "$ref" : "#/components/schemas/Charges"
           },
@@ -376,6 +385,9 @@
             },
             "nullable" : true,
             "type" : "array"
+          },
+          "paidFromPool" : {
+            "type" : "boolean"
           },
           "payers" : {
             "items" : {
@@ -405,7 +417,7 @@
             "type" : "integer"
           }
         },
-        "required" : [ "createdAt", "expenseDate", "groupId", "id", "payers", "shares", "splitType", "title", "totalMinor", "version" ],
+        "required" : [ "category", "createdAt", "expenseDate", "groupId", "id", "paidFromPool", "payers", "shares", "splitType", "title", "totalMinor", "version" ],
         "type" : "object"
       },
       "ForgotPasswordRequest" : {
@@ -460,10 +472,19 @@
           "name" : {
             "type" : "string"
           },
+          "poolBalanceMinor" : {
+            "description" : "Integer minor units (piasters: 1 EGP = 100). Never a decimal.",
+            "format" : "int64",
+            "type" : "integer"
+          },
           "totalSpentMinor" : {
             "description" : "Integer minor units (piasters: 1 EGP = 100). Never a decimal.",
             "format" : "int64",
             "type" : "integer"
+          },
+          "treasurerMemberId" : {
+            "format" : "uuid",
+            "type" : "string"
           },
           "type" : {
             "type" : "string"
@@ -489,7 +510,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "createdAt", "currencyCode", "id", "members", "muted", "name", "totalSpentMinor", "type", "updatedAt", "version", "yourMemberId", "yourNetMinor", "yourRole" ],
+        "required" : [ "createdAt", "currencyCode", "id", "members", "muted", "name", "poolBalanceMinor", "totalSpentMinor", "treasurerMemberId", "type", "updatedAt", "version", "yourMemberId", "yourNetMinor", "yourRole" ],
         "type" : "object"
       },
       "GroupNotificationPrefsView" : {
@@ -1293,6 +1314,9 @@
             "format" : "uuid",
             "type" : "string"
           },
+          "kind" : {
+            "type" : "string"
+          },
           "note" : {
             "type" : "string"
           },
@@ -1355,6 +1379,9 @@
             "format" : "uuid",
             "type" : "string"
           },
+          "kind" : {
+            "type" : "string"
+          },
           "note" : {
             "nullable" : true,
             "type" : "string"
@@ -1374,7 +1401,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "amountMinor", "createdAt", "declaredAt", "fromMemberId", "groupId", "id", "recordedByAdmin", "settledOn", "status", "toMemberId" ],
+        "required" : [ "amountMinor", "createdAt", "declaredAt", "fromMemberId", "groupId", "id", "kind", "recordedByAdmin", "settledOn", "status", "toMemberId" ],
         "type" : "object"
       },
       "ShareInput" : {
@@ -1561,6 +1588,10 @@
       "UpdateGroupRequest" : {
         "properties" : {
           "name" : {
+            "type" : "string"
+          },
+          "treasurerMemberId" : {
+            "format" : "uuid",
             "type" : "string"
           },
           "type" : {
@@ -2855,7 +2886,7 @@
                 }
               }
             },
-            "description" : "Conflict (code: VERSION_CONFLICT)"
+            "description" : "Conflict (code: VERSION_CONFLICT, INVALID_STATE_TRANSITION)"
           },
           "413" : {
             "content" : {
@@ -3115,6 +3146,13 @@
           "required" : false,
           "schema" : {
             "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "category",
+          "required" : false,
+          "schema" : {
             "type" : "string"
           }
         } ],

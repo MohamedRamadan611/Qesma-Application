@@ -14,6 +14,7 @@ part 'settlement_command.g.dart';
 /// Properties:
 /// * [amountMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
 /// * [fromMemberId] 
+/// * [kind] 
 /// * [note] 
 /// * [settledOn] 
 /// * [toMemberId] 
@@ -25,6 +26,9 @@ abstract class SettlementCommand implements Built<SettlementCommand, SettlementC
 
   @BuiltValueField(wireName: r'fromMemberId')
   String get fromMemberId;
+
+  @BuiltValueField(wireName: r'kind')
+  String? get kind;
 
   @BuiltValueField(wireName: r'note')
   String? get note;
@@ -68,6 +72,13 @@ class _$SettlementCommandSerializer implements PrimitiveSerializer<SettlementCom
       object.fromMemberId,
       specifiedType: const FullType(String),
     );
+    if (object.kind != null) {
+      yield r'kind';
+      yield serializers.serialize(
+        object.kind,
+        specifiedType: const FullType(String),
+      );
+    }
     if (object.note != null) {
       yield r'note';
       yield serializers.serialize(
@@ -121,6 +132,13 @@ class _$SettlementCommandSerializer implements PrimitiveSerializer<SettlementCom
             specifiedType: const FullType(String),
           ) as String;
           result.fromMemberId = valueDes;
+          break;
+        case r'kind':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.kind = valueDes;
           break;
         case r'note':
           final valueDes = serializers.deserialize(

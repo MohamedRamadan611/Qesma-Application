@@ -97,6 +97,10 @@ public class SettlementService {
         List<Member> members = access.listMembers(ctx);
         requireMember(members, request.fromMemberId());
         Member receiver = requireMember(members, request.toMemberId());
+        if (SettlementValidator.POOL_DEPOSIT.equals(request.kind())
+                && !request.toMemberId().equals(ctx.group().getTreasurerMemberId())) {
+            throw ApiException.validation("A pool deposit must go to the group treasurer");   // also: no treasurer
+        }
 
         boolean manager = ctx.can(Permission.MANAGE_SETTLEMENTS);
         UUID me = ctx.me().getId();
@@ -126,7 +130,7 @@ public class SettlementService {
         UUID id = UUID.randomUUID();
         Settlement saved = settlements.saveAndFlush(new Settlement(id, groupId, request.fromMemberId(),
                 request.toMemberId(), request.amountMinor(), request.settledOn(), request.note(), userId, me, now,
-                confirmed, onBehalf));
+                confirmed, onBehalf).withKind(request.kind()));
         String body = toJson(view(saved));
         // B15: the receiver learns of a declared payment; both parties learn of a recorded (confirmed) one
         events.record(groupId, me, confirmed ? EventType.SETTLEMENT_CONFIRMED : EventType.SETTLEMENT_PENDING,
@@ -266,7 +270,7 @@ public class SettlementService {
         return new SettlementView(s.getId(), s.getGroupId(), s.getFromMemberId(), s.getToMemberId(),
                 s.getAmountMinor(), s.getSettledOn(), s.getNote(), s.getCreatedAt(), s.getStatus(),
                 s.isRecordedByAdmin(), s.getCreatedByMemberId(), s.getDeclaredAt(), s.getConfirmedAt(),
-                s.getDisputedAt(), s.getCancelledAt());
+                s.getDisputedAt(), s.getCancelledAt(), s.getKind());
     }
 
     /** Spec 6 notes: both members must belong to the settlement's group and still be in it. */
@@ -287,6 +291,9 @@ public class SettlementService {
         m.put("amountMinor", v.amountMinor());
         m.put("settledOn", v.settledOn().toString());
         m.put("note", v.note());
+        if (!SettlementValidator.PAYMENT.equals(v.kind())) {
+            m.put("kind", v.kind());   // only non-default is hashed: pre-BSA1 replays keep their hash
+        }
         return m;
     }
 

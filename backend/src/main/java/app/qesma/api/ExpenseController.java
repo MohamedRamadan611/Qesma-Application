@@ -112,8 +112,9 @@ public class ExpenseController {
                                           @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
                                           @RequestParam(required = false)
                                           @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
-                                          @RequestParam(required = false) UUID memberId) {
-        return PageResponse.of(expenses.list(currentUser.id(), gid, page, size, fromDate, toDate, memberId),
+                                          @RequestParam(required = false) UUID memberId,
+                                          @RequestParam(required = false) String category) {
+        return PageResponse.of(expenses.list(currentUser.id(), gid, page, size, fromDate, toDate, memberId, category),
                 view -> view);
     }
 

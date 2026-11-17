@@ -12,5 +12,14 @@ import java.util.UUID;
 public record SettlementView(UUID id, UUID groupId, UUID fromMemberId, UUID toMemberId, long amountMinor,
                              LocalDate settledOn, String note, Instant createdAt, String status,
                              boolean recordedByAdmin, UUID createdByMemberId, Instant declaredAt,
-                             Instant confirmedAt, Instant disputedAt, Instant cancelledAt) {
+                             Instant confirmedAt, Instant disputedAt, Instant cancelledAt, String kind) {
+
+    /** A PAYMENT (no kind given). */
+    public SettlementView(UUID id, UUID groupId, UUID fromMemberId, UUID toMemberId, long amountMinor,
+                          LocalDate settledOn, String note, Instant createdAt, String status,
+                          boolean recordedByAdmin, UUID createdByMemberId, Instant declaredAt,
+                          Instant confirmedAt, Instant disputedAt, Instant cancelledAt) {
+        this(id, groupId, fromMemberId, toMemberId, amountMinor, settledOn, note, createdAt, status, recordedByAdmin,
+                createdByMemberId, declaredAt, confirmedAt, disputedAt, cancelledAt, "PAYMENT");
+    }
 }

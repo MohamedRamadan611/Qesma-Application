@@ -2435,4 +2435,46 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get backupBannerDismiss => 'تجاهل';
+
+  @override
+  String get categoryFood => 'طعام ومشروبات';
+
+  @override
+  String get categoryTransport => 'مواصلات';
+
+  @override
+  String get categoryFuel => 'بنزين';
+
+  @override
+  String get categoryAccommodation => 'سكن وإقامة';
+
+  @override
+  String get categoryGroceries => 'بقالة وسوبرماركت';
+
+  @override
+  String get categoryShopping => 'تسوق ومشتريات';
+
+  @override
+  String get categoryEntertainment => 'ترفيه وخروجات';
+
+  @override
+  String get categoryBills => 'فواتير وخدمات';
+
+  @override
+  String get categoryOther => 'أخرى';
+
+  @override
+  String get expenseFilterCategory => 'التصنيف';
+
+  @override
+  String get expenseFilterCategoryTitle => 'تصفية حسب التصنيف';
+
+  @override
+  String get expenseFilterCategoryHint => 'عرض مصاريف تصنيف واحد فقط';
+
+  @override
+  String get expenseFilterAllCategories => 'كل التصنيفات';
+
+  @override
+  String get expenseCategoryPickerTitle => 'التصنيف';
 }

@@ -14,6 +14,21 @@ import org.springframework.data.repository.query.Param;
 
 public interface SettlementRepository extends JpaRepository<Settlement, UUID> {
 
+    /** BSA1 treasurer lock (A137): any pool deposit of the group, whatever its status. */
+    @Query("select count(s) > 0 from Settlement s where s.groupId = :groupId and s.kind = 'POOL_DEPOSIT'")
+    boolean existsPoolDeposit(@Param("groupId") UUID groupId);
+
+    /**
+     * BSA1 pool meter in one statement: CONFIRMED deposits minus live (not deleted) pool expenses. Computed, never stored.
+     */
+    @Query(nativeQuery = true, value = """
+            select cast((select coalesce(sum(amount_minor), 0) from settlements
+                         where group_id = :groupId and kind = 'POOL_DEPOSIT' and status = 'CONFIRMED')
+                      - (select coalesce(sum(total_minor), 0) from expenses
+                         where group_id = :groupId and paid_from_pool and deleted_at is null) as bigint)
+            """)
+    long poolBalanceMinor(@Param("groupId") UUID groupId);
+
     /** A settlement is only reachable through its own group (a settlement id of another group is a 404). */
     @Query("select s from Settlement s where s.id = :id and s.groupId = :groupId")
     Optional<Settlement> findInGroup(@Param("id") UUID id, @Param("groupId") UUID groupId);

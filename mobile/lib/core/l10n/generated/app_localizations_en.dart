@@ -2466,4 +2466,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupBannerDismiss => 'Dismiss';
+
+  @override
+  String get categoryFood => 'Food & Drinks';
+
+  @override
+  String get categoryTransport => 'Transport';
+
+  @override
+  String get categoryFuel => 'Fuel';
+
+  @override
+  String get categoryAccommodation => 'Accommodation';
+
+  @override
+  String get categoryGroceries => 'Groceries';
+
+  @override
+  String get categoryShopping => 'Shopping';
+
+  @override
+  String get categoryEntertainment => 'Entertainment';
+
+  @override
+  String get categoryBills => 'Bills & Utilities';
+
+  @override
+  String get categoryOther => 'Other';
+
+  @override
+  String get expenseFilterCategory => 'Category';
+
+  @override
+  String get expenseFilterCategoryTitle => 'Filter by category';
+
+  @override
+  String get expenseFilterCategoryHint => 'Show expenses from one category';
+
+  @override
+  String get expenseFilterAllCategories => 'All categories';
+
+  @override
+  String get expenseCategoryPickerTitle => 'Category';
 }

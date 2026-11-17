@@ -10,13 +10,16 @@ class _$UpdateGroupRequest extends UpdateGroupRequest {
   @override
   final String? name;
   @override
+  final String? treasurerMemberId;
+  @override
   final String? type;
 
   factory _$UpdateGroupRequest(
           [void Function(UpdateGroupRequestBuilder)? updates]) =>
       (UpdateGroupRequestBuilder()..update(updates))._build();
 
-  _$UpdateGroupRequest._({this.name, this.type}) : super._();
+  _$UpdateGroupRequest._({this.name, this.treasurerMemberId, this.type})
+      : super._();
   @override
   UpdateGroupRequest rebuild(
           void Function(UpdateGroupRequestBuilder) updates) =>
@@ -31,6 +34,7 @@ class _$UpdateGroupRequest extends UpdateGroupRequest {
     if (identical(other, this)) return true;
     return other is UpdateGroupRequest &&
         name == other.name &&
+        treasurerMemberId == other.treasurerMemberId &&
         type == other.type;
   }
 
@@ -38,6 +42,7 @@ class _$UpdateGroupRequest extends UpdateGroupRequest {
   int get hashCode {
     var _$hash = 0;
     _$hash = $jc(_$hash, name.hashCode);
+    _$hash = $jc(_$hash, treasurerMemberId.hashCode);
     _$hash = $jc(_$hash, type.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
@@ -47,6 +52,7 @@ class _$UpdateGroupRequest extends UpdateGroupRequest {
   String toString() {
     return (newBuiltValueToStringHelper(r'UpdateGroupRequest')
           ..add('name', name)
+          ..add('treasurerMemberId', treasurerMemberId)
           ..add('type', type))
         .toString();
   }
@@ -60,6 +66,11 @@ class UpdateGroupRequestBuilder
   String? get name => _$this._name;
   set name(String? name) => _$this._name = name;
 
+  String? _treasurerMemberId;
+  String? get treasurerMemberId => _$this._treasurerMemberId;
+  set treasurerMemberId(String? treasurerMemberId) =>
+      _$this._treasurerMemberId = treasurerMemberId;
+
   String? _type;
   String? get type => _$this._type;
   set type(String? type) => _$this._type = type;
@@ -72,6 +83,7 @@ class UpdateGroupRequestBuilder
     final $v = _$v;
     if ($v != null) {
       _name = $v.name;
+      _treasurerMemberId = $v.treasurerMemberId;
       _type = $v.type;
       _$v = null;
     }
@@ -95,6 +107,7 @@ class UpdateGroupRequestBuilder
     final _$result = _$v ??
         _$UpdateGroupRequest._(
           name: name,
+          treasurerMemberId: treasurerMemberId,
           type: type,
         );
     replace(_$result);

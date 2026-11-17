@@ -5,19 +5,32 @@ import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../application/expense_filters.dart';
+import '../data/expense_category.dart';
 import 'expense_ui.dart';
 import '../../../core/theme/palette.dart';
 
-/// The two filter chips (date range, member) with a remove button next to an active one.
+/// The filter chips (date range, member, category) with a remove button next to an active one.
 class ExpenseFilterBar extends StatelessWidget {
-  const ExpenseFilterBar({super.key, required this.filters, required this.nameOf, required this.onDate, required this.onMember, required this.onClearDate, required this.onClearMember});
+  const ExpenseFilterBar({
+    super.key,
+    required this.filters,
+    required this.nameOf,
+    required this.onDate,
+    required this.onMember,
+    required this.onCategory,
+    required this.onClearDate,
+    required this.onClearMember,
+    required this.onClearCategory,
+  });
 
   final ExpenseFilters filters;
   final String Function(String memberId) nameOf;
   final VoidCallback onDate;
   final VoidCallback onMember;
+  final VoidCallback onCategory;
   final VoidCallback onClearDate;
   final VoidCallback onClearMember;
+  final VoidCallback onClearCategory;
 
   String _dateValue(AppLocalizations l10n) {
     final from = filters.from;
@@ -34,6 +47,9 @@ class ExpenseFilterBar extends StatelessWidget {
     final dateLabel = '${l10n.expenseFilterDate}: ${_dateValue(l10n)}';
     final memberId = filters.memberId;
     final memberLabel = '${l10n.expenseFilterMember}: ${memberId == null ? l10n.expenseFilterAll : nameOf(memberId)}';
+    final category = filters.category != null ? ExpenseCategory.fromWire(filters.category) : null;
+    final categoryLabel = '${l10n.expenseFilterCategory}: ${category == null ? l10n.expenseFilterAllCategories : category.label(l10n)}';
+
     return Wrap(
       spacing: QesmaSpacing.sm,
       runSpacing: QesmaSpacing.xs,
@@ -41,6 +57,13 @@ class ExpenseFilterBar extends StatelessWidget {
       children: [
         _RemovableChip(label: dateLabel, icon: Icons.calendar_today_outlined, active: filters.hasDateRange, onTap: onDate, onClear: onClearDate),
         _RemovableChip(label: memberLabel, icon: Icons.person_outline, active: memberId != null, onTap: onMember, onClear: onClearMember),
+        _RemovableChip(
+          label: categoryLabel,
+          icon: category?.icon ?? Icons.category_outlined,
+          active: filters.category != null,
+          onTap: onCategory,
+          onClear: onClearCategory,
+        ),
       ],
     );
   }
@@ -234,6 +257,79 @@ class _MemberChoiceRow extends StatelessWidget {
                 ],
               ),
             ),
+            if (selected) Icon(Icons.check, color: context.colors.primary),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Category filter sheet. Returns the chosen category wire value, an empty string for "all categories",
+/// or null when dismissed.
+Future<String?> showCategoryFilterSheet(BuildContext context, {required String? selectedCategory}) {
+  final l10n = AppLocalizations.of(context);
+  return showAppBottomSheet<String>(
+    context,
+    title: l10n.expenseFilterCategoryTitle,
+    subtitle: l10n.expenseFilterCategoryHint,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Builder(
+          builder: (sheetContext) => _CategoryChoiceRow(
+            title: l10n.expenseFilterAllCategories,
+            selected: selectedCategory == null || selectedCategory.isEmpty,
+            leading: const Icon(Icons.category_outlined),
+            onTap: () => Navigator.of(sheetContext).pop(''),
+          ),
+        ),
+        for (final cat in ExpenseCategory.values) ...[
+          const SizedBox(height: QesmaSpacing.sm),
+          Builder(
+            builder: (sheetContext) {
+              final (catBg, catFg) = cat.colors;
+              return _CategoryChoiceRow(
+                title: cat.label(l10n),
+                selected: selectedCategory == cat.wire,
+                leading: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(color: catBg, borderRadius: BorderRadius.circular(QesmaRadii.control)),
+                  child: Icon(cat.icon, color: catFg, size: 20),
+                ),
+                onTap: () => Navigator.of(sheetContext).pop(cat.wire),
+              );
+            },
+          ),
+        ],
+      ],
+    ),
+  );
+}
+
+class _CategoryChoiceRow extends StatelessWidget {
+  const _CategoryChoiceRow({required this.title, required this.selected, required this.leading, required this.onTap});
+
+  final String title;
+  final bool selected;
+  final Widget leading;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: AppCard(
+        onTap: onTap,
+        padding: const EdgeInsetsDirectional.fromSTEB(QesmaSpacing.md, QesmaSpacing.sm, QesmaSpacing.md, QesmaSpacing.sm),
+        child: Row(
+          children: [
+            leading,
+            const SizedBox(width: QesmaSpacing.md),
+            Expanded(child: Text(title, style: theme.textTheme.titleMedium)),
             if (selected) Icon(Icons.check, color: context.colors.primary),
           ],
         ),

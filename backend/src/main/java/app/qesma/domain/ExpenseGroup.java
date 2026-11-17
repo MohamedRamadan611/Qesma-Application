@@ -45,6 +45,9 @@ public class ExpenseGroup {
     @Column(name = "version", nullable = false)
     private int version;
 
+    @Column(name = "treasurer_member_id")
+    private UUID treasurerMemberId;
+
     @Column(name = "member_seq", nullable = false, insertable = false, updatable = false)
     private int memberSeq;
 
@@ -81,6 +84,16 @@ public class ExpenseGroup {
 
     public int getVersion() {
         return version;
+    }
+
+    public UUID getTreasurerMemberId() {
+        return treasurerMemberId;
+    }
+
+    /** BSA1: the caller (GroupService) has checked the member is ACTIVE in this group and the pool is untouched. */
+    public void setTreasurer(UUID memberId, Instant now) {
+        this.treasurerMemberId = memberId;
+        this.updatedAt = now;
     }
 
     public int getMemberSeq() {

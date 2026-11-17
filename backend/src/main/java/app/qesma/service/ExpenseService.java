@@ -104,6 +104,7 @@ public class ExpenseService {
         GroupContext ctx = access.requireForUpdate(userId, groupId, Permission.ADD_EXPENSE); // 2. membership (404), role (403) + group row lock
 
         ExpenseValidator.Valid request = ExpenseValidator.validate(command);   // 3. shape validation, no I/O
+        ExpenseValidator.requirePoolRules(request, ctx.group().getTreasurerMemberId());
         String requestHash = hasher.hash(CREATE_ENDPOINT, groupId, request);
         Optional<IdempotencyService.Outcome> replay = idempotency.findReplay(userId, key, CREATE_ENDPOINT, requestHash);
         if (replay.isPresent()) {                                              // 4. replay: no writes at all
@@ -166,6 +167,7 @@ public class ExpenseService {
         requireVersion(expense, expectedVersion, ctx);
 
         ExpenseValidator.Valid request = ExpenseValidator.validate(command);
+        ExpenseValidator.requirePoolRules(request, ctx.group().getTreasurerMemberId());
         List<Member> members = access.listMembers(ctx);
         // A member who left may stay in an expense that already has them, but cannot be added (B12, A79).
         java.util.Set<UUID> before = memberIdsOf(expenseId);   // read before the replace: also the edit's recipients (A99)
@@ -253,8 +255,9 @@ public class ExpenseService {
 
     @Transactional(readOnly = true)
     public Page<ExpenseView> list(UUID userId, UUID groupId, int page, int size, LocalDate fromDate, LocalDate toDate,
-                                  UUID memberId) {
+                                  UUID memberId, String category) {
         FieldRules.page(page, size);
+        String cat = category == null || category.isBlank() ? null : ExpenseValidator.category(category);
         if (fromDate != null && toDate != null && fromDate.isAfter(toDate)) {
             throw ApiException.validation("fromDate must not be after toDate");
         }
@@ -262,7 +265,10 @@ public class ExpenseService {
         LocalDate from = fromDate == null ? OPEN_FROM : fromDate;
         LocalDate to = toDate == null ? OPEN_TO : toDate;
         PageRequest paging = PageRequest.of(page, size);
-        Page<Expense> found = memberId == null
+        Page<Expense> found = cat != null
+                ? (memberId == null ? expenses.findPageByCategory(groupId, from, to, cat, paging)
+                   : expenses.findPageForMemberByCategory(groupId, from, to, memberId, cat, paging))
+                : memberId == null
                 ? expenses.findPage(groupId, from, to, paging)
                 : expenses.findPageForMember(groupId, from, to, memberId, paging);
         List<Member> members = access.listMembers(ctx);
@@ -308,10 +314,10 @@ public class ExpenseService {
         if (calc.itemized()) {
             return Expense.itemized(id, groupId, request.title(), calc.totalMinor(), request.expenseDate(), userId,
                     now, calc.subtotalMinor(), calc.serviceBps(), calc.serviceMinor(), calc.taxBps(), calc.taxMinor(),
-                    calc.taxBase(), calc.adjustmentMinor());
+                    calc.taxBase(), calc.adjustmentMinor()).withPool(request.category(), request.paidFromPool());
         }
         return new Expense(id, groupId, request.title(), request.splitType(), calc.totalMinor(),
-                request.expenseDate(), userId, now);
+                request.expenseDate(), userId, now).withPool(request.category(), request.paidFromPool());
     }
 
     private static ExpenseSplit split(UUID expenseId, ExpenseView.ShareView s) {
@@ -336,7 +342,8 @@ public class ExpenseService {
         List<ExpenseView.ItemView> itemViews = calc.itemized() ? saveItems(expenseId, request.items(), order) : null;
         return new ExpenseView(expenseId, expense.getGroupId(), expense.getTitle(), expense.getSplitType(),
                 calc.totalMinor(), expense.getExpenseDate(), payerViews(calc.payers(), order), calc.shares(),
-                expense.getCreatedAt(), expense.getVersion(), itemViews, calc.itemized() ? charges(calc) : null);
+                expense.getCreatedAt(), expense.getVersion(), itemViews, calc.itemized() ? charges(calc) : null,
+                expense.getCategory(), expense.isPaidFromPool());
     }
 
     /** Items keep the order the client sent; each item's assignees are listed in member sort order. */
@@ -439,7 +446,8 @@ public class ExpenseService {
             boolean itemized = Expense.ITEMIZED.equals(e.getSplitType());
             return new ExpenseView(e.getId(), e.getGroupId(), e.getTitle(), e.getSplitType(), e.getTotalMinor(),
                     e.getExpenseDate(), payerViews, shareViews, e.getCreatedAt(), e.getVersion(),
-                    itemized ? itemViews(e) : null, itemized ? charges(e) : null);
+                    itemized ? itemViews(e) : null, itemized ? charges(e) : null, e.getCategory(),
+                    e.isPaidFromPool());
         }
 
         private List<ExpenseView.ItemView> itemViews(Expense e) {

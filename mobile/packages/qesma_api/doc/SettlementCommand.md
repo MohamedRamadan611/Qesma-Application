@@ -10,6 +10,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **amountMinor** | **int** | Integer minor units (piasters: 1 EGP = 100). Never a decimal. | 
 **fromMemberId** | **String** |  | 
+**kind** | **String** |  | [optional] 
 **note** | **String** |  | [optional] 
 **settledOn** | [**Date**](Date.md) |  | 
 **toMemberId** | **String** |  | 

@@ -17,12 +17,14 @@ part 'expense_view.g.dart';
 /// ExpenseView
 ///
 /// Properties:
+/// * [category] 
 /// * [charges] 
 /// * [createdAt] 
 /// * [expenseDate] 
 /// * [groupId] 
 /// * [id] 
 /// * [items] 
+/// * [paidFromPool] 
 /// * [payers] 
 /// * [shares] 
 /// * [splitType] 
@@ -31,6 +33,9 @@ part 'expense_view.g.dart';
 /// * [version] 
 @BuiltValue()
 abstract class ExpenseView implements Built<ExpenseView, ExpenseViewBuilder> {
+  @BuiltValueField(wireName: r'category')
+  String get category;
+
   @BuiltValueField(wireName: r'charges')
   Charges? get charges;
 
@@ -48,6 +53,9 @@ abstract class ExpenseView implements Built<ExpenseView, ExpenseViewBuilder> {
 
   @BuiltValueField(wireName: r'items')
   BuiltList<ItemView>? get items;
+
+  @BuiltValueField(wireName: r'paidFromPool')
+  bool get paidFromPool;
 
   @BuiltValueField(wireName: r'payers')
   BuiltList<PayerView> get payers;
@@ -91,6 +99,11 @@ class _$ExpenseViewSerializer implements PrimitiveSerializer<ExpenseView> {
     ExpenseView object, {
     FullType specifiedType = FullType.unspecified,
   }) sync* {
+    yield r'category';
+    yield serializers.serialize(
+      object.category,
+      specifiedType: const FullType(String),
+    );
     if (object.charges != null) {
       yield r'charges';
       yield serializers.serialize(
@@ -125,6 +138,11 @@ class _$ExpenseViewSerializer implements PrimitiveSerializer<ExpenseView> {
         specifiedType: const FullType.nullable(BuiltList, [FullType(ItemView)]),
       );
     }
+    yield r'paidFromPool';
+    yield serializers.serialize(
+      object.paidFromPool,
+      specifiedType: const FullType(bool),
+    );
     yield r'payers';
     yield serializers.serialize(
       object.payers,
@@ -178,6 +196,13 @@ class _$ExpenseViewSerializer implements PrimitiveSerializer<ExpenseView> {
       final key = serializedList[i] as String;
       final value = serializedList[i + 1];
       switch (key) {
+        case r'category':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.category = valueDes;
+          break;
         case r'charges':
           final valueDes = serializers.deserialize(
             value,
@@ -220,6 +245,13 @@ class _$ExpenseViewSerializer implements PrimitiveSerializer<ExpenseView> {
           ) as BuiltList<ItemView>?;
           if (valueDes == null) continue;
           result.items.replace(valueDes);
+          break;
+        case r'paidFromPool':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(bool),
+          ) as bool;
+          result.paidFromPool = valueDes;
           break;
         case r'payers':
           final valueDes = serializers.deserialize(

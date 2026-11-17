@@ -28,6 +28,8 @@ class _$SettlementView extends SettlementView {
   @override
   final String id;
   @override
+  final String kind;
+  @override
   final String? note;
   @override
   final bool recordedByAdmin;
@@ -52,6 +54,7 @@ class _$SettlementView extends SettlementView {
       required this.fromMemberId,
       required this.groupId,
       required this.id,
+      required this.kind,
       this.note,
       required this.recordedByAdmin,
       required this.settledOn,
@@ -79,6 +82,7 @@ class _$SettlementView extends SettlementView {
         fromMemberId == other.fromMemberId &&
         groupId == other.groupId &&
         id == other.id &&
+        kind == other.kind &&
         note == other.note &&
         recordedByAdmin == other.recordedByAdmin &&
         settledOn == other.settledOn &&
@@ -99,6 +103,7 @@ class _$SettlementView extends SettlementView {
     _$hash = $jc(_$hash, fromMemberId.hashCode);
     _$hash = $jc(_$hash, groupId.hashCode);
     _$hash = $jc(_$hash, id.hashCode);
+    _$hash = $jc(_$hash, kind.hashCode);
     _$hash = $jc(_$hash, note.hashCode);
     _$hash = $jc(_$hash, recordedByAdmin.hashCode);
     _$hash = $jc(_$hash, settledOn.hashCode);
@@ -121,6 +126,7 @@ class _$SettlementView extends SettlementView {
           ..add('fromMemberId', fromMemberId)
           ..add('groupId', groupId)
           ..add('id', id)
+          ..add('kind', kind)
           ..add('note', note)
           ..add('recordedByAdmin', recordedByAdmin)
           ..add('settledOn', settledOn)
@@ -175,6 +181,10 @@ class SettlementViewBuilder
   String? get id => _$this._id;
   set id(String? id) => _$this._id = id;
 
+  String? _kind;
+  String? get kind => _$this._kind;
+  set kind(String? kind) => _$this._kind = kind;
+
   String? _note;
   String? get note => _$this._note;
   set note(String? note) => _$this._note = note;
@@ -213,6 +223,7 @@ class SettlementViewBuilder
       _fromMemberId = $v.fromMemberId;
       _groupId = $v.groupId;
       _id = $v.id;
+      _kind = $v.kind;
       _note = $v.note;
       _recordedByAdmin = $v.recordedByAdmin;
       _settledOn = $v.settledOn;
@@ -255,6 +266,8 @@ class SettlementViewBuilder
               groupId, r'SettlementView', 'groupId'),
           id: BuiltValueNullFieldError.checkNotNull(
               id, r'SettlementView', 'id'),
+          kind: BuiltValueNullFieldError.checkNotNull(
+              kind, r'SettlementView', 'kind'),
           note: note,
           recordedByAdmin: BuiltValueNullFieldError.checkNotNull(
               recordedByAdmin, r'SettlementView', 'recordedByAdmin'),

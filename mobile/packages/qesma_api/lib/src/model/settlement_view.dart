@@ -22,6 +22,7 @@ part 'settlement_view.g.dart';
 /// * [fromMemberId] 
 /// * [groupId] 
 /// * [id] 
+/// * [kind] 
 /// * [note] 
 /// * [recordedByAdmin] 
 /// * [settledOn] 
@@ -59,6 +60,9 @@ abstract class SettlementView implements Built<SettlementView, SettlementViewBui
 
   @BuiltValueField(wireName: r'id')
   String get id;
+
+  @BuiltValueField(wireName: r'kind')
+  String get kind;
 
   @BuiltValueField(wireName: r'note')
   String? get note;
@@ -154,6 +158,11 @@ class _$SettlementViewSerializer implements PrimitiveSerializer<SettlementView> 
     yield r'id';
     yield serializers.serialize(
       object.id,
+      specifiedType: const FullType(String),
+    );
+    yield r'kind';
+    yield serializers.serialize(
+      object.kind,
       specifiedType: const FullType(String),
     );
     if (object.note != null) {
@@ -279,6 +288,13 @@ class _$SettlementViewSerializer implements PrimitiveSerializer<SettlementView> 
             specifiedType: const FullType(String),
           ) as String;
           result.id = valueDes;
+          break;
+        case r'kind':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.kind = valueDes;
           break;
         case r'note':
           final valueDes = serializers.deserialize(

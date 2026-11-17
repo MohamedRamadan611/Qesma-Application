@@ -82,7 +82,7 @@ public class GroupController {
                                            @RequestBody UpdateGroupRequest request) {
         int expected = IfMatch.version(ifMatch);
         try {
-            groups.update(currentUser.id(), gid, expected, request.name(), request.type());
+            groups.update(currentUser.id(), gid, expected, request.name(), request.type(), request.treasurerMemberId());
         } catch (ApiException e) {
             if (e.code() != ErrorCode.VERSION_CONFLICT) {
                 throw e;

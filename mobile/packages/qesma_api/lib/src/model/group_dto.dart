@@ -20,7 +20,9 @@ part 'group_dto.g.dart';
 /// * [members] 
 /// * [muted] 
 /// * [name] 
+/// * [poolBalanceMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
 /// * [totalSpentMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
+/// * [treasurerMemberId] 
 /// * [type] 
 /// * [updatedAt] 
 /// * [version] 
@@ -51,8 +53,15 @@ abstract class GroupDto implements Built<GroupDto, GroupDtoBuilder> {
   String get name;
 
   /// Integer minor units (piasters: 1 EGP = 100). Never a decimal.
+  @BuiltValueField(wireName: r'poolBalanceMinor')
+  int get poolBalanceMinor;
+
+  /// Integer minor units (piasters: 1 EGP = 100). Never a decimal.
   @BuiltValueField(wireName: r'totalSpentMinor')
   int get totalSpentMinor;
+
+  @BuiltValueField(wireName: r'treasurerMemberId')
+  String get treasurerMemberId;
 
   @BuiltValueField(wireName: r'type')
   String get type;
@@ -133,10 +142,20 @@ class _$GroupDtoSerializer implements PrimitiveSerializer<GroupDto> {
       object.name,
       specifiedType: const FullType(String),
     );
+    yield r'poolBalanceMinor';
+    yield serializers.serialize(
+      object.poolBalanceMinor,
+      specifiedType: const FullType(int),
+    );
     yield r'totalSpentMinor';
     yield serializers.serialize(
       object.totalSpentMinor,
       specifiedType: const FullType(int),
+    );
+    yield r'treasurerMemberId';
+    yield serializers.serialize(
+      object.treasurerMemberId,
+      specifiedType: const FullType(String),
     );
     yield r'type';
     yield serializers.serialize(
@@ -241,12 +260,26 @@ class _$GroupDtoSerializer implements PrimitiveSerializer<GroupDto> {
           ) as String;
           result.name = valueDes;
           break;
+        case r'poolBalanceMinor':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(int),
+          ) as int;
+          result.poolBalanceMinor = valueDes;
+          break;
         case r'totalSpentMinor':
           final valueDes = serializers.deserialize(
             value,
             specifiedType: const FullType(int),
           ) as int;
           result.totalSpentMinor = valueDes;
+          break;
+        case r'treasurerMemberId':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.treasurerMemberId = valueDes;
           break;
         case r'type':
           final valueDes = serializers.deserialize(

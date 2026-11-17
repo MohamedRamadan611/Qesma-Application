@@ -18,10 +18,21 @@ import java.util.UUID;
  * @param service              ITEMIZED only; absent = no service charge
  * @param tax                  ITEMIZED only; absent = no tax
  * @param adjustmentMinor      ITEMIZED only; signed, absent = 0
+ * @param category             optional expense category; absent = OTHER
+ * @param paidFromPool         optional; true only when the group has a treasurer who is the single payer (BSA1)
  */
 public record ExpenseCommand(String title, LocalDate expenseDate, String splitType, Long totalMinor,
                              List<PayerInput> payers, List<UUID> participantMemberIds, List<ShareInput> shares,
-                             List<ItemInput> items, ServiceInput service, TaxInput tax, Long adjustmentMinor) {
+                             List<ItemInput> items, ServiceInput service, TaxInput tax, Long adjustmentMinor,
+                             String category, Boolean paidFromPool) {
+
+    /** Without category / paidFromPool (defaults OTHER and false). */
+    public ExpenseCommand(String title, LocalDate expenseDate, String splitType, Long totalMinor,
+                          List<PayerInput> payers, List<UUID> participantMemberIds, List<ShareInput> shares,
+                          List<ItemInput> items, ServiceInput service, TaxInput tax, Long adjustmentMinor) {
+        this(title, expenseDate, splitType, totalMinor, payers, participantMemberIds, shares, items, service, tax,
+                adjustmentMinor, null, null);
+    }
 
     /** EQUAL/EXACT shape (no itemized fields). */
     public ExpenseCommand(String title, LocalDate expenseDate, String splitType, Long totalMinor,

@@ -28,6 +28,7 @@ final class ValidExpense {
     required this.splitType,
     required this.totalMinor,
     required this.payers,
+    required this.category,
     this.participantMemberIds,
     this.shares,
     this.items,
@@ -42,6 +43,7 @@ final class ValidExpense {
   final String splitType;
   final int totalMinor;
   final List<ValidAmount> payers;
+  final String category;
   final List<String>? participantMemberIds;
   final List<ValidAmount>? shares;
   final List<ValidItem>? items;
@@ -62,6 +64,20 @@ abstract final class ExpenseValidator {
   static const int maxBps = 10000;
   static const String minDate = '2000-01-01';
   static const String maxDate = '2100-12-31';
+  static const String defaultCategory = 'OTHER';
+  static const Set<String> categories = {
+    'FOOD', 'TRANSPORT', 'FUEL', 'ACCOMMODATION', 'GROCERIES', 'SHOPPING', 'ENTERTAINMENT', 'BILLS', defaultCategory
+  };
+
+  /// Null or blank = OTHER; anything outside the enum is a validation error (never silently coerced).
+  static String category(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return defaultCategory;
+    final value = raw.trim().toUpperCase();
+    if (!categories.contains(value)) {
+      throw LocalApiException.validation('category must be one of ${categories.toList()..sort()}');
+    }
+    return value;
+  }
 
   /// Create and update require at least one payer; preview passes [requirePayers] false.
   static ValidExpense validate(ExpenseIn c, {bool requirePayers = true}) {
@@ -128,6 +144,7 @@ abstract final class ExpenseValidator {
       splitType: 'EQUAL',
       totalMinor: total,
       payers: payers,
+      category: category(c.category),
       participantMemberIds: participants?.cast<String>().toList(),
     );
   }
@@ -154,6 +171,7 @@ abstract final class ExpenseValidator {
       splitType: 'EXACT',
       totalMinor: total,
       payers: payers,
+      category: category(c.category),
       shares: valid,
     );
   }
@@ -205,6 +223,7 @@ abstract final class ExpenseValidator {
       splitType: 'ITEMIZED',
       totalMinor: total,
       payers: payers,
+      category: category(c.category),
       items: clean,
       serviceBps: serviceBps,
       taxBps: taxBps,

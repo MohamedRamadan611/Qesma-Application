@@ -37,6 +37,13 @@ public class RequestHasher {
         canonical.put("expenseDate", v.expenseDate().toString());
         canonical.put("splitType", v.splitType());
         canonical.put("totalMinor", v.totalMinor());
+        // Only non-defaults are hashed, so a replay of a pre-BSA1 key keeps its hash.
+        if (!ExpenseValidator.DEFAULT_CATEGORY.equals(v.category())) {
+            canonical.put("category", v.category());
+        }
+        if (v.paidFromPool()) {
+            canonical.put("paidFromPool", true);
+        }
         canonical.put("payers", amounts(v.payers().stream()
                 .map(p -> new Entry(p.memberId(), p.amountMinor())).toList()));
         canonical.put("participantMemberIds", v.participantMemberIds() == null ? null

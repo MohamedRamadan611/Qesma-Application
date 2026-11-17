@@ -83,7 +83,7 @@ class ExpensesListController extends Notifier<ExpensesListState> {
   }
 
   Future<ExpensesPage> _fetch(int page, ExpenseFilters f) =>
-      _repo.list(gid, page: page, fromDate: f.from, toDate: f.to, memberId: f.memberId);
+      _repo.list(gid, page: page, fromDate: f.from, toDate: f.to, memberId: f.memberId, category: f.category);
 
   /// First page with the current filters. Shows the skeleton; on failure the error state.
   Future<void> load() async {

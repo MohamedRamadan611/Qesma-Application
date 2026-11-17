@@ -10,9 +10,13 @@ class _$ExpenseCommand extends ExpenseCommand {
   @override
   final int? adjustmentMinor;
   @override
+  final String? category;
+  @override
   final Date expenseDate;
   @override
   final BuiltList<ItemInput>? items;
+  @override
+  final bool? paidFromPool;
   @override
   final BuiltList<String>? participantMemberIds;
   @override
@@ -35,8 +39,10 @@ class _$ExpenseCommand extends ExpenseCommand {
 
   _$ExpenseCommand._(
       {this.adjustmentMinor,
+      this.category,
       required this.expenseDate,
       this.items,
+      this.paidFromPool,
       this.participantMemberIds,
       this.payers,
       this.service,
@@ -58,8 +64,10 @@ class _$ExpenseCommand extends ExpenseCommand {
     if (identical(other, this)) return true;
     return other is ExpenseCommand &&
         adjustmentMinor == other.adjustmentMinor &&
+        category == other.category &&
         expenseDate == other.expenseDate &&
         items == other.items &&
+        paidFromPool == other.paidFromPool &&
         participantMemberIds == other.participantMemberIds &&
         payers == other.payers &&
         service == other.service &&
@@ -74,8 +82,10 @@ class _$ExpenseCommand extends ExpenseCommand {
   int get hashCode {
     var _$hash = 0;
     _$hash = $jc(_$hash, adjustmentMinor.hashCode);
+    _$hash = $jc(_$hash, category.hashCode);
     _$hash = $jc(_$hash, expenseDate.hashCode);
     _$hash = $jc(_$hash, items.hashCode);
+    _$hash = $jc(_$hash, paidFromPool.hashCode);
     _$hash = $jc(_$hash, participantMemberIds.hashCode);
     _$hash = $jc(_$hash, payers.hashCode);
     _$hash = $jc(_$hash, service.hashCode);
@@ -92,8 +102,10 @@ class _$ExpenseCommand extends ExpenseCommand {
   String toString() {
     return (newBuiltValueToStringHelper(r'ExpenseCommand')
           ..add('adjustmentMinor', adjustmentMinor)
+          ..add('category', category)
           ..add('expenseDate', expenseDate)
           ..add('items', items)
+          ..add('paidFromPool', paidFromPool)
           ..add('participantMemberIds', participantMemberIds)
           ..add('payers', payers)
           ..add('service', service)
@@ -115,6 +127,10 @@ class ExpenseCommandBuilder
   set adjustmentMinor(int? adjustmentMinor) =>
       _$this._adjustmentMinor = adjustmentMinor;
 
+  String? _category;
+  String? get category => _$this._category;
+  set category(String? category) => _$this._category = category;
+
   Date? _expenseDate;
   Date? get expenseDate => _$this._expenseDate;
   set expenseDate(Date? expenseDate) => _$this._expenseDate = expenseDate;
@@ -123,6 +139,10 @@ class ExpenseCommandBuilder
   ListBuilder<ItemInput> get items =>
       _$this._items ??= ListBuilder<ItemInput>();
   set items(ListBuilder<ItemInput>? items) => _$this._items = items;
+
+  bool? _paidFromPool;
+  bool? get paidFromPool => _$this._paidFromPool;
+  set paidFromPool(bool? paidFromPool) => _$this._paidFromPool = paidFromPool;
 
   ListBuilder<String>? _participantMemberIds;
   ListBuilder<String> get participantMemberIds =>
@@ -168,8 +188,10 @@ class ExpenseCommandBuilder
     final $v = _$v;
     if ($v != null) {
       _adjustmentMinor = $v.adjustmentMinor;
+      _category = $v.category;
       _expenseDate = $v.expenseDate;
       _items = $v.items?.toBuilder();
+      _paidFromPool = $v.paidFromPool;
       _participantMemberIds = $v.participantMemberIds?.toBuilder();
       _payers = $v.payers?.toBuilder();
       _service = $v.service?.toBuilder();
@@ -202,9 +224,11 @@ class ExpenseCommandBuilder
       _$result = _$v ??
           _$ExpenseCommand._(
             adjustmentMinor: adjustmentMinor,
+            category: category,
             expenseDate: BuiltValueNullFieldError.checkNotNull(
                 expenseDate, r'ExpenseCommand', 'expenseDate'),
             items: _items?.build(),
+            paidFromPool: paidFromPool,
             participantMemberIds: _participantMemberIds?.build(),
             payers: _payers?.build(),
             service: _service?.build(),
@@ -221,6 +245,7 @@ class ExpenseCommandBuilder
       try {
         _$failedField = 'items';
         _items?.build();
+
         _$failedField = 'participantMemberIds';
         _participantMemberIds?.build();
         _$failedField = 'payers';

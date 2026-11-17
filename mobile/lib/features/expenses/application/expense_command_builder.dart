@@ -49,6 +49,7 @@ ExpenseCommand? buildExpenseCommand(
     b
       ..title = title
       ..expenseDate = form.date
+      ..category = form.category
       ..totalMinor = total;
     if (form.splitMode == SplitMode.exact) {
       b.splitType = 'EXACT';
@@ -174,6 +175,7 @@ ExpenseCommand? buildItemizedCommand(
     b
       ..title = title
       ..expenseDate = form.date
+      ..category = form.category
       ..splitType = 'ITEMIZED';
     b.items.addAll([
       for (final item in draft.items)

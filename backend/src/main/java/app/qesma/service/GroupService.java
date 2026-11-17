@@ -12,6 +12,7 @@ import app.qesma.persistence.InviteStore;
 import app.qesma.persistence.JoinRequestStore;
 import app.qesma.persistence.MemberRepository;
 import app.qesma.persistence.NotificationPrefStore;
+import app.qesma.persistence.SettlementRepository;
 import app.qesma.persistence.UserRepository;
 import app.qesma.persistence.YourNetQuery;
 import app.qesma.domain.User;
@@ -47,13 +48,22 @@ public class GroupService {
      * {@code yourRole} is the caller's role (OWNER, ADMIN or MEMBER).
      */
     public record GroupDetail(ExpenseGroup group, List<Member> members, long totalSpentMinor,
-                              java.time.Instant lastExpenseAt, UUID yourMemberId, Long yourNetMinor, String yourRole, boolean muted) {
+                              java.time.Instant lastExpenseAt, UUID yourMemberId, Long yourNetMinor, String yourRole, boolean muted,
+                              Long poolBalanceMinor) {
+
+        /** Without the pool meter (no treasurer). */
+        public GroupDetail(ExpenseGroup group, List<Member> members, long totalSpentMinor,
+                           java.time.Instant lastExpenseAt, UUID yourMemberId, Long yourNetMinor, String yourRole,
+                           boolean muted) {
+            this(group, members, totalSpentMinor, lastExpenseAt, yourMemberId, yourNetMinor, yourRole, muted, null);
+        }
     }
 
     private final GroupAccessService access;
     private final ExpenseGroupRepository groups;
     private final MemberRepository members;
     private final ExpenseRepository expenses;
+    private final SettlementRepository settlements;
     private final UserRepository users;
     private final YourNetQuery yourNet;
     private final NotificationPrefStore prefs;
@@ -64,7 +74,7 @@ public class GroupService {
     private final MeterRegistry metrics;
 
     public GroupService(GroupAccessService access, ExpenseGroupRepository groups, MemberRepository members,
-                        ExpenseRepository expenses, UserRepository users, YourNetQuery yourNet, NotificationPrefStore prefs,
+                        ExpenseRepository expenses, SettlementRepository settlements, UserRepository users, YourNetQuery yourNet, NotificationPrefStore prefs,
                         ObjectProvider<GroupUsageChecker> usage, InviteStore invites, JoinRequestStore joinRequests,
                         Clock clock, MeterRegistry metrics) {
         this.invites = invites;
@@ -73,6 +83,7 @@ public class GroupService {
         this.groups = groups;
         this.members = members;
         this.expenses = expenses;
+        this.settlements = settlements;
         this.users = users;
         this.yourNet = yourNet;
         this.prefs = prefs;
@@ -114,7 +125,8 @@ public class GroupService {
         YourNetQuery.YourTotals mine = yourNet.forGroups(userId, List.of(groupId)).get(groupId);
         return new GroupDetail(ctx.group(), access.listMembers(ctx), totals.totalSpentMinor(),
                 totals.lastExpenseAt(), ctx.me().getId(), netOf(mine), ctx.role().name(),
-                prefs.isGroupMuted(userId, groupId));
+                prefs.isGroupMuted(userId, groupId),
+                ctx.group().getTreasurerMemberId() == null ? null : settlements.poolBalanceMinor(groupId));
     }
 
     /**
@@ -123,19 +135,44 @@ public class GroupService {
      * Ownership (404) is decided before anything about versions or input is revealed.
      */
     @Transactional
-    public ExpenseGroup update(UUID userId, UUID groupId, int expectedVersion, String rawName, String rawType) {
-        ExpenseGroup group = access.require(userId, groupId, Permission.EDIT_GROUP).group();
+    public ExpenseGroup update(UUID userId, UUID groupId, int expectedVersion, String rawName, String rawType,
+                               UUID treasurerMemberId) {
+        // Row lock: deposits and pool expenses take the same lock, so the pool-untouched check below cannot race them.
+        ExpenseGroup group = access.requireForUpdate(userId, groupId, Permission.EDIT_GROUP).group();
         if (group.getVersion() != expectedVersion) {
             throw ApiException.conflict(ErrorCode.VERSION_CONFLICT, "The group was modified by someone else");
         }
         String name = rawName == null ? group.getName() : FieldRules.name(rawName, FieldRules.GROUP_NAME_MAX, "name");
         String type = rawType == null ? group.getType() : FieldRules.groupType(rawType);
-        if (!name.equals(group.getName()) || !type.equals(group.getType())) {
+        boolean treasurerChanges = treasurerMemberId != null && !treasurerMemberId.equals(group.getTreasurerMemberId());
+        if (treasurerChanges) {
+            requireTreasurerChange(group, treasurerMemberId);
+        }
+        if (!name.equals(group.getName()) || !type.equals(group.getType()) || treasurerChanges) {
             group.edit(name, type, clock.instant());
+            if (treasurerChanges) {
+                group.setTreasurer(treasurerMemberId, clock.instant());
+            }
             group = groups.saveAndFlush(group); // flush now so the new version is known and a lost race throws here
             record("updated", userId, groupId);
         }
         return group;
+    }
+
+    /**
+     * BSA1 (A137): the treasurer is an ACTIVE member of this group, and can change only while no pool deposit and no
+     * pool expense exists, counting cancelled and soft-deleted rows. Setting the first treasurer is always allowed.
+     */
+    private void requireTreasurerChange(ExpenseGroup group, UUID memberId) {
+        Member m = members.findByIdAndGroupId(memberId, group.getId()).orElseThrow(
+                () -> ApiException.validation("treasurerMemberId must be a member of this group"));
+        if (!"ACTIVE".equals(m.getStatus())) {
+            throw ApiException.validation("The treasurer must be an active member");
+        }
+        if (settlements.existsPoolDeposit(group.getId()) || expenses.existsPoolExpense(group.getId())) {
+            throw ApiException.conflict(ErrorCode.INVALID_STATE_TRANSITION,
+                    "The treasurer cannot change once the pool has deposits or expenses");
+        }
     }
 
     /** Deletes a group that holds no ledger data, together with its (ledger-free) members. */

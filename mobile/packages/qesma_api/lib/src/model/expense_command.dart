@@ -19,8 +19,10 @@ part 'expense_command.g.dart';
 ///
 /// Properties:
 /// * [adjustmentMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
+/// * [category] 
 /// * [expenseDate] 
 /// * [items] 
+/// * [paidFromPool] 
 /// * [participantMemberIds] 
 /// * [payers] 
 /// * [service] 
@@ -35,11 +37,17 @@ abstract class ExpenseCommand implements Built<ExpenseCommand, ExpenseCommandBui
   @BuiltValueField(wireName: r'adjustmentMinor')
   int? get adjustmentMinor;
 
+  @BuiltValueField(wireName: r'category')
+  String? get category;
+
   @BuiltValueField(wireName: r'expenseDate')
   Date get expenseDate;
 
   @BuiltValueField(wireName: r'items')
   BuiltList<ItemInput>? get items;
+
+  @BuiltValueField(wireName: r'paidFromPool')
+  bool? get paidFromPool;
 
   @BuiltValueField(wireName: r'participantMemberIds')
   BuiltList<String>? get participantMemberIds;
@@ -96,6 +104,13 @@ class _$ExpenseCommandSerializer implements PrimitiveSerializer<ExpenseCommand> 
         specifiedType: const FullType(int),
       );
     }
+    if (object.category != null) {
+      yield r'category';
+      yield serializers.serialize(
+        object.category,
+        specifiedType: const FullType(String),
+      );
+    }
     yield r'expenseDate';
     yield serializers.serialize(
       object.expenseDate,
@@ -106,6 +121,13 @@ class _$ExpenseCommandSerializer implements PrimitiveSerializer<ExpenseCommand> 
       yield serializers.serialize(
         object.items,
         specifiedType: const FullType(BuiltList, [FullType(ItemInput)]),
+      );
+    }
+    if (object.paidFromPool != null) {
+      yield r'paidFromPool';
+      yield serializers.serialize(
+        object.paidFromPool,
+        specifiedType: const FullType(bool),
       );
     }
     if (object.participantMemberIds != null) {
@@ -190,6 +212,13 @@ class _$ExpenseCommandSerializer implements PrimitiveSerializer<ExpenseCommand> 
           ) as int;
           result.adjustmentMinor = valueDes;
           break;
+        case r'category':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.category = valueDes;
+          break;
         case r'expenseDate':
           final valueDes = serializers.deserialize(
             value,
@@ -203,6 +232,13 @@ class _$ExpenseCommandSerializer implements PrimitiveSerializer<ExpenseCommand> 
             specifiedType: const FullType(BuiltList, [FullType(ItemInput)]),
           ) as BuiltList<ItemInput>;
           result.items.replace(valueDes);
+          break;
+        case r'paidFromPool':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(bool),
+          ) as bool;
+          result.paidFromPool = valueDes;
           break;
         case r'participantMemberIds':
           final valueDes = serializers.deserialize(

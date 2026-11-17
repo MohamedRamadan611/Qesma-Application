@@ -18,6 +18,7 @@ import '../application/expense_detail_controller.dart';
 import '../application/expense_form_controller.dart';
 import '../application/expense_form_state.dart';
 import '../application/expense_preview_controller.dart';
+import 'category_picker.dart';
 import 'itemized_editor.dart';
 import 'expense_ui.dart';
 import 'payers_sheet.dart';
@@ -275,6 +276,11 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                   icon: Icons.calendar_today_outlined,
                   variant: AppButtonVariant.secondary,
                   onPressed: () => _pickDate(form),
+                ),
+                const SizedBox(height: QesmaSpacing.md),
+                CategoryPicker(
+                  selectedCategory: form.category,
+                  onChanged: _controller.setCategory,
                 ),
               ],
             ),

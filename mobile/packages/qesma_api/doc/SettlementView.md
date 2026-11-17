@@ -18,6 +18,7 @@ Name | Type | Description | Notes
 **fromMemberId** | **String** |  | 
 **groupId** | **String** |  | 
 **id** | **String** |  | 
+**kind** | **String** |  | 
 **note** | **String** |  | [optional] 
 **recordedByAdmin** | **bool** |  | 
 **settledOn** | [**Date**](Date.md) |  | 

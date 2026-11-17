@@ -133,6 +133,7 @@ final class LocalRouter {
           fromDate: _dateParam(r, 'fromDate'),
           toDate: _dateParam(r, 'toDate'),
           memberId: _uuidParam(r, 'memberId'),
+          category: _single(r, 'category'),
         );
         return _ok(PageResponseExpenseView.serializer, page);
       }),

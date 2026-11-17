@@ -11,7 +11,16 @@ import java.util.UUID;
  */
 public record ExpenseView(UUID id, UUID groupId, String title, String splitType, long totalMinor,
                           LocalDate expenseDate, List<PayerView> payers, List<ShareView> shares,
-                          Instant createdAt, int version, List<ItemView> items, Charges charges) {
+                          Instant createdAt, int version, List<ItemView> items, Charges charges,
+                          String category, boolean paidFromPool) {
+
+    /** Without category / pool flag (OTHER, false). */
+    public ExpenseView(UUID id, UUID groupId, String title, String splitType, long totalMinor,
+                       LocalDate expenseDate, List<PayerView> payers, List<ShareView> shares,
+                       Instant createdAt, int version, List<ItemView> items, Charges charges) {
+        this(id, groupId, title, splitType, totalMinor, expenseDate, payers, shares, createdAt, version, items,
+                charges, "OTHER", false);
+    }
 
     /** EQUAL/EXACT shape. */
     public ExpenseView(UUID id, UUID groupId, String title, String splitType, long totalMinor,

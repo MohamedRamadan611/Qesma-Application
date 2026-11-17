@@ -29,7 +29,7 @@ class ExpensesRepository {
   }
 
   /// Newest first (the server sorts by `expenseDate desc, createdAt desc`).
-  Future<ExpensesPage> list(String gid, {int page = 0, Date? fromDate, Date? toDate, String? memberId}) => _run(() async {
+  Future<ExpensesPage> list(String gid, {int page = 0, Date? fromDate, Date? toDate, String? memberId, String? category}) => _run(() async {
         final response = await _api.getExpenseControllerApi().listExpenses(
               gid: gid,
               page: page,
@@ -37,6 +37,7 @@ class ExpensesRepository {
               fromDate: fromDate,
               toDate: toDate,
               memberId: memberId,
+              category: category,
             );
         final body = response.data;
         if (body == null) throw const ApiUnexpected();
