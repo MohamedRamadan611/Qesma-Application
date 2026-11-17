@@ -1,5 +1,8 @@
 import 'package:flutter/foundation.dart';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../app_mode.dart';
 import 'dev_settings.dart';
 
 /// Where the backend lives. The generated client already includes `/api/v1` in every
@@ -10,6 +13,11 @@ import 'dev_settings.dart';
 /// Release builds must be given an https URL; there is deliberately no default.
 abstract final class ApiConfig {
   static const String _definedBaseUrl = String.fromEnvironment('API_BASE_URL');
+
+  /// Origin placeholder for local mode; the request never leaves the process.
+  static const String localOrigin = 'http://qesma.local';
+
+  static String baseUrlFor(AppMode mode) => mode == AppMode.local ? localOrigin : baseUrl;
 
   static String get baseUrl => resolveBaseUrl(
         defined: _definedBaseUrl,
@@ -34,3 +42,7 @@ abstract final class ApiConfig {
     return chosen.endsWith('/') ? chosen.substring(0, chosen.length - 1) : chosen;
   }
 }
+
+/// The origin the Dio clients are built with. Local mode never dials it (the in-process `LocalBackend` answers every
+/// request), so `API_BASE_URL` is required in server mode only.
+final apiBaseUrlProvider = Provider<String>((ref) => ApiConfig.baseUrlFor(ref.watch(appModeProvider)));

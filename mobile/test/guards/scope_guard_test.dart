@@ -16,6 +16,7 @@ const enabledFeatures = <String>{
   'settlements', // FL13: two-sided settlement (dispute, pending, confirm)
   'handles', // FL14: payment details screen (InstaPay address, wallet number)
   'reminders', // FL14: Remind button on a transfer
+  'backup', // SA5: export / restore the local data, reminder banner
 };
 
 /// Words, Arabic words, phrases, icons and routes of one Phase 2 feature.
@@ -46,6 +47,11 @@ const phase2Features = <String, Phase2Feature>{
     routes: ["'/notifications", "'/activity"],
   ),
   'accountDeletion': Phase2Feature(phrases: ['delete account', 'delete my account']),
+  // Standalone features (STANDALONE_SPEC 15): each prompt enables its key together with its screens.
+  'backup': Phase2Feature(
+    words: ['export', 'import', 'backup', 'restore'],
+    icons: ['Icons.download', 'Icons.upload', 'Icons.file_download'],
+  ),
 };
 
 /// Omitted for good (not Phase 2): never enabled.
@@ -53,7 +59,6 @@ const _permanentWords = <String, String>{
   'guest': 'guest mode (SCREEN_MAP: no guest mode)',
   'receipt': 'receipt photo / scan (omitted)',
   'scan': 'scan the receipt (omitted)',
-  'export': 'export (out of scope)',
   'contacts': 'add from contacts (no contacts access)',
   'coupon': 'not a concept of the app',
   'premium': 'not a concept of the app',
@@ -64,7 +69,6 @@ const _permanentPhrases = <String>['coming soon', 'sign out everywhere', 'monthl
 const _permanentArabic = <String>['ضيف', 'قريبا', 'قريباً', 'إيصال'];
 const _permanentIcons = <String>[
   'Icons.camera', 'Icons.photo', 'Icons.qr_code', 'Icons.document_scanner', 'Icons.receipt', 'Icons.contacts',
-  'Icons.download', 'Icons.upload', 'Icons.file_download',
 ];
 const _permanentRoutes = <String>["'/guest"];
 
@@ -187,6 +191,14 @@ void main() {
       expect(copyViolations({'ar': <String, dynamic>{'k': 'قريبا'}}, all), isNotEmpty);
       expect(sourceViolations({'lib/c.dart': 'Icon(Icons.camera, size: 8)'}, all), isNotEmpty);
       expect(sourceViolations({'lib/d.dart': "go('/guest')"}, all), isNotEmpty);
+    });
+
+    test('backup words and icons are caught until the backup key is enabled (SA5)', () {
+      expect(copyViolations({'en': <String, dynamic>{'k': 'Export backup'}}, const {}), isNotEmpty);
+      expect(copyViolations({'en': <String, dynamic>{'k': 'Restore from backup'}}, const {}), isNotEmpty);
+      expect(sourceViolations({'lib/e.dart': 'Icon(Icons.download)'}, const {}), isNotEmpty);
+      expect(copyViolations({'en': <String, dynamic>{'k': 'Export backup'}}, const {'backup'}), isEmpty);
+      expect(sourceViolations({'lib/e.dart': 'Icon(Icons.download)'}, const {'backup'}), isEmpty);
     });
 
     test('whole words only: the Arabic "adds" is not "guest"', () {

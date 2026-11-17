@@ -5,6 +5,7 @@ import 'package:qesma_api/qesma_api.dart';
 
 import '../../../core/errors/api_problem.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
+import '../../../core/features_for_mode.dart';
 import '../../../core/permissions/group_role.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/palette.dart';
@@ -35,6 +36,7 @@ class MembersTab extends ConsumerWidget {
     final busy = ref.watch(groupDetailControllerProvider(group.id)).busy;
     final members = group.members.toList()..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
     final permissions = ref.watch(groupPermissionsProvider(group.id));
+    final showRoles = ref.watch(modeFeaturesProvider).roleChips;
     final canManage = permissions.canManageMembers;
     final canInvite = permissions.canManageInvites;
     final pendingRequests = permissions.canApproveJoins ? ref.watch(joinRequestsControllerProvider(group.id)).items.length : 0;
@@ -88,6 +90,7 @@ class MembersTab extends ConsumerWidget {
               return _MemberRow(
                 member: member,
                 busy: busy,
+                showRoles: showRoles,
                 onOptions: actions.isEmpty ? null : () => _options(context, ref, member, actions),
               );
             }),
@@ -149,11 +152,14 @@ class _JoinRequestsBanner extends StatelessWidget {
 }
 
 class _MemberRow extends StatelessWidget {
-  const _MemberRow({required this.member, required this.busy, required this.onOptions});
+  const _MemberRow({required this.member, required this.busy, required this.onOptions, required this.showRoles});
 
   final MemberDto member;
   final bool busy;
   final VoidCallback? onOptions;
+
+  /// Role tags and the connected / name-only badge: server mode only (one person and ghosts locally).
+  final bool showRoles;
 
   @override
   Widget build(BuildContext context) {
@@ -183,12 +189,13 @@ class _MemberRow extends StatelessWidget {
                 spacing: QesmaSpacing.xs,
                 runSpacing: QesmaSpacing.xs,
                 children: [
-                  if (role == GroupRole.owner) AppTag(label: l10n.membersRoleOwner, tone: AppTagTone.primary, icon: Icons.workspace_premium_outlined),
-                  if (role == GroupRole.admin) AppTag(label: l10n.membersRoleAdmin, tone: AppTagTone.info, icon: Icons.verified_user_outlined),
-                  if (member.hasAccount)
-                    AppTag(label: l10n.membersBadgeConnected, tone: AppTagTone.success, icon: Icons.link)
-                  else
-                    AppTag(label: l10n.membersBadgeNameOnly, icon: Icons.person_outline),
+                  if (showRoles && role == GroupRole.owner) AppTag(label: l10n.membersRoleOwner, tone: AppTagTone.primary, icon: Icons.workspace_premium_outlined),
+                  if (showRoles && role == GroupRole.admin) AppTag(label: l10n.membersRoleAdmin, tone: AppTagTone.info, icon: Icons.verified_user_outlined),
+                  if (showRoles)
+                    if (member.hasAccount)
+                      AppTag(label: l10n.membersBadgeConnected, tone: AppTagTone.success, icon: Icons.link)
+                    else
+                      AppTag(label: l10n.membersBadgeNameOnly, icon: Icons.person_outline),
                   if (left) AppTag(label: l10n.membersLeftChip, tone: AppTagTone.warning, icon: Icons.logout),
                 ],
               ),

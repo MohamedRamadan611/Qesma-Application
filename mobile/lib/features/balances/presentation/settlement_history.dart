@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qesma_api/qesma_api.dart';
 
 import '../../../core/errors/error_copy.dart';
+import '../../../core/features_for_mode.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/theme/qesma_text.dart';
 import '../../../core/theme/tokens.dart';
@@ -144,7 +146,12 @@ class _PaymentRow extends StatelessWidget {
                         style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper),
                       ),
                       const SizedBox(height: QesmaSpacing.xs),
-                      SettlementStatusChip(status),
+                      // Local mode has no review step: a payment is simply recorded; only "cancelled" needs a mark.
+                      Consumer(
+                        builder: (context, ref, _) => ref.watch(modeFeaturesProvider).settlementReview || status == SettlementStatus.cancelled
+                            ? SettlementStatusChip(status)
+                            : const SizedBox.shrink(),
+                      ),
                     ],
                   ),
                 ),

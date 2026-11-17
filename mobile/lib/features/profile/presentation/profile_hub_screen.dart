@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/app_info.dart';
+import '../../../core/features_for_mode.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/l10n/locale_controller.dart';
 import '../../../core/theme/theme_mode_controller.dart';
@@ -14,6 +15,7 @@ import '../../auth/application/auth_state.dart';
 import '../../auth/presentation/auth_widgets.dart';
 import '../../expenses/presentation/expense_ui.dart';
 import '../../groups/application/groups_list_controller.dart';
+import '../../backup/presentation/backup_section.dart';
 import 'appearance_sheet.dart';
 import 'language_sheet.dart';
 import 'profile_rows.dart';
@@ -46,6 +48,7 @@ class ProfileHubScreen extends ConsumerWidget {
     final auth = ref.watch(authControllerProvider);
     final locale = ref.watch(localeProvider);
     final themeMode = ref.watch(themeModeProvider);
+    final features = ref.watch(modeFeaturesProvider);
     final groups = ref.watch(groupsListControllerProvider);
     final open = ref.read(urlOpenerProvider);
     final user = auth is AuthSignedIn ? auth.user : null;
@@ -76,9 +79,10 @@ class ProfileHubScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Semantics(header: true, child: Text(name, style: theme.textTheme.headlineMedium)),
-                          if (user?.username != null) Text(ltrIsolate('@${user!.username}'), style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
-                          if (email != null) Text(email, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
-                          Text(user?.hasPassword ?? false ? l10n.accountSignedInWithPassword : l10n.accountGoogleTitle, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper)),
+                          if (features.signIn && user?.username != null) Text(ltrIsolate('@${user!.username}'), style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
+                          if (features.signIn && email != null) Text(email, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
+                          if (features.signIn)
+                            Text(user?.hasPassword ?? false ? l10n.accountSignedInWithPassword : l10n.accountGoogleTitle, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper)),
                         ],
                       ),
                     ),
@@ -128,11 +132,15 @@ class ProfileHubScreen extends ConsumerWidget {
                 value: appearanceLabel(l10n, themeMode),
                 onTap: () => showAppearanceSheet(context),
               ),
-              if (user?.hasPassword ?? false)
+              if (features.changePassword && (user?.hasPassword ?? false))
                 ProfileRow(icon: Icons.password_outlined, title: l10n.profileChangePassword, onTap: () => context.push(Routes.changePassword)),
-              ProfileRow(icon: Icons.manage_accounts_outlined, title: l10n.profileAccountSettings, onTap: () => context.push(Routes.accountSettings)),
+              if (features.accountSettings) ProfileRow(icon: Icons.manage_accounts_outlined, title: l10n.profileAccountSettings, onTap: () => context.push(Routes.accountSettings)),
             ],
           ),
+          if (features.backup) ...[
+            const SizedBox(height: QesmaSpacing.lg),
+            const BackupSection(),
+          ],
           const SizedBox(height: QesmaSpacing.lg),
           ProfileSection(
             title: l10n.profileSectionAbout,
@@ -142,8 +150,10 @@ class ProfileHubScreen extends ConsumerWidget {
               ProfileRow(icon: Icons.info_outline, title: l10n.profileVersion, value: ltrIsolate(AppInfo.display)),
             ],
           ),
-          const SizedBox(height: QesmaSpacing.lg),
-          AppButton(label: l10n.homeSignOut, icon: Icons.logout, variant: AppButtonVariant.destructive, onPressed: () => confirmSignOut(context, ref)),
+          if (features.signOut) ...[
+            const SizedBox(height: QesmaSpacing.lg),
+            AppButton(label: l10n.homeSignOut, icon: Icons.logout, variant: AppButtonVariant.destructive, onPressed: () => confirmSignOut(context, ref)),
+          ],
         ],
       ),
     );

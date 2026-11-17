@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/error_copy.dart';
+import '../../../core/features_for_mode.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
@@ -58,7 +59,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final state = ref.watch(updateProfileControllerProvider);
     final form = state.form;
     final auth = ref.watch(authControllerProvider);
-    final email = auth is AuthSignedIn ? auth.user.email : null;
+    final email = ref.watch(modeFeaturesProvider).signIn && auth is AuthSignedIn ? auth.user.email : null;
     final error = switch (form.error) {
       NameError.empty => _touched ? l10n.profileNameRequired : null,
       NameError.tooLong => l10n.profileNameTooLong,

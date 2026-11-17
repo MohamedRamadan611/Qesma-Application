@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/features_for_mode.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/tokens.dart';
@@ -74,12 +76,22 @@ class WelcomeScreen extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  AppButton(
-                    label: l10n.welcomeStart,
-                    icon: Icons.arrow_forward,
-                    onPressed: () => context.go(
-                      safeFrom == null ? Routes.signIn : Uri(path: Routes.signIn, queryParameters: {'from': safeFrom}).toString(),
-                    ),
+                  Consumer(
+                    builder: (context, ref, _) {
+                      // Local mode has no sign-in: the start button leads to "what's your name?".
+                      final signIn = ref.watch(modeFeaturesProvider).signIn;
+                      return AppButton(
+                        label: l10n.welcomeStart,
+                        icon: Icons.arrow_forward,
+                        onPressed: () => context.go(
+                          !signIn
+                              ? Routes.welcomeName
+                              : safeFrom == null
+                                  ? Routes.signIn
+                                  : Uri(path: Routes.signIn, queryParameters: {'from': safeFrom}).toString(),
+                        ),
+                      );
+                    },
                   ),
                   const SizedBox(height: QesmaSpacing.xs),
                   const ConsentFooter(),

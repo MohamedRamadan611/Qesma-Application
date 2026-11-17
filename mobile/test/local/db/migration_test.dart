@@ -6,8 +6,7 @@ import 'generated/schema.dart';
 
 /// Forward-only migrations (STANDALONE_SPEC 5.4). Exported snapshots live in `drift_schemas/local/`; the
 /// helpers in `generated/` come from `dart run drift_dev schema generate drift_schemas/local/ test/local/db/generated/`.
-/// Schema 1 is the first shipped version, so today this proves the snapshot equals the code; every later
-/// version (SA6, SA10) adds a `from N-1 to N` case with data.
+/// Every version adds a `from N-1 to N` case with data (SA5: 1 -> 2 adds the backup-reminder snooze).
 void main() {
   late SchemaVerifier verifier;
 
@@ -26,5 +25,19 @@ void main() {
       await verifier.migrateAndValidate(db, db.schemaVersion);
       await db.close();
     }
+  });
+
+  test('v1 -> v2 keeps the existing data and adds the nullable backup-reminder snooze (SA5)', () async {
+    final schema = await verifier.schemaAt(1);
+    schema.rawDatabase.execute('INSERT INTO local_meta (id, created_schema_version, created_at, last_export_at, last_export_format_version) VALUES (1, 1, 1000, 2000, 1)');
+    schema.rawDatabase.execute("INSERT INTO local_profile (id, display_name, created_at, updated_at) VALUES ('00000000-0000-4000-8000-000000000001', 'Mona', 1, 1)");
+    final db = LocalDatabase(schema.newConnection());
+    await verifier.migrateAndValidate(db, 2);
+    final meta = await db.metaDao.get();
+    expect((meta.createdSchemaVersion, meta.createdAt, meta.lastExportAt, meta.backupReminderSnoozedUntil), (1, 1000, 2000, null));
+    expect((await db.profileDao.find())!.displayName, 'Mona');
+    await db.metaDao.snoozeBackupReminder(5);
+    expect((await db.metaDao.get()).backupReminderSnoozedUntil, 5);
+    await db.close();
   });
 }

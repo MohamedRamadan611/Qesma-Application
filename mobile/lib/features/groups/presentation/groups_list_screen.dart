@@ -4,11 +4,13 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/api_failure.dart';
 import '../../../core/errors/error_copy.dart';
+import '../../../core/features_for_mode.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../application/groups_list_controller.dart';
+import '../../backup/presentation/backup_banner.dart';
 import 'group_card.dart';
 import '../../../core/theme/palette.dart';
 
@@ -57,6 +59,7 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
     final l10n = AppLocalizations.of(context);
     final state = ref.watch(groupsListControllerProvider);
     final controller = ref.read(groupsListControllerProvider.notifier);
+    final joinByCode = ref.watch(modeFeaturesProvider).joinByCode;
 
     Widget body;
     switch (state.status) {
@@ -92,6 +95,7 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
                             ),
                           ),
                           // Somebody who was sent an invite code starts here.
+                          if (joinByCode)
                           Padding(
                             padding: const EdgeInsetsDirectional.fromSTEB(QesmaSpacing.margin, 0, QesmaSpacing.margin, QesmaSpacing.lg),
                             child: AppButton(
@@ -115,7 +119,12 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
                   itemCount: state.items.length + 1 + (state.loadingMore ? 1 : 0),
                   separatorBuilder: (_, _) => const SizedBox(height: QesmaSpacing.md - 4),
                   itemBuilder: (context, index) {
-                    if (index == 0) return _NetHeader(totalMinor: state.netTotalMinor);
+                    if (index == 0) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [const BackupBanner(), _NetHeader(totalMinor: state.netTotalMinor)],
+                      );
+                    }
                     if (index > state.items.length) {
                       return const Padding(
                         padding: EdgeInsets.all(QesmaSpacing.md),
@@ -133,11 +142,12 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
       title: l10n.groupsTitle,
       showBack: false,
       actions: [
-        IconButton(
-          icon: const Icon(Icons.group_add),
-          tooltip: l10n.inviteEnterCodeButton,
-          onPressed: () => context.push(Routes.join),
-        ),
+        if (joinByCode)
+          IconButton(
+            icon: const Icon(Icons.group_add),
+            tooltip: l10n.inviteEnterCodeButton,
+            onPressed: () => context.push(Routes.join),
+          ),
       ],
       floatingActionButton: state.status == GroupsStatus.ready && state.items.isNotEmpty
           ? FloatingActionButton.extended(

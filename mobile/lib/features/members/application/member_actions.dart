@@ -27,8 +27,8 @@ Set<MemberAction> memberActionsFor({required Permissions viewer, required Member
     if (viewer.canChangeRoles && !left && !self && linked && role == GroupRole.member) MemberAction.promote,
     if (viewer.canChangeRoles && !left && !self && role == GroupRole.admin) MemberAction.demote,
     if (viewer.canUnlinkMember && !left && !self && linked && !targetIsOwner && mayActOnTarget) MemberAction.unlink,
-    if (!left && !self && !targetIsOwner && mayActOnTarget) MemberAction.markLeft,
-    if (left) MemberAction.reactivate,
+    if (viewer.canChangeMemberStatus && !left && !self && !targetIsOwner && mayActOnTarget) MemberAction.markLeft,
+    if (viewer.canChangeMemberStatus && left) MemberAction.reactivate,
     if (viewer.canTransferOwnership && !left && !self && linked) MemberAction.transferOwnership,
   };
 }

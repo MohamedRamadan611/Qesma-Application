@@ -66,7 +66,8 @@ Without a server the phone holds the only copy, so backup is a **launch requirem
 1. **Export:** `qesma-backup-v1.json` with `formatVersion`, `schemaVersion`, `exportedAt`, app version and every table needed to rebuild the ledger (groups, members, expenses with children, revisions, settlements, profile, own handles). Ids are preserved; idempotency keys are not exported. The file contains names and amounts; the share text says so.
 2. **Import:** replace-all after an explicit confirmation (merge is out of scope). Validation **before** anything is written: format/schema version, referential integrity, limits, and a **recompute check**: balances recomputed by the engine sum to 0 and each expense's shares sum to its total. One transaction; on any failure nothing changes. A newer `formatVersion` is refused with a clear message.
 3. **Android auto-backup** includes the drift database file and excludes caches and secure storage. This **replaces** the FL2 `android:allowBackup="false"` rule (A128); SA5 changes the manifest, the guard and the ADR-006 addendum together.
-4. A dismissible reminder banner after N new expenses or N days since the last export (SA5 chooses N).
+4. A dismissible reminder banner after 10 new expenses or 14 days since the last export (SA5, A165); dismiss snoozes it 7 days.
+5. SA5 details: file format and limits A162, import A163, auto-backup and WAL A164, reminder and schema 2 A165. Profile hub (local mode): "Export backup" (confirm, then the share sheet) and "Restore from backup" (file picker, validation, counts and a destructive confirm); the export share text and the privacy policy say the file contains names and amounts.
 
 ## 7. Categories
 

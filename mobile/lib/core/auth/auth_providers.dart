@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qesma_api/qesma_api.dart';
 
+import '../api/api_config.dart';
 import '../api/connectivity.dart';
 import '../api/dio_factory.dart';
 import '../api/forbidden_events.dart';
@@ -23,6 +24,7 @@ final googleIdTokenSourceProvider = Provider<GoogleIdTokenSource>((ref) => PlayG
 /// Dio WITHOUT the auth interceptor: used for `/auth/*` only, so the refresh request can
 /// never recurse into the interceptor and never carries a bearer token.
 final authlessDioProvider = Provider<Dio>((ref) => createDio(
+      baseUrl: ref.watch(apiBaseUrlProvider),
       adapter: ref.watch(httpAdapterProvider),
       interceptors: [ConnectivityInterceptor((online) => ref.read(connectivityProvider.notifier).report(online: online)), RequestLogInterceptor()],
     ));
@@ -47,7 +49,7 @@ final sessionManagerProvider = Provider<SessionManager>((ref) {
 
 /// The Dio every feature uses: bearer token, 401 handling, request log.
 final apiDioProvider = Provider<Dio>((ref) {
-  final dio = createDio(adapter: ref.watch(httpAdapterProvider));
+  final dio = createDio(baseUrl: ref.watch(apiBaseUrlProvider), adapter: ref.watch(httpAdapterProvider));
   dio.interceptors.addAll([
     ConnectivityInterceptor((online) => ref.read(connectivityProvider.notifier).report(online: online)),
     AuthInterceptor(session: ref.watch(sessionManagerProvider), dio: dio),

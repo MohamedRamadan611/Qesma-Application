@@ -2339,4 +2339,100 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get remindRetry => 'معرفناش نبعت التذكير. جرّب تاني.';
+
+  @override
+  String get onboardingNameTitle => 'اسمك إيه؟';
+
+  @override
+  String get onboardingNameHelper =>
+      'الاسم ده هيظهر في مجموعاتك. تقدر تغيّره بعدين.';
+
+  @override
+  String get onboardingContinue => 'كمّل';
+
+  @override
+  String get backupSectionTitle => 'النسخة الاحتياطية';
+
+  @override
+  String get backupExportTitle => 'احفظ نسخة احتياطية';
+
+  @override
+  String get backupExportBody =>
+      'هنجهّز ملف فيه كل مجموعاتك ومصاريفك بالأسماء والمبالغ. احتفظ بيه في مكان آمن وماتبعتوش غير لحد بتثق فيه.';
+
+  @override
+  String get backupExportConfirm => 'جهّز الملف';
+
+  @override
+  String get backupShareText =>
+      'نسخة قسمة الاحتياطية. الملف فيه أسماء ومبالغ، فاحتفظ بيه في مكان آمن وماتبعتوش غير لحد بتثق فيه.';
+
+  @override
+  String get backupExportDone => 'النسخة الاحتياطية اتجهزت.';
+
+  @override
+  String get backupExportFailed =>
+      'معرفناش نجهّز النسخة الاحتياطية. جرّب تاني.';
+
+  @override
+  String get backupRestoreTitle => 'استرجع من نسخة احتياطية';
+
+  @override
+  String backupLastExport(String date) {
+    return 'آخر نسخة: $date';
+  }
+
+  @override
+  String get backupNeverExported => 'لسه ماعملتش نسخة';
+
+  @override
+  String get backupRestoreConfirmTitle => 'نسترجع النسخة دي؟';
+
+  @override
+  String backupRestoreConfirmBody(String groups, String expenses, String date) {
+    return 'النسخة فيها $groups مجموعة و$expenses مصروف (اتعملت $date). هنمسح كل البيانات اللي على التليفون دلوقتي ونحط بياناتها مكانها. مينفعش نرجّع اللي اتمسح.';
+  }
+
+  @override
+  String get backupRestoreConfirm => 'استرجع وامسح الحالي';
+
+  @override
+  String get backupRestoreDone => 'البيانات اتسترجعت.';
+
+  @override
+  String get backupErrorUnreadable =>
+      'الملف ده مش نسخة احتياطية من قسمة، أو باظ. بياناتك زي ما هي.';
+
+  @override
+  String get backupErrorTooLarge =>
+      'الملف كبير أوي ومينفعش نفتحه. بياناتك زي ما هي.';
+
+  @override
+  String get backupErrorNewer =>
+      'النسخة دي اتعملت بإصدار أحدث من قسمة. حدّث التطبيق وجرّب تاني. بياناتك زي ما هي.';
+
+  @override
+  String get backupErrorInvalid =>
+      'الملف ناقص أو فيه بيانات غلط. بياناتك زي ما هي.';
+
+  @override
+  String get backupErrorInconsistent =>
+      'حسابات الملف مش مظبوطة، فمرجّعناش حاجة. بياناتك زي ما هي.';
+
+  @override
+  String get backupErrorFailed =>
+      'حصلت مشكلة وإحنا بنسترجع، ومحدش اتغيّر. بياناتك زي ما هي.';
+
+  @override
+  String get backupBannerTitle => 'احفظ نسخة احتياطية';
+
+  @override
+  String get backupBannerBody =>
+      'التليفون ده هو النسخة الوحيدة من بياناتك. احفظ نسخة دلوقتي عشان ماتضيعش.';
+
+  @override
+  String get backupBannerAction => 'احفظ نسخة';
+
+  @override
+  String get backupBannerDismiss => 'تجاهل';
 }

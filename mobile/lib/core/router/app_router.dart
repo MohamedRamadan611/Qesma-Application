@@ -8,6 +8,7 @@ import '../../features/auth/application/auth_state.dart';
 import '../../features/auth/presentation/change_password_screen.dart';
 import '../../features/auth/presentation/username_auth_screens.dart';
 import '../../features/auth/presentation/sign_in_screen.dart';
+import '../../features/auth/presentation/local_name_screen.dart';
 import '../../features/auth/presentation/splash_screen.dart';
 import '../../features/auth/presentation/welcome_screen.dart';
 import '../../features/balances/presentation/settlement_detail_screen.dart';
@@ -26,6 +27,8 @@ import '../../features/profile/presentation/account_settings_screen.dart';
 import '../../features/profile/presentation/edit_profile_screen.dart';
 import '../../features/profile/presentation/payment_handles_screen.dart';
 import '../../features/profile/presentation/profile_hub_screen.dart';
+import '../app_mode.dart';
+import '../features_for_mode.dart';
 import '../widgets/main_shell.dart';
 import '../widgets/catalogue/component_catalogue.dart';
 
@@ -46,6 +49,9 @@ abstract final class Routes {
   static String editExpense(String gid, String eid) => '/groups/$gid/expenses/$eid/edit';
   static const String splash = '/splash';
   static const String welcome = '/welcome';
+
+  /// Local mode only: "what's your name?" (the one-field onboarding that replaces sign-in).
+  static const String welcomeName = '/welcome/name';
   static const String signIn = '/sign-in';
   static const String usernameSignIn = '/sign-in/username';
   static const String register = '/sign-in/register';
@@ -119,18 +125,49 @@ String? authRedirect(AuthState state, Uri location, {String? pendingInvite}) {
   }
 }
 
+/// Paths that exist only in server mode. In local mode a request for one of them (a stray `/join/<code>` link,
+/// STANDALONE_SPEC 2) is ignored: the person lands on their own groups.
+bool isServerOnlyPath(String path) =>
+    path == Routes.join ||
+    path.startsWith('${Routes.join}/') ||
+    path == Routes.signIn ||
+    path.startsWith('${Routes.signIn}/') ||
+    path == Routes.changePassword ||
+    path == Routes.accountSettings ||
+    RegExp(r'^/groups/[^/]+/join-requests$').hasMatch(path);
+
+/// The route guard of local mode (no sign-in, no tokens, no `from` carry). Pure, tested as a table. The only
+/// "account" state is whether the local profile exists: while it does not, the onboarding is the only reachable page.
+String? localRedirect(AuthState state, Uri location) {
+  final path = location.path;
+  final onboarding = path == Routes.welcome || path == Routes.welcomeName;
+  switch (state) {
+    case AuthRestoring() || AuthRestoreFailed():
+      return path == Routes.splash ? null : Routes.splash;
+    case AuthSignedOut() || AuthSigningIn() || AuthSessionExpired():
+      return onboarding ? null : Routes.welcome;
+    case AuthSignedIn():
+      if (path == Routes.splash || onboarding || isServerOnlyPath(path)) return Routes.home;
+      return null;
+  }
+}
+
 class _AuthRefresh extends ChangeNotifier {
   void ping() => notifyListeners();
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
   final refresh = _AuthRefresh();
+  final local = ref.watch(appModeProvider) == AppMode.local;
+  final features = ref.watch(modeFeaturesProvider);
   ref.listen<AuthState>(authControllerProvider, (previous, next) => refresh.ping());
-  // A code left by a killed process; a code remembered now makes the router look again.
-  ref.listen<PendingInviteState>(pendingInviteProvider, (previous, next) => refresh.ping());
-  Future.microtask(() async {
-    await ref.read(pendingInviteProvider.notifier).restore();
-  });
+  if (!local) {
+    // A code left by a killed process; a code remembered now makes the router look again.
+    ref.listen<PendingInviteState>(pendingInviteProvider, (previous, next) => refresh.ping());
+    Future.microtask(() async {
+      await ref.read(pendingInviteProvider.notifier).restore();
+    });
+  }
   final initial = kDebugMode && _initialRouteDefine.isNotEmpty ? _initialRouteDefine : Routes.home;
   final router = GoRouter(
     navigatorKey: rootNavigatorKey,
@@ -138,6 +175,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     refreshListenable: refresh,
     redirect: (context, state) {
       final auth = ref.read(authControllerProvider);
+      if (local) return localRedirect(auth, state.uri);
       final pending = ref.read(pendingInviteProvider);
       // A signed-out person opening an invite link: keep the code (memory and secure storage, never logged) until
       // it is used, so it survives sign-in even if the process dies during the Google picker.
@@ -157,7 +195,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
       GoRoute(path: Routes.editProfile, builder: (context, state) => const EditProfileScreen()),
-      GoRoute(path: Routes.accountSettings, builder: (context, state) => const AccountSettingsScreen()),
+      if (features.accountSettings) GoRoute(path: Routes.accountSettings, builder: (context, state) => const AccountSettingsScreen()),
       GoRoute(path: Routes.paymentHandles, builder: (context, state) => const PaymentHandlesScreen()),
       GoRoute(path: Routes.newGroup, builder: (context, state) => const CreateGroupScreen()),
       GoRoute(
@@ -166,7 +204,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(path: 'edit', builder: (context, state) => EditGroupScreen(gid: state.pathParameters['gid']!)),
           GoRoute(path: 'settlements/:sid', builder: (context, state) => SettlementDetailScreen(gid: state.pathParameters['gid']!, sid: state.pathParameters['sid']!)),
-          GoRoute(path: 'join-requests', builder: (context, state) => JoinRequestsScreen(gid: state.pathParameters['gid']!)),
+          if (features.joinRequests) GoRoute(path: 'join-requests', builder: (context, state) => JoinRequestsScreen(gid: state.pathParameters['gid']!)),
           // 'expenses/new' must stay before 'expenses/:eid' (first match wins).
           GoRoute(path: 'expenses/new', builder: (context, state) => ExpenseFormScreen(gid: state.pathParameters['gid']!)),
           GoRoute(
@@ -181,8 +219,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
-      GoRoute(path: Routes.join, builder: (context, state) => const EnterCodeScreen()),
-      GoRoute(
+      if (features.joinByCode) GoRoute(path: Routes.join, builder: (context, state) => const EnterCodeScreen()),
+      if (features.joinByCode)
+        GoRoute(
         path: '${Routes.join}/:codeOrToken',
         builder: (context, state) {
           final raw = state.pathParameters['codeOrToken'] ?? '';
@@ -193,10 +232,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: Routes.splash, builder: (context, state) => const SplashScreen()),
       GoRoute(path: Routes.welcome, builder: (context, state) => WelcomeScreen(from: state.uri.queryParameters['from'])),
-      GoRoute(path: Routes.signIn, builder: (context, state) => const SignInScreen()),
-      GoRoute(path: Routes.usernameSignIn, builder: (context, state) => const UsernameSignInScreen()),
-      GoRoute(path: Routes.register, builder: (context, state) => const RegisterScreen()),
-      GoRoute(path: Routes.changePassword, builder: (context, state) => const ChangePasswordScreen()),
+      if (features.signIn) ...[
+        GoRoute(path: Routes.signIn, builder: (context, state) => const SignInScreen()),
+        GoRoute(path: Routes.usernameSignIn, builder: (context, state) => const UsernameSignInScreen()),
+        GoRoute(path: Routes.register, builder: (context, state) => const RegisterScreen()),
+      ],
+      if (features.changePassword) GoRoute(path: Routes.changePassword, builder: (context, state) => const ChangePasswordScreen()),
+      if (local) GoRoute(path: Routes.welcomeName, builder: (context, state) => const LocalNameScreen()),
       if (kDebugMode) GoRoute(path: Routes.catalogue, builder: (context, state) => const ComponentCatalogue()),
     ],
   );

@@ -2370,4 +2370,100 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get remindRetry => 'We could not send the reminder. Try again.';
+
+  @override
+  String get onboardingNameTitle => 'What\'s your name?';
+
+  @override
+  String get onboardingNameHelper =>
+      'This name shows in your groups. You can change it later.';
+
+  @override
+  String get onboardingContinue => 'Continue';
+
+  @override
+  String get backupSectionTitle => 'Backup';
+
+  @override
+  String get backupExportTitle => 'Export backup';
+
+  @override
+  String get backupExportBody =>
+      'We\'ll prepare a file with all your groups and expenses, including names and amounts. Keep it somewhere safe and share it only with people you trust.';
+
+  @override
+  String get backupExportConfirm => 'Create file';
+
+  @override
+  String get backupShareText =>
+      'Qesma backup. This file contains names and amounts: keep it somewhere safe and share it only with people you trust.';
+
+  @override
+  String get backupExportDone => 'Your backup is ready.';
+
+  @override
+  String get backupExportFailed =>
+      'We couldn\'t create the backup. Please try again.';
+
+  @override
+  String get backupRestoreTitle => 'Restore from backup';
+
+  @override
+  String backupLastExport(String date) {
+    return 'Last backup: $date';
+  }
+
+  @override
+  String get backupNeverExported => 'No backup yet';
+
+  @override
+  String get backupRestoreConfirmTitle => 'Restore this backup?';
+
+  @override
+  String backupRestoreConfirmBody(String groups, String expenses, String date) {
+    return 'This backup has $groups groups and $expenses expenses (created $date). All the data on this phone will be deleted and replaced with it. This can\'t be undone.';
+  }
+
+  @override
+  String get backupRestoreConfirm => 'Restore and replace';
+
+  @override
+  String get backupRestoreDone => 'Your data was restored.';
+
+  @override
+  String get backupErrorUnreadable =>
+      'This isn\'t a Qesma backup, or the file is damaged. Your data is unchanged.';
+
+  @override
+  String get backupErrorTooLarge =>
+      'This file is too large to open. Your data is unchanged.';
+
+  @override
+  String get backupErrorNewer =>
+      'This backup was made by a newer version of Qesma. Update the app and try again. Your data is unchanged.';
+
+  @override
+  String get backupErrorInvalid =>
+      'The file is incomplete or has invalid data. Your data is unchanged.';
+
+  @override
+  String get backupErrorInconsistent =>
+      'The amounts in this file don\'t add up, so nothing was restored. Your data is unchanged.';
+
+  @override
+  String get backupErrorFailed =>
+      'Something went wrong while restoring, and nothing was changed. Your data is unchanged.';
+
+  @override
+  String get backupBannerTitle => 'Back up your data';
+
+  @override
+  String get backupBannerBody =>
+      'This phone holds the only copy of your data. Save a copy now so you don\'t lose it.';
+
+  @override
+  String get backupBannerAction => 'Back up now';
+
+  @override
+  String get backupBannerDismiss => 'Dismiss';
 }

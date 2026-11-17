@@ -128,3 +128,16 @@ Still to come with their backend prompts: settlement v2 UI (FL13) (B13), payment
 | `MEMBER_INACTIVE` (422, B12) | a member who left was used in a change | notice "this member has left", group re-read (FL12) |
 | `OWNER_MUST_TRANSFER` (409, B12) | the owner tried to leave | dialog "transfer ownership first", then the transfer picker (FL12) |
 | (not in the contract yet) `INVALID_STATE_TRANSITION` 409 (B13), `REMIND_RATE_LIMITED` 429 (B16) | | added with their prompts |
+
+## 7. Hidden in local mode (SA4, `QESMA_MODE=local`)
+One table decides: `mobile/lib/core/features_for_mode.dart` (`ModeFeatures`); `Permissions` is built from it, so role-based checks follow. Hidden means absent from the widget tree and the route table, never disabled. Server mode is unchanged. Proof: `test/features/mode/local_mode_hidden_test.dart` (ar/en, text scale 1.0 and 2.0) and `test/guards/mode_guard_test.dart`.
+
+| Area | Hidden in local mode | What the person sees instead |
+|:--|:--|:--|
+| Sign-in | splash retry, welcome -> sign-in, Google / username / register screens, password change, session-expired dialog, token storage | welcome -> "اسمك إيه؟" (name, 1-60, `PATCH /me` creates the profile) -> groups list |
+| Account | sign out, account settings, delete account, email / username / "connected Google account" lines | name, edit name, language, appearance, own payment details, terms, privacy, version; local mode adds the Backup section (export, restore) and the groups-list reminder banner (SA5) |
+| Invites and join | invite button / sheet, "have an invite code?" (groups list and empty state), `/join`, `/join/<code>` (ignored: lands on the groups list), join requests banner and screen | nothing |
+| Members | role chips (owner / admin), linked / name-only badges, role actions, unlink, mark left / reactivate, leave group, transfer ownership | members with add, rename, delete (ghosts); the "you" tag |
+| Settlements | confirm, dispute, pending / disputed chips, receiver card and "payments waiting" banner, outcome hint, receiver payment details block | "I paid / I received" saves a confirmed payment at once; cancel stays (a "cancelled" mark only) |
+| Reminders | server Remind button and its rate-limit texts | reminder tones by WhatsApp (SA9) |
+| Notifications | notification center, activity feed, settings, push | nothing |

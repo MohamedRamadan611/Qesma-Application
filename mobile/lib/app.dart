@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/api/connectivity.dart';
+import 'core/features_for_mode.dart';
 import 'core/l10n/generated/app_localizations.dart';
 import 'core/l10n/locale_controller.dart';
 import 'core/router/app_router.dart';
@@ -10,6 +11,7 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/theme_mode_controller.dart';
 import 'core/widgets/app_states.dart';
 import 'features/auth/presentation/session_expired_dialog.dart';
+import 'features/backup/presentation/backup_checkpoint_host.dart';
 import 'features/groups/application/freshness.dart';
 
 class QesmaApp extends ConsumerWidget {
@@ -28,9 +30,13 @@ class QesmaApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      builder: (context, child) => FreshnessHost(
-        child: SessionExpiredHost(child: _OfflineHost(child: child ?? const SizedBox.shrink())),
-      ),
+      builder: (context, child) {
+        final body = _OfflineHost(child: child ?? const SizedBox.shrink());
+        // No session in local mode, so no session-expired dialog.
+        final features = ref.watch(modeFeaturesProvider);
+        final host = FreshnessHost(child: features.sessionExpiredDialog ? SessionExpiredHost(child: body) : body);
+        return features.backup ? BackupCheckpointHost(child: host) : host;
+      },
       theme: buildAppTheme(Brightness.light),
       darkTheme: buildAppTheme(Brightness.dark),
       themeMode: ref.watch(themeModeProvider), // the phone's setting unless the user chose one

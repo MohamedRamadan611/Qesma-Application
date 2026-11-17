@@ -4,6 +4,7 @@ import 'package:qesma_api/qesma_api.dart';
 
 import '../../../core/errors/api_failure.dart';
 import '../../../core/errors/error_copy.dart';
+import '../../../core/features_for_mode.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/palette.dart';
@@ -86,13 +87,16 @@ class _Body extends ConsumerWidget {
     final from = nameOf(settlement.fromMemberId);
     final to = nameOf(settlement.toMemberId);
     final perms = ref.watch(groupPermissionsProvider(gid));
-    final actions = settlementActionsFor(
+    final review = ref.watch(modeFeaturesProvider).settlementReview;
+    final allowed = settlementActionsFor(
       status: status,
       yourMemberId: group.yourMemberId,
       fromMemberId: settlement.fromMemberId,
       toMemberId: settlement.toMemberId,
       isAdminOrOwner: perms.canManageMembers,
     );
+    // Local mode: nobody reviews a payment, so confirm and dispute are never offered (cancel is the only undo).
+    final actions = review ? allowed : allowed.difference({SettlementAction.confirm, SettlementAction.dispute});
     final active = ref.watch(settlementActionsControllerProvider(gid));
     final busy = active.busy;
 
@@ -110,7 +114,7 @@ class _Body extends ConsumerWidget {
     };
 
     final payerSays = status == SettlementStatus.cancelled ? l10n.stmtPayerCancelled : l10n.stmtPayerPaid;
-    final receiverSays = switch (status) {
+    final receiverSays = !review ? null : switch (status) {
       SettlementStatus.pending => l10n.stmtReceiverWaiting,
       SettlementStatus.disputed => l10n.stmtReceiverNotReceived,
       SettlementStatus.confirmed => settlement.recordedByAdmin ? l10n.stmtRecordedByAdmin : l10n.stmtReceiverConfirmed,
@@ -122,7 +126,7 @@ class _Body extends ConsumerWidget {
       l10n.detailDateOn(dateText(settlement.settledOn)),
       l10n.detailDeclaredAt(settlementWhen(settlement.declaredAt)),
       if (settlement.disputedAt != null) l10n.detailDisputedAt(settlementWhen(settlement.disputedAt!)),
-      if (settlement.confirmedAt != null) l10n.detailConfirmedAt(settlementWhen(settlement.confirmedAt!)),
+      if (review && settlement.confirmedAt != null) l10n.detailConfirmedAt(settlementWhen(settlement.confirmedAt!)),
       if (settlement.cancelledAt != null) l10n.detailCancelledAt(settlementWhen(settlement.cancelledAt!)),
     ];
 
@@ -148,7 +152,7 @@ class _Body extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsetsDirectional.fromSTEB(QesmaSpacing.margin, QesmaSpacing.sm, QesmaSpacing.margin, QesmaSpacing.xl),
       children: [
-        StatusBanner(icon: bannerIcon, text: bannerText, tone: bannerTone),
+        if (review || status == SettlementStatus.cancelled) StatusBanner(icon: bannerIcon, text: bannerText, tone: bannerTone),
         if (status == SettlementStatus.disputed)
           Padding(
             padding: const EdgeInsets.only(top: QesmaSpacing.xs),
@@ -173,7 +177,7 @@ class _Body extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: QesmaSpacing.sm),
-              Center(child: SettlementStatusChip(status)),
+              if (review || status == SettlementStatus.cancelled) Center(child: SettlementStatusChip(status)),
               if (status.isOpen) ...[
                 const SizedBox(height: QesmaSpacing.sm),
                 Text(l10n.detailNotCounted, textAlign: TextAlign.center, style: theme.textTheme.bodySmall?.copyWith(color: c.textSecondary)),

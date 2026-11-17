@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/features_for_mode.dart';
 import '../../../core/permissions/group_role.dart';
 import '../../../core/permissions/permissions.dart';
 import 'group_detail_controller.dart';
@@ -8,6 +9,7 @@ import 'group_detail_controller.dart';
 /// been read the role is unknown and [Permissions.unknown] (the least privilege) applies.
 final groupPermissionsProvider = Provider.autoDispose.family<Permissions, String>((ref, gid) {
   final group = ref.watch(groupDetailControllerProvider(gid).select((s) => s.group));
-  if (group == null) return const Permissions.unknown();
-  return Permissions(GroupRole.parse(group.yourRole));
+  final features = ref.watch(modeFeaturesProvider);
+  if (group == null) return Permissions.unknown(features: features);
+  return Permissions(GroupRole.parse(group.yourRole), features: features);
 });

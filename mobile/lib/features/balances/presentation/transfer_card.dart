@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qesma_api/qesma_api.dart';
 
+import '../../../core/features_for_mode.dart';
 import '../../../core/format/date_format.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/theme/balance_colors.dart';
@@ -118,8 +120,12 @@ class TransferCard extends StatelessWidget {
           ],
           if (role == TransferRole.payer) ...[
             const SizedBox(height: QesmaSpacing.md),
-            _Handles(to: to, instapay: instapay, wallet: wallet),
-            const SizedBox(height: QesmaSpacing.sm + 4),
+            // The receiver's payment details come from their account: server mode only (local members are ghosts).
+            Consumer(
+              builder: (context, ref, _) => ref.watch(modeFeaturesProvider).settlementReview
+                  ? Padding(padding: const EdgeInsets.only(bottom: QesmaSpacing.sm + 4), child: _Handles(to: to, instapay: instapay, wallet: wallet))
+                  : const SizedBox.shrink(),
+            ),
             _NoMoneyNote(),
           ],
           if (onRecord != null) ...[

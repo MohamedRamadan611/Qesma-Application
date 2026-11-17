@@ -4051,6 +4051,168 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'معرفناش نبعت التذكير. جرّب تاني.'**
   String get remindRetry;
+
+  /// Local mode onboarding: title above the one name field.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسمك إيه؟'**
+  String get onboardingNameTitle;
+
+  /// Local mode onboarding: helper under the name field.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاسم ده هيظهر في مجموعاتك. تقدر تغيّره بعدين.'**
+  String get onboardingNameHelper;
+
+  /// Local mode onboarding: save the name and go to the groups list.
+  ///
+  /// In ar, this message translates to:
+  /// **'كمّل'**
+  String get onboardingContinue;
+
+  /// Profile hub: section title for export and restore.
+  ///
+  /// In ar, this message translates to:
+  /// **'النسخة الاحتياطية'**
+  String get backupSectionTitle;
+
+  /// Profile hub row and confirm dialog title: save a backup file.
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ نسخة احتياطية'**
+  String get backupExportTitle;
+
+  /// Export confirm dialog body: privacy warning.
+  ///
+  /// In ar, this message translates to:
+  /// **'هنجهّز ملف فيه كل مجموعاتك ومصاريفك بالأسماء والمبالغ. احتفظ بيه في مكان آمن وماتبعتوش غير لحد بتثق فيه.'**
+  String get backupExportBody;
+
+  /// Export confirm dialog: confirm button.
+  ///
+  /// In ar, this message translates to:
+  /// **'جهّز الملف'**
+  String get backupExportConfirm;
+
+  /// Text sent with the backup file in the share sheet.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسخة قسمة الاحتياطية. الملف فيه أسماء ومبالغ، فاحتفظ بيه في مكان آمن وماتبعتوش غير لحد بتثق فيه.'**
+  String get backupShareText;
+
+  /// Snackbar after the backup file was handed to the share sheet.
+  ///
+  /// In ar, this message translates to:
+  /// **'النسخة الاحتياطية اتجهزت.'**
+  String get backupExportDone;
+
+  /// Snackbar when the export failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'معرفناش نجهّز النسخة الاحتياطية. جرّب تاني.'**
+  String get backupExportFailed;
+
+  /// Profile hub row: restore from a backup file.
+  ///
+  /// In ar, this message translates to:
+  /// **'استرجع من نسخة احتياطية'**
+  String get backupRestoreTitle;
+
+  /// Profile hub row value: date of the last export (ISO date).
+  ///
+  /// In ar, this message translates to:
+  /// **'آخر نسخة: {date}'**
+  String backupLastExport(String date);
+
+  /// Profile hub row value: never exported.
+  ///
+  /// In ar, this message translates to:
+  /// **'لسه ماعملتش نسخة'**
+  String get backupNeverExported;
+
+  /// Restore confirm dialog title.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسترجع النسخة دي؟'**
+  String get backupRestoreConfirmTitle;
+
+  /// Restore confirm dialog body with counts.
+  ///
+  /// In ar, this message translates to:
+  /// **'النسخة فيها {groups} مجموعة و{expenses} مصروف (اتعملت {date}). هنمسح كل البيانات اللي على التليفون دلوقتي ونحط بياناتها مكانها. مينفعش نرجّع اللي اتمسح.'**
+  String backupRestoreConfirmBody(String groups, String expenses, String date);
+
+  /// Restore confirm dialog: destructive confirm button.
+  ///
+  /// In ar, this message translates to:
+  /// **'استرجع وامسح الحالي'**
+  String get backupRestoreConfirm;
+
+  /// Snackbar after a successful restore.
+  ///
+  /// In ar, this message translates to:
+  /// **'البيانات اتسترجعت.'**
+  String get backupRestoreDone;
+
+  /// Restore error: not a backup file.
+  ///
+  /// In ar, this message translates to:
+  /// **'الملف ده مش نسخة احتياطية من قسمة، أو باظ. بياناتك زي ما هي.'**
+  String get backupErrorUnreadable;
+
+  /// Restore error: file or content too large.
+  ///
+  /// In ar, this message translates to:
+  /// **'الملف كبير أوي ومينفعش نفتحه. بياناتك زي ما هي.'**
+  String get backupErrorTooLarge;
+
+  /// Restore error: newer format version.
+  ///
+  /// In ar, this message translates to:
+  /// **'النسخة دي اتعملت بإصدار أحدث من قسمة. حدّث التطبيق وجرّب تاني. بياناتك زي ما هي.'**
+  String get backupErrorNewer;
+
+  /// Restore error: invalid structure.
+  ///
+  /// In ar, this message translates to:
+  /// **'الملف ناقص أو فيه بيانات غلط. بياناتك زي ما هي.'**
+  String get backupErrorInvalid;
+
+  /// Restore error: recompute check failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'حسابات الملف مش مظبوطة، فمرجّعناش حاجة. بياناتك زي ما هي.'**
+  String get backupErrorInconsistent;
+
+  /// Restore error: write failed and was rolled back.
+  ///
+  /// In ar, this message translates to:
+  /// **'حصلت مشكلة وإحنا بنسترجع، ومحدش اتغيّر. بياناتك زي ما هي.'**
+  String get backupErrorFailed;
+
+  /// Reminder banner: title.
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ نسخة احتياطية'**
+  String get backupBannerTitle;
+
+  /// Reminder banner: body.
+  ///
+  /// In ar, this message translates to:
+  /// **'التليفون ده هو النسخة الوحيدة من بياناتك. احفظ نسخة دلوقتي عشان ماتضيعش.'**
+  String get backupBannerBody;
+
+  /// Reminder banner: action.
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ نسخة'**
+  String get backupBannerAction;
+
+  /// Reminder banner: dismiss tooltip.
+  ///
+  /// In ar, this message translates to:
+  /// **'تجاهل'**
+  String get backupBannerDismiss;
 }
 
 class _AppLocalizationsDelegate

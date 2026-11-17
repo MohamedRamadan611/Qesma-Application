@@ -300,12 +300,12 @@ void main() {
   });
 
   group('singletons and handles', () {
-    test('a second profile row is refused; local_meta exists with schema 1', () async {
+    test('a second profile row is refused; local_meta exists at the current schema', () async {
       await expectLater(
         db.profileDao.insertProfile(LocalProfileCompanion.insert(id: tid(2), displayName: 'X', createdAt: t0, updatedAt: t0)),
         rejected,
       );
-      expect((await db.metaDao.get()).createdSchemaVersion, 1);
+      expect((await db.metaDao.get()).createdSchemaVersion, db.schemaVersion);
       await expectLater(raw(db, 'INSERT INTO local_meta (id, created_schema_version, created_at) VALUES (2, 1, 0)'), rejected);
     });
 

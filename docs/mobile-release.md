@@ -36,6 +36,19 @@ Internal testing (a few invited testers) does **not** need items 1-3, but needs 
 4. Publishing status Testing allows only listed test users; move to Production when the privacy policy URL exists.
 
 ## 3. Build commands
+`QESMA_MODE` (SA4) picks the app: `local` = standalone, everything on the phone (no server, no sign-in, no Google client, `API_BASE_URL` not needed);
+`server` = the multi-user app below. Empty means `local` in release builds and `server` in debug builds and tests. Any other value stops the app at start.
+
+**Local mode (the standalone release):**
+```
+flutter build apk --release       --dart-define=QESMA_MODE=local --dart-define=APP_VERSION=<x.y.z+n>
+flutter build appbundle --release --dart-define=QESMA_MODE=local --dart-define=APP_VERSION=<x.y.z+n>
+# on a phone, debug (Git Bash: the prefix stops it rewriting arguments that look like paths)
+MSYS_NO_PATHCONV=1 flutter run --dart-define=QESMA_MODE=local -d <device id>
+```
+Local mode keeps its data in `qesma_local.sqlite` in the app's documents directory; there is no network call.
+
+**Server mode:** (add `--dart-define=QESMA_MODE=server` to make it explicit; it is the default only for debug builds)
 Run from `mobile/`. `API_BASE_URL` must be https in release (`ApiConfig` throws otherwise).
 ```
 flutter build apk --release       --dart-define=API_BASE_URL=https://<api host> --dart-define=GOOGLE_SERVER_CLIENT_ID=<web client id> --dart-define=APP_VERSION=<x.y.z+n>
@@ -64,3 +77,5 @@ as a crash on sign-in or on reading secure storage). This run needs an https bac
 Display name; username or Google account id and email; group, member and expense data the user enters; a hashed password (BCrypt) for username
 accounts; IP address in server logs/rate limiter. No analytics or crash SDKs, no advertising id, no location, no contacts, no files. Tokens live in
 Android secure storage. The app never holds or moves money.
+
+**Backup file (standalone, SA5).** The user can export `qesma-backup-v1.json`: it contains the names of groups and members and every expense and payment amount, and it is only handed to the Android share sheet the user chooses; the app uploads nothing. Restoring reads a file the user picks, on the phone. Android auto-backup (Google account) may store the local database file; it is limited to that file (no tokens, no caches). The policy must state this.

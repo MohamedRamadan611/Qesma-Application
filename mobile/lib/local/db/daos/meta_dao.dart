@@ -11,8 +11,17 @@ class MetaDao extends DatabaseAccessor<LocalDatabase> with _$MetaDaoMixin {
 
   Future<LocalMetaRow> get() => (select(localMeta)..where((m) => m.id.equals(1))).getSingle();
 
+  /// Records a successful export and clears the reminder snooze (the banner starts counting again).
   Future<void> recordExport({required int exportedAt, required int formatVersion}) =>
       (update(localMeta)..where((m) => m.id.equals(1))).write(
-        LocalMetaCompanion(lastExportAt: Value(exportedAt), lastExportFormatVersion: Value(formatVersion)),
+        LocalMetaCompanion(
+          lastExportAt: Value(exportedAt),
+          lastExportFormatVersion: Value(formatVersion),
+          backupReminderSnoozedUntil: const Value(null),
+        ),
       );
+
+  /// Hides the backup reminder until [untilMillis] (UTC epoch ms).
+  Future<void> snoozeBackupReminder(int untilMillis) => (update(localMeta)..where((m) => m.id.equals(1)))
+      .write(LocalMetaCompanion(backupReminderSnoozedUntil: Value(untilMillis)));
 }

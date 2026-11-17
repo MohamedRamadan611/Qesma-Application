@@ -5,6 +5,7 @@ import 'package:qesma_api/qesma_api.dart';
 
 import '../../../core/errors/api_failure.dart';
 import '../../../core/errors/error_copy.dart';
+import '../../../core/features_for_mode.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/theme/qesma_text.dart';
 import '../../../core/theme/tokens.dart';
@@ -122,6 +123,7 @@ class _BalancesTabState extends ConsumerState<BalancesTab> {
     final permissions = ref.watch(groupPermissionsProvider(_gid));
     final canRecordForOthers = permissions.canManageMembers;
     final remindState = ref.watch(remindControllerProvider(_gid));
+    final features = ref.watch(modeFeaturesProvider);
     final now = ref.watch(clockProvider)();
 
     return RefreshIndicator(
@@ -152,7 +154,9 @@ class _BalancesTabState extends ConsumerState<BalancesTab> {
                         nameOf,
                         group.yourMemberId,
                         canRecordForOthers,
-                        remind: remindStateFor(
+                        remind: !features.serverRemind
+                            ? const RemindState(RemindKind.hidden)
+                            : remindStateFor(
                           isCreditor: transfers[i].toMemberId == group.yourMemberId,
                           isDebtor: transfers[i].fromMemberId == group.yourMemberId,
                           canRemindAny: permissions.canRemindAny,

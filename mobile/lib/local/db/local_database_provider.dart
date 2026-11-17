@@ -13,10 +13,14 @@ const localDatabaseFileName = 'qesma_local.sqlite';
 /// The app-wide local database, opened lazily on first use and closed with the provider container.
 /// Tests override it with `LocalDatabase.inMemory()`.
 final localDatabaseProvider = Provider<LocalDatabase>((ref) {
-  final db = LocalDatabase(LazyDatabase(() async {
-    final dir = await getApplicationDocumentsDirectory();
-    return LocalDatabase.openFile(File('${dir.path}${Platform.pathSeparator}$localDatabaseFileName'));
-  }));
+  final db = openLocalDatabase();
   ref.onDispose(db.close);
   return db;
 });
+
+/// The on-device database (`<documents>/qesma_local.sqlite`), opened on first use. `main.dart` hands it to the
+/// provider scope in local mode.
+LocalDatabase openLocalDatabase() => LocalDatabase(LazyDatabase(() async {
+      final dir = await getApplicationDocumentsDirectory();
+      return LocalDatabase.openFile(File('${dir.path}${Platform.pathSeparator}$localDatabaseFileName'));
+    }));

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qesma_api/qesma_api.dart';
 
 import '../../../core/errors/error_copy.dart';
+import '../../../core/features_for_mode.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
@@ -196,8 +197,11 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
           errorText: noteError ? l10n.paymentNoteError : null,
           onChanged: _controller.setNote,
         ),
-        const SizedBox(height: QesmaSpacing.md),
-        _OutcomeHint(outcome: outcome, from: form.fromId == you, receiverName: toName),
+        // Local mode: a payment is simply recorded and counted at once, so there is nothing to predict.
+        if (ref.watch(modeFeaturesProvider).settlementReview) ...[
+          const SizedBox(height: QesmaSpacing.md),
+          _OutcomeHint(outcome: outcome, from: form.fromId == you, receiverName: toName),
+        ],
         if (view.failure != null) ...[
           const SizedBox(height: QesmaSpacing.md),
           StatusBanner(icon: Icons.error_outline, text: errorCopyFor(l10n, view.failure!).message, tone: BannerTone.error),

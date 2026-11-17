@@ -22,10 +22,15 @@ dependencies:
   # GENERATED from ../docs/openapi.json by tool/generate_api.sh. Never edit by hand.
   qesma_api:
     path: packages/qesma_api
+  # Pure Dart split engine (SA1). Imported only under lib/local/** (A149, source guard).
+  qesma_engine:
+    path: packages/qesma_engine
   google_sign_in: 7.2.0
   flutter_secure_storage: 11.2.0
   url_launcher: 6.3.3
   share_plus: 13.3.1
+  # Pick a backup file to restore (ADR-012, SA5).
+  file_picker: 13.4.0
   # Standalone local database (ADR-012, SA2).
   drift: 2.35.4
   sqlite3: 3.9.1

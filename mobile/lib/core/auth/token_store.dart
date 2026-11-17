@@ -63,3 +63,17 @@ class InMemoryTokenStore implements TokenStore {
   @override
   Future<void> clear() async => _token = null;
 }
+
+/// Local mode has no session: nothing is read, nothing is written, no platform storage is touched.
+class NoTokenStore implements TokenStore {
+  const NoTokenStore();
+
+  @override
+  Future<String?> readRefreshToken() async => null;
+
+  @override
+  Future<void> writeRefreshToken(String token) async {}
+
+  @override
+  Future<void> clear() async {}
+}

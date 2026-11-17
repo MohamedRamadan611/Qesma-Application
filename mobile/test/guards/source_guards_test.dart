@@ -6,8 +6,9 @@ import 'package:flutter_test/flutter_test.dart';
 /// the offending file:line, so a violation cannot be merged by accident.
 ///
 /// Excluded from every guard: generated code (`lib/core/l10n/generated`).
-/// `core/money` is the only place allowed to do money arithmetic. `lib/local/db/` (drift persistence, SA2)
-/// is exempt from the rounding scan only.
+/// `core/money` is the only place allowed to do money arithmetic. `lib/local/db/` (drift persistence, SA2) and
+/// `lib/local/service/` (local backend services, SA3: money only through qesma_engine calls and plain sums of
+/// stored amounts) are exempt from the rounding scan only; `double`/`num` stay banned there.
 /// `core/theme` and `core/widgets` may use `double` (pixel sizes) but nothing money-related.
 
 List<File> _dartFiles() => Directory('lib')
@@ -58,7 +59,7 @@ void main() {
       // double/num above stay banned in lib/local/.
       ..._scan(
         RegExp(r'[/*]\s*100\b|~/\s*100\b|\.round\(\)|\.floor\(\)|\.ceil\(\)|\.truncate\(\)|\.toStringAsFixed\('),
-        skip: (p) => p.startsWith('lib/core/money/') || p.startsWith('lib/local/db/'),
+        skip: (p) => p.startsWith('lib/core/money/') || p.startsWith('lib/local/db/') || p.startsWith('lib/local/service/'),
       ),
     ];
     expect(hits, isEmpty, reason: 'Money is int piasters; use core/money (parse/format) or ask the backend.\n${hits.join('\n')}');
@@ -91,7 +92,9 @@ void main() {
   test('nothing in lib/ logs or prints (use the request logger, which never logs tokens)', () {
     final hits = _scan(
       RegExp(r'\bprint\(|\bdebugPrint\(|\bdeveloper\.log\('),
-      skip: (p) => p == 'lib/core/api/dio_factory.dart' || p == 'lib/core/auth/auth_log.dart', // the two debug-only sinks: enums and status codes only
+      // The three debug-only sinks: enums, status codes, request ids and error types only.
+      skip: (p) =>
+          p == 'lib/core/api/dio_factory.dart' || p == 'lib/core/auth/auth_log.dart' || p == 'lib/local/backend/local_log.dart',
     );
     expect(hits, isEmpty, reason: hits.join('\n'));
   });
@@ -154,6 +157,11 @@ void main() {
     );
     expect(hits, isEmpty, reason: 'Only lib/core/auth and lib/features/auth/application may touch tokens.\n${hits.join('\n')}');
   });
+  test('qesma_engine is imported only under lib/local/ (A149: features never compute splits or balances)', () {
+    final hits = _scan(RegExp(r"import\s+'package:qesma_engine/"), skip: (p) => p.startsWith('lib/local/'));
+    expect(hits, isEmpty, reason: 'Reach the engine through the local backend.\n${hits.join('\n')}');
+  });
+
   test('the generated API is used only by repositories and core wiring (widgets and notifiers never touch it)', () {
     final hits = _scan(
       RegExp(r'qesmaApiProvider|authlessApiProvider|get\w+ControllerApi\(\)'),
@@ -228,9 +236,20 @@ void main() {
     }
   });
 
-  test('the manifest disables Android backup (restored backups cannot unwrap the Keystore-wrapped token)', () {
+  test('Android auto-backup is on and limited to the local database file (A128, replaces the FL2 allowBackup=false rule)', () {
     final main = File('android/app/src/main/AndroidManifest.xml').readAsStringSync();
-    expect(main, contains('android:allowBackup="false"'));
+    expect(main, contains('android:allowBackup="true"'));
+    expect(main, contains('android:fullBackupContent="@xml/backup_rules"'));
+    expect(main, contains('android:dataExtractionRules="@xml/data_extraction_rules"'));
+    final dbName = RegExp("localDatabaseFileName = '([^']+)'").firstMatch(File('lib/local/db/local_database_provider.dart').readAsStringSync())!.group(1)!;
+    for (final rules in ['backup_rules.xml', 'data_extraction_rules.xml']) {
+      final xml = File('android/app/src/main/res/xml/$rules').readAsStringSync();
+      expect(xml, contains('<include domain="root" path="app_flutter/$dbName"/>'), reason: rules);
+      // The only include is the database file; the WAL side files and secure storage are excluded explicitly.
+      expect(RegExp('<include ').allMatches(xml).length, rules == 'backup_rules.xml' ? 1 : 2, reason: rules);
+      expect(xml, contains('path="app_flutter/$dbName-wal"'), reason: rules);
+      expect(xml, contains('FlutterSecureStorage.xml'), reason: rules);
+    }
   });
 
   test('the Android release manifest has no cleartext, no emulator host and no fake token', () {
@@ -242,7 +261,7 @@ void main() {
 
     final debug = File('android/app/src/debug/res/xml/network_security_config.xml').readAsStringSync();
     expect(debug, contains('10.0.2.2'));
-    expect(Directory('android/app/src/main/res/xml').existsSync(), isFalse,
+    expect(File('android/app/src/main/res/xml/network_security_config.xml').existsSync(), isFalse,
         reason: 'a network security config in main would apply to release builds');
   });
 }

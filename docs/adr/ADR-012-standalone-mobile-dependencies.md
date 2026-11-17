@@ -26,6 +26,8 @@ Already present and reused: `share_plus` 13.3.1 (image and text share), `url_lau
 - `firebase_app_check` is **0.x**: its API can change between minor versions. SA12 reads the current documentation before Step 0 and pins exactly.
 - Firebase packages pull Google Play services and add a `google-services.json` (not a secret; not edited by hand). No other Firebase product is added.
 
+**SA5 (2026-11-17):** `file_picker` 13.4.0 added (exact pin); API read from the package source: `FilePicker.pickFile()` returns a `PlatformFile` with `length()` and `readAsBytes()`. APK size impact not measured here (no release build in this session).
+
 ## Source guard
 The test in `mobile/test/guards/source_guards_test.dart` that bans the substring `firebase` in `pubspec.yaml` is narrowed to allow **exactly** `firebase_core`, `firebase_ai` and `firebase_app_check`. `analytics`, `crashlytics`, `sentry`, `amplitude`, `mixpanel`, `shared_preferences`, `connectivity_plus` and `package_info_plus` stay banned. SA12 applies the change in the same commit as the dependency.
 

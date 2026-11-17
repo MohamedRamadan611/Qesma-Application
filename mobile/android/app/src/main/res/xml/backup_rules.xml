@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android auto-backup, API 30 and lower (SA5, A128/A162). Only the local database file is backed up: it is the only
+     copy of the user's ledger. The WAL is folded into it when the app goes to the background (BackupService.checkpoint).
+     An include list backs up ONLY what it names, so caches and no_backup are out by construction; the -wal/-shm side
+     files and the secure-storage preferences file (which a
+     restored device cannot decrypt) are excluded explicitly. -->
+<full-backup-content>
+    <include domain="root" path="app_flutter/qesma_local.sqlite"/>
+    <exclude domain="root" path="app_flutter/qesma_local.sqlite-wal"/>
+    <exclude domain="root" path="app_flutter/qesma_local.sqlite-shm"/>
+    <exclude domain="sharedpref" path="FlutterSecureStorage.xml"/>
+</full-backup-content>

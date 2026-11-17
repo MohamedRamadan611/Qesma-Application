@@ -431,6 +431,17 @@ class LocalMeta extends Table with TableInfo<LocalMeta, LocalMetaRow> {
         requiredDuringInsert: false,
         $customConstraints: 'CHECK (last_export_format_version IS NULL OR last_export_format_version >= 1)',
       );
+  static const VerificationMeta _backupReminderSnoozedUntilMeta =
+      const VerificationMeta('backupReminderSnoozedUntil');
+  late final GeneratedColumn<int> backupReminderSnoozedUntil =
+      GeneratedColumn<int>(
+        'backup_reminder_snoozed_until',
+        aliasedName,
+        true,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+        $customConstraints: '',
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -438,6 +449,7 @@ class LocalMeta extends Table with TableInfo<LocalMeta, LocalMetaRow> {
     createdAt,
     lastExportAt,
     lastExportFormatVersion,
+    backupReminderSnoozedUntil,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -491,6 +503,15 @@ class LocalMeta extends Table with TableInfo<LocalMeta, LocalMetaRow> {
         ),
       );
     }
+    if (data.containsKey('backup_reminder_snoozed_until')) {
+      context.handle(
+        _backupReminderSnoozedUntilMeta,
+        backupReminderSnoozedUntil.isAcceptableOrUnknown(
+          data['backup_reminder_snoozed_until']!,
+          _backupReminderSnoozedUntilMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -520,6 +541,10 @@ class LocalMeta extends Table with TableInfo<LocalMeta, LocalMetaRow> {
         DriftSqlType.int,
         data['${effectivePrefix}last_export_format_version'],
       ),
+      backupReminderSnoozedUntil: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}backup_reminder_snoozed_until'],
+      ),
     );
   }
 
@@ -544,12 +569,14 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
   final int createdAt;
   final int? lastExportAt;
   final int? lastExportFormatVersion;
+  final int? backupReminderSnoozedUntil;
   const LocalMetaRow({
     required this.id,
     required this.createdSchemaVersion,
     required this.createdAt,
     this.lastExportAt,
     this.lastExportFormatVersion,
+    this.backupReminderSnoozedUntil,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -563,6 +590,11 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
     if (!nullToAbsent || lastExportFormatVersion != null) {
       map['last_export_format_version'] = Variable<int>(
         lastExportFormatVersion,
+      );
+    }
+    if (!nullToAbsent || backupReminderSnoozedUntil != null) {
+      map['backup_reminder_snoozed_until'] = Variable<int>(
+        backupReminderSnoozedUntil,
       );
     }
     return map;
@@ -579,6 +611,10 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
       lastExportFormatVersion: lastExportFormatVersion == null && nullToAbsent
           ? const Value.absent()
           : Value(lastExportFormatVersion),
+      backupReminderSnoozedUntil:
+          backupReminderSnoozedUntil == null && nullToAbsent
+          ? const Value.absent()
+          : Value(backupReminderSnoozedUntil),
     );
   }
 
@@ -597,6 +633,9 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
       lastExportFormatVersion: serializer.fromJson<int?>(
         json['last_export_format_version'],
       ),
+      backupReminderSnoozedUntil: serializer.fromJson<int?>(
+        json['backup_reminder_snoozed_until'],
+      ),
     );
   }
   @override
@@ -610,6 +649,9 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
       'last_export_format_version': serializer.toJson<int?>(
         lastExportFormatVersion,
       ),
+      'backup_reminder_snoozed_until': serializer.toJson<int?>(
+        backupReminderSnoozedUntil,
+      ),
     };
   }
 
@@ -619,6 +661,7 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
     int? createdAt,
     Value<int?> lastExportAt = const Value.absent(),
     Value<int?> lastExportFormatVersion = const Value.absent(),
+    Value<int?> backupReminderSnoozedUntil = const Value.absent(),
   }) => LocalMetaRow(
     id: id ?? this.id,
     createdSchemaVersion: createdSchemaVersion ?? this.createdSchemaVersion,
@@ -627,6 +670,9 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
     lastExportFormatVersion: lastExportFormatVersion.present
         ? lastExportFormatVersion.value
         : this.lastExportFormatVersion,
+    backupReminderSnoozedUntil: backupReminderSnoozedUntil.present
+        ? backupReminderSnoozedUntil.value
+        : this.backupReminderSnoozedUntil,
   );
   LocalMetaRow copyWithCompanion(LocalMetaCompanion data) {
     return LocalMetaRow(
@@ -641,6 +687,9 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
       lastExportFormatVersion: data.lastExportFormatVersion.present
           ? data.lastExportFormatVersion.value
           : this.lastExportFormatVersion,
+      backupReminderSnoozedUntil: data.backupReminderSnoozedUntil.present
+          ? data.backupReminderSnoozedUntil.value
+          : this.backupReminderSnoozedUntil,
     );
   }
 
@@ -651,7 +700,8 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
           ..write('createdSchemaVersion: $createdSchemaVersion, ')
           ..write('createdAt: $createdAt, ')
           ..write('lastExportAt: $lastExportAt, ')
-          ..write('lastExportFormatVersion: $lastExportFormatVersion')
+          ..write('lastExportFormatVersion: $lastExportFormatVersion, ')
+          ..write('backupReminderSnoozedUntil: $backupReminderSnoozedUntil')
           ..write(')'))
         .toString();
   }
@@ -663,6 +713,7 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
     createdAt,
     lastExportAt,
     lastExportFormatVersion,
+    backupReminderSnoozedUntil,
   );
   @override
   bool operator ==(Object other) =>
@@ -672,7 +723,8 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
           other.createdSchemaVersion == this.createdSchemaVersion &&
           other.createdAt == this.createdAt &&
           other.lastExportAt == this.lastExportAt &&
-          other.lastExportFormatVersion == this.lastExportFormatVersion);
+          other.lastExportFormatVersion == this.lastExportFormatVersion &&
+          other.backupReminderSnoozedUntil == this.backupReminderSnoozedUntil);
 }
 
 class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
@@ -681,12 +733,14 @@ class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
   final Value<int> createdAt;
   final Value<int?> lastExportAt;
   final Value<int?> lastExportFormatVersion;
+  final Value<int?> backupReminderSnoozedUntil;
   const LocalMetaCompanion({
     this.id = const Value.absent(),
     this.createdSchemaVersion = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.lastExportAt = const Value.absent(),
     this.lastExportFormatVersion = const Value.absent(),
+    this.backupReminderSnoozedUntil = const Value.absent(),
   });
   LocalMetaCompanion.insert({
     this.id = const Value.absent(),
@@ -694,6 +748,7 @@ class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
     required int createdAt,
     this.lastExportAt = const Value.absent(),
     this.lastExportFormatVersion = const Value.absent(),
+    this.backupReminderSnoozedUntil = const Value.absent(),
   }) : createdSchemaVersion = Value(createdSchemaVersion),
        createdAt = Value(createdAt);
   static Insertable<LocalMetaRow> custom({
@@ -702,6 +757,7 @@ class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
     Expression<int>? createdAt,
     Expression<int>? lastExportAt,
     Expression<int>? lastExportFormatVersion,
+    Expression<int>? backupReminderSnoozedUntil,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -711,6 +767,8 @@ class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
       if (lastExportAt != null) 'last_export_at': lastExportAt,
       if (lastExportFormatVersion != null)
         'last_export_format_version': lastExportFormatVersion,
+      if (backupReminderSnoozedUntil != null)
+        'backup_reminder_snoozed_until': backupReminderSnoozedUntil,
     });
   }
 
@@ -720,6 +778,7 @@ class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
     Value<int>? createdAt,
     Value<int?>? lastExportAt,
     Value<int?>? lastExportFormatVersion,
+    Value<int?>? backupReminderSnoozedUntil,
   }) {
     return LocalMetaCompanion(
       id: id ?? this.id,
@@ -728,6 +787,8 @@ class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
       lastExportAt: lastExportAt ?? this.lastExportAt,
       lastExportFormatVersion:
           lastExportFormatVersion ?? this.lastExportFormatVersion,
+      backupReminderSnoozedUntil:
+          backupReminderSnoozedUntil ?? this.backupReminderSnoozedUntil,
     );
   }
 
@@ -751,6 +812,11 @@ class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
         lastExportFormatVersion.value,
       );
     }
+    if (backupReminderSnoozedUntil.present) {
+      map['backup_reminder_snoozed_until'] = Variable<int>(
+        backupReminderSnoozedUntil.value,
+      );
+    }
     return map;
   }
 
@@ -761,7 +827,8 @@ class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
           ..write('createdSchemaVersion: $createdSchemaVersion, ')
           ..write('createdAt: $createdAt, ')
           ..write('lastExportAt: $lastExportAt, ')
-          ..write('lastExportFormatVersion: $lastExportFormatVersion')
+          ..write('lastExportFormatVersion: $lastExportFormatVersion, ')
+          ..write('backupReminderSnoozedUntil: $backupReminderSnoozedUntil')
           ..write(')'))
         .toString();
   }
@@ -7638,6 +7705,7 @@ typedef $LocalMetaCreateCompanionBuilder = LocalMetaCompanion Function({
   required int createdAt,
   Value<int?> lastExportAt,
   Value<int?> lastExportFormatVersion,
+  Value<int?> backupReminderSnoozedUntil,
 });
 typedef $LocalMetaUpdateCompanionBuilder = LocalMetaCompanion Function({
   Value<int> id,
@@ -7645,6 +7713,7 @@ typedef $LocalMetaUpdateCompanionBuilder = LocalMetaCompanion Function({
   Value<int> createdAt,
   Value<int?> lastExportAt,
   Value<int?> lastExportFormatVersion,
+  Value<int?> backupReminderSnoozedUntil,
 });
 
 class $LocalMetaFilterComposer extends Composer<_$LocalDatabase, LocalMeta> {
@@ -7677,6 +7746,11 @@ class $LocalMetaFilterComposer extends Composer<_$LocalDatabase, LocalMeta> {
 
   ColumnFilters<int> get lastExportFormatVersion => $composableBuilder(
     column: $table.lastExportFormatVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get backupReminderSnoozedUntil => $composableBuilder(
+    column: $table.backupReminderSnoozedUntil,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -7713,6 +7787,11 @@ class $LocalMetaOrderingComposer extends Composer<_$LocalDatabase, LocalMeta> {
     column: $table.lastExportFormatVersion,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get backupReminderSnoozedUntil => $composableBuilder(
+    column: $table.backupReminderSnoozedUntil,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $LocalMetaAnnotationComposer
@@ -7742,6 +7821,11 @@ class $LocalMetaAnnotationComposer
 
   GeneratedColumn<int> get lastExportFormatVersion => $composableBuilder(
     column: $table.lastExportFormatVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get backupReminderSnoozedUntil => $composableBuilder(
+    column: $table.backupReminderSnoozedUntil,
     builder: (column) => column,
   );
 }
@@ -7782,12 +7866,14 @@ class $LocalMetaTableManager
                 Value<int> createdAt = const Value.absent(),
                 Value<int?> lastExportAt = const Value.absent(),
                 Value<int?> lastExportFormatVersion = const Value.absent(),
+                Value<int?> backupReminderSnoozedUntil = const Value.absent(),
               }) => LocalMetaCompanion(
                 id: id,
                 createdSchemaVersion: createdSchemaVersion,
                 createdAt: createdAt,
                 lastExportAt: lastExportAt,
                 lastExportFormatVersion: lastExportFormatVersion,
+                backupReminderSnoozedUntil: backupReminderSnoozedUntil,
               ),
           createCompanionCallback:
               ({
@@ -7796,12 +7882,14 @@ class $LocalMetaTableManager
                 required int createdAt,
                 Value<int?> lastExportAt = const Value.absent(),
                 Value<int?> lastExportFormatVersion = const Value.absent(),
+                Value<int?> backupReminderSnoozedUntil = const Value.absent(),
               }) => LocalMetaCompanion.insert(
                 id: id,
                 createdSchemaVersion: createdSchemaVersion,
                 createdAt: createdAt,
                 lastExportAt: lastExportAt,
                 lastExportFormatVersion: lastExportFormatVersion,
+                backupReminderSnoozedUntil: backupReminderSnoozedUntil,
               ),
           withReferenceMapper: (p0) => p0
               .map(

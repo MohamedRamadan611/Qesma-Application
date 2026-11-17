@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qesma_api/qesma_api.dart';
 
+import '../../../core/features_for_mode.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/palette.dart';
@@ -101,6 +102,7 @@ class IncomingPaymentsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (!ref.watch(modeFeaturesProvider).settlementReview) return const SizedBox.shrink();
     final l10n = AppLocalizations.of(context);
     final items = ref.watch(incomingPaymentsProvider(group.id)).value ?? const <SettlementView>[];
     if (items.isEmpty) return const SizedBox.shrink();
@@ -132,6 +134,7 @@ class IncomingPaymentsBanner extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (!ref.watch(modeFeaturesProvider).settlementReview) return const SizedBox.shrink();
     final l10n = AppLocalizations.of(context);
     final items = ref.watch(incomingPaymentsProvider(gid)).value ?? const <SettlementView>[];
     if (items.isEmpty) return const SizedBox.shrink();
