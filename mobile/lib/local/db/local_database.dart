@@ -45,7 +45,7 @@ int utcNowMillis() => DateTime.now().toUtc().millisecondsSinceEpoch;
   ],
 )
 class LocalDatabase extends _$LocalDatabase {
-  LocalDatabase(super.executor, {this.clock = utcNowMillis});
+  LocalDatabase(super.executor, {this._clock = utcNowMillis});
 
   /// A private in-memory database for tests.
   LocalDatabase.inMemory({int Function() clock = utcNowMillis})
@@ -54,8 +54,7 @@ class LocalDatabase extends _$LocalDatabase {
   /// The executor for a database file, opened on a background isolate.
   static QueryExecutor openFile(File file) => NativeDatabase.createInBackground(file, setup: configureConnection);
 
-  /// Source of timestamps the database itself writes (the local_meta row).
-  final int Function() clock;
+  final int Function() _clock;
 
   @override
   int get schemaVersion => 1;
@@ -65,7 +64,7 @@ class LocalDatabase extends _$LocalDatabase {
         onCreate: (m) async {
           await m.createAll();
           await into(localMeta).insert(
-            LocalMetaCompanion.insert(id: const Value(1), createdSchemaVersion: schemaVersion, createdAt: clock()),
+            LocalMetaCompanion.insert(id: const Value(1), createdSchemaVersion: schemaVersion, createdAt: _clock()),
           );
         },
         onUpgrade: (m, from, to) async {
