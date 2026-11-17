@@ -4297,6 +4297,222 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'التصنيف'**
   String get expenseCategoryPickerTitle;
+
+  /// عنوان صفحة نصيبي
+  ///
+  /// In ar, this message translates to:
+  /// **'نصيبي'**
+  String get myShareTitle;
+
+  /// وصف مختصر لصفحة نصيبي في الإعدادات
+  ///
+  /// In ar, this message translates to:
+  /// **'استهلاكك ومصاريفك الشهرية'**
+  String get myShareSubtitle;
+
+  /// عنوان فرعي للمصاريف الشهرية
+  ///
+  /// In ar, this message translates to:
+  /// **'المصاريف الشهرية'**
+  String get myShareMonthlySpend;
+
+  /// إجمالي ما استهلكه المستخدم في الشهر
+  ///
+  /// In ar, this message translates to:
+  /// **'استهلاكك'**
+  String get myShareConsumed;
+
+  /// إجمالي ما دفعه المستخدم مقدمًا في الشهر
+  ///
+  /// In ar, this message translates to:
+  /// **'دفعت مقدمًا'**
+  String get mySharePaidUpFront;
+
+  /// الفرق بين ما دفعه المستخدم وما استهلكه
+  ///
+  /// In ar, this message translates to:
+  /// **'الفرق'**
+  String get myShareDifference;
+
+  /// حالة عندما يدفع المستخدم أكثر مما يستهلك
+  ///
+  /// In ar, this message translates to:
+  /// **'دفعت أكثر مما استهلكت'**
+  String get myShareYouPaidMore;
+
+  /// حالة عندما يستهلك المستخدم أكثر مما يدفع
+  ///
+  /// In ar, this message translates to:
+  /// **'استهلكت أكثر مما دفعت'**
+  String get myShareYouConsumedMore;
+
+  /// حالة التساوي بين الدفع والاستهلاك
+  ///
+  /// In ar, this message translates to:
+  /// **'استهلاكك مساوٍ لما دفعته'**
+  String get myShareBalanced;
+
+  /// عنوان الحالة الفارغة لصفحة نصيبي
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد مصاريف بعد'**
+  String get myShareEmptyTitle;
+
+  /// وصف الحالة الفارغة لصفحة نصيبي
+  ///
+  /// In ar, this message translates to:
+  /// **'عند تسجيل المصاريف في مجموعاتك، ستظهر تفاصيل استهلاكك هنا.'**
+  String get myShareEmptyBody;
+
+  /// عنوان نافذة تفاصيل مصاريف الفئة
+  ///
+  /// In ar, this message translates to:
+  /// **'تفاصيل الفئة'**
+  String get myShareDrilldownTitle;
+
+  /// عدد المصاريف في الفئة
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =1{مصروف واحد} =2{مصروفان} few{{count} مصاريف} many{{count} مصروفًا} other{{count} مصروف}}'**
+  String myShareExpensesCount(int count);
+
+  /// نص عند عدم وجود مصاريف للفئة
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد مصاريف لهذه الفئة'**
+  String get myShareNoExpensesInCategory;
+
+  /// عنوان صفحة ملخص الرحلة
+  ///
+  /// In ar, this message translates to:
+  /// **'ملخص الرحلة'**
+  String get recapTitle;
+
+  /// زر مشاركة الملخص كصورة
+  ///
+  /// In ar, this message translates to:
+  /// **'مشاركة كصورة'**
+  String get recapShareImage;
+
+  /// زر مشاركة الملخص كنص
+  ///
+  /// In ar, this message translates to:
+  /// **'مشاركة كنص'**
+  String get recapShareText;
+
+  /// عنوان نافذة تأكيد مشاركة الملخص
+  ///
+  /// In ar, this message translates to:
+  /// **'مشاركة ملخص الرحلة'**
+  String get recapConfirmShareTitle;
+
+  /// نص نافذة تأكيد مشاركة الملخص والأسماء
+  ///
+  /// In ar, this message translates to:
+  /// **'ستظهر أسماء أعضاء المجموعة في الملخص المشترك. هل تريد المتابعة؟'**
+  String get recapConfirmShareBody;
+
+  /// زر تأكيد المشاركة
+  ///
+  /// In ar, this message translates to:
+  /// **'مشاركة'**
+  String get recapConfirmShareAction;
+
+  /// عنوان إجمالي المصاريف في الملخص
+  ///
+  /// In ar, this message translates to:
+  /// **'إجمالي المصاريف'**
+  String get recapTotalSpent;
+
+  /// عدد المصاريف في ملخص الرحلة
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =1{مصروف واحد} =2{مصروفان} few{{count} مصاريف} many{{count} مصروفًا} other{{count} مصروف}}'**
+  String recapExpensesCount(int count);
+
+  /// عنوان العضو الأكثر دفعًا
+  ///
+  /// In ar, this message translates to:
+  /// **'أكثر من دفع'**
+  String get recapTopPayer;
+
+  /// عنوان أكبر مصروف منفرد
+  ///
+  /// In ar, this message translates to:
+  /// **'أكبر مصروف'**
+  String get recapBiggestExpense;
+
+  /// عنوان قسم توزيع المصاريف حسب الفئات
+  ///
+  /// In ar, this message translates to:
+  /// **'توزيع المصاريف'**
+  String get recapCategoriesTitle;
+
+  /// عنوان الحالة الفارغة لملخص الرحلة
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد مصاريف بعد'**
+  String get recapEmptyTitle;
+
+  /// نص الحالة الفارغة لملخص الرحلة
+  ///
+  /// In ar, this message translates to:
+  /// **'عند تسجيل مصاريف في هذه المجموعة، سيظهر ملخص الرحلة هنا.'**
+  String get recapEmptyBody;
+
+  /// العلامة المائية للتطبيق
+  ///
+  /// In ar, this message translates to:
+  /// **'قسمة • Qesma'**
+  String get recapWatermark;
+
+  /// رابط تحميل التطبيق في أسفل الصورة
+  ///
+  /// In ar, this message translates to:
+  /// **'qesma.app'**
+  String get recapPlayLink;
+
+  /// زر فتح شاشة ملخص الرحلة
+  ///
+  /// In ar, this message translates to:
+  /// **'عرض ملخص الرحلة'**
+  String get recapViewButton;
+
+  /// عنوان الملخص النصي للمجموعة
+  ///
+  /// In ar, this message translates to:
+  /// **'ملخص مصاريف {groupName}'**
+  String recapTextSummaryHeader(String groupName);
+
+  /// سطر إجمالي المصاريف في الملخص النصي
+  ///
+  /// In ar, this message translates to:
+  /// **'إجمالي المصاريف: {amount} ({count})'**
+  String recapTextSummaryTotal(String amount, String count);
+
+  /// عنوان قسم التسويات في الملخص النصي
+  ///
+  /// In ar, this message translates to:
+  /// **'التسويات المقترحة:'**
+  String get recapTextSummaryTransfersHeader;
+
+  /// سطر تسوية فردية في الملخص النصي
+  ///
+  /// In ar, this message translates to:
+  /// **'• {from} يدفع لـ {to}: {amount}'**
+  String recapTextSummaryTransferLine(String from, String to, String amount);
+
+  /// نص تسوية كافة المصاريف في الملخص النصي
+  ///
+  /// In ar, this message translates to:
+  /// **'تمت تسوية جميع المصاريف!'**
+  String get recapTextSummaryAllSettled;
+
+  /// تذييل الملخص النصي
+  ///
+  /// In ar, this message translates to:
+  /// **'تم الحساب بواسطة تطبيق قسمة • qesma.app'**
+  String get recapTextSummaryFooter;
 }
 
 class _AppLocalizationsDelegate

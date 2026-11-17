@@ -23,10 +23,12 @@ import '../../features/invites/application/invite_code.dart';
 import '../../features/invites/application/pending_invite.dart';
 import '../../features/invites/presentation/enter_code_screen.dart';
 import '../../features/invites/presentation/join_screen.dart';
+import '../../features/my_share/presentation/my_share_screen.dart';
 import '../../features/profile/presentation/account_settings_screen.dart';
 import '../../features/profile/presentation/edit_profile_screen.dart';
 import '../../features/profile/presentation/payment_handles_screen.dart';
 import '../../features/profile/presentation/profile_hub_screen.dart';
+import '../../features/recap/presentation/trip_recap_screen.dart';
 import '../app_mode.dart';
 import '../features_for_mode.dart';
 import '../widgets/main_shell.dart';
@@ -47,8 +49,10 @@ abstract final class Routes {
   static String expense(String gid, String eid) => '/groups/$gid/expenses/$eid';
   static String settlement(String gid, String sid) => '/groups/$gid/settlements/$sid';
   static String editExpense(String gid, String eid) => '/groups/$gid/expenses/$eid/edit';
+  static String recap(String gid) => '/groups/$gid/recap';
   static const String splash = '/splash';
   static const String welcome = '/welcome';
+  static const String myShare = '/my-share';
 
   /// Local mode only: "what's your name?" (the one-field onboarding that replaces sign-in).
   static const String welcomeName = '/welcome/name';
@@ -197,11 +201,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: Routes.editProfile, builder: (context, state) => const EditProfileScreen()),
       if (features.accountSettings) GoRoute(path: Routes.accountSettings, builder: (context, state) => const AccountSettingsScreen()),
       GoRoute(path: Routes.paymentHandles, builder: (context, state) => const PaymentHandlesScreen()),
+      if (features.myShare) GoRoute(path: Routes.myShare, builder: (context, state) => const MyShareScreen()),
       GoRoute(path: Routes.newGroup, builder: (context, state) => const CreateGroupScreen()),
       GoRoute(
         path: '/groups/:gid',
         builder: (context, state) => GroupHomeScreen(gid: state.pathParameters['gid']!, initialTab: state.uri.queryParameters['tab']),
         routes: [
+          if (features.recap) GoRoute(path: 'recap', builder: (context, state) => TripRecapScreen(gid: state.pathParameters['gid']!)),
           GoRoute(path: 'edit', builder: (context, state) => EditGroupScreen(gid: state.pathParameters['gid']!)),
           GoRoute(path: 'settlements/:sid', builder: (context, state) => SettlementDetailScreen(gid: state.pathParameters['gid']!, sid: state.pathParameters['sid']!)),
           if (features.joinRequests) GoRoute(path: 'join-requests', builder: (context, state) => JoinRequestsScreen(gid: state.pathParameters['gid']!)),

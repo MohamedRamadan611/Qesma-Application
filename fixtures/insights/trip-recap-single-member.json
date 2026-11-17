@@ -1,0 +1,98 @@
+{
+  "name": "trip-recap-single-member",
+  "members": [
+    {
+      "memberId": "m1",
+      "displayName": "Sole Traveler",
+      "sortOrder": 0
+    }
+  ],
+  "expenses": [
+    {
+      "expenseId": "e1",
+      "title": "Train Ticket",
+      "totalMinor": 15000,
+      "expenseDate": "2026-11-15",
+      "createdAt": 100,
+      "category": "TRANSPORT",
+      "payers": [
+        {
+          "memberId": "m1",
+          "amountMinor": 15000
+        }
+      ]
+    }
+  ],
+  "expected": {
+    "totalSpentMinor": 15000,
+    "expenseCount": 1,
+    "dateRangeStart": "2026-11-15",
+    "dateRangeEnd": "2026-11-15",
+    "topPayer": {
+      "memberId": "m1",
+      "displayName": "Sole Traveler",
+      "amountPaidMinor": 15000
+    },
+    "biggestExpense": {
+      "expenseId": "e1",
+      "title": "Train Ticket",
+      "totalMinor": 15000,
+      "expenseDate": "2026-11-15"
+    },
+    "categoryBreakdown": [
+      {
+        "category": "FOOD",
+        "totalMinor": 0,
+        "percentageBps": 0
+      },
+      {
+        "category": "TRANSPORT",
+        "totalMinor": 15000,
+        "percentageBps": 10000
+      },
+      {
+        "category": "FUEL",
+        "totalMinor": 0,
+        "percentageBps": 0
+      },
+      {
+        "category": "ACCOMMODATION",
+        "totalMinor": 0,
+        "percentageBps": 0
+      },
+      {
+        "category": "GROCERIES",
+        "totalMinor": 0,
+        "percentageBps": 0
+      },
+      {
+        "category": "SHOPPING",
+        "totalMinor": 0,
+        "percentageBps": 0
+      },
+      {
+        "category": "ENTERTAINMENT",
+        "totalMinor": 0,
+        "percentageBps": 0
+      },
+      {
+        "category": "BILLS",
+        "totalMinor": 0,
+        "percentageBps": 0
+      },
+      {
+        "category": "OTHER",
+        "totalMinor": 0,
+        "percentageBps": 0
+      }
+    ],
+    "memberPaidTotals": [
+      {
+        "memberId": "m1",
+        "displayName": "Sole Traveler",
+        "sortOrder": 0,
+        "amountPaidMinor": 15000
+      }
+    ]
+  }
+}

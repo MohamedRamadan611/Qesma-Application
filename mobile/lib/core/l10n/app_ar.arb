@@ -1606,5 +1606,105 @@
   "expenseFilterAllCategories": "كل التصنيفات",
   "@expenseFilterAllCategories": {"description":"خيار عرض كل التصنيفات"},
   "expenseCategoryPickerTitle": "التصنيف",
-  "@expenseCategoryPickerTitle": {"description":"عنوان اختيار التصنيف في نموذج المصروف"}
+  "@expenseCategoryPickerTitle": {"description":"عنوان اختيار التصنيف في نموذج المصروف"},
+  "myShareTitle": "نصيبي",
+  "@myShareTitle": {"description":"عنوان صفحة نصيبي"},
+  "myShareSubtitle": "استهلاكك ومصاريفك الشهرية",
+  "@myShareSubtitle": {"description":"وصف مختصر لصفحة نصيبي في الإعدادات"},
+  "myShareMonthlySpend": "المصاريف الشهرية",
+  "@myShareMonthlySpend": {"description":"عنوان فرعي للمصاريف الشهرية"},
+  "myShareConsumed": "استهلاكك",
+  "@myShareConsumed": {"description":"إجمالي ما استهلكه المستخدم في الشهر"},
+  "mySharePaidUpFront": "دفعت مقدمًا",
+  "@mySharePaidUpFront": {"description":"إجمالي ما دفعه المستخدم مقدمًا في الشهر"},
+  "myShareDifference": "الفرق",
+  "@myShareDifference": {"description":"الفرق بين ما دفعه المستخدم وما استهلكه"},
+  "myShareYouPaidMore": "دفعت أكثر مما استهلكت",
+  "@myShareYouPaidMore": {"description":"حالة عندما يدفع المستخدم أكثر مما يستهلك"},
+  "myShareYouConsumedMore": "استهلكت أكثر مما دفعت",
+  "@myShareYouConsumedMore": {"description":"حالة عندما يستهلك المستخدم أكثر مما يدفع"},
+  "myShareBalanced": "استهلاكك مساوٍ لما دفعته",
+  "@myShareBalanced": {"description":"حالة التساوي بين الدفع والاستهلاك"},
+  "myShareEmptyTitle": "لا توجد مصاريف بعد",
+  "@myShareEmptyTitle": {"description":"عنوان الحالة الفارغة لصفحة نصيبي"},
+  "myShareEmptyBody": "عند تسجيل المصاريف في مجموعاتك، ستظهر تفاصيل استهلاكك هنا.",
+  "@myShareEmptyBody": {"description":"وصف الحالة الفارغة لصفحة نصيبي"},
+  "myShareDrilldownTitle": "تفاصيل الفئة",
+  "@myShareDrilldownTitle": {"description":"عنوان نافذة تفاصيل مصاريف الفئة"},
+  "myShareExpensesCount": "{count, plural, =1{مصروف واحد} =2{مصروفان} few{{count} مصاريف} many{{count} مصروفًا} other{{count} مصروف}}",
+  "@myShareExpensesCount": {
+    "description": "عدد المصاريف في الفئة",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "myShareNoExpensesInCategory": "لا توجد مصاريف لهذه الفئة",
+  "@myShareNoExpensesInCategory": {"description":"نص عند عدم وجود مصاريف للفئة"},
+  "recapTitle": "ملخص الرحلة",
+  "@recapTitle": {"description":"عنوان صفحة ملخص الرحلة"},
+  "recapShareImage": "مشاركة كصورة",
+  "@recapShareImage": {"description":"زر مشاركة الملخص كصورة"},
+  "recapShareText": "مشاركة كنص",
+  "@recapShareText": {"description":"زر مشاركة الملخص كنص"},
+  "recapConfirmShareTitle": "مشاركة ملخص الرحلة",
+  "@recapConfirmShareTitle": {"description":"عنوان نافذة تأكيد مشاركة الملخص"},
+  "recapConfirmShareBody": "ستظهر أسماء أعضاء المجموعة في الملخص المشترك. هل تريد المتابعة؟",
+  "@recapConfirmShareBody": {"description":"نص نافذة تأكيد مشاركة الملخص والأسماء"},
+  "recapConfirmShareAction": "مشاركة",
+  "@recapConfirmShareAction": {"description":"زر تأكيد المشاركة"},
+  "recapTotalSpent": "إجمالي المصاريف",
+  "@recapTotalSpent": {"description":"عنوان إجمالي المصاريف في الملخص"},
+  "recapExpensesCount": "{count, plural, =1{مصروف واحد} =2{مصروفان} few{{count} مصاريف} many{{count} مصروفًا} other{{count} مصروف}}",
+  "@recapExpensesCount": {
+    "description": "عدد المصاريف في ملخص الرحلة",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "recapTopPayer": "أكثر من دفع",
+  "@recapTopPayer": {"description":"عنوان العضو الأكثر دفعًا"},
+  "recapBiggestExpense": "أكبر مصروف",
+  "@recapBiggestExpense": {"description":"عنوان أكبر مصروف منفرد"},
+  "recapCategoriesTitle": "توزيع المصاريف",
+  "@recapCategoriesTitle": {"description":"عنوان قسم توزيع المصاريف حسب الفئات"},
+  "recapEmptyTitle": "لا توجد مصاريف بعد",
+  "@recapEmptyTitle": {"description":"عنوان الحالة الفارغة لملخص الرحلة"},
+  "recapEmptyBody": "عند تسجيل مصاريف في هذه المجموعة، سيظهر ملخص الرحلة هنا.",
+  "@recapEmptyBody": {"description":"نص الحالة الفارغة لملخص الرحلة"},
+  "recapWatermark": "قسمة • Qesma",
+  "@recapWatermark": {"description":"العلامة المائية للتطبيق"},
+  "recapPlayLink": "qesma.app",
+  "@recapPlayLink": {"description":"رابط تحميل التطبيق في أسفل الصورة"},
+  "recapViewButton": "عرض ملخص الرحلة",
+  "@recapViewButton": {"description":"زر فتح شاشة ملخص الرحلة"},
+  "recapTextSummaryHeader": "ملخص مصاريف {groupName}",
+  "@recapTextSummaryHeader": {
+    "description": "عنوان الملخص النصي للمجموعة",
+    "placeholders": {
+      "groupName": {"type": "String"}
+    }
+  },
+  "recapTextSummaryTotal": "إجمالي المصاريف: {amount} ({count})",
+  "@recapTextSummaryTotal": {
+    "description": "سطر إجمالي المصاريف في الملخص النصي",
+    "placeholders": {
+      "amount": {"type": "String"},
+      "count": {"type": "String"}
+    }
+  },
+  "recapTextSummaryTransfersHeader": "التسويات المقترحة:",
+  "@recapTextSummaryTransfersHeader": {"description":"عنوان قسم التسويات في الملخص النصي"},
+  "recapTextSummaryTransferLine": "• {from} يدفع لـ {to}: {amount}",
+  "@recapTextSummaryTransferLine": {
+    "description": "سطر تسوية فردية في الملخص النصي",
+    "placeholders": {
+      "from": {"type": "String"},
+      "to": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "recapTextSummaryAllSettled": "تمت تسوية جميع المصاريف!",
+  "@recapTextSummaryAllSettled": {"description":"نص تسوية كافة المصاريف في الملخص النصي"},
+  "recapTextSummaryFooter": "تم الحساب بواسطة تطبيق قسمة • qesma.app",
+  "@recapTextSummaryFooter": {"description":"تذييل الملخص النصي"}
 }

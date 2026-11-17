@@ -1,0 +1,7 @@
+{
+  "name": "zero-months-empty",
+  "input": [],
+  "expected": {
+    "sections": []
+  }
+}

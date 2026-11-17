@@ -2508,4 +2508,137 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get expenseCategoryPickerTitle => 'Category';
+
+  @override
+  String get myShareTitle => 'My Share';
+
+  @override
+  String get myShareSubtitle => 'Monthly spend and consumption';
+
+  @override
+  String get myShareMonthlySpend => 'Monthly spend';
+
+  @override
+  String get myShareConsumed => 'Consumed';
+
+  @override
+  String get mySharePaidUpFront => 'Paid up front';
+
+  @override
+  String get myShareDifference => 'Difference';
+
+  @override
+  String get myShareYouPaidMore => 'You paid more than you consumed';
+
+  @override
+  String get myShareYouConsumedMore => 'You consumed more than you paid';
+
+  @override
+  String get myShareBalanced => 'Consumption equals payments';
+
+  @override
+  String get myShareEmptyTitle => 'No expenses yet';
+
+  @override
+  String get myShareEmptyBody =>
+      'When expenses are recorded in your groups, your monthly consumption will appear here.';
+
+  @override
+  String get myShareDrilldownTitle => 'Category Details';
+
+  @override
+  String myShareExpensesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count expenses',
+      one: '1 expense',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get myShareNoExpensesInCategory => 'No expenses in this category';
+
+  @override
+  String get recapTitle => 'Trip Recap';
+
+  @override
+  String get recapShareImage => 'Share image';
+
+  @override
+  String get recapShareText => 'Share as text';
+
+  @override
+  String get recapConfirmShareTitle => 'Share Trip Recap';
+
+  @override
+  String get recapConfirmShareBody =>
+      'Member names will appear in the shared summary. Do you want to continue?';
+
+  @override
+  String get recapConfirmShareAction => 'Share';
+
+  @override
+  String get recapTotalSpent => 'Total Spent';
+
+  @override
+  String recapExpensesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count expenses',
+      one: '1 expense',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recapTopPayer => 'Top Payer';
+
+  @override
+  String get recapBiggestExpense => 'Biggest Expense';
+
+  @override
+  String get recapCategoriesTitle => 'Spending by Category';
+
+  @override
+  String get recapEmptyTitle => 'No expenses yet';
+
+  @override
+  String get recapEmptyBody =>
+      'When expenses are recorded in this group, the trip recap will appear here.';
+
+  @override
+  String get recapWatermark => 'قسمة • Qesma';
+
+  @override
+  String get recapPlayLink => 'qesma.app';
+
+  @override
+  String get recapViewButton => 'View Trip Recap';
+
+  @override
+  String recapTextSummaryHeader(String groupName) {
+    return 'Expense summary: $groupName';
+  }
+
+  @override
+  String recapTextSummaryTotal(String amount, String count) {
+    return 'Total spent: $amount ($count)';
+  }
+
+  @override
+  String get recapTextSummaryTransfersHeader => 'Suggested settlements:';
+
+  @override
+  String recapTextSummaryTransferLine(String from, String to, String amount) {
+    return '• $from pays $to: $amount';
+  }
+
+  @override
+  String get recapTextSummaryAllSettled => 'All expenses are settled!';
+
+  @override
+  String get recapTextSummaryFooter => 'Calculated by Qesma • qesma.app';
 }

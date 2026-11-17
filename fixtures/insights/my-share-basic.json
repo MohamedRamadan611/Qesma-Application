@@ -1,0 +1,106 @@
+{
+  "name": "basic-single-month-three-categories",
+  "input": [
+    {
+      "expenseId": "e1",
+      "groupId": "g1",
+      "expenseTitle": "Dinner at Restaurant",
+      "groupName": "Trip to Dahab",
+      "expenseDate": "2026-11-10",
+      "category": "FOOD",
+      "currencyCode": "EGP",
+      "owedMinor": 15000,
+      "paidMinor": 30000
+    },
+    {
+      "expenseId": "e2",
+      "groupId": "g1",
+      "expenseTitle": "Gas for the car",
+      "groupName": "Trip to Dahab",
+      "expenseDate": "2026-11-12",
+      "category": "FUEL",
+      "currencyCode": "EGP",
+      "owedMinor": 5000,
+      "paidMinor": 0
+    },
+    {
+      "expenseId": "e3",
+      "groupId": "g1",
+      "expenseTitle": "Supermarket snacks",
+      "groupName": "Trip to Dahab",
+      "expenseDate": "2026-11-15",
+      "category": "GROCERIES",
+      "currencyCode": "EGP",
+      "owedMinor": 10000,
+      "paidMinor": 10000
+    }
+  ],
+  "expected": {
+    "sections": [
+      {
+        "currencyCode": "EGP",
+        "months": [
+          {
+            "month": "2026-11",
+            "totalConsumedMinor": 30000,
+            "totalPaidUpFrontMinor": 40000,
+            "netDiffMinor": 10000,
+            "categories": [
+              {
+                "category": "FOOD",
+                "consumedMinor": 15000,
+                "paidUpFrontMinor": 30000,
+                "percentageBps": 5000,
+                "expenses": [
+                  {
+                    "expenseId": "e1",
+                    "groupId": "g1",
+                    "expenseTitle": "Dinner at Restaurant",
+                    "groupName": "Trip to Dahab",
+                    "expenseDate": "2026-11-10",
+                    "owedMinor": 15000,
+                    "paidMinor": 30000
+                  }
+                ]
+              },
+              {
+                "category": "FUEL",
+                "consumedMinor": 5000,
+                "paidUpFrontMinor": 0,
+                "percentageBps": 1667,
+                "expenses": [
+                  {
+                    "expenseId": "e2",
+                    "groupId": "g1",
+                    "expenseTitle": "Gas for the car",
+                    "groupName": "Trip to Dahab",
+                    "expenseDate": "2026-11-12",
+                    "owedMinor": 5000,
+                    "paidMinor": 0
+                  }
+                ]
+              },
+              {
+                "category": "GROCERIES",
+                "consumedMinor": 10000,
+                "paidUpFrontMinor": 10000,
+                "percentageBps": 3333,
+                "expenses": [
+                  {
+                    "expenseId": "e3",
+                    "groupId": "g1",
+                    "expenseTitle": "Supermarket snacks",
+                    "groupName": "Trip to Dahab",
+                    "expenseDate": "2026-11-15",
+                    "owedMinor": 10000,
+                    "paidMinor": 10000
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

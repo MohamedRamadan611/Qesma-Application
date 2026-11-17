@@ -119,6 +119,13 @@ class ProfileHubScreen extends ConsumerWidget {
           ProfileSection(
             title: l10n.profileSectionPrefs,
             children: [
+              if (features.myShare)
+                ProfileRow(
+                  icon: Icons.pie_chart_outline,
+                  title: l10n.myShareTitle,
+                  value: l10n.myShareMonthlySpend,
+                  onTap: () => context.push(Routes.myShare),
+                ),
               ProfileRow(icon: Icons.account_balance_wallet_outlined, title: l10n.profilePaymentDetails, onTap: () => context.push(Routes.paymentHandles)),
               ProfileRow(
                 icon: Icons.language,

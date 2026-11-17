@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/api_failure.dart';
 import '../../../core/errors/error_copy.dart';
+import '../../../core/features_for_mode.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/tokens.dart';
@@ -103,6 +104,12 @@ class _GroupHomeScreenState extends ConsumerState<GroupHomeScreen> {
       onBack: () => context.go(Routes.home),
       // Only an owner or an admin edits the group (the server still decides; a plain member would get 403).
       actions: [
+        if (ref.watch(modeFeaturesProvider).recap)
+          IconButton(
+            icon: const Icon(Icons.photo),
+            tooltip: l10n.recapTitle,
+            onPressed: () => context.push(Routes.recap(group.id)),
+          ),
         // Owner and Admin invite people (the server still decides; a plain member would get 403).
         if (ref.watch(groupPermissionsProvider(widget.gid)).canManageInvites)
           IconButton(

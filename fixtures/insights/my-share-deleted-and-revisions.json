@@ -1,0 +1,117 @@
+{
+  "name": "not-you-and-tied-remainders",
+  "input": [
+    {
+      "expenseId": "e20",
+      "groupId": "g1",
+      "expenseTitle": "Not for you at all",
+      "groupName": "Flat Mates",
+      "expenseDate": "2026-09-01",
+      "category": "SHOPPING",
+      "currencyCode": "EGP",
+      "owedMinor": 0,
+      "paidMinor": 0
+    },
+    {
+      "expenseId": "e21",
+      "groupId": "g1",
+      "expenseTitle": "Food Split",
+      "groupName": "Flat Mates",
+      "expenseDate": "2026-09-05",
+      "category": "FOOD",
+      "currencyCode": "EGP",
+      "owedMinor": 10000,
+      "paidMinor": 10000
+    },
+    {
+      "expenseId": "e22",
+      "groupId": "g1",
+      "expenseTitle": "Uber to Airport",
+      "groupName": "Flat Mates",
+      "expenseDate": "2026-09-10",
+      "category": "TRANSPORT",
+      "currencyCode": "EGP",
+      "owedMinor": 10000,
+      "paidMinor": 0
+    },
+    {
+      "expenseId": "e23",
+      "groupId": "g1",
+      "expenseTitle": "Cinema tickets",
+      "groupName": "Flat Mates",
+      "expenseDate": "2026-09-15",
+      "category": "ENTERTAINMENT",
+      "currencyCode": "EGP",
+      "owedMinor": 10000,
+      "paidMinor": 10000
+    }
+  ],
+  "expected": {
+    "sections": [
+      {
+        "currencyCode": "EGP",
+        "months": [
+          {
+            "month": "2026-09",
+            "totalConsumedMinor": 30000,
+            "totalPaidUpFrontMinor": 20000,
+            "netDiffMinor": -10000,
+            "categories": [
+              {
+                "category": "FOOD",
+                "consumedMinor": 10000,
+                "paidUpFrontMinor": 10000,
+                "percentageBps": 3334,
+                "expenses": [
+                  {
+                    "expenseId": "e21",
+                    "groupId": "g1",
+                    "expenseTitle": "Food Split",
+                    "groupName": "Flat Mates",
+                    "expenseDate": "2026-09-05",
+                    "owedMinor": 10000,
+                    "paidMinor": 10000
+                  }
+                ]
+              },
+              {
+                "category": "TRANSPORT",
+                "consumedMinor": 10000,
+                "paidUpFrontMinor": 0,
+                "percentageBps": 3333,
+                "expenses": [
+                  {
+                    "expenseId": "e22",
+                    "groupId": "g1",
+                    "expenseTitle": "Uber to Airport",
+                    "groupName": "Flat Mates",
+                    "expenseDate": "2026-09-10",
+                    "owedMinor": 10000,
+                    "paidMinor": 0
+                  }
+                ]
+              },
+              {
+                "category": "ENTERTAINMENT",
+                "consumedMinor": 10000,
+                "paidUpFrontMinor": 10000,
+                "percentageBps": 3333,
+                "expenses": [
+                  {
+                    "expenseId": "e23",
+                    "groupId": "g1",
+                    "expenseTitle": "Cinema tickets",
+                    "groupName": "Flat Mates",
+                    "expenseDate": "2026-09-15",
+                    "owedMinor": 10000,
+                    "paidMinor": 10000
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

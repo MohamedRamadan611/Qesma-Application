@@ -2477,4 +2477,144 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get expenseCategoryPickerTitle => 'التصنيف';
+
+  @override
+  String get myShareTitle => 'نصيبي';
+
+  @override
+  String get myShareSubtitle => 'استهلاكك ومصاريفك الشهرية';
+
+  @override
+  String get myShareMonthlySpend => 'المصاريف الشهرية';
+
+  @override
+  String get myShareConsumed => 'استهلاكك';
+
+  @override
+  String get mySharePaidUpFront => 'دفعت مقدمًا';
+
+  @override
+  String get myShareDifference => 'الفرق';
+
+  @override
+  String get myShareYouPaidMore => 'دفعت أكثر مما استهلكت';
+
+  @override
+  String get myShareYouConsumedMore => 'استهلكت أكثر مما دفعت';
+
+  @override
+  String get myShareBalanced => 'استهلاكك مساوٍ لما دفعته';
+
+  @override
+  String get myShareEmptyTitle => 'لا توجد مصاريف بعد';
+
+  @override
+  String get myShareEmptyBody =>
+      'عند تسجيل المصاريف في مجموعاتك، ستظهر تفاصيل استهلاكك هنا.';
+
+  @override
+  String get myShareDrilldownTitle => 'تفاصيل الفئة';
+
+  @override
+  String myShareExpensesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count مصروف',
+      many: '$count مصروفًا',
+      few: '$count مصاريف',
+      two: 'مصروفان',
+      one: 'مصروف واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get myShareNoExpensesInCategory => 'لا توجد مصاريف لهذه الفئة';
+
+  @override
+  String get recapTitle => 'ملخص الرحلة';
+
+  @override
+  String get recapShareImage => 'مشاركة كصورة';
+
+  @override
+  String get recapShareText => 'مشاركة كنص';
+
+  @override
+  String get recapConfirmShareTitle => 'مشاركة ملخص الرحلة';
+
+  @override
+  String get recapConfirmShareBody =>
+      'ستظهر أسماء أعضاء المجموعة في الملخص المشترك. هل تريد المتابعة؟';
+
+  @override
+  String get recapConfirmShareAction => 'مشاركة';
+
+  @override
+  String get recapTotalSpent => 'إجمالي المصاريف';
+
+  @override
+  String recapExpensesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count مصروف',
+      many: '$count مصروفًا',
+      few: '$count مصاريف',
+      two: 'مصروفان',
+      one: 'مصروف واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recapTopPayer => 'أكثر من دفع';
+
+  @override
+  String get recapBiggestExpense => 'أكبر مصروف';
+
+  @override
+  String get recapCategoriesTitle => 'توزيع المصاريف';
+
+  @override
+  String get recapEmptyTitle => 'لا توجد مصاريف بعد';
+
+  @override
+  String get recapEmptyBody =>
+      'عند تسجيل مصاريف في هذه المجموعة، سيظهر ملخص الرحلة هنا.';
+
+  @override
+  String get recapWatermark => 'قسمة • Qesma';
+
+  @override
+  String get recapPlayLink => 'qesma.app';
+
+  @override
+  String get recapViewButton => 'عرض ملخص الرحلة';
+
+  @override
+  String recapTextSummaryHeader(String groupName) {
+    return 'ملخص مصاريف $groupName';
+  }
+
+  @override
+  String recapTextSummaryTotal(String amount, String count) {
+    return 'إجمالي المصاريف: $amount ($count)';
+  }
+
+  @override
+  String get recapTextSummaryTransfersHeader => 'التسويات المقترحة:';
+
+  @override
+  String recapTextSummaryTransferLine(String from, String to, String amount) {
+    return '• $from يدفع لـ $to: $amount';
+  }
+
+  @override
+  String get recapTextSummaryAllSettled => 'تمت تسوية جميع المصاريف!';
+
+  @override
+  String get recapTextSummaryFooter =>
+      'تم الحساب بواسطة تطبيق قسمة • qesma.app';
 }

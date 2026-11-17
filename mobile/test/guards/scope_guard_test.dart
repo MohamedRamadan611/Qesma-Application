@@ -18,6 +18,8 @@ const enabledFeatures = <String>{
   'reminders', // FL14: Remind button on a transfer
   'backup', // SA5: export / restore the local data, reminder banner
   'categories', // SA6: expense categories
+  'myShare', // SA7: My share (what I consumed vs paid up front)
+  'recap', // SA8: trip recap image & text summary
 };
 
 /// Words, Arabic words, phrases, icons and routes of one Phase 2 feature.
@@ -53,6 +55,15 @@ const phase2Features = <String, Phase2Feature>{
     words: ['export', 'import', 'backup', 'restore'],
     icons: ['Icons.download', 'Icons.upload', 'Icons.file_download'],
   ),
+  'categories': Phase2Feature(),
+  'myShare': Phase2Feature(
+    phrases: ['monthly spend'],
+    routes: ["'/my-share"],
+  ),
+  'recap': Phase2Feature(
+    icons: ['Icons.photo', 'Icons.share'],
+    routes: ["'/recap", "'/groups/:gid/recap"],
+  ),
 };
 
 /// Omitted for good (not Phase 2): never enabled.
@@ -66,10 +77,10 @@ const _permanentWords = <String, String>{
   'subscribe': 'not a concept of the app',
   'ads': 'not a concept of the app',
 };
-const _permanentPhrases = <String>['coming soon', 'sign out everywhere', 'monthly spend', 'cover photo', 'pay now', 'ready to settle'];
+const _permanentPhrases = <String>['coming soon', 'sign out everywhere', 'cover photo', 'pay now', 'ready to settle'];
 const _permanentArabic = <String>['ضيف', 'قريبا', 'قريباً', 'إيصال'];
 const _permanentIcons = <String>[
-  'Icons.camera', 'Icons.photo', 'Icons.qr_code', 'Icons.document_scanner', 'Icons.receipt', 'Icons.contacts',
+  'Icons.camera', 'Icons.qr_code', 'Icons.document_scanner', 'Icons.receipt', 'Icons.contacts',
 ];
 const _permanentRoutes = <String>["'/guest"];
 

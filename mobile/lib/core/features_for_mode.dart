@@ -24,6 +24,8 @@ class ModeFeatures {
     required this.changePassword,
     required this.accountSettings,
     required this.backup,
+    required this.myShare,
+    required this.recap,
   });
 
   /// Today's app: everything on (backup is a local-mode feature, SA5).
@@ -45,6 +47,8 @@ class ModeFeatures {
     changePassword: true,
     accountSettings: true,
     backup: false,
+    myShare: false,
+    recap: false,
   );
 
   /// The standalone release: every server-only feature off. `backup` (export, restore, reminder banner) is on: SA5.
@@ -66,6 +70,8 @@ class ModeFeatures {
     changePassword: false,
     accountSettings: false,
     backup: true,
+    myShare: true,
+    recap: true,
   );
 
   static ModeFeatures of(AppMode mode) => mode == AppMode.local ? local : server;
@@ -89,6 +95,8 @@ class ModeFeatures {
   final bool changePassword;
   final bool accountSettings;
   final bool backup;
+  final bool myShare;
+  final bool recap;
 }
 
 final modeFeaturesProvider = Provider<ModeFeatures>((ref) => ModeFeatures.of(ref.watch(appModeProvider)));

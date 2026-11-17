@@ -830,5 +830,105 @@
   "expenseFilterAllCategories": "All categories",
   "@expenseFilterAllCategories": {"description":"Option to show all categories in filter sheet"},
   "expenseCategoryPickerTitle": "Category",
-  "@expenseCategoryPickerTitle": {"description":"Category section title in expense form"}
+  "@expenseCategoryPickerTitle": {"description":"Category section title in expense form"},
+  "myShareTitle": "My Share",
+  "@myShareTitle": {"description":"Title of My Share screen"},
+  "myShareSubtitle": "Monthly spend and consumption",
+  "@myShareSubtitle": {"description":"Subtitle for My Share row in settings"},
+  "myShareMonthlySpend": "Monthly spend",
+  "@myShareMonthlySpend": {"description":"Subtitle for monthly spend"},
+  "myShareConsumed": "Consumed",
+  "@myShareConsumed": {"description":"Total consumed by user in the month"},
+  "mySharePaidUpFront": "Paid up front",
+  "@mySharePaidUpFront": {"description":"Total paid up front by user in the month"},
+  "myShareDifference": "Difference",
+  "@myShareDifference": {"description":"Difference between paid and consumed"},
+  "myShareYouPaidMore": "You paid more than you consumed",
+  "@myShareYouPaidMore": {"description":"Status when user paid more than consumed"},
+  "myShareYouConsumedMore": "You consumed more than you paid",
+  "@myShareYouConsumedMore": {"description":"Status when user consumed more than paid"},
+  "myShareBalanced": "Consumption equals payments",
+  "@myShareBalanced": {"description":"Status when consumed equals paid"},
+  "myShareEmptyTitle": "No expenses yet",
+  "@myShareEmptyTitle": {"description":"Empty state title for My Share"},
+  "myShareEmptyBody": "When expenses are recorded in your groups, your monthly consumption will appear here.",
+  "@myShareEmptyBody": {"description":"Empty state body for My Share"},
+  "myShareDrilldownTitle": "Category Details",
+  "@myShareDrilldownTitle": {"description":"Title for category drilldown sheet"},
+  "myShareExpensesCount": "{count, plural, =1{1 expense} other{{count} expenses}}",
+  "@myShareExpensesCount": {
+    "description": "Number of expenses in category",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "myShareNoExpensesInCategory": "No expenses in this category",
+  "@myShareNoExpensesInCategory": {"description":"Text when no expenses in category"},
+  "recapTitle": "Trip Recap",
+  "@recapTitle": {"description":"Trip recap screen title"},
+  "recapShareImage": "Share image",
+  "@recapShareImage": {"description":"Share recap as image button"},
+  "recapShareText": "Share as text",
+  "@recapShareText": {"description":"Share recap as text button"},
+  "recapConfirmShareTitle": "Share Trip Recap",
+  "@recapConfirmShareTitle": {"description":"Confirm share dialog title"},
+  "recapConfirmShareBody": "Member names will appear in the shared summary. Do you want to continue?",
+  "@recapConfirmShareBody": {"description":"Confirm share dialog body regarding member names"},
+  "recapConfirmShareAction": "Share",
+  "@recapConfirmShareAction": {"description":"Confirm share button action"},
+  "recapTotalSpent": "Total Spent",
+  "@recapTotalSpent": {"description":"Total spent label"},
+  "recapExpensesCount": "{count, plural, =1{1 expense} other{{count} expenses}}",
+  "@recapExpensesCount": {
+    "description": "Number of expenses in recap",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "recapTopPayer": "Top Payer",
+  "@recapTopPayer": {"description":"Top payer label"},
+  "recapBiggestExpense": "Biggest Expense",
+  "@recapBiggestExpense": {"description":"Biggest expense label"},
+  "recapCategoriesTitle": "Spending by Category",
+  "@recapCategoriesTitle": {"description":"Spending by category title"},
+  "recapEmptyTitle": "No expenses yet",
+  "@recapEmptyTitle": {"description":"Empty state title for trip recap"},
+  "recapEmptyBody": "When expenses are recorded in this group, the trip recap will appear here.",
+  "@recapEmptyBody": {"description":"Empty state body for trip recap"},
+  "recapWatermark": "قسمة • Qesma",
+  "@recapWatermark": {"description":"App watermark in image"},
+  "recapPlayLink": "qesma.app",
+  "@recapPlayLink": {"description":"Play store / app link placeholder"},
+  "recapViewButton": "View Trip Recap",
+  "@recapViewButton": {"description":"Button to open trip recap screen"},
+  "recapTextSummaryHeader": "Expense summary: {groupName}",
+  "@recapTextSummaryHeader": {
+    "description": "Header for text summary",
+    "placeholders": {
+      "groupName": {"type": "String"}
+    }
+  },
+  "recapTextSummaryTotal": "Total spent: {amount} ({count})",
+  "@recapTextSummaryTotal": {
+    "description": "Total spent line in text summary",
+    "placeholders": {
+      "amount": {"type": "String"},
+      "count": {"type": "String"}
+    }
+  },
+  "recapTextSummaryTransfersHeader": "Suggested settlements:",
+  "@recapTextSummaryTransfersHeader": {"description":"Suggested settlements header in text summary"},
+  "recapTextSummaryTransferLine": "• {from} pays {to}: {amount}",
+  "@recapTextSummaryTransferLine": {
+    "description": "Single transfer line in text summary",
+    "placeholders": {
+      "from": {"type": "String"},
+      "to": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "recapTextSummaryAllSettled": "All expenses are settled!",
+  "@recapTextSummaryAllSettled": {"description":"Text when all balances are settled"},
+  "recapTextSummaryFooter": "Calculated by Qesma • qesma.app",
+  "@recapTextSummaryFooter": {"description":"Footer in text summary"}
 }

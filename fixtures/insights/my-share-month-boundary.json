@@ -1,0 +1,122 @@
+{
+  "name": "month-boundary-descending",
+  "input": [
+    {
+      "expenseId": "e31",
+      "groupId": "g1",
+      "expenseTitle": "October End",
+      "groupName": "Flat Mates",
+      "expenseDate": "2026-10-31",
+      "category": "FOOD",
+      "currencyCode": "EGP",
+      "owedMinor": 1000,
+      "paidMinor": 1000
+    },
+    {
+      "expenseId": "e32",
+      "groupId": "g1",
+      "expenseTitle": "November Start",
+      "groupName": "Flat Mates",
+      "expenseDate": "2026-11-01",
+      "category": "FOOD",
+      "currencyCode": "EGP",
+      "owedMinor": 2000,
+      "paidMinor": 2000
+    },
+    {
+      "expenseId": "e33",
+      "groupId": "g1",
+      "expenseTitle": "December Mid",
+      "groupName": "Flat Mates",
+      "expenseDate": "2026-12-15",
+      "category": "BILLS",
+      "currencyCode": "EGP",
+      "owedMinor": 3000,
+      "paidMinor": 3000
+    }
+  ],
+  "expected": {
+    "sections": [
+      {
+        "currencyCode": "EGP",
+        "months": [
+          {
+            "month": "2026-12",
+            "totalConsumedMinor": 3000,
+            "totalPaidUpFrontMinor": 3000,
+            "netDiffMinor": 0,
+            "categories": [
+              {
+                "category": "BILLS",
+                "consumedMinor": 3000,
+                "paidUpFrontMinor": 3000,
+                "percentageBps": 10000,
+                "expenses": [
+                  {
+                    "expenseId": "e33",
+                    "groupId": "g1",
+                    "expenseTitle": "December Mid",
+                    "groupName": "Flat Mates",
+                    "expenseDate": "2026-12-15",
+                    "owedMinor": 3000,
+                    "paidMinor": 3000
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "month": "2026-11",
+            "totalConsumedMinor": 2000,
+            "totalPaidUpFrontMinor": 2000,
+            "netDiffMinor": 0,
+            "categories": [
+              {
+                "category": "FOOD",
+                "consumedMinor": 2000,
+                "paidUpFrontMinor": 2000,
+                "percentageBps": 10000,
+                "expenses": [
+                  {
+                    "expenseId": "e32",
+                    "groupId": "g1",
+                    "expenseTitle": "November Start",
+                    "groupName": "Flat Mates",
+                    "expenseDate": "2026-11-01",
+                    "owedMinor": 2000,
+                    "paidMinor": 2000
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "month": "2026-10",
+            "totalConsumedMinor": 1000,
+            "totalPaidUpFrontMinor": 1000,
+            "netDiffMinor": 0,
+            "categories": [
+              {
+                "category": "FOOD",
+                "consumedMinor": 1000,
+                "paidUpFrontMinor": 1000,
+                "percentageBps": 10000,
+                "expenses": [
+                  {
+                    "expenseId": "e31",
+                    "groupId": "g1",
+                    "expenseTitle": "October End",
+                    "groupName": "Flat Mates",
+                    "expenseDate": "2026-10-31",
+                    "owedMinor": 1000,
+                    "paidMinor": 1000
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,148 @@
+{
+  "name": "trip-recap-percentages-sum-10000",
+  "members": [
+    {
+      "memberId": "m1",
+      "displayName": "Amr",
+      "sortOrder": 0
+    },
+    {
+      "memberId": "m2",
+      "displayName": "Tarek",
+      "sortOrder": 1
+    },
+    {
+      "memberId": "m3",
+      "displayName": "Nour",
+      "sortOrder": 2
+    }
+  ],
+  "expenses": [
+    {
+      "expenseId": "e1",
+      "title": "Lunch",
+      "totalMinor": 1000,
+      "expenseDate": "2026-11-20",
+      "createdAt": 1,
+      "category": "FOOD",
+      "payers": [
+        {
+          "memberId": "m1",
+          "amountMinor": 1000
+        }
+      ]
+    },
+    {
+      "expenseId": "e2",
+      "title": "Metro",
+      "totalMinor": 1000,
+      "expenseDate": "2026-11-20",
+      "createdAt": 2,
+      "category": "TRANSPORT",
+      "payers": [
+        {
+          "memberId": "m2",
+          "amountMinor": 1000
+        }
+      ]
+    },
+    {
+      "expenseId": "e3",
+      "title": "Cinema",
+      "totalMinor": 1000,
+      "expenseDate": "2026-11-20",
+      "createdAt": 3,
+      "category": "ENTERTAINMENT",
+      "payers": [
+        {
+          "memberId": "m3",
+          "amountMinor": 1000
+        }
+      ]
+    }
+  ],
+  "expected": {
+    "totalSpentMinor": 3000,
+    "expenseCount": 3,
+    "dateRangeStart": "2026-11-20",
+    "dateRangeEnd": "2026-11-20",
+    "topPayer": {
+      "memberId": "m1",
+      "displayName": "Amr",
+      "amountPaidMinor": 1000
+    },
+    "biggestExpense": {
+      "expenseId": "e1",
+      "title": "Lunch",
+      "totalMinor": 1000,
+      "expenseDate": "2026-11-20"
+    },
+    "categoryBreakdown": [
+      {
+        "category": "FOOD",
+        "totalMinor": 1000,
+        "percentageBps": 3334
+      },
+      {
+        "category": "TRANSPORT",
+        "totalMinor": 1000,
+        "percentageBps": 3333
+      },
+      {
+        "category": "FUEL",
+        "totalMinor": 0,
+        "percentageBps": 0
+      },
+      {
+        "category": "ACCOMMODATION",
+        "totalMinor": 0,
+        "percentageBps": 0
+      },
+      {
+        "category": "GROCERIES",
+        "totalMinor": 0,
+        "percentageBps": 0
+      },
+      {
+        "category": "SHOPPING",
+        "totalMinor": 0,
+        "percentageBps": 0
+      },
+      {
+        "category": "ENTERTAINMENT",
+        "totalMinor": 1000,
+        "percentageBps": 3333
+      },
+      {
+        "category": "BILLS",
+        "totalMinor": 0,
+        "percentageBps": 0
+      },
+      {
+        "category": "OTHER",
+        "totalMinor": 0,
+        "percentageBps": 0
+      }
+    ],
+    "memberPaidTotals": [
+      {
+        "memberId": "m1",
+        "displayName": "Amr",
+        "sortOrder": 0,
+        "amountPaidMinor": 1000
+      },
+      {
+        "memberId": "m2",
+        "displayName": "Tarek",
+        "sortOrder": 1,
+        "amountPaidMinor": 1000
+      },
+      {
+        "memberId": "m3",
+        "displayName": "Nour",
+        "sortOrder": 2,
+        "amountPaidMinor": 1000
+      }
+    ]
+  }
+}

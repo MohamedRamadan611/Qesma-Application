@@ -139,7 +139,11 @@ class _BalancesTabState extends ConsumerState<BalancesTab> {
             const SizedBox(height: QesmaSpacing.md),
             IncomingPaymentsSection(group: group),
             if (transfers.isEmpty)
-              _AllSettled()
+              _AllSettled(
+                onViewRecap: ref.watch(modeFeaturesProvider).recap
+                    ? () => context.push(Routes.recap(group.id))
+                    : null,
+              )
             else
               SectionCard(
                 title: l10n.balancesSuggestedTitle,
@@ -278,6 +282,10 @@ class _StatusCard extends StatelessWidget {
 }
 
 class _AllSettled extends StatelessWidget {
+  const _AllSettled({this.onViewRecap});
+
+  final VoidCallback? onViewRecap;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -287,19 +295,33 @@ class _AllSettled extends StatelessWidget {
         decoration: BoxDecoration(color: context.colors.successContainer, borderRadius: BorderRadius.circular(QesmaRadii.card)),
         child: Padding(
           padding: const EdgeInsets.all(QesmaSpacing.md),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              ExcludeSemantics(child: Icon(Icons.check_circle, color: context.colors.success)),
-              const SizedBox(width: QesmaSpacing.sm + 4),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(l10n.balancesAllSettledTitle, style: theme.textTheme.titleSmall?.copyWith(color: context.colors.success)),
-                    Text(l10n.balancesAllSettledBody, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.success)),
-                  ],
-                ),
+              Row(
+                children: [
+                  ExcludeSemantics(child: Icon(Icons.check_circle, color: context.colors.success)),
+                  const SizedBox(width: QesmaSpacing.sm + 4),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(l10n.balancesAllSettledTitle, style: theme.textTheme.titleSmall?.copyWith(color: context.colors.success)),
+                        Text(l10n.balancesAllSettledBody, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.success)),
+                      ],
+                    ),
+                  ),
+                ],
               ),
+              if (onViewRecap != null) ...[
+                const SizedBox(height: QesmaSpacing.sm + 4),
+                AppButton(
+                  label: l10n.recapViewButton,
+                  icon: Icons.photo,
+                  variant: AppButtonVariant.secondary,
+                  onPressed: onViewRecap,
+                ),
+              ],
             ],
           ),
         ),

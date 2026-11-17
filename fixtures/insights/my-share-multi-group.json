@@ -1,0 +1,119 @@
+{
+  "name": "multi-group-and-currency",
+  "input": [
+    {
+      "expenseId": "e10",
+      "groupId": "g1",
+      "expenseTitle": "Cairo Flat Electricity",
+      "groupName": "Flat Mates",
+      "expenseDate": "2026-10-05",
+      "category": "BILLS",
+      "currencyCode": "EGP",
+      "owedMinor": 25000,
+      "paidMinor": 25000
+    },
+    {
+      "expenseId": "e11",
+      "groupId": "g2",
+      "expenseTitle": "Sahel Hotel",
+      "groupName": "Sahel Weekend",
+      "expenseDate": "2026-10-18",
+      "category": "ACCOMMODATION",
+      "currencyCode": "EGP",
+      "owedMinor": 100000,
+      "paidMinor": 0
+    },
+    {
+      "expenseId": "e12",
+      "groupId": "g3",
+      "expenseTitle": "Euro Tour Lunch",
+      "groupName": "Euro Trip",
+      "expenseDate": "2026-10-20",
+      "category": "FOOD",
+      "currencyCode": "EUR",
+      "owedMinor": 2000,
+      "paidMinor": 4000
+    }
+  ],
+  "expected": {
+    "sections": [
+      {
+        "currencyCode": "EGP",
+        "months": [
+          {
+            "month": "2026-10",
+            "totalConsumedMinor": 125000,
+            "totalPaidUpFrontMinor": 25000,
+            "netDiffMinor": -100000,
+            "categories": [
+              {
+                "category": "ACCOMMODATION",
+                "consumedMinor": 100000,
+                "paidUpFrontMinor": 0,
+                "percentageBps": 8000,
+                "expenses": [
+                  {
+                    "expenseId": "e11",
+                    "groupId": "g2",
+                    "expenseTitle": "Sahel Hotel",
+                    "groupName": "Sahel Weekend",
+                    "expenseDate": "2026-10-18",
+                    "owedMinor": 100000,
+                    "paidMinor": 0
+                  }
+                ]
+              },
+              {
+                "category": "BILLS",
+                "consumedMinor": 25000,
+                "paidUpFrontMinor": 25000,
+                "percentageBps": 2000,
+                "expenses": [
+                  {
+                    "expenseId": "e10",
+                    "groupId": "g1",
+                    "expenseTitle": "Cairo Flat Electricity",
+                    "groupName": "Flat Mates",
+                    "expenseDate": "2026-10-05",
+                    "owedMinor": 25000,
+                    "paidMinor": 25000
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "currencyCode": "EUR",
+        "months": [
+          {
+            "month": "2026-10",
+            "totalConsumedMinor": 2000,
+            "totalPaidUpFrontMinor": 4000,
+            "netDiffMinor": 2000,
+            "categories": [
+              {
+                "category": "FOOD",
+                "consumedMinor": 2000,
+                "paidUpFrontMinor": 4000,
+                "percentageBps": 10000,
+                "expenses": [
+                  {
+                    "expenseId": "e12",
+                    "groupId": "g3",
+                    "expenseTitle": "Euro Tour Lunch",
+                    "groupName": "Euro Trip",
+                    "expenseDate": "2026-10-20",
+                    "owedMinor": 2000,
+                    "paidMinor": 4000
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

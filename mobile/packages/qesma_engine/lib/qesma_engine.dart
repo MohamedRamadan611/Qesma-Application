@@ -7,6 +7,8 @@ library;
 export 'src/balance_calculator.dart';
 export 'src/bps.dart';
 export 'src/engine_exception.dart';
+export 'src/insights/my_share.dart';
+export 'src/insights/trip_recap.dart';
 export 'src/itemized_calculator.dart';
 export 'src/limits.dart';
 export 'src/lrm.dart';

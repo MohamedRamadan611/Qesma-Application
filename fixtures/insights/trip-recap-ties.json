@@ -1,0 +1,123 @@
+{
+  "name": "trip-recap-ties",
+  "members": [
+    {
+      "memberId": "m1",
+      "displayName": "Alice",
+      "sortOrder": 5
+    },
+    {
+      "memberId": "m2",
+      "displayName": "Bob",
+      "sortOrder": 2
+    }
+  ],
+  "expenses": [
+    {
+      "expenseId": "e1",
+      "title": "Hotel A",
+      "totalMinor": 50000,
+      "expenseDate": "2026-11-02",
+      "createdAt": 5000,
+      "category": "ACCOMMODATION",
+      "payers": [
+        {
+          "memberId": "m1",
+          "amountMinor": 50000
+        }
+      ]
+    },
+    {
+      "expenseId": "e2",
+      "title": "Hotel B",
+      "totalMinor": 50000,
+      "expenseDate": "2026-11-01",
+      "createdAt": 9000,
+      "category": "ACCOMMODATION",
+      "payers": [
+        {
+          "memberId": "m2",
+          "amountMinor": 50000
+        }
+      ]
+    }
+  ],
+  "expected": {
+    "totalSpentMinor": 100000,
+    "expenseCount": 2,
+    "dateRangeStart": "2026-11-01",
+    "dateRangeEnd": "2026-11-02",
+    "topPayer": {
+      "memberId": "m2",
+      "displayName": "Bob",
+      "amountPaidMinor": 50000
+    },
+    "biggestExpense": {
+      "expenseId": "e2",
+      "title": "Hotel B",
+      "totalMinor": 50000,
+      "expenseDate": "2026-11-01"
+    },
+    "categoryBreakdown": [
+      {
+        "category": "FOOD",
+        "totalMinor": 0,
+        "percentageBps": 0
+      },
+      {
+        "category": "TRANSPORT",
+        "totalMinor": 0,
+        "percentageBps": 0
+      },
+      {
+        "category": "FUEL",
+        "totalMinor": 0,
+        "percentageBps": 0
+      },
+      {
+        "category": "ACCOMMODATION",
+        "totalMinor": 100000,
+        "percentageBps": 10000
+      },
+      {
+        "category": "GROCERIES",
+        "totalMinor": 0,
+        "percentageBps": 0
+      },
+      {
+        "category": "SHOPPING",
+        "totalMinor": 0,
+        "percentageBps": 0
+      },
+      {
+        "category": "ENTERTAINMENT",
+        "totalMinor": 0,
+        "percentageBps": 0
+      },
+      {
+        "category": "BILLS",
+        "totalMinor": 0,
+        "percentageBps": 0
+      },
+      {
+        "category": "OTHER",
+        "totalMinor": 0,
+        "percentageBps": 0
+      }
+    ],
+    "memberPaidTotals": [
+      {
+        "memberId": "m2",
+        "displayName": "Bob",
+        "sortOrder": 2,
+        "amountPaidMinor": 50000
+      },
+      {
+        "memberId": "m1",
+        "displayName": "Alice",
+        "sortOrder": 5,
+        "amountPaidMinor": 50000
+      }
+    ]
+  }
+}
