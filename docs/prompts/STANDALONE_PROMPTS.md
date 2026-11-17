@@ -6,13 +6,13 @@ Discipline (same as Phase 1 and 2): one prompt per fresh session; Step 0 plan an
 
 ## Before the first prompt
 - FL14 and B17 merged and green. Tag the repo `server-phase-ready` so the server phase can resume from there.
-- Decision Log continues from A121; ADRs from ADR-011 (ADR-010 stays reserved for FCM).
+- Decision Log: SA0 wrote A121-A150 (next free id: A151); ADRs: ADR-011 (local-first) and ADR-012 (dependencies) exist after SA0 (ADR-010 stays reserved for FCM). Package versions in ADR-012 were read from pub.dev on 2026-11-17; `sqlite3_flutter_libs` is end-of-life, so SA2 pins `sqlite3` instead.
 
 ## Run order
 
 | Order | Command | What | Needs | Money risk |
 |---|---|---|---|---|
-| 1 | `/sa0-standalone-spec` | Spec, ADR-011/012, Decision Log, scope and guard rules (docs only) | — | rules only |
+| 1 | `/sa0-standalone-spec` | Spec, ADR-011/012, Decision Log A121-A150, scope, SCREEN_MAP and guard rules (docs only) | — | rules only |
 | 2 | `/sa1-dart-engine` | Pure Dart engine, parity with Java on `fixtures/engine` | SA0 | **high** |
 | 3 | `/sa2-local-db` | drift schema, invariants, migrations | SA1 | medium |
 | 4 | `/sa3-local-backend` | `LocalBackend` adapter + ported services, conformance suite | SA2 | **high** |
@@ -62,3 +62,6 @@ To-buy checklist (members claim items), B18/FL17 push, FL15 notifications/activi
 - BSA1: `/r-review` then `/v-verify bsa1`.
 - Others: `/flr-review`; `/flv-verify` before SA13.
 - Gates are written to `docs/gates/gate-sa<N>.md`.
+
+## Owner decisions recorded in SA0 (for the prompts that depend on them)
+- My share is shown per currency (A131). A ride leg with no riders is rejected (A141). The treasurer cannot deposit to themselves (A138). Recap percentage ties follow the category enum order (A133). OCR cap: 20 scans per device per day (A145). Android auto-backup replaces `allowBackup="false"` (A128, SA5). Each feature's guard words/icons are listed in `docs/STANDALONE_SPEC.md` section 15.

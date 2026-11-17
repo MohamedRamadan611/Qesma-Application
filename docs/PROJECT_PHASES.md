@@ -21,7 +21,7 @@
 4. Nothing is hard-deleted from the ledger. Edits create revisions; deletes are soft.
 5. All create endpoints are idempotent.
 6. Personal data (names, phone/email, financial records, later payment handles and receipt images) is regulated by Egypt's Personal Data Protection Law No. 151 of 2020. Collect the minimum, and have a lawyer review before public release.
-7. Everything happens **inside the app**. No WhatsApp/chat integration. Invitations use a link/code shared through the OS share sheet; reminders use push notifications.
+7. Everything happens **inside the app**. No WhatsApp/chat integration (no API, no auto-send). Invitations use a link/code shared through the OS share sheet; reminders use push notifications. *Standalone release amendment (A121, STANDALONE_SPEC 12): the app may open the OS share sheet or a `https://wa.me/?text=` link with a user-edited text (reminder tones, trip recap); nothing is ever sent automatically and no phone numbers are stored.*
 8. Arabic (Egyptian, RTL) first; English second. EGP default.
 
 ### 0.2 Phase map
@@ -44,8 +44,8 @@
 | Members | Ghost members, rename, remove-if-no-txns | Invite, link to account, LEFT status, roles | — | — | — |
 | Expense split | Equal (all/selected), Exact, **Itemized + optional service/tax** | — | Percent, Shares | — | — |
 | Payers | **Multiple payers** | — | — | — | — |
-| Expense extras | Edit/soft-delete + revisions | Activity feed, conflict UI | Refunds, categories, duplicate warning | Multi-currency | Receipt scan, dispute, recurring (housing) |
-| Balances | Net + simplified transfers | — | Detailed pairwise view, trip summary | Base-currency balances | — |
+| Expense extras | Edit/soft-delete + revisions | Activity feed, conflict UI | Refunds, ~~categories~~ (moved to Standalone), duplicate warning | Multi-currency | ~~Receipt scan~~ (moved to Standalone), dispute, recurring (housing) |
+| Balances | Net + simplified transfers | — | Detailed pairwise view, ~~trip summary~~ (recap moved to Standalone) | Base-currency balances | — |
 | Settlement | Organizer records payments | Two-sided confirm, partial, disputed, payment handles | Final statement image | — | PDF/CSV export |
 | Notifications | — | Push + "Remind" + in-app center | — | — | — |
 | Platform | Idempotency, versioning | Version-conflict UX | Crash reporting, release | Offline queue | Paywall, iOS |
@@ -88,6 +88,22 @@
 2. Restaurant bill with optional service charge and optional tax, each with its own percentage.
 
 **Gate 1 → 2 (suggested):** at least 3 real trips/outings recorded end-to-end by someone other than you; the app's final balances match a manual check; no calculation bug found in the last week of use; you personally want to keep using it.
+
+---
+
+## Standalone release — local-first Android app (decided SA0, runs before the server phase)
+
+**Goal:** a first public release that costs $0 to run: one organizer, no deployed server, no accounts. The app serves the existing `/api/v1` contract in-process from SQLite (`LocalBackend`) with a Dart port of the engine (ADR-011). The Java backend (Phase 1 and Phase 2 through B17) is frozen at the tag `server-phase-ready` and returns in the server phase.
+
+**Full detail:** `STANDALONE_SPEC.md` (rules), `adr/ADR-011-standalone-local-first.md`, `adr/ADR-012-standalone-mobile-dependencies.md`, Decision Log A121–A150, and the prompts in `prompts/STANDALONE_PROMPTS.md` (SA0–SA14, BSA1).
+
+| Slice | Content |
+|---|---|
+| Launch (1.0.0) | Phase 1 core; **categories** (was 3.3); **My share**; **trip recap** image and text (was 3.4); reminder tones (WhatsApp); pool & treasurer (أمين الصندوق); Khorouga fuel/ride calculator; **receipt OCR** (was 5.2, Gemini via Firebase AI Logic, free tier, with consent); JSON backup; local mode without sign-in |
+| Update 1 | Voice entry |
+| Server phase | To-buy checklist, invites/roles/settlement confirmation/notifications (Phase 2 as built), push (B18/FL17), upload of local data, `RemoteRepository` switch, server endpoints for My share and recap |
+
+**Gate (suggested):** the owner uses the app for at least 3 real trips/outings; balances match a manual check; a backup restores identically on another phone; day-7 retention and groups per user from Play Console decide when to start the server phase (SA13 lists the trigger).
 
 ---
 
@@ -207,9 +223,13 @@ Invite-link leakage (expiry, revoke, approval option); notification spam (per-gr
 - Expense `kind = REFUND`, optionally linked to the original expense. Model: "received by" member(s) (cash returned to them) and "credited to" participants. Balance contribution is the reverse of a normal expense, so `Σ net == 0` is preserved. Property tests must cover refunds.
 
 ### 3.3 Categories
+> **Moved to the Standalone release** (STANDALONE_SPEC 7, A129): the fixed enum there replaces the list below.
+
 - Fixed set to start: food, transport, fuel, accommodation, activities, shopping, other (icons + Arabic labels). Filter and group by category.
 
 ### 3.4 Trip summary
+> **Moved to the Standalone release** as the trip recap (STANDALONE_SPEC 9, A132–A134); the by-day statistics below are not part of it.
+
 - Total spent; per member: paid, owed, net; by category; by day; average per member. Shareable as an image rendered on the client.
 
 ### 3.5 Detailed balances view
@@ -224,7 +244,7 @@ Invite-link leakage (expiry, revoke, approval option); notification spam (per-gr
 
 ### 3.8 Release readiness
 - Privacy policy and Terms (Arabic + English), Play Store listing (Arabic first), Data Safety form, signed release builds, staged rollout.
-- Crash reporting (e.g. Firebase Crashlytics) and minimal, privacy-respecting analytics (screens and key events only, no financial values).
+- Crash reporting (e.g. Firebase Crashlytics; **deferred**: the standalone release ships no crash or analytics SDK, A121/ADR-012) and minimal, privacy-respecting analytics (screens and key events only, no financial values).
 - Onboarding walkthrough (3 short screens), in-app "Send feedback" link, support contact.
 - Backup **restore drill** (prove backups can be restored), basic load test, rate limiting review.
 - Lawyer review of privacy policy, data retention, and account deletion.
@@ -256,7 +276,7 @@ expense_groups:+ status (OPEN|CLOSED), archived_at
 ### 4.2 Pending-operation queue
 - Create/edit/delete expense and create settlement can be done offline. Each operation is stored with its `Idempotency-Key`, `baseVersion`, and timestamp, shown as "pending sync", and replayed on reconnect with retry/backoff.
 - Conflict rules: creates never conflict (idempotent); edits/deletes use the version check — on conflict show the Phase 2 conflict UI; the server wins by default.
-- **Engine parity (decide):** offline previews and offline balance display require the split/balance engine on the device. Port the engine to Dart and validate it with the **same shared JSON test fixtures** (all vectors from Phase 1+3) so both implementations are proven identical. The server remains authoritative and recomputes on sync; if a result differs, the server's result wins and the UI shows the update.
+- **Engine parity (decided by ADR-011, standalone release):** offline previews and offline balance display require the split/balance engine on the device. Port the engine to Dart and validate it with the **same shared JSON test fixtures** (all vectors from Phase 1+3) so both implementations are proven identical. The server remains authoritative and recomputes on sync; if a result differs, the server's result wins and the UI shows the update.
 
 ### 4.3 Multi-currency
 - Group has a **base currency**. Per group, the organizer sets **exchange rates** (currency → base) manually, with an optional per-expense override. Live-rate lookup is optional and only if a free, compliant source is found (**verify terms/cost**).
@@ -294,7 +314,7 @@ Duplicated engine logic (mitigated by shared fixtures); sync conflicts on edits;
 
 ### 5.2 Candidate paid features (pick by evidence)
 - PDF/CSV export of statements; unlimited history and groups.
-- **Receipt scanning with AI** (low cost per scan, but receipt images are personal data: require explicit consent, minimal retention, lawyer review; keep optional).
+- **Receipt scanning with AI** (**moved to the Standalone release**, STANDALONE_SPEC 13, A144–A146; was: low cost per scan, but receipt images are personal data: require explicit consent, minimal retention, lawyer review; keep optional).
 - **Recurring bills for HOUSING groups** (rent, electricity, internet auto-created each month from templates) — makes usage monthly rather than occasional. Consider pulling this earlier if Phase 0 interviews show housing is the main use case.
 - **Shared kitty** (internal accounting of a pooled amount; no real money handled).
 - **Sub-groups** (e.g. a family counted as one unit inside a bigger group).

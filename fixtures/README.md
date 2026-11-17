@@ -30,4 +30,12 @@ Rules:
 - Only the keys present under `expected` are asserted. `transfers` is an ordered list (the order the spec 7.7 greedy rule produces).
 - `expected` is the single authoritative answer; every engine must reproduce it exactly.
 
-Vectors V1–V8 come from `docs/PROJECT_SPEC.md` section 10. They are run by `FixtureTest` in the backend.
+The standalone release (`docs/STANDALONE_SPEC.md`) adds more folders next to `engine/`: `pool/` (SA10), `ride/` (SA11) and `insights/` (SA7, SA8); each is defined by the prompt that adds it. Both engines (Java and the Dart port, ADR-011) must pass every engine vector.
+
+Vectors V1–V8 come from `docs/PROJECT_SPEC.md` section 10. They are run by `FixtureTest` in the backend (Java, the reference) and by `test/fixture_test.dart` in `mobile/packages/qesma_engine` (the Dart port).
+
+## Parity rule (ADR-011)
+- Both engines must pass every vector in `engine/`. A vector that one engine fails is a bug in that engine, never a reason to edit `expected`. Java is the reference.
+- Any change in engine behaviour adds a new vector (or a new `expected` key) that pins it. A vector is never edited quietly to fit new behaviour.
+- When the Java engine changes, the new vector and the matching Dart change go in the same commit, so both runners stay green at every commit.
+- Run them with `./mvnw -q test -Dtest=FixtureTest` (from `backend/`) and `dart test test/fixture_test.dart` (from `mobile/packages/qesma_engine/`).

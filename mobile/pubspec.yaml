@@ -26,6 +26,10 @@ dependencies:
   flutter_secure_storage: 11.2.0
   url_launcher: 6.3.3
   share_plus: 13.3.1
+  # Standalone local database (ADR-012, SA2).
+  drift: 2.35.4
+  sqlite3: 3.9.1
+  path_provider: 2.1.6
 
 dev_dependencies:
   integration_test:
@@ -33,6 +37,8 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   crypto: 3.0.8
+  drift_dev: 2.35.3
+  build_runner: 2.17.1
   flutter_lints: 6.0.0
 
 flutter:

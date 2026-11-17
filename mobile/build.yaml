@@ -1,0 +1,18 @@
+# drift code generation for the standalone local database (SA2, ADR-012).
+# Regenerate: dart run build_runner build --delete-conflicting-outputs
+# New schema version: bump schemaVersion, then dart run drift_dev make-migrations
+targets:
+  $default:
+    builders:
+      drift_dev:
+        options:
+          databases:
+            local: lib/local/db/local_database.dart
+          schema_dir: drift_schemas/
+          test_dir: test/local/db/
+          sql:
+            dialect: sqlite
+            options:
+              version: "3.45"
+              modules:
+                - json1

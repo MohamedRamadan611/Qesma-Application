@@ -1,0 +1,19 @@
+# No `include:`: the package may depend on `test` only (SA1), so no lints package.
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+
+linter:
+  rules:
+    - always_declare_return_types
+    - avoid_print
+    - prefer_final_locals
+    - prefer_single_quotes
+    - unawaited_futures
+    - use_super_parameters
+    - annotate_overrides
+    - avoid_relative_lib_imports
+    - prefer_const_constructors
+    - unnecessary_new

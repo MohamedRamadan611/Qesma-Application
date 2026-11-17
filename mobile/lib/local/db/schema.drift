@@ -1,0 +1,238 @@
+-- Standalone local database, schema version 1 (SA2, STANDALONE_SPEC 5, decisions A126 and A151-A157).
+-- Ports the Phase 1 Postgres tables (Flyway V4-V9, V12, V14, V15, V16) one by one. Every table is STRICT, so an
+-- INTEGER money column can never hold a REAL or a TEXT value.
+-- Types: ids TEXT UUID; money (piasters), bps and versions INTEGER; timestamps INTEGER UTC epoch milliseconds;
+-- dates TEXT 'YYYY-MM-DD'. `user_id` columns reference the single local_profile row (the server's users row).
+-- Server-only tables (users, tokens, passwords, invites, join requests, events, notifications, prefs, remind log,
+-- device tokens) are not created. Forward-only: a shipped version of this file is changed only by a new
+-- schemaVersion with a step migration (drift_dev make-migrations).
+
+-- New: the one local user (replaces `users`). The `singleton` column allows exactly one row.
+CREATE TABLE local_profile (
+    id           TEXT    NOT NULL PRIMARY KEY CHECK (length(id) = 36),
+    display_name TEXT    NOT NULL CHECK (length(trim(display_name)) BETWEEN 1 AND 60),
+    created_at   INTEGER NOT NULL,
+    updated_at   INTEGER NOT NULL,
+    singleton    INTEGER NOT NULL DEFAULT 1 UNIQUE CHECK (singleton = 1)
+) STRICT AS LocalProfileRow;
+
+-- New: one row (id = 1) written when the database is created; SA5 fills the export fields.
+CREATE TABLE local_meta (
+    id                         INTEGER NOT NULL PRIMARY KEY CHECK (id = 1),
+    created_schema_version     INTEGER NOT NULL CHECK (created_schema_version >= 1),
+    created_at                 INTEGER NOT NULL,
+    last_export_at             INTEGER,
+    last_export_format_version INTEGER CHECK (last_export_format_version IS NULL OR last_export_format_version >= 1),
+    CHECK ((last_export_at IS NULL) = (last_export_format_version IS NULL))
+) STRICT AS LocalMetaRow;
+
+-- V4 expense_groups.
+CREATE TABLE expense_groups (
+    id            TEXT    NOT NULL PRIMARY KEY CHECK (length(id) = 36),
+    owner_user_id TEXT    NOT NULL REFERENCES local_profile (id),
+    name          TEXT    NOT NULL CHECK (length(trim(name)) BETWEEN 1 AND 60),
+    type          TEXT    NOT NULL CHECK (type IN ('TRIP', 'HOUSING', 'OUTING', 'OTHER')),
+    currency_code TEXT    NOT NULL DEFAULT 'EGP' CHECK (length(currency_code) = 3 AND currency_code NOT GLOB '*[^A-Z]*'),
+    created_at    INTEGER NOT NULL,
+    updated_at    INTEGER NOT NULL,
+    version       INTEGER NOT NULL DEFAULT 1 CHECK (version >= 1),
+    member_seq    INTEGER NOT NULL DEFAULT 0 CHECK (member_seq >= 0)
+) STRICT AS GroupRow;
+
+CREATE INDEX ix_expense_groups_owner_created ON expense_groups (owner_user_id, created_at DESC, id DESC);
+
+-- V4 members + V9 (link), V12 (role/status), V14 (LEFT requires a link).
+-- Uniqueness of names is on name_key (memberNameKey in name_key.dart), not lower(display_name): SQLite lower()
+-- is ASCII-only. The CHECK on name_key only catches a key that was not lower-cased at all.
+CREATE TABLE members (
+    id           TEXT    NOT NULL PRIMARY KEY CHECK (length(id) = 36),
+    group_id     TEXT    NOT NULL REFERENCES expense_groups (id),
+    display_name TEXT    NOT NULL CHECK (length(trim(display_name)) BETWEEN 1 AND 40),
+    name_key     TEXT    NOT NULL CHECK (name_key <> '' AND name_key = lower(name_key)),
+    user_id      TEXT    REFERENCES local_profile (id),
+    sort_order   INTEGER NOT NULL CHECK (sort_order >= 1),
+    role         TEXT    NOT NULL DEFAULT 'MEMBER' CHECK (role IN ('OWNER', 'ADMIN', 'MEMBER')),
+    status       TEXT    NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'LEFT')),
+    joined_at    INTEGER,
+    left_at      INTEGER,
+    created_at   INTEGER NOT NULL,
+    CONSTRAINT uq_members_group_sort_order UNIQUE (group_id, sort_order),
+    CONSTRAINT uq_members_group_name_key UNIQUE (group_id, name_key),
+    CONSTRAINT ck_members_owner_linked_active CHECK (role <> 'OWNER' OR (user_id IS NOT NULL AND status = 'ACTIVE')),
+    CONSTRAINT ck_members_left_at CHECK ((status = 'LEFT') = (left_at IS NOT NULL)),
+    CONSTRAINT ck_members_left_linked CHECK (status <> 'LEFT' OR user_id IS NOT NULL)
+) STRICT AS MemberRow;
+
+CREATE UNIQUE INDEX ux_members_group_user ON members (group_id, user_id) WHERE user_id IS NOT NULL;
+CREATE UNIQUE INDEX ux_members_group_owner ON members (group_id) WHERE role = 'OWNER';
+
+-- V5 expenses + V6 (itemized charges) + V8 (cap 10^12).
+CREATE TABLE expenses (
+    id                 TEXT    NOT NULL PRIMARY KEY CHECK (length(id) = 36),
+    group_id           TEXT    NOT NULL REFERENCES expense_groups (id),
+    title              TEXT    NOT NULL CHECK (length(trim(title)) BETWEEN 1 AND 100),
+    split_type         TEXT    NOT NULL CHECK (split_type IN ('EQUAL', 'EXACT', 'ITEMIZED')),
+    total_minor        INTEGER NOT NULL CHECK (total_minor BETWEEN 1 AND 1000000000000),
+    expense_date       TEXT    NOT NULL CHECK (date(expense_date) IS expense_date),
+    subtotal_minor     INTEGER,
+    service_bps        INTEGER CHECK (service_bps IS NULL OR service_bps BETWEEN 0 AND 10000),
+    service_minor      INTEGER,
+    tax_bps            INTEGER CHECK (tax_bps IS NULL OR tax_bps BETWEEN 0 AND 10000),
+    tax_minor          INTEGER,
+    tax_base           TEXT    CHECK (tax_base IS NULL OR tax_base IN ('SUBTOTAL', 'SUBTOTAL_PLUS_SERVICE')),
+    adjustment_minor   INTEGER,
+    created_by_user_id TEXT    NOT NULL REFERENCES local_profile (id),
+    created_at         INTEGER NOT NULL,
+    updated_at         INTEGER NOT NULL,
+    deleted_at         INTEGER,
+    version            INTEGER NOT NULL DEFAULT 1 CHECK (version >= 1),
+    CONSTRAINT ck_expenses_itemized_columns CHECK (
+        split_type = 'ITEMIZED' OR (
+            subtotal_minor IS NULL AND service_bps IS NULL AND service_minor IS NULL AND tax_bps IS NULL
+            AND tax_minor IS NULL AND tax_base IS NULL AND adjustment_minor IS NULL)),
+    CONSTRAINT ck_expenses_itemized_charges CHECK (
+        split_type <> 'ITEMIZED' OR (
+            subtotal_minor IS NOT NULL AND subtotal_minor > 0
+            AND service_minor IS NOT NULL AND service_minor >= 0
+            AND tax_minor IS NOT NULL AND tax_minor >= 0
+            AND adjustment_minor IS NOT NULL
+            AND total_minor = subtotal_minor + service_minor + tax_minor + adjustment_minor
+            AND (service_bps IS NOT NULL OR service_minor = 0)
+            AND (tax_bps IS NOT NULL OR tax_minor = 0)
+            AND ((tax_bps IS NULL) = (tax_base IS NULL))))
+) STRICT AS ExpenseRow;
+
+CREATE INDEX ix_expenses_group_list ON expenses (group_id, expense_date DESC, created_at DESC, id DESC)
+    WHERE deleted_at IS NULL;
+CREATE INDEX ix_expenses_group ON expenses (group_id);
+
+-- V5 expense_payers + V8 cap.
+CREATE TABLE expense_payers (
+    expense_id   TEXT    NOT NULL REFERENCES expenses (id),
+    member_id    TEXT    NOT NULL REFERENCES members (id),
+    amount_minor INTEGER NOT NULL CHECK (amount_minor BETWEEN 1 AND 1000000000000),
+    PRIMARY KEY (expense_id, member_id)
+) STRICT AS PayerRow;
+
+CREATE INDEX ix_expense_payers_member ON expense_payers (member_id);
+
+-- V5 expense_splits + V6 breakdown + V8 cap.
+CREATE TABLE expense_splits (
+    expense_id       TEXT    NOT NULL REFERENCES expenses (id),
+    member_id        TEXT    NOT NULL REFERENCES members (id),
+    owed_minor       INTEGER NOT NULL CHECK (owed_minor BETWEEN 0 AND 1000000000000),
+    items_minor      INTEGER,
+    service_minor    INTEGER,
+    tax_minor        INTEGER,
+    adjustment_minor INTEGER,
+    PRIMARY KEY (expense_id, member_id),
+    CONSTRAINT ck_expense_splits_breakdown CHECK (
+        (items_minor IS NULL AND service_minor IS NULL AND tax_minor IS NULL AND adjustment_minor IS NULL)
+        OR (items_minor IS NOT NULL AND items_minor >= 0 AND service_minor IS NOT NULL AND service_minor >= 0
+            AND tax_minor IS NOT NULL AND tax_minor >= 0 AND adjustment_minor IS NOT NULL
+            AND owed_minor = items_minor + service_minor + tax_minor + adjustment_minor))
+) STRICT AS SplitRow;
+
+CREATE INDEX ix_expense_splits_member ON expense_splits (member_id);
+
+-- V6 expense_items + V8 cap.
+CREATE TABLE expense_items (
+    id           TEXT    NOT NULL PRIMARY KEY CHECK (length(id) = 36),
+    expense_id   TEXT    NOT NULL REFERENCES expenses (id),
+    name         TEXT    NOT NULL CHECK (length(trim(name)) BETWEEN 1 AND 100),
+    amount_minor INTEGER NOT NULL CHECK (amount_minor BETWEEN 1 AND 1000000000000),
+    sort_order   INTEGER NOT NULL CHECK (sort_order >= 0),
+    CONSTRAINT ux_expense_items_order UNIQUE (expense_id, sort_order)
+) STRICT AS ItemRow;
+
+-- V6 expense_item_assignees.
+CREATE TABLE expense_item_assignees (
+    item_id   TEXT NOT NULL REFERENCES expense_items (id),
+    member_id TEXT NOT NULL REFERENCES members (id),
+    PRIMARY KEY (item_id, member_id)
+) STRICT AS AssigneeRow;
+
+CREATE INDEX ix_expense_item_assignees_member ON expense_item_assignees (member_id);
+
+-- V7 expense_revisions: immutable JSON snapshots. Append-only: the trigger refuses any UPDATE and the DAO has no
+-- update or delete. There is no DELETE trigger so that the SA5 replace-all import can wipe the ledger.
+CREATE TABLE expense_revisions (
+    id                 TEXT    NOT NULL PRIMARY KEY CHECK (length(id) = 36),
+    expense_id         TEXT    NOT NULL REFERENCES expenses (id),
+    version            INTEGER NOT NULL CHECK (version >= 1),
+    change_type        TEXT    NOT NULL CHECK (change_type IN ('CREATE', 'UPDATE', 'DELETE')),
+    snapshot           TEXT    NOT NULL CHECK (json_valid(snapshot) AND json_type(snapshot) = 'object'),
+    changed_by_user_id TEXT    NOT NULL REFERENCES local_profile (id),
+    changed_at         INTEGER NOT NULL,
+    CONSTRAINT ux_expense_revisions_version UNIQUE (expense_id, version)
+) STRICT AS RevisionRow;
+
+CREATE TRIGGER expense_revisions_append_only BEFORE UPDATE ON expense_revisions
+BEGIN
+    SELECT RAISE(ABORT, 'expense_revisions are append-only');
+END;
+
+-- V8 settlements + V15 status. The legacy deleted_at column is not ported (A87: never written since B13).
+CREATE TABLE settlements (
+    id                   TEXT    NOT NULL PRIMARY KEY CHECK (length(id) = 36),
+    group_id             TEXT    NOT NULL REFERENCES expense_groups (id),
+    from_member_id       TEXT    NOT NULL REFERENCES members (id),
+    to_member_id         TEXT    NOT NULL REFERENCES members (id),
+    amount_minor         INTEGER NOT NULL CHECK (amount_minor BETWEEN 1 AND 1000000000000),
+    settled_on           TEXT    NOT NULL CHECK (date(settled_on) IS settled_on),
+    note                 TEXT    CHECK (note IS NULL OR length(trim(note)) BETWEEN 1 AND 200),
+    created_by_user_id   TEXT    NOT NULL REFERENCES local_profile (id),
+    created_by_member_id TEXT    REFERENCES members (id),
+    created_at           INTEGER NOT NULL,
+    status               TEXT    NOT NULL CHECK (status IN ('PENDING', 'CONFIRMED', 'DISPUTED', 'CANCELLED')),
+    declared_at          INTEGER NOT NULL,
+    confirmed_at         INTEGER,
+    disputed_at          INTEGER,
+    cancelled_at         INTEGER,
+    recorded_by_admin    INTEGER NOT NULL DEFAULT 0 CHECK (recorded_by_admin IN (0, 1)),
+    CONSTRAINT ck_settlements_members CHECK (from_member_id <> to_member_id),
+    CONSTRAINT ck_settlements_confirmed_at CHECK ((status = 'CONFIRMED') = (confirmed_at IS NOT NULL)),
+    CONSTRAINT ck_settlements_cancelled_at CHECK ((status = 'CANCELLED') = (cancelled_at IS NOT NULL)),
+    CONSTRAINT ck_settlements_disputed_at CHECK (status <> 'DISPUTED' OR disputed_at IS NOT NULL),
+    CONSTRAINT ck_settlements_pending_clean CHECK (status <> 'PENDING' OR (disputed_at IS NULL AND confirmed_at IS NULL))
+) STRICT AS SettlementRow;
+
+CREATE INDEX ix_settlements_group_list ON settlements (group_id, settled_on DESC, created_at DESC, id DESC);
+CREATE INDEX ix_settlements_group_confirmed ON settlements (group_id) WHERE status = 'CONFIRMED';
+CREATE INDEX ix_settlements_from_member ON settlements (from_member_id);
+CREATE INDEX ix_settlements_to_member ON settlements (to_member_id);
+
+-- V16 payment_handles (the local profile's own handles only). The Postgres regexes are ported to GLOB so the
+-- file needs no custom SQL function:
+--   WALLET   ^01[0125][0-9]{8}$
+--   INSTAPAY ^[a-z0-9._-]+@[a-z0-9.-]+$, 3..60 characters
+CREATE TABLE payment_handles (
+    id         TEXT    NOT NULL PRIMARY KEY CHECK (length(id) = 36),
+    user_id    TEXT    NOT NULL REFERENCES local_profile (id),
+    type       TEXT    NOT NULL CHECK (type IN ('INSTAPAY', 'WALLET')),
+    value      TEXT    NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    CONSTRAINT uq_payment_handles_user_type UNIQUE (user_id, type),
+    CONSTRAINT ck_payment_handles_wallet CHECK (type <> 'WALLET'
+        OR value GLOB '01[0125][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'),
+    CONSTRAINT ck_payment_handles_instapay CHECK (type <> 'INSTAPAY' OR (
+        length(value) BETWEEN 3 AND 60
+        AND value GLOB '?*@?*'
+        AND value NOT GLOB '*@*@*'
+        AND value NOT GLOB '*[^a-z0-9._@-]*'
+        AND value NOT GLOB '*@*_*'))
+) STRICT AS PaymentHandleRow;
+
+-- V5 idempotency_keys. One local user, so the scope is the key alone (STANDALONE_SPEC 3.4).
+-- Retention 24 hours, purged at app start (IdempotencyDao.deleteCreatedBefore, called by SA3).
+CREATE TABLE idempotency_keys (
+    "key"           TEXT    NOT NULL PRIMARY KEY CHECK (length("key") = 36),
+    endpoint        TEXT    NOT NULL,
+    request_hash    TEXT    NOT NULL,
+    response_status INTEGER NOT NULL CHECK (response_status BETWEEN 100 AND 599),
+    response_body   TEXT    NOT NULL CHECK (json_valid(response_body)),
+    created_at      INTEGER NOT NULL
+) STRICT AS IdempotencyRow;
+
+CREATE INDEX ix_idempotency_keys_created ON idempotency_keys (created_at);

@@ -61,6 +61,18 @@ tool/generate_api.*             regeneration script
 test/                           unit, contract, guard and widget tests
 ```
 
+## Local database (SA2, standalone release)
+`lib/local/db/`: drift schema in `schema.drift` (SQLite, every table STRICT, CHECK/UNIQUE/FK ported from the Flyway migrations), thin DAOs in `daos/`, `memberNameKey` in `name_key.dart`, `localDatabaseProvider` (file `qesma_local.sqlite` in the app documents directory). Decisions A151–A157 in `docs/PROJECT_SPEC.md`.
+
+```
+dart run build_runner build                       # regenerate *.g.dart after editing schema.drift or a DAO
+dart run drift_dev make-migrations                # after bumping schemaVersion: exports drift_schemas/local/drift_schema_vN.json + steps
+dart run drift_dev schema generate drift_schemas/local/ test/local/db/generated/   # test helpers for migration_test.dart
+flutter test test/local                           # schema, DAO and migration tests (in-memory SQLite)
+```
+
+**Native SQLite for `flutter test` (Windows).** No manual install. `sqlite3` 3.x ships SQLite through a Dart build hook: on the first `flutter test` (or build) the hook downloads the prebuilt `sqlite3.dll` for the host from the package's GitHub release, checks it against the sha256 pinned in the package, and caches it under `.dart_tool/hooks_runner/shared/sqlite3/` (copied to `.dart_tool/lib/`). The first run therefore needs network access; later runs are offline. Without network, add to `pubspec.yaml` `hooks: user_defines: sqlite3: source: system` and put a `sqlite3.dll` (3.37+, for STRICT tables) on `PATH` (see the package's `doc/hook.md`). `sqlite3_flutter_libs` is end-of-life and not used (ADR-012). Generated drift files and schema snapshots are committed.
+
 ## Rules enforced by tests (see `test/guards`)
 No `double`/`num`/`/ 100`/`* 100`/`.round()` outside `core/money` (`double` allowed for pixel sizes in `core/theme` and `core/widgets`); no hard-coded UI strings; no prints; the fake token appears only in `dev_settings.dart`; the release manifest has no cleartext and no emulator host.
 

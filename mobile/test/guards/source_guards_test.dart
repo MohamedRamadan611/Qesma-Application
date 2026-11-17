@@ -6,7 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 /// the offending file:line, so a violation cannot be merged by accident.
 ///
 /// Excluded from every guard: generated code (`lib/core/l10n/generated`).
-/// `core/money` is the only place allowed to do money arithmetic.
+/// `core/money` is the only place allowed to do money arithmetic. `lib/local/db/` (drift persistence, SA2)
+/// is exempt from the rounding scan only.
 /// `core/theme` and `core/widgets` may use `double` (pixel sizes) but nothing money-related.
 
 List<File> _dartFiles() => Directory('lib')
@@ -52,10 +53,12 @@ void main() {
         RegExp(r'\b(double|num)\b|\.toDouble\(|double\.parse|double\.tryParse'),
         skip: (p) => p.startsWith('lib/core/money/') || p.startsWith('lib/core/theme/') || p.startsWith('lib/core/widgets/'),
       ),
-      // The classic piaster/EGP conversions and rounding, allowed nowhere but core/money.
+      // The classic piaster/EGP conversions and rounding, allowed nowhere but core/money and the local
+      // persistence layer (SA2, STANDALONE_SPEC 15.2: it stores amounts, it does not compute them).
+      // double/num above stay banned in lib/local/.
       ..._scan(
         RegExp(r'[/*]\s*100\b|~/\s*100\b|\.round\(\)|\.floor\(\)|\.ceil\(\)|\.truncate\(\)|\.toStringAsFixed\('),
-        skip: (p) => p.startsWith('lib/core/money/'),
+        skip: (p) => p.startsWith('lib/core/money/') || p.startsWith('lib/local/db/'),
       ),
     ];
     expect(hits, isEmpty, reason: 'Money is int piasters; use core/money (parse/format) or ask the backend.\n${hits.join('\n')}');

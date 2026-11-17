@@ -9,6 +9,7 @@ analyzer:
     # Generated code: never linted, never edited. Covered by the contract hash test instead.
     - packages/**
     - lib/core/l10n/generated/**
+    - test/local/db/generated/** # drift_dev schema helpers for migration tests
     - build/**
     - android/**
 

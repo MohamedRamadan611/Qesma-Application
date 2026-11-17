@@ -15,7 +15,7 @@
 8. Errors: RFC 7807 problem+json with a stable `code` from the spec's list (8.5). No swallowed exceptions. No stack traces to clients.
 9. Schema invariants live in the database (CHECK, UNIQUE, FK, NOT NULL). Flyway migrations are forward-only and reviewed.
 10. No secrets in code, logs, or git. Never log tokens, Authorization headers, or personal data beyond ids.
-11. Do not build anything outside the Phase 1 scope (spec 3.2), except while running a Phase 2 prompt (`/b10`-`/b19`, `/fl10`-`/fl18`): then the scope is `docs/PHASE2_SPEC.md` and that prompt only. Do not add libraries or infrastructure (Redis, Kafka, microservices) without an ADR and my approval.
+11. Do not build anything outside the Phase 1 scope (spec 3.2), except while running a Phase 2 prompt (`/b10`-`/b19`, `/fl10`-`/fl18`): then the scope is `docs/PHASE2_SPEC.md` and that prompt only, or while running a standalone prompt (`/sa0`-`/sa14`, `/bsa1`): then the scope is `docs/STANDALONE_SPEC.md` and that prompt only. Do not add libraries or infrastructure (Redis, Kafka, microservices) without an ADR and my approval.
 
 ## Working method
 - Before writing code for a component: do the 6-step design (context/load, data & invariants, failure modes, authorization, replay/concurrency, observability) and summarize it in 10–20 lines. Wait for approval if I asked for plan mode.
@@ -38,6 +38,8 @@ To avoid prompt dilution and conflicting rules, **never activate all skills at o
 - **Cross-cutting / Architecture (`/`, `/docs/`):** `think-before-coding`, `architecture`, `boring-by-default`, `documentation`, `deploy-checklist`.
 - **Pure Engine (`backend/src/.../engine/`):** `think-before-coding`, `test-driven-development`, `testing-with-discernment`.
   - *Strictly FORBIDDEN in Engine:* DB/JPA/Flyway skills (`data-modeling-discipline`, `migration-safety`, `query-discipline`, `explain-this-query`, `hunt-n-plus-one`), HTTP/API skills (`api-doc-generator`, `api-docs-check`), and all UI/UX skills.
+- **Standalone engine (`mobile/packages/qesma_engine/`):** same skills and the same *strictly FORBIDDEN* list as the Pure Engine above (`think-before-coding`, `test-driven-development`, `testing-with-discernment`); pure Dart, no Flutter, no I/O.
+- **Standalone local backend (`mobile/lib/local/`):** `think-before-coding`, `data-modeling-discipline`, `migration-safety`, `testing-with-discernment` (SQLite/drift schema, services and the in-process backend; no UI skills here).
 - **Database & Persistence (`backend/.../persistence/`, `backend/.../db/migration/`):** `data-modeling-discipline`, `migration-safety`, `review-migration`, `query-discipline`, `explain-this-query`, `hunt-n-plus-one`.
 - **API & Controllers (`backend/.../api/`):** `api-doc-generator`, `api-docs-check`, `error-handling-as-design`, `auth-and-authorization`, `idempotency-and-side-effects`, `security-discipline`.
 - **Services & Security (`backend/.../service/`, `backend/.../security/`):** `think-before-coding`, `auth-and-authorization`, `idempotency-and-side-effects`, `observability-by-default`, `backend-performance-review`, `security-discipline`.
@@ -59,6 +61,15 @@ To avoid prompt dilution and conflicting rules, **never activate all skills at o
 - `/r-review`: `audit`, `code-review`, `security-discipline`, `migration-safety` (if DB touched)
 - `/f-bugfix`: `debugging-discipline`, `testing-with-discernment`, `test-driven-development`
 - `/s-spec-change`: `architecture`, `boring-by-default`, `documentation`
+
+## Token discipline (applies to every prompt and every session)
+- **One milestone per session.** Run `/clear` before starting the next prompt. Use `/compact` only after a milestone's tests pass, never mid-change.
+- **Models:** Opus 5.5 for planning (Step 0) and for money or security implementation (engine, balances, pool, calculators, OCR parsing, Java contract). Sonnet 5.5 for other implementation. Haiku 5.5 only for small docs edits.
+- **Read narrowly:** never read `docs/openapi.json`, `docs/PROJECT_SPEC.md` or `docs/PHASE2_SPEC.md` whole. Use Grep to find a section, then Read with `offset` and `limit`. Do not re-read a file already read in this session unless it changed.
+- **Search before reading:** use Grep with `head_limit` (or `output_mode: "files_with_matches"`) before opening files. Use one Explore agent only when the search spans many areas; a known file needs a direct Read or Grep, not an agent.
+- **Short test output:** print only failures and the summary, for example `./mvnw test ... 2>&1 | grep -E "Tests run:|FAIL|ERROR\]   "` or the equivalent for `flutter test`. Run the full suite once at the end of a milestone, not after each edit. Never paste full logs into the conversation.
+- **Short replies:** keep status updates and final summaries under about 300 words unless the prompt asks for more. Use tables for lists of files, tests or results. Describe a failure with the file, line and message, not the full stack trace or a screenshot.
+- **Stop reading when you have enough:** once the facts needed for a decision are established, act. Do not re-derive facts already in the conversation.
 
 ## Stop protocol
 After finishing a prompt: (1) run the full test suite, (2) list assumptions and open questions, (3) list files changed, (4) do NOT start the next milestone.
