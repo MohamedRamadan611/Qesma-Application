@@ -1,6 +1,7 @@
 import 'package:qesma_api/qesma_api.dart';
 
 import '../../../core/money/money.dart';
+import 'expense_draft.dart';
 import 'expense_form_state.dart';
 
 /// Fills the edit form from a saved expense.
@@ -30,6 +31,7 @@ ExpenseFormState formFromExpense(
     amountText: Money.formatPlain(expense.totalMinor),
     date: expense.expenseDate,
     category: expense.category,
+    paidFromPool: expense.paidFromPool,
     singlePayerId: single ? payers.first.memberId : fallbackPayerId,
     splitMode: itemized
         ? SplitMode.itemized
@@ -71,3 +73,16 @@ ItemizedDraft _itemizedFrom(ExpenseView expense, Charges? charges) {
     adjustmentText: adjustment == 0 ? '' : Money.formatPlain(adjustment),
   );
 }
+
+/// Fills the add form from a draft (SA11): EXACT among the draft's members with its amounts, one payer, its
+/// category, on [date]. Amounts are shown as plain numbers, exactly as if typed.
+ExpenseFormState formFromDraft(ExpenseDraft draft, {required Date date}) => ExpenseFormState(
+      title: draft.title,
+      amountText: Money.formatPlain(draft.totalMinor),
+      date: date,
+      category: draft.category,
+      singlePayerId: draft.payerId,
+      splitMode: SplitMode.exact,
+      selectedIds: draft.exactShares.keys.toSet(),
+      exactTexts: {for (final e in draft.exactShares.entries) e.key: Money.formatPlain(e.value)},
+    );

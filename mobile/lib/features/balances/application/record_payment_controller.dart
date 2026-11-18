@@ -66,14 +66,24 @@ class RecordPaymentController extends Notifier<RecordPaymentView> {
     final members = group?.members.toList() ?? const <MemberDto>[];
     final seed = key.seed;
     final you = group?.yourMemberId;
-    final fromId = seed.fromId ?? you ?? members.firstOrNull?.id;
-    final toId = seed.toId ?? members.where((m) => m.id != fromId).firstOrNull?.id;
+    final String? fromId;
+    final String? toId;
+    if (seed.poolDeposit) {
+      // SA10: the receiver is the treasurer; the depositor is anyone else (A138: never the treasurer).
+      toId = seed.toId;
+      final others = members.where((m) => m.id != toId && m.status == 'ACTIVE').toList();
+      fromId = seed.fromId ?? others.where((m) => m.id == you).firstOrNull?.id ?? others.firstOrNull?.id;
+    } else {
+      fromId = seed.fromId ?? you ?? members.firstOrNull?.id;
+      toId = seed.toId ?? members.where((m) => m.id != fromId).firstOrNull?.id;
+    }
     _initial = PaymentForm(
       fromId: fromId,
       toId: toId,
       amountText: seed.amountMinor == null ? '' : Money.formatPlain(seed.amountMinor!),
       date: ref.read(clockProvider)().toDate(),
       suggestedMinor: seed.amountMinor,
+      poolDeposit: seed.poolDeposit,
     );
     return RecordPaymentView(form: _initial);
   }

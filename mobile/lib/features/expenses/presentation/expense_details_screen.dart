@@ -192,6 +192,7 @@ class _Content extends StatelessWidget {
                     child: ExcludeSemantics(child: AppTag(label: dateText(expense.expenseDate), icon: Icons.calendar_today_outlined)),
                   ),
                   AppTag(label: category.label(l10n), icon: category.icon),
+                  if (expense.paidFromPool) AppTag(label: l10n.expensePoolTag, icon: Icons.savings_outlined, tone: AppTagTone.info),
                   if (split != null) AppTag(label: split.label(l10n), tone: split == SplitType.itemized ? AppTagTone.warning : AppTagTone.primary),
                   if (expense.version > 1) AppTag(label: l10n.expenseEditedBadge('${expense.version}'), tone: AppTagTone.info, icon: Icons.history),
                 ],

@@ -104,7 +104,7 @@ An internal ledger of a pooled kitty. The app records it and **never holds money
 3. A **pool expense** is an expense whose **single payer is the treasurer** and `paidFromPool = true`. It is valid only when the group has a treasurer; otherwise `422 VALIDATION_ERROR`.
 4. **Meter** = Σ CONFIRMED deposits − Σ totals of non-deleted pool expenses. It **may go negative** (the treasurer fronted cash; shown with text, not colour only). Never stored: `GroupDto.poolBalanceMinor`, null when there is no treasurer, computed in one query.
 5. Unequal deposits are allowed. Leftover and overdraft **settle through the normal balances and suggested transfers** (the kind does not change any net: tested). Only **received** deposits are recorded. The treasurer's own share of an expense is calculated like anyone's.
-6. **Changing the treasurer** (including clearing it) is allowed only while **no deposit and no pool expense exists**, counting cancelled and soft-deleted rows (the ledger is never hard-deleted). The error code is chosen in BSA1 and added to `ErrorCode`, the OpenAPI enum and `ApiContractCoverageIT`.
+6. **Changing the treasurer** (including clearing it; clearing has no request in the contract, so it is not offered: A167) is allowed only while **no deposit and no pool expense exists**, counting cancelled and soft-deleted rows (the ledger is never hard-deleted). The error code is chosen in BSA1 and added to `ErrorCode`, the OpenAPI enum and `ApiContractCoverageIT`.
 7. Authorization: the same roles that edit the group / record settlements; no new permission.
 
 ## 11. Khorouga calculator (حاسبة البنزين وأوبر)
@@ -126,6 +126,8 @@ Pure functions in `qesma_engine`; integer / BigInt math only; no network, no map
 4. **A leg with no riders on board is rejected** (`VALIDATION_ERROR`; the user fixes the stops) (A141).
 
 Decimal inputs (km, L/100 km) are parsed by string logic like `Money.parse`, never `double`; Arabic-Indic digits and the comma are accepted; at most one decimal.
+
+**SA11 details (A168):** fuel types 80 / 92 / 95 / diesel; saved prices live in `fuel_prices` (local schema 6) and are not part of the backup; `,` is a decimal point in km and L/100 km fields (no grouping); limits and fixture rules are in A168.
 
 ## 12. Reminder tones
 
@@ -202,7 +204,7 @@ SA4 adds a **per-mode allow-list**: in local mode the server-only features (`inv
 | My share | 8 | A130, A131, A150 | SA7 |
 | Trip recap | 9 | A132–A134, A150 | SA8 |
 | Reminder tones | 12 | A143 | SA9 |
-| Pool & treasurer | 10 | A135–A138 | BSA1, SA10 |
+| Pool & treasurer | 10 | A135–A138, A167 | BSA1, SA10 |
 | Khorouga calculator | 11 | A139–A142 | SA11 |
 | Receipt OCR | 13 | A144–A146 | SA12 |
 | Voice entry | 14 | A147 | SA14 |

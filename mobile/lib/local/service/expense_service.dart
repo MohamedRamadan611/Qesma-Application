@@ -32,6 +32,7 @@ final class ExpenseService {
   Future<Outcome> create(String groupId, String key, ExpenseIn command) => _db.transaction(() async {
         final access = await _ctx.requireGroup(groupId);
         final request = ExpenseValidator.validate(command);
+        ExpenseValidator.requirePoolRules(request, access.group.treasurerMemberId);
         final fingerprint = IdempotencyService.fingerprint(canonical(createEndpoint, groupId, request));
         final replay = await _idempotency.findReplay(key, createEndpoint, fingerprint);
         if (replay != null) return replay;
@@ -80,6 +81,7 @@ final class ExpenseService {
         final stored = await _liveGraph(groupId, expenseId);
         _requireVersion(stored, expectedVersion, access);
         final request = ExpenseValidator.validate(command);
+        ExpenseValidator.requirePoolRules(request, access.group.treasurerMemberId);
         // A member who left may stay in an expense that already has them, but cannot be added (B12, A79).
         final kept = <String>{
           ...stored.payers.map((p) => p.memberId),
@@ -228,6 +230,8 @@ final class ExpenseService {
       'expenseDate': v.expenseDate,
       'splitType': v.splitType,
       'totalMinor': v.totalMinor,
+      // Only a non-default flag is hashed (Java RequestHasher), so keys stored before SA10 keep their hash.
+      if (v.paidFromPool) 'paidFromPool': true,
       'payers': amounts(v.payers),
       'participantMemberIds': v.participantMemberIds == null ? null : ([...v.participantMemberIds!]..sort()),
       'shares': v.shares == null ? null : amounts(v.shares!),
@@ -319,6 +323,7 @@ final class ExpenseService {
         updatedAt: updatedAt,
         version: version,
         category: request.category,
+        paidFromPool: request.paidFromPool ? 1 : 0,
       ),
       payers: [for (final p in calc.payers) PayerRow(expenseId: id, memberId: p.memberId, amountMinor: p.amountMinor)],
       splits: [

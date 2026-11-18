@@ -36,7 +36,7 @@ Future<void> seedGroup(LocalDatabase db) async {
 
 /// An EQUAL expense of [total] paid by "you", owed by "you" and Ali.
 ExpenseGraph equalExpense(String id, {int total = 10000}) => ExpenseGraph(
-      expense: ExpenseRow(
+      expense: ExpenseRow(paidFromPool: 0, 
         id: id,
         groupId: groupId,
         title: 'Taxi',
@@ -62,7 +62,7 @@ ExpenseGraph itemizedExpense(String id) {
   final item1 = tid(900);
   final item2 = tid(901);
   return ExpenseGraph(
-    expense: ExpenseRow(
+    expense: ExpenseRow(paidFromPool: 0, 
       id: id,
       groupId: groupId,
       title: 'مطعم',
@@ -111,7 +111,7 @@ RevisionRow revision(String id, String expenseId, int version, String changeType
       changedAt: t0,
     );
 
-SettlementRow confirmedSettlement(String id, {String? from, String? to, int amount = 5000}) => SettlementRow(
+SettlementRow confirmedSettlement(String id, {String? from, String? to, int amount = 5000}) => SettlementRow(kind: 'PAYMENT', 
       id: id,
       groupId: groupId,
       fromMemberId: from ?? aliId,

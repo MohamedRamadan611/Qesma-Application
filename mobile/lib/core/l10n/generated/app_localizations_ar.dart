@@ -2699,4 +2699,296 @@ class AppLocalizationsAr extends AppLocalizations {
   ) {
     return 'يا $name يا فنان، تذكير لطيف قبل ما الجيب يعلن إفلاسه بخصوص $group: عليك $amount. متخليش المحفظة تعيط!$handle';
   }
+
+  @override
+  String get poolSectionTitle => 'الصندوق';
+
+  @override
+  String get poolSectionHint =>
+      'واحد من المجموعة يمسك فلوس الكل، وكل واحد يسلّمه إيداعه.';
+
+  @override
+  String get poolTreasurerLabel => 'أمين الصندوق';
+
+  @override
+  String get poolTreasurerNone => 'مفيش أمين صندوق لسه';
+
+  @override
+  String get poolTreasurerChoose => 'اختار أمين الصندوق';
+
+  @override
+  String get poolTreasurerLocked =>
+      'مينفعش تغيّر أمين الصندوق بعد أول إيداع أو أول مصروف من الصندوق.';
+
+  @override
+  String poolTreasurerIs(String name) {
+    return 'أمين الصندوق: $name';
+  }
+
+  @override
+  String get poolRemaining => 'الباقي في الصندوق';
+
+  @override
+  String get poolDeposited => 'إجمالي الإيداعات';
+
+  @override
+  String get poolSpent => 'اتصرف من الصندوق';
+
+  @override
+  String poolCovered(String amount) {
+    return 'أمين الصندوق دفع من جيبه $amount';
+  }
+
+  @override
+  String get poolCoveredHint => 'هيرجعلهم في التحويلات اللي في تبويب الحسابات.';
+
+  @override
+  String get poolEmptyMeter => 'الصندوق فاضي';
+
+  @override
+  String get poolOpenDetails => 'تفاصيل الصندوق';
+
+  @override
+  String get poolAddDeposit => 'إضافة إيداع';
+
+  @override
+  String get poolDepositsTitle => 'الإيداعات';
+
+  @override
+  String get poolDepositsEmpty => 'لسه مفيش إيداعات';
+
+  @override
+  String get poolDepositsEmptyBody =>
+      'سجّل الفلوس اللي كل واحد سلّمها لأمين الصندوق.';
+
+  @override
+  String get poolDepositSheetTitle => 'إيداع في الصندوق';
+
+  @override
+  String get poolDepositFrom => 'مين اللي سلّم الفلوس؟';
+
+  @override
+  String poolDepositTo(String name) {
+    return 'لأمين الصندوق: $name';
+  }
+
+  @override
+  String get poolDepositAmountLabel => 'المبلغ (ج.م)';
+
+  @override
+  String get poolDepositSave => 'سجّل الإيداع';
+
+  @override
+  String get poolDepositSaved => 'اتسجّل الإيداع';
+
+  @override
+  String get poolDepositOnlyTreasurer =>
+      'محدش غير أمين الصندوق في المجموعة. أضف أعضاء الأول عشان يودعوا.';
+
+  @override
+  String get expensePaidFromPool => 'اتدفع من الصندوق';
+
+  @override
+  String expensePaidFromPoolHint(String name) {
+    return '$name (أمين الصندوق) دفع من فلوس الصندوق، فهو الدافع الوحيد.';
+  }
+
+  @override
+  String get expensePoolTag => 'من الصندوق';
+
+  @override
+  String get balancesPoolNote =>
+      'الفلوس اللي فاضلة في الصندوق، أو اللي دفعها أمين الصندوق من جيبه، بتتسوّى في التحويلات اللي تحت.';
+
+  @override
+  String get calcTitle => 'حاسبة الخروجة';
+
+  @override
+  String get calcMenuAddExpense => 'إضافة مصروف';
+
+  @override
+  String get calcMenuAddExpenseHint => 'اكتب المبلغ ومين هيتقسم عليهم';
+
+  @override
+  String get calcMenuCalculator => 'حاسبة البنزين والمشوار';
+
+  @override
+  String get calcMenuCalculatorHint =>
+      'قسّم البنزين والكارتة، أو مشوار مشترك فيه محطات';
+
+  @override
+  String get calcTabFuel => 'بنزين';
+
+  @override
+  String get calcTabRide => 'مشوار مشترك';
+
+  @override
+  String get calcDistance => 'المسافة (كم)';
+
+  @override
+  String get calcDistanceError =>
+      'اكتب مسافة لحد 10,000 كم، وبعد العلامة رقم واحد بس';
+
+  @override
+  String get calcConsumption => 'الاستهلاك (لتر لكل 100 كم)';
+
+  @override
+  String get calcConsumptionHint => 'أغلب العربيات بين 6 و 10';
+
+  @override
+  String get calcConsumptionError =>
+      'اكتب رقم من 1 لـ 30، وبعد العلامة رقم واحد بس';
+
+  @override
+  String get calcFuelType => 'نوع البنزين';
+
+  @override
+  String get calcFuel80 => 'بنزين 80';
+
+  @override
+  String get calcFuel92 => 'بنزين 92';
+
+  @override
+  String get calcFuel95 => 'بنزين 95';
+
+  @override
+  String get calcFuelDiesel => 'سولار';
+
+  @override
+  String get calcPriceNotSet => 'مفيش سعر متسجّل. اكتب سعر البنزينة النهارده.';
+
+  @override
+  String calcPriceSaved(String price, String date) {
+    return '$price للتر · آخر تحديث $date';
+  }
+
+  @override
+  String get calcPriceEdit => 'تعديل السعر';
+
+  @override
+  String get calcPriceSet => 'إضافة السعر';
+
+  @override
+  String calcPriceDialogTitle(String fuel) {
+    return 'سعر اللتر: $fuel';
+  }
+
+  @override
+  String get calcPriceDialogHint =>
+      'اكتب السعر اللي دفعته في البنزينة. قسمة مش بتجيب الأسعار من أي مكان.';
+
+  @override
+  String get calcPriceError => 'اكتب سعر لحد 1,000 جنيه';
+
+  @override
+  String get calcTolls => 'الكارتة';
+
+  @override
+  String calcTollLabel(String number) {
+    return 'كارتة $number';
+  }
+
+  @override
+  String get calcTollAdd => 'إضافة كارتة';
+
+  @override
+  String get calcTollRemove => 'شيل الكارتة دي';
+
+  @override
+  String get calcTollError => 'اكتب المبلغ، أو شيل الكارتة دي';
+
+  @override
+  String get calcDriver => 'السواق (دفع البنزين)';
+
+  @override
+  String get calcDriverShares => 'السواق بيدفع نصيب هو كمان';
+
+  @override
+  String get calcPassengers => 'مين في العربية';
+
+  @override
+  String get calcFare => 'الأجرة كلها';
+
+  @override
+  String get calcFarePayer => 'مين دفع الأجرة';
+
+  @override
+  String get calcStops => 'المحطات';
+
+  @override
+  String calcStopName(String number) {
+    return 'محطة $number';
+  }
+
+  @override
+  String calcLegDistance(String from, String to) {
+    return 'من محطة $from لمحطة $to (كم)';
+  }
+
+  @override
+  String get calcStopAdd => 'إضافة محطة';
+
+  @override
+  String get calcStopRemove => 'شيل آخر محطة';
+
+  @override
+  String get calcRiders => 'مين ركب';
+
+  @override
+  String get calcGetsIn => 'ركب من';
+
+  @override
+  String get calcGetsOut => 'نزل عند';
+
+  @override
+  String get calcResultTitle => 'نصيب كل واحد';
+
+  @override
+  String get calcFuelCost => 'البنزين';
+
+  @override
+  String get calcTollsCost => 'الكارتة';
+
+  @override
+  String get calcTotal => 'الإجمالي';
+
+  @override
+  String calcLegFare(String from, String to) {
+    return 'من محطة $from لمحطة $to';
+  }
+
+  @override
+  String get calcErrorNoSharers => 'اختار شخص واحد على الأقل يشارك في التكلفة.';
+
+  @override
+  String calcErrorEmptyLeg(String from, String to) {
+    return 'مفيش حد راكب من محطة $from لمحطة $to. غيّر مين ركب أو نزل فين.';
+  }
+
+  @override
+  String get calcErrorZero =>
+      'اكتب المسافة والسعر، أو كارتة، عشان تشوف النصيب.';
+
+  @override
+  String get calcErrorTooLarge => 'المبلغ ده كبير أوي.';
+
+  @override
+  String get calcErrorRange => 'راجع الأرقام اللي فوق.';
+
+  @override
+  String get calcCreateExpense => 'اعمل المصروف';
+
+  @override
+  String get calcCreateHint => 'هتراجعه قبل ما يتحفظ.';
+
+  @override
+  String calcDraftFuelTitle(String km) {
+    return 'بنزين، $km كم';
+  }
+
+  @override
+  String get calcDraftTollsTitle => 'كارتة';
+
+  @override
+  String get calcDraftRideTitle => 'مشوار مشترك';
 }

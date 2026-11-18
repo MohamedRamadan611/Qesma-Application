@@ -10,6 +10,7 @@ import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/theme/qesma_text.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
+import '../../expenses/presentation/status_banner.dart';
 import '../../expenses/presentation/expense_blocks.dart';
 import '../../expenses/presentation/expense_ui.dart';
 import '../../groups/presentation/group_ui.dart';
@@ -142,6 +143,11 @@ class _BalancesTabState extends ConsumerState<BalancesTab> {
           children: [
             _StatusCard(totalSpentMinor: group.totalSpentMinor, transferCount: transfers.length),
             const SizedBox(height: QesmaSpacing.md),
+            // SA10: refunds of the pool and top-ups of the treasurer are ordinary suggested transfers (A136).
+            if (ref.watch(modeFeaturesProvider).pool && group.treasurerMemberId != null) ...[
+              StatusBanner(icon: Icons.savings_outlined, text: l10n.balancesPoolNote, tone: BannerTone.neutral),
+              const SizedBox(height: QesmaSpacing.md),
+            ],
             IncomingPaymentsSection(group: group),
             if (transfers.isEmpty)
               _AllSettled(

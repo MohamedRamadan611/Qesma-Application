@@ -1,0 +1,23 @@
+{
+  "name": "equal deposits, two pool expenses, leftover refunded through the normal transfers",
+  "members": ["T", "A", "B", "C"],
+  "treasurer": "T",
+  "steps": [
+    { "op": "deposit", "ref": "d1", "from": "A", "amountMinor": 50000 },
+    { "op": "deposit", "ref": "d2", "from": "B", "amountMinor": 50000 },
+    { "op": "deposit", "ref": "d3", "from": "C", "amountMinor": 50000 },
+    { "op": "poolExpense", "ref": "e1", "totalMinor": 80000 },
+    { "op": "poolExpense", "ref": "e2", "totalMinor": 40000 }
+  ],
+  "expected": {
+    "poolBalanceMinor": 30000,
+    "depositedMinor": 150000,
+    "spentMinor": 120000,
+    "nets": { "T": -60000, "A": 20000, "B": 20000, "C": 20000 },
+    "transfers": [
+      { "from": "T", "to": "A", "amountMinor": 20000 },
+      { "from": "T", "to": "B", "amountMinor": 20000 },
+      { "from": "T", "to": "C", "amountMinor": 20000 }
+    ]
+  }
+}

@@ -48,6 +48,7 @@ final class ExpenseIn {
     this.tax,
     this.adjustmentMinor,
     this.category,
+    this.paidFromPool,
   });
 
   final String? title;
@@ -68,6 +69,9 @@ final class ExpenseIn {
   final int? adjustmentMinor;
   final String? category;
 
+  /// BSA1: optional; true only for a pool expense (single payer = the treasurer).
+  final bool? paidFromPool;
+
   static ExpenseIn read(JsonFields f) {
     final service = f.obj('service');
     final tax = f.obj('tax');
@@ -85,18 +89,22 @@ final class ExpenseIn {
       tax: tax == null ? null : TaxIn(tax.integer('bps'), tax.str('base')),
       adjustmentMinor: f.integer('adjustmentMinor'),
       category: f.str('category'),
+      paidFromPool: f.boolean('paidFromPool'),
     );
   }
 }
 
 /// `SettlementCommand`.
 final class SettlementIn {
-  const SettlementIn(this.fromMemberId, this.toMemberId, this.amountMinor, this.settledOn, this.note);
+  const SettlementIn(this.fromMemberId, this.toMemberId, this.amountMinor, this.settledOn, this.note, [this.kind]);
   final String? fromMemberId;
   final String? toMemberId;
   final int? amountMinor;
   final String? settledOn;
   final String? note;
+
+  /// BSA1: PAYMENT (default when missing or blank) or POOL_DEPOSIT.
+  final String? kind;
 
   static SettlementIn read(JsonFields f) => SettlementIn(
         f.uuid('fromMemberId'),
@@ -104,5 +112,6 @@ final class SettlementIn {
         f.integer('amountMinor'),
         f.date('settledOn'),
         f.str('note'),
+        f.str('kind'),
       );
 }

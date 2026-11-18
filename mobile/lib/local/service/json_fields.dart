@@ -38,6 +38,13 @@ final class JsonFields {
 
   int? integer(String key) => integerValue(_map[key], key);
 
+  /// A JSON boolean (Jackson does not coerce strings or numbers to a `Boolean` here either).
+  bool? boolean(String key) {
+    final v = _map[key];
+    if (v == null || v is bool) return v as bool?;
+    throw LocalApiException.unreadable('$key must be a boolean');
+  }
+
   String? uuid(String key) => uuidValue(_map[key], key);
 
   /// A `YYYY-MM-DD` calendar date, returned in that canonical text form.

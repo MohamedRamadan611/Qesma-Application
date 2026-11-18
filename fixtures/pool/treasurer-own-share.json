@@ -1,0 +1,17 @@
+{
+  "name": "the treasurer's own share is calculated like anyone's (their own cash makes the meter negative)",
+  "members": ["T", "A", "B"],
+  "treasurer": "T",
+  "steps": [
+    { "op": "deposit", "ref": "d1", "from": "A", "amountMinor": 30000 },
+    { "op": "deposit", "ref": "d2", "from": "B", "amountMinor": 30000 },
+    { "op": "poolExpense", "ref": "e1", "totalMinor": 90000 }
+  ],
+  "expected": {
+    "poolBalanceMinor": -30000,
+    "depositedMinor": 60000,
+    "spentMinor": 90000,
+    "nets": { "T": 0, "A": 0, "B": 0 },
+    "transfers": []
+  }
+}

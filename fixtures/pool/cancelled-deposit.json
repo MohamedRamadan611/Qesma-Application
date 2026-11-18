@@ -1,0 +1,21 @@
+{
+  "name": "a cancelled deposit leaves the meter and the nets",
+  "members": ["T", "A", "B"],
+  "treasurer": "T",
+  "steps": [
+    { "op": "deposit", "ref": "d1", "from": "A", "amountMinor": 30000 },
+    { "op": "deposit", "ref": "d2", "from": "B", "amountMinor": 30000 },
+    { "op": "cancel", "ref": "d2" },
+    { "op": "poolExpense", "ref": "e1", "totalMinor": 30000 }
+  ],
+  "expected": {
+    "poolBalanceMinor": 0,
+    "depositedMinor": 30000,
+    "spentMinor": 30000,
+    "nets": { "T": -10000, "A": 20000, "B": -10000 },
+    "transfers": [
+      { "from": "T", "to": "A", "amountMinor": 10000 },
+      { "from": "B", "to": "A", "amountMinor": 10000 }
+    ]
+  }
+}

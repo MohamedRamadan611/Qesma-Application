@@ -71,7 +71,7 @@ void main() {
 
     // Expense in Group 3 (should be ignored)
     await db.expensesDao.insertGraph(ExpenseGraph(
-      expense: ExpenseRow(
+      expense: ExpenseRow(paidFromPool: 0, 
         id: tid(100),
         groupId: group3Id,
         title: 'Stranger Expense',
@@ -93,7 +93,7 @@ void main() {
 
     // Expense 1: Group 1, 2026-11-10, FOOD. Total 30000. You paid 30000, you owed 15000.
     await db.expensesDao.insertGraph(ExpenseGraph(
-      expense: ExpenseRow(
+      expense: ExpenseRow(paidFromPool: 0, 
         id: tid(101),
         groupId: groupId,
         title: 'Seafood Feast',
@@ -115,7 +115,7 @@ void main() {
 
     // Expense 2: Group 1, 2026-11-12, FUEL. Total 5000. Ali paid 5000, you owed 2500.
     await db.expensesDao.insertGraph(ExpenseGraph(
-      expense: ExpenseRow(
+      expense: ExpenseRow(paidFromPool: 0, 
         id: tid(102),
         groupId: groupId,
         title: 'Gas',
@@ -137,7 +137,7 @@ void main() {
 
     // Expense 3: Group 1, 2026-10-05, BILLS. You paid 20000, you owed 20000.
     await db.expensesDao.insertGraph(ExpenseGraph(
-      expense: ExpenseRow(
+      expense: ExpenseRow(paidFromPool: 0, 
         id: tid(103),
         groupId: groupId,
         title: 'Internet',
@@ -156,7 +156,7 @@ void main() {
 
     // Expense 4: Group 1, 2026-11-14, SHOPPING - Soft-deleted!
     await db.expensesDao.insertGraph(ExpenseGraph(
-      expense: ExpenseRow(
+      expense: ExpenseRow(paidFromPool: 0, 
         id: tid(104),
         groupId: groupId,
         title: 'Deleted Clothes',
@@ -176,7 +176,7 @@ void main() {
 
     // Expense 5: Group 2 (USD), 2026-11-20, FOOD. You paid 4000, you owed 2000.
     await db.expensesDao.insertGraph(ExpenseGraph(
-      expense: ExpenseRow(
+      expense: ExpenseRow(paidFromPool: 0, 
         id: tid(105),
         groupId: group2Id,
         title: 'NY Lunch',
@@ -261,7 +261,7 @@ void main() {
     // Initial query has run; now insert an expense
     await Future<void>.delayed(const Duration(milliseconds: 50));
     await db.expensesDao.insertGraph(ExpenseGraph(
-      expense: ExpenseRow(
+      expense: ExpenseRow(paidFromPool: 0, 
         id: tid(301),
         groupId: groupId,
         title: 'Dinner',

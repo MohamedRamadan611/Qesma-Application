@@ -47,6 +47,7 @@ List<String> _scan(
 
 void main() {
   _fl14TimeGuard();
+  _sa10PoolGuard();
   test('no money arithmetic or floating point outside core/money', () {
     final hits = <String>[
       // Floating point types and conversions: allowed only for pixel sizes in theme/widgets.
@@ -291,5 +292,36 @@ void _fl14TimeGuard() {
   test('the guard is alive: the Remind files exist and are scanned', () {
     final scanned = _dartFiles().map(_rel).where((p) => p.contains('/remind_') || p.contains('/payment_handles')).toList();
     expect(scanned.length, greaterThanOrEqualTo(4), reason: scanned.join('\n'));
+  });
+}
+
+// SA10 (STANDALONE_SPEC 10, A136): the pool meter is `GroupDto.poolBalanceMinor`, computed by the backend and never
+// stored; deposited and spent come from the local read-model. Widgets never add, subtract or fold them, nor work a
+// meter out of deposits or expenses. A negative meter is shown through `Money.magnitude` (core/money).
+final _poolArithmetic = RegExp(
+  r'\b(poolBalanceMinor|depositedMinor|spentMinor|meterMinor)\b\s*[-+*/%]\s*[\w(]'
+  r'|[\w)]\s*[-+*/%]=?\s*\w*\.?\b(poolBalanceMinor|depositedMinor|spentMinor|meterMinor)\b'
+  r'|\b(poolBalanceMinor|depositedMinor|spentMinor|deposits|amountMinor)\b[^;]*(\.fold\(|\.reduce\(|\.sum\b)'
+  r'|\.abs\(\)',
+);
+
+bool _isPoolUi(String path) =>
+    path.startsWith('lib/features/pool/') ||
+    path == 'lib/features/groups/presentation/edit_group_screen.dart' ||
+    path == 'lib/features/groups/presentation/group_home_screen.dart';
+
+void _sa10PoolGuard() {
+  test('no arithmetic on the pool meter in the UI: the remaining amount is poolBalanceMinor as the backend sent it', () {
+    final hits = _scan(_poolArithmetic, skip: (p) => !_isPoolUi(p));
+    expect(hits, isEmpty, reason: 'The meter is computed in lib/local, never in widgets (A136).\n${hits.join('\n')}');
+  });
+
+  test('the pool guard is alive: the pool files are scanned and the pattern catches a widget-side meter', () {
+    final scanned = _dartFiles().map(_rel).where(_isPoolUi).toList();
+    expect(scanned.length, greaterThanOrEqualTo(4), reason: scanned.join('\n'));
+    expect(_poolArithmetic.hasMatch('final left = s.depositedMinor - s.spentMinor;'), isTrue);
+    expect(_poolArithmetic.hasMatch('final total = s.deposits.fold(0, (a, d) => a + d.amountMinor);'), isTrue);
+    expect(_poolArithmetic.hasMatch('Text(moneyDisplay(l10n, meter.abs()))'), isTrue);
+    expect(_poolArithmetic.hasMatch('MoneyText(group.poolBalanceMinor ?? 0)'), isFalse);
   });
 }

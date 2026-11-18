@@ -39,3 +39,17 @@ Vectors V1–V8 come from `docs/PROJECT_SPEC.md` section 10. They are run by `Fi
 - Any change in engine behaviour adds a new vector (or a new `expected` key) that pins it. A vector is never edited quietly to fit new behaviour.
 - When the Java engine changes, the new vector and the matching Dart change go in the same commit, so both runners stay green at every commit.
 - Run them with `./mvnw -q test -Dtest=FixtureTest` (from `backend/`) and `dart test test/fixture_test.dart` (from `mobile/packages/qesma_engine/`).
+
+## Ride vectors (`fixtures/ride/*.json`, SA11, Dart-only)
+Run by `test/ride/ride_fixture_test.dart` in `mobile/packages/qesma_engine` (STANDALONE_SPEC 11, A139-A141, A168). The Java engine is frozen for the standalone release, so these are not run by `FixtureTest`.
+```json
+{ "name": "...", "kind": "fuel",
+  "input": { "distanceTenthsKm": 1000, "consumptionTenths": 81, "pricePerLitreMinor": 1375, "tollsMinor": [2500],
+             "driver": { "id": "A", "sortOrder": 0 }, "driverIncluded": true, "passengers": [ { "id": "B", "sortOrder": 1 } ] },
+  "expected": { "fuelMinor": 11138, "tollsMinor": 2500, "totalMinor": 13638, "payerMemberId": "A", "shares": { "A": 6819, "B": 6819 } } }
+{ "name": "...", "kind": "multiStop",
+  "input": { "fareMinor": 10000, "legDistancesTenthsKm": [50, 30],
+             "riders": [ { "memberId": "A", "sortOrder": 0, "boardStop": 0, "leaveStop": 2 } ] },
+  "expected": { "legFaresMinor": [5000, 5000], "shares": { "A": 10000 } } }
+```
+A rejected input has `"expected": { "error": "VALIDATION_ERROR" }`. Distances are tenths of km, consumption tenths of L/100 km, money in piasters.

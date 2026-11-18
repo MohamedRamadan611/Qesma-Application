@@ -10,21 +10,28 @@ final Date kLastPaymentDate = Date(2100, 12, 31);
 /// The longest note the server accepts (A44), in code points.
 const int kPaymentNoteMax = 200;
 
+/// SA10: the settlement kind of a pool deposit (a plain payment leaves `kind` out: the server default is PAYMENT).
+const String kPoolDepositKind = 'POOL_DEPOSIT';
+
 /// What the Record payment sheet is opened with: a tapped transfer (from, to and the server's
 /// amount, a copy) or nothing for a payment the user describes themselves.
 @immutable
 class PaymentSeed {
-  const PaymentSeed({this.fromId, this.toId, this.amountMinor});
+  const PaymentSeed({this.fromId, this.toId, this.amountMinor, this.poolDeposit = false});
 
   final String? fromId;
   final String? toId;
   final int? amountMinor;
 
-  @override
-  bool operator ==(Object other) => other is PaymentSeed && other.fromId == fromId && other.toId == toId && other.amountMinor == amountMinor;
+  /// SA10: a deposit to the pool: [toId] is the treasurer and the settlement kind is POOL_DEPOSIT.
+  final bool poolDeposit;
 
   @override
-  int get hashCode => Object.hash(fromId, toId, amountMinor);
+  bool operator ==(Object other) =>
+      other is PaymentSeed && other.fromId == fromId && other.toId == toId && other.amountMinor == amountMinor && other.poolDeposit == poolDeposit;
+
+  @override
+  int get hashCode => Object.hash(fromId, toId, amountMinor, poolDeposit);
 }
 
 /// Why a field is not acceptable yet (the sheet shows the matching message once the field was touched).
@@ -41,6 +48,7 @@ class PaymentForm {
     required this.date,
     this.note = '',
     this.suggestedMinor,
+    this.poolDeposit = false,
   });
 
   final String? fromId;
@@ -51,6 +59,9 @@ class PaymentForm {
 
   /// The tapped transfer's amount as the server sent it, for the "full amount" chip. Null for a manual entry.
   final int? suggestedMinor;
+
+  /// SA10: a pool deposit (kind POOL_DEPOSIT, receiver fixed to the treasurer); a plain payment otherwise.
+  final bool poolDeposit;
 
   /// 1..10^12 piasters, or null while the text is not a valid amount.
   int? get amountMinor => Money.parse(amountText);
@@ -80,6 +91,7 @@ class PaymentForm {
         date: date ?? this.date,
         note: note ?? this.note,
         suggestedMinor: suggestedMinor,
+        poolDeposit: poolDeposit,
       );
 
   /// The inputs differ from how the sheet opened (decides the discard question).
@@ -97,7 +109,8 @@ SettlementCommand? buildSettlementCommand(PaymentForm form) {
     ..toMemberId = form.toId
     ..amountMinor = form.amountMinor
     ..settledOn = form.date
-    ..note = note.isEmpty ? null : note);
+    ..note = note.isEmpty ? null : note
+    ..kind = form.poolDeposit ? kPoolDepositKind : null);
 }
 
 /// The body as JSON-encodable values: what the idempotency key is bound to (same body, same key).
@@ -107,4 +120,5 @@ Map<String, Object?> settlementBodyJson(SettlementCommand command) => {
       'amountMinor': command.amountMinor,
       'settledOn': command.settledOn.toString(),
       if (command.note != null) 'note': command.note,
+      if (command.kind != null) 'kind': command.kind,
     };

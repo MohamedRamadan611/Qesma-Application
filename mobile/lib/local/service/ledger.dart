@@ -72,5 +72,31 @@ FROM members m WHERE m.group_id = ? ORDER BY m.sort_order''',
     return (totalSpentMinor: row.read<int>('total'), lastExpenseAt: row.readNullable<int>('last'));
   }
 
+  /// The pool meter in one statement (A136, Java `SettlementRepository.poolBalanceMinor`): CONFIRMED deposits minus
+  /// the totals of live (not deleted) pool expenses. May be negative. Computed, never stored.
+  Future<int> poolBalance(String groupId) async {
+    final row = await _db.customSelect(
+      '''
+SELECT (SELECT COALESCE(SUM(amount_minor), 0) FROM settlements
+        WHERE group_id = ?1 AND kind = 'POOL_DEPOSIT' AND status = 'CONFIRMED')
+     - (SELECT COALESCE(SUM(total_minor), 0) FROM expenses
+        WHERE group_id = ?1 AND paid_from_pool = 1 AND deleted_at IS NULL) AS meter''',
+      variables: [Variable.withString(groupId)],
+      readsFrom: {_db.settlements, _db.expenses},
+    ).getSingle();
+    return row.read<int>('meter');
+  }
+
+  /// A137: the pool was used — any deposit or pool expense, cancelled and soft-deleted rows included.
+  Future<bool> poolUsed(String groupId) async {
+    final row = await _db.customSelect(
+      "SELECT EXISTS(SELECT 1 FROM settlements WHERE group_id = ?1 AND kind = 'POOL_DEPOSIT') "
+      'OR EXISTS(SELECT 1 FROM expenses WHERE group_id = ?1 AND paid_from_pool = 1) AS used',
+      variables: [Variable.withString(groupId)],
+      readsFrom: {_db.settlements, _db.expenses},
+    ).getSingle();
+    return row.read<bool>('used');
+  }
+
   static List<MemberRef> refs(List<MemberRow> members) => [for (final m in members) MemberRef(m.id, m.sortOrder)];
 }

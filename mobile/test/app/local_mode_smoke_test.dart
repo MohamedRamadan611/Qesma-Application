@@ -78,6 +78,9 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text(l10n.expensesAdd).first);
     await tester.pumpAndSettle();
+    // SA11: in local mode the button opens a menu (plain expense or the calculator).
+    await tester.tap(find.text(l10n.calcMenuAddExpenseHint));
+    await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField).at(0), 'Dinner');
     await tester.enterText(find.byType(TextField).at(1), '100');
     await tester.pumpAndSettle();

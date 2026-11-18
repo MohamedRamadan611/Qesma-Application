@@ -5,6 +5,7 @@ import '../../integration/flows/expense_form_flow.dart';
 import '../../integration/flows/expense_itemized_flow.dart';
 import '../../integration/flows/expenses_flow.dart';
 import '../../integration/flows/groups_flow.dart';
+import '../../integration/flows/pool_flow.dart';
 import '../../integration/flows/profile_flow.dart';
 import 'support/local_container.dart';
 
@@ -22,6 +23,9 @@ void main() {
       () async => runExpenseItemizedFlow(await localContainer()));
 
   test('balances, transfers and payments (FL7 flow) in local mode', () async => runBalancesFlow(await localContainer()));
+
+  test('pool & treasurer: deposits, a pool expense, the meter and the lock (SA10 flow) in local mode',
+      () async => runPoolFlow(await localContainer()));
 
   test('profile name and own payment handles (FL8/FL14 flow) in local mode',
       () async => runProfileFlow(await localContainer()));

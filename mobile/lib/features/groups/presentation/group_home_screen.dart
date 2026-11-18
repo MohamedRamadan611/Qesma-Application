@@ -14,6 +14,7 @@ import '../../balances/presentation/receiver_card.dart';
 import '../../expenses/application/expenses_list_controller.dart';
 import '../../expenses/presentation/expenses_tab.dart';
 import '../../invites/presentation/invite_sheet.dart';
+import '../../pool/presentation/pool_card.dart';
 import '../application/group_detail_controller.dart';
 import '../application/group_permissions.dart';
 import '../data/group_type.dart';
@@ -126,7 +127,10 @@ class _GroupHomeScreenState extends ConsumerState<GroupHomeScreen> {
       ],
       floatingActionButton: _tab == 0
           ? FloatingActionButton.extended(
-              onPressed: () => context.push(Routes.addExpense(group.id)),
+              // SA11: in local mode the button offers the calculator next to a plain expense.
+              onPressed: ref.watch(modeFeaturesProvider).calculator
+                  ? () => _showAddMenu(context, group.id)
+                  : () => context.push(Routes.addExpense(group.id)),
               icon: const Icon(Icons.add),
               label: Text(l10n.expensesAdd),
             )
@@ -135,6 +139,12 @@ class _GroupHomeScreenState extends ConsumerState<GroupHomeScreen> {
         children: [
           // Payments waiting for this person to confirm (FL13), visible on every tab.
           IncomingPaymentsBanner(gid: group.id),
+          // SA10: the pool card, only when the group has a treasurer.
+          if (ref.watch(modeFeaturesProvider).pool && group.treasurerMemberId != null)
+            Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(QesmaSpacing.margin, 0, QesmaSpacing.margin, QesmaSpacing.sm),
+              child: PoolCard(group: group),
+            ),
           Padding(
             padding: const EdgeInsetsDirectional.fromSTEB(
               QesmaSpacing.margin,
@@ -149,6 +159,38 @@ class _GroupHomeScreenState extends ConsumerState<GroupHomeScreen> {
             ),
           ),
           Expanded(child: tabBody),
+        ],
+      ),
+    );
+  }
+
+  /// SA11: add a plain expense, or open the Khorouga calculator (which prefills one).
+  void _showAddMenu(BuildContext context, String gid) {
+    final l10n = AppLocalizations.of(context);
+    showAppBottomSheet<void>(
+      context,
+      title: l10n.expensesAdd,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.edit_note),
+            title: Text(l10n.calcMenuAddExpense),
+            subtitle: Text(l10n.calcMenuAddExpenseHint),
+            onTap: () {
+              Navigator.of(context).pop();
+              context.push(Routes.addExpense(gid));
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.local_gas_station_outlined),
+            title: Text(l10n.calcMenuCalculator),
+            subtitle: Text(l10n.calcMenuCalculatorHint),
+            onTap: () {
+              Navigator.of(context).pop();
+              context.push(Routes.calculator(gid));
+            },
+          ),
         ],
       ),
     );

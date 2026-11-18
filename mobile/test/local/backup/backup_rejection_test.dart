@@ -5,6 +5,7 @@ import 'package:qesma/local/backup/backup_format.dart';
 import 'package:qesma/local/backup/backup_importer.dart';
 import 'package:qesma/local/backup/backup_service.dart';
 import 'package:qesma/local/backup/backup_validator.dart';
+import 'package:qesma/local/db/local_database.dart';
 
 import '../backend/support/local_http.dart';
 import 'support/backup_support.dart';
@@ -57,6 +58,9 @@ void main() {
     test('a newer formatVersion is refused with its own code', () async {
       final j = copy()..['formatVersion'] = 2;
       await expectRejected(encodeBackup(j), BackupError.newerFormat);
+    });
+    test('the validator accepts the schema this app writes (a schema bump must bump the validator too)', () {
+      expect(BackupValidator.currentSchemaVersion, LocalDatabase.inMemory().schemaVersion);
     });
     test('a newer schemaVersion is refused with the same code', () async {
       final j = copy()..['schemaVersion'] = BackupValidator.currentSchemaVersion + 1;

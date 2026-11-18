@@ -36,6 +36,7 @@ final class ValidExpense {
     this.taxBps,
     this.taxBase,
     this.adjustmentMinor = 0,
+    this.paidFromPool = false,
   });
 
   final String title;
@@ -51,6 +52,9 @@ final class ValidExpense {
   final int? taxBps;
   final String? taxBase;
   final int adjustmentMinor;
+
+  /// BSA1: a pool expense; checked against the group by [ExpenseValidator.requirePoolRules].
+  final bool paidFromPool;
 
   bool get itemized => splitType == 'ITEMIZED';
 }
@@ -77,6 +81,16 @@ abstract final class ExpenseValidator {
       throw LocalApiException.validation('category must be one of ${categories.toList()..sort()}');
     }
     return value;
+  }
+
+  /// BSA1 (A135, Java `ExpenseValidator.requirePoolRules`): a pool expense needs a group treasurer and exactly one
+  /// payer, the treasurer. Needs the group, so create and update call it right after [validate] (preview does not).
+  static void requirePoolRules(ValidExpense v, String? treasurerMemberId) {
+    if (!v.paidFromPool) return;
+    if (treasurerMemberId == null) throw LocalApiException.validation('paidFromPool needs a group treasurer');
+    if (v.payers.length != 1 || v.payers.single.memberId != treasurerMemberId) {
+      throw LocalApiException.validation('A pool expense must have exactly one payer: the treasurer');
+    }
   }
 
   /// Create and update require at least one payer; preview passes [requirePayers] false.
@@ -145,6 +159,7 @@ abstract final class ExpenseValidator {
       totalMinor: total,
       payers: payers,
       category: category(c.category),
+      paidFromPool: c.paidFromPool == true,
       participantMemberIds: participants?.cast<String>().toList(),
     );
   }
@@ -172,6 +187,7 @@ abstract final class ExpenseValidator {
       totalMinor: total,
       payers: payers,
       category: category(c.category),
+      paidFromPool: c.paidFromPool == true,
       shares: valid,
     );
   }
@@ -224,6 +240,7 @@ abstract final class ExpenseValidator {
       totalMinor: total,
       payers: payers,
       category: category(c.category),
+      paidFromPool: c.paidFromPool == true,
       items: clean,
       serviceBps: serviceBps,
       taxBps: taxBps,

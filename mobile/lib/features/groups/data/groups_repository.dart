@@ -71,7 +71,8 @@ class GroupsRepository {
       });
 
   /// `PATCH` with `If-Match`. The group must have been read first (no blind edits).
-  Future<GroupDto> update(String gid, {required String name, required String type}) => _run(() async {
+  /// [treasurerMemberId] null leaves the treasurer as it is (SA10: it can be set or changed, never cleared).
+  Future<GroupDto> update(String gid, {required String name, required String type, String? treasurerMemberId}) => _run(() async {
         final ifMatch = _etags.ifMatchFor(gid);
         if (ifMatch == null) throw const ApiUnexpected();
         final response = await _api.getGroupControllerApi().updateGroup(
@@ -79,7 +80,8 @@ class GroupsRepository {
               ifMatch: ifMatch,
               updateGroupRequest: UpdateGroupRequest((b) => b
                 ..name = name
-                ..type = type),
+                ..type = type
+                ..treasurerMemberId = treasurerMemberId),
             );
         final group = response.data;
         if (group == null) throw const ApiUnexpected();

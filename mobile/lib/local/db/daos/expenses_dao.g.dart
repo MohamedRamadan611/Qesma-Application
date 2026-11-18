@@ -6,8 +6,8 @@ part of 'expenses_dao.dart';
 mixin _$ExpensesDaoMixin on DatabaseAccessor<LocalDatabase> {
   LocalProfile get localProfile => attachedDatabase.localProfile;
   LocalMeta get localMeta => attachedDatabase.localMeta;
-  ExpenseGroups get expenseGroups => attachedDatabase.expenseGroups;
   Members get members => attachedDatabase.members;
+  ExpenseGroups get expenseGroups => attachedDatabase.expenseGroups;
   Expenses get expenses => attachedDatabase.expenses;
   ExpensePayers get expensePayers => attachedDatabase.expensePayers;
   ExpenseSplits get expenseSplits => attachedDatabase.expenseSplits;
@@ -18,6 +18,7 @@ mixin _$ExpensesDaoMixin on DatabaseAccessor<LocalDatabase> {
   Settlements get settlements => attachedDatabase.settlements;
   PaymentHandles get paymentHandles => attachedDatabase.paymentHandles;
   IdempotencyKeys get idempotencyKeys => attachedDatabase.idempotencyKeys;
+  FuelPrices get fuelPrices => attachedDatabase.fuelPrices;
   ExpensesDaoManager get managers => ExpensesDaoManager(this);
 }
 
@@ -28,10 +29,10 @@ class ExpensesDaoManager {
       $LocalProfileTableManager(_db.attachedDatabase, _db.localProfile);
   $LocalMetaTableManager get localMeta =>
       $LocalMetaTableManager(_db.attachedDatabase, _db.localMeta);
-  $ExpenseGroupsTableManager get expenseGroups =>
-      $ExpenseGroupsTableManager(_db.attachedDatabase, _db.expenseGroups);
   $MembersTableManager get members =>
       $MembersTableManager(_db.attachedDatabase, _db.members);
+  $ExpenseGroupsTableManager get expenseGroups =>
+      $ExpenseGroupsTableManager(_db.attachedDatabase, _db.expenseGroups);
   $ExpensesTableManager get expenses =>
       $ExpensesTableManager(_db.attachedDatabase, _db.expenses);
   $ExpensePayersTableManager get expensePayers =>
@@ -53,4 +54,6 @@ class ExpensesDaoManager {
       $PaymentHandlesTableManager(_db.attachedDatabase, _db.paymentHandles);
   $IdempotencyKeysTableManager get idempotencyKeys =>
       $IdempotencyKeysTableManager(_db.attachedDatabase, _db.idempotencyKeys);
+  $FuelPricesTableManager get fuelPrices =>
+      $FuelPricesTableManager(_db.attachedDatabase, _db.fuelPrices);
 }

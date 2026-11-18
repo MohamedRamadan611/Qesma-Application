@@ -38,7 +38,7 @@ void main() {
     // Expense 2: Dinner (Food), 30,000 minor, paid by aliId
     await db.expensesDao.insertGraph(
       ExpenseGraph(
-        expense: ExpenseRow(
+        expense: ExpenseRow(paidFromPool: 0, 
           id: tid(102),
           groupId: groupId,
           title: 'Dinner',
@@ -64,7 +64,7 @@ void main() {
     // Expense 3: Deleted expense (Fuel), 20,000 minor -> soft-deleted
     await db.expensesDao.insertGraph(
       ExpenseGraph(
-        expense: ExpenseRow(
+        expense: ExpenseRow(paidFromPool: 0, 
           id: tid(103),
           groupId: groupId,
           title: 'Fuel Deleted',

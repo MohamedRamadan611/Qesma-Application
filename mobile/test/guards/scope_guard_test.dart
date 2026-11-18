@@ -20,6 +20,8 @@ const enabledFeatures = <String>{
   'categories', // SA6: expense categories
   'myShare', // SA7: My share (what I consumed vs paid up front)
   'recap', // SA8: trip recap image & text summary
+  'pool', // SA10: pool & treasurer (edit-group section, pool card and screen, deposit sheet, expense toggle)
+  'calculator', // SA11: Khorouga calculator (fuel + tolls, multi-stop ride), prefills an EXACT expense
 };
 
 /// Words, Arabic words, phrases, icons and routes of one Phase 2 feature.
@@ -63,6 +65,18 @@ const phase2Features = <String, Phase2Feature>{
   'recap': Phase2Feature(
     icons: ['Icons.photo', 'Icons.share'],
     routes: ["'/recap", "'/groups/:gid/recap"],
+  ),
+  'pool': Phase2Feature(
+    words: ['treasurer', 'deposit', 'deposits', 'pool'],
+    arabic: ['الصندوق', 'إيداع', 'الإيداعات'],
+    phrases: ['أمين الصندوق'],
+    routes: ["/pool'"],
+  ),
+  // SA11. 'fuel' is not listed: it is also the SA6 FUEL category label.
+  'calculator': Phase2Feature(
+    words: ['calculator', 'toll', 'tolls', 'ride', 'rides'],
+    arabic: ['حاسبة', 'كارتة', 'الكارتة'],
+    routes: ["'/calculator", "/calculator'"],
   ),
 };
 
@@ -211,6 +225,14 @@ void main() {
       expect(sourceViolations({'lib/e.dart': 'Icon(Icons.download)'}, const {}), isNotEmpty);
       expect(copyViolations({'en': <String, dynamic>{'k': 'Export backup'}}, const {'backup'}), isEmpty);
       expect(sourceViolations({'lib/e.dart': 'Icon(Icons.download)'}, const {'backup'}), isEmpty);
+    });
+
+    test('calculator words and its route are caught until the calculator key is enabled (SA11)', () {
+      expect(copyViolations({'en': <String, dynamic>{'k': 'Add a toll'}}, const {}), isNotEmpty);
+      expect(copyViolations({'ar': <String, dynamic>{'k': 'إضافة كارتة'}}, const {}), isNotEmpty);
+      expect(sourceViolations({'lib/f.dart': "GoRoute(path: 'calculator', x: Routes.calculator, p: '/groups/1/calculator')"}, const {}), isNotEmpty);
+      expect(copyViolations({'en': <String, dynamic>{'k': 'Add a toll'}}, const {'calculator'}), isEmpty);
+      expect(copyViolations({'ar': <String, dynamic>{'k': 'إضافة كارتة'}}, const {'calculator'}), isEmpty);
     });
 
     test('whole words only: the Arabic "adds" is not "guest"', () {

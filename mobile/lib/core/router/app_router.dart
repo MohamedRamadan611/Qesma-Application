@@ -28,6 +28,9 @@ import '../../features/profile/presentation/account_settings_screen.dart';
 import '../../features/profile/presentation/edit_profile_screen.dart';
 import '../../features/profile/presentation/payment_handles_screen.dart';
 import '../../features/profile/presentation/profile_hub_screen.dart';
+import '../../features/calculator/presentation/calculator_screen.dart';
+import '../../features/expenses/application/expense_draft.dart';
+import '../../features/pool/presentation/pool_screen.dart';
 import '../../features/recap/presentation/trip_recap_screen.dart';
 import '../app_mode.dart';
 import '../features_for_mode.dart';
@@ -50,6 +53,8 @@ abstract final class Routes {
   static String settlement(String gid, String sid) => '/groups/$gid/settlements/$sid';
   static String editExpense(String gid, String eid) => '/groups/$gid/expenses/$eid/edit';
   static String recap(String gid) => '/groups/$gid/recap';
+  static String pool(String gid) => '/groups/$gid/pool';
+  static String calculator(String gid) => '/groups/$gid/calculator';
   static const String splash = '/splash';
   static const String welcome = '/welcome';
   static const String myShare = '/my-share';
@@ -208,11 +213,20 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => GroupHomeScreen(gid: state.pathParameters['gid']!, initialTab: state.uri.queryParameters['tab']),
         routes: [
           if (features.recap) GoRoute(path: 'recap', builder: (context, state) => TripRecapScreen(gid: state.pathParameters['gid']!)),
+          if (features.calculator) GoRoute(path: 'calculator', builder: (context, state) => CalculatorScreen(gid: state.pathParameters['gid']!)),
+          if (features.pool) GoRoute(path: 'pool', builder: (context, state) => PoolScreen(gid: state.pathParameters['gid']!)),
           GoRoute(path: 'edit', builder: (context, state) => EditGroupScreen(gid: state.pathParameters['gid']!)),
           GoRoute(path: 'settlements/:sid', builder: (context, state) => SettlementDetailScreen(gid: state.pathParameters['gid']!, sid: state.pathParameters['sid']!)),
           if (features.joinRequests) GoRoute(path: 'join-requests', builder: (context, state) => JoinRequestsScreen(gid: state.pathParameters['gid']!)),
           // 'expenses/new' must stay before 'expenses/:eid' (first match wins).
-          GoRoute(path: 'expenses/new', builder: (context, state) => ExpenseFormScreen(gid: state.pathParameters['gid']!)),
+          GoRoute(
+            path: 'expenses/new',
+            // SA11: the calculator hands its draft over as `extra` (never in the URL: it holds names and amounts).
+            builder: (context, state) => ExpenseFormScreen(
+              gid: state.pathParameters['gid']!,
+              draft: state.extra is ExpenseDraft ? state.extra! as ExpenseDraft : null,
+            ),
+          ),
           GoRoute(
             path: 'expenses/:eid',
             builder: (context, state) => ExpenseDetailsScreen(gid: state.pathParameters['gid']!, eid: state.pathParameters['eid']!),

@@ -6,6 +6,7 @@ import 'package:qesma_api/qesma_api.dart';
 import '../../../core/errors/api_failure.dart';
 import '../../../core/errors/api_problem.dart';
 import '../../../core/errors/error_copy.dart';
+import '../../../core/features_for_mode.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/money/money.dart';
 import '../../../core/router/app_router.dart';
@@ -15,6 +16,7 @@ import '../../groups/application/group_detail_controller.dart';
 import '../../groups/presentation/group_ui.dart';
 import '../application/expense_command_builder.dart';
 import '../application/expense_detail_controller.dart';
+import '../application/expense_draft.dart';
 import '../application/expense_form_controller.dart';
 import '../application/expense_form_state.dart';
 import '../application/expense_preview_controller.dart';
@@ -29,12 +31,15 @@ import '../../../core/theme/palette.dart';
 /// (everyone / selected / exact amounts; the restaurant bill is FL6). Every per-member number
 /// is the server's; the form only adds up what the user typed.
 class ExpenseFormScreen extends ConsumerStatefulWidget {
-  const ExpenseFormScreen({super.key, required this.gid, this.eid});
+  const ExpenseFormScreen({super.key, required this.gid, this.eid, this.draft});
 
   final String gid;
 
   /// Null when adding.
   final String? eid;
+
+  /// Add mode only: open filled in from another screen (SA11 calculator); the user still reviews and saves.
+  final ExpenseDraft? draft;
 
   @override
   ConsumerState<ExpenseFormScreen> createState() => _ExpenseFormScreenState();
@@ -166,7 +171,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
           if (_isEdit) {
             _controller.startEdit();
           } else {
-            _controller.startCreate();
+            _controller.startCreate(draft: widget.draft);
           }
         });
         return scaffold(const SkeletonList(itemCount: 3));
@@ -292,6 +297,12 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
             mismatch: payersMismatch,
             serverBanner: payersBanner,
             onEdit: () => showPayersSheet(context, formKey: _key),
+            // SA10: the pool switch exists only when the group has a treasurer.
+            treasurerId: ref.watch(modeFeaturesProvider).pool ? group.treasurerMemberId : null,
+            onPoolChanged: (on) {
+              final t = group.treasurerMemberId;
+              if (t != null) _controller.setPaidFromPool(on, treasurerId: t);
+            },
           ),
           const SizedBox(height: QesmaSpacing.md),
           SplitSection(formKey: _key, form: form, members: members, previewKey: previewKey),
@@ -350,13 +361,25 @@ class _Note extends StatelessWidget {
 }
 
 class _PaidByCard extends StatelessWidget {
-  const _PaidByCard({required this.form, required this.nameOf, required this.mismatch, required this.serverBanner, required this.onEdit});
+  const _PaidByCard({
+    required this.form,
+    required this.nameOf,
+    required this.mismatch,
+    required this.serverBanner,
+    required this.onEdit,
+    this.treasurerId,
+    this.onPoolChanged,
+  });
 
   final ExpenseFormState form;
   final String Function(String) nameOf;
   final bool mismatch;
   final String? serverBanner;
   final VoidCallback onEdit;
+
+  /// SA10: the group's treasurer; null hides the "Paid from the pool" switch.
+  final String? treasurerId;
+  final ValueChanged<bool>? onPoolChanged;
 
   String _summary(AppLocalizations l10n) {
     if (form.payerMode == PayerMode.single) {
@@ -391,8 +414,29 @@ class _PaidByCard extends StatelessWidget {
           ),
           const SizedBox(height: QesmaSpacing.sm),
           Semantics(label: stripIsolates(_summary(l10n)), child: ExcludeSemantics(child: Text(_summary(l10n), style: theme.textTheme.bodyMedium))),
+          if (treasurerId != null) ...[
+            const SizedBox(height: QesmaSpacing.xs),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              secondary: Icon(Icons.savings_outlined, color: context.colors.primary),
+              title: Text(l10n.expensePaidFromPool, style: theme.textTheme.bodyLarge),
+              value: form.paidFromPool,
+              onChanged: onPoolChanged,
+            ),
+            if (form.paidFromPool)
+              Text(
+                l10n.expensePaidFromPoolHint(fsIsolate(nameOf(treasurerId!))),
+                style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary),
+              ),
+          ],
           const SizedBox(height: QesmaSpacing.sm),
-          AppButton(label: l10n.expenseFormEditPayers, icon: Icons.edit_outlined, variant: AppButtonVariant.secondary, onPressed: onEdit),
+          // While the expense is paid from the pool the treasurer is the only payer (A135): no payer editor.
+          AppButton(
+            label: l10n.expenseFormEditPayers,
+            icon: Icons.edit_outlined,
+            variant: AppButtonVariant.secondary,
+            onPressed: form.paidFromPool ? null : onEdit,
+          ),
           if (mismatch) ...[const SizedBox(height: QesmaSpacing.sm), ErrorBanner(l10n.expenseFormPayersMismatch)],
           if (serverBanner != null) ...[const SizedBox(height: QesmaSpacing.sm), ErrorBanner(serverBanner!)],
         ],

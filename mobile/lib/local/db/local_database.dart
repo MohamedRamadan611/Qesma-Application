@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:sqlite3/sqlite3.dart' show Database;
 
 import 'daos/expenses_dao.dart';
+import 'daos/fuel_prices_dao.dart';
 import 'daos/groups_dao.dart';
 import 'daos/idempotency_dao.dart';
 import 'daos/members_dao.dart';
@@ -43,6 +44,7 @@ int utcNowMillis() => DateTime.now().toUtc().millisecondsSinceEpoch;
     SettlementsDao,
     PaymentHandlesDao,
     IdempotencyDao,
+    FuelPricesDao,
   ],
 )
 class LocalDatabase extends _$LocalDatabase {
@@ -58,7 +60,7 @@ class LocalDatabase extends _$LocalDatabase {
   final int Function() _clock;
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -82,6 +84,21 @@ class LocalDatabase extends _$LocalDatabase {
           // SA9: last-used reminder tone (local_meta.last_reminder_tone, nullable).
           from3To4: (m, schema) async {
             await m.addColumn(schema.localMeta, schema.localMeta.lastReminderTone);
+          },
+          // SA10: pool & treasurer, mirroring Java V20. Additive with defaults, so every existing row stays valid:
+          // no treasurer, paid_from_pool 0, kind PAYMENT. Balances are unaffected (they never read these columns).
+          from4To5: (m, schema) async {
+            await m.addColumn(schema.expenseGroups, schema.expenseGroups.treasurerMemberId);
+            await m.addColumn(schema.expenses, schema.expenses.paidFromPool);
+            await m.addColumn(schema.settlements, schema.settlements.kind);
+            await m.createIndex(schema.ixExpensesPool);
+            await m.createIndex(schema.ixSettlementsDeposits);
+            await m.createTrigger(schema.expenseGroupsTreasurerInsert);
+            await m.createTrigger(schema.expenseGroupsTreasurerUpdate);
+          },
+          // SA11: saved fuel prices for the Khorouga calculator (new table, A168). Nothing existing changes.
+          from5To6: (m, schema) async {
+            await m.createTable(schema.fuelPrices);
           },
         ),
         beforeOpen: (details) async {

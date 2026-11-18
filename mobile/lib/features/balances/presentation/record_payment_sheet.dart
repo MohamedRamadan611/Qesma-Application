@@ -39,6 +39,11 @@ Future<SettlementView?> showRecordPaymentSheet(BuildContext context, {required S
   return result;
 }
 
+/// SA10: a deposit to the pool (STANDALONE_SPEC 10, A135): the same sheet and the same idempotent send, with the
+/// receiver fixed to the treasurer and the kind POOL_DEPOSIT. The depositor is anyone but the treasurer (A138).
+Future<SettlementView?> showDepositSheet(BuildContext context, {required String gid, required String treasurerId}) =>
+    showRecordPaymentSheet(context, gid: gid, seed: PaymentSeed(toId: treasurerId, poolDeposit: true));
+
 class _PaymentSheet extends ConsumerStatefulWidget {
   const _PaymentSheet({required this.pkey});
 
@@ -63,7 +68,9 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
   List<MemberDto> get _members => ref.read(groupDetailControllerProvider(widget.pkey.gid)).group?.members.toList() ?? const [];
 
   Future<void> _pickFrom(PaymentForm form) async {
-    final id = await showMemberPicker(context, members: _members, selectedId: form.fromId, excludeId: form.toId);
+    // A deposit comes from an active member other than the treasurer (who is form.toId and excluded below).
+    final members = form.poolDeposit ? _members.where((m) => m.status == 'ACTIVE').toList() : _members;
+    final id = await showMemberPicker(context, members: members, selectedId: form.fromId, excludeId: form.toId);
     if (id != null) _controller.setFrom(id);
   }
 
@@ -125,11 +132,27 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
     // A Member never picks the payer (it is them) unless they are the receiver of cash, then the receiver is them. Owner/Admin pick both.
     final fromLocked = !isAdmin && form.toId != you;
     final toLocked = !isAdmin && form.toId == you;
-    final title = form.fromId == you ? l10n.paymentTitleDeclare : (form.toId == you ? l10n.paymentTitleReceived : l10n.paymentTitleOnBehalf);
+    final deposit = form.poolDeposit;
+    final title = deposit
+        ? l10n.poolDepositSheetTitle
+        : form.fromId == you
+            ? l10n.paymentTitleDeclare
+            : (form.toId == you ? l10n.paymentTitleReceived : l10n.paymentTitleOnBehalf);
     final toName = form.toId == null ? '' : nameOf(form.toId!);
 
-    final from = _MemberField(label: l10n.paymentFrom, memberId: form.fromId, nameOf: nameOf, onTap: view.sending || fromLocked ? null : () => _pickFrom(form));
+    final from = _MemberField(
+      label: deposit ? l10n.poolDepositFrom : l10n.paymentFrom,
+      memberId: form.fromId,
+      nameOf: nameOf,
+      onTap: view.sending || fromLocked ? null : () => _pickFrom(form),
+    );
     final to = _MemberField(label: l10n.paymentTo, memberId: form.toId, nameOf: nameOf, onTap: view.sending || toLocked ? null : () => _pickTo(form));
+    // A deposit's receiver is fixed (the treasurer, named in the subtitle): only the depositor is picked.
+    final Widget members = deposit
+        ? (form.fromId == null ? StatusBanner(icon: Icons.info_outline, text: l10n.poolDepositOnlyTreasurer, tone: BannerTone.neutral) : from)
+        : stacked
+            ? Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [from, const SizedBox(height: QesmaSpacing.sm), to])
+            : Row(children: [Expanded(child: from), const SizedBox(width: QesmaSpacing.sm), Expanded(child: to)]);
 
     final amountError = _amountTouched && amount == null;
     final dateError = !form.dateValid;
@@ -138,17 +161,17 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
     final body = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (stacked) ...[from, const SizedBox(height: QesmaSpacing.sm), to] else Row(children: [Expanded(child: from), const SizedBox(width: QesmaSpacing.sm), Expanded(child: to)]),
+        members,
         if (form.firstError == PaymentFieldError.sameMember) ...[
           const SizedBox(height: QesmaSpacing.sm),
           Semantics(liveRegion: true, child: Text(l10n.paymentSameMember, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.error))),
         ],
         const SizedBox(height: QesmaSpacing.md),
-        Text(l10n.paymentAmountLabel, style: theme.textTheme.labelLarge),
+        Text(deposit ? l10n.poolDepositAmountLabel : l10n.paymentAmountLabel, style: theme.textTheme.labelLarge),
         const SizedBox(height: QesmaSpacing.sm),
         AmountBox(
           text: form.amountText,
-          semanticLabel: l10n.paymentAmountLabel,
+          semanticLabel: deposit ? l10n.poolDepositAmountLabel : l10n.paymentAmountLabel,
           expand: true,
           hasError: amountError,
           enabled: !view.sending,
@@ -214,7 +237,11 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
       mainAxisSize: MainAxisSize.min,
       children: [
         AppButton(
-          label: amount == null ? l10n.paymentConfirmNoAmount : l10n.paymentConfirm(moneyDisplay(l10n, amount)),
+          label: deposit
+              ? l10n.poolDepositSave
+              : amount == null
+                  ? l10n.paymentConfirmNoAmount
+                  : l10n.paymentConfirm(moneyDisplay(l10n, amount)),
           icon: Icons.check,
           loading: view.sending,
           onPressed: form.canSend && !view.sending && outcome != InitialOutcome.notAllowed ? _send : null,
@@ -234,7 +261,12 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) _askDiscard();
       },
-      child: AppBottomSheet(title: title, subtitle: l10n.paymentSubtitle, action: action, child: body),
+      child: AppBottomSheet(
+        title: title,
+        subtitle: deposit ? l10n.poolDepositTo(fsIsolate(toName)) : l10n.paymentSubtitle,
+        action: action,
+        child: body,
+      ),
     );
   }
 }

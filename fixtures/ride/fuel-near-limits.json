@@ -1,0 +1,20 @@
+{
+  "name": "fuel: 10,000 km at 30 L/100km and 1,000 EGP/L plus a toll gives exactly 10^12",
+  "kind": "fuel",
+  "input": {
+    "distanceTenthsKm": 100000,
+    "consumptionTenths": 300,
+    "pricePerLitreMinor": 100000,
+    "tollsMinor": [999700000000],
+    "driver": { "id": "A", "sortOrder": 0 },
+    "driverIncluded": true,
+    "passengers": [ { "id": "B", "sortOrder": 1 }, { "id": "C", "sortOrder": 2 } ]
+  },
+  "expected": {
+    "fuelMinor": 300000000,
+    "tollsMinor": 999700000000,
+    "totalMinor": 1000000000000,
+    "payerMemberId": "A",
+    "shares": { "A": 333333333334, "B": 333333333333, "C": 333333333333 }
+  }
+}

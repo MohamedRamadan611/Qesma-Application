@@ -2021,10 +2021,959 @@ i1.GeneratedColumn<String> _column_71(String aliasedName) =>
       type: i1.DriftSqlType.string,
       $customConstraints: 'CHECK (last_reminder_tone IS NULL OR last_reminder_tone IN (\'SOFT\', \'FIRM\', \'FUNNY\'))',
     );
+
+final class Schema5 extends i0.VersionedSchema {
+  Schema5({required super.database}) : super(version: 5);
+  @override
+  late final List<i1.DatabaseSchemaEntity> entities = [
+    localProfile,
+    localMeta,
+    members,
+    expenseGroups,
+    ixExpenseGroupsOwnerCreated,
+    expenseGroupsTreasurerInsert,
+    expenseGroupsTreasurerUpdate,
+    uxMembersGroupUser,
+    uxMembersGroupOwner,
+    expenses,
+    ixExpensesGroupList,
+    ixExpensesGroupCategory,
+    ixExpensesGroup,
+    ixExpensesPool,
+    expensePayers,
+    ixExpensePayersMember,
+    expenseSplits,
+    ixExpenseSplitsMember,
+    expenseItems,
+    expenseItemAssignees,
+    ixExpenseItemAssigneesMember,
+    expenseRevisions,
+    expenseRevisionsAppendOnly,
+    settlements,
+    ixSettlementsGroupList,
+    ixSettlementsGroupConfirmed,
+    ixSettlementsFromMember,
+    ixSettlementsToMember,
+    ixSettlementsDeposits,
+    paymentHandles,
+    idempotencyKeys,
+    ixIdempotencyKeysCreated,
+  ];
+  late final Shape0 localProfile = Shape0(
+    source: i0.VersionedTable(
+      entityName: 'local_profile',
+      withoutRowId: false,
+      isStrict: true,
+      tableConstraints: [],
+      columns: [_column_0, _column_1, _column_2, _column_3, _column_4],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape14 localMeta = Shape14(
+    source: i0.VersionedTable(
+      entityName: 'local_meta',
+      withoutRowId: false,
+      isStrict: true,
+      tableConstraints: [
+        'CHECK((last_export_at IS NULL)=(last_export_format_version IS NULL))',
+      ],
+      columns: [
+        _column_5,
+        _column_6,
+        _column_2,
+        _column_7,
+        _column_8,
+        _column_9,
+        _column_71,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape3 members = Shape3(
+    source: i0.VersionedTable(
+      entityName: 'members',
+      withoutRowId: false,
+      isStrict: true,
+      tableConstraints: [
+        'CONSTRAINT uq_members_group_sort_order UNIQUE(group_id, sort_order)',
+        'CONSTRAINT uq_members_group_name_key UNIQUE(group_id, name_key)',
+        'CONSTRAINT ck_members_owner_linked_active CHECK(role <> \'OWNER\' OR(user_id IS NOT NULL AND status = \'ACTIVE\'))',
+        'CONSTRAINT ck_members_left_at CHECK((status = \'LEFT\')=(left_at IS NOT NULL))',
+        'CONSTRAINT ck_members_left_linked CHECK(status <> \'LEFT\' OR user_id IS NOT NULL)',
+      ],
+      columns: [
+        _column_0,
+        _column_16,
+        _column_17,
+        _column_18,
+        _column_19,
+        _column_20,
+        _column_21,
+        _column_22,
+        _column_23,
+        _column_24,
+        _column_2,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape15 expenseGroups = Shape15(
+    source: i0.VersionedTable(
+      entityName: 'expense_groups',
+      withoutRowId: false,
+      isStrict: true,
+      tableConstraints: [],
+      columns: [
+        _column_0,
+        _column_10,
+        _column_11,
+        _column_12,
+        _column_13,
+        _column_2,
+        _column_3,
+        _column_14,
+        _column_15,
+        _column_72,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Index ixExpenseGroupsOwnerCreated = i1.Index(
+    'ix_expense_groups_owner_created',
+    'CREATE INDEX ix_expense_groups_owner_created ON expense_groups (owner_user_id, created_at DESC, id DESC)',
+  );
+  final i1.Trigger expenseGroupsTreasurerInsert = i1.Trigger(
+    'CREATE TRIGGER expense_groups_treasurer_insert BEFORE INSERT ON expense_groups WHEN NEW.treasurer_member_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM members WHERE id = NEW.treasurer_member_id AND group_id = NEW.id) BEGIN SELECT RAISE (ABORT, \'the treasurer must be a member of the same group\');END',
+    'expense_groups_treasurer_insert',
+  );
+  final i1.Trigger expenseGroupsTreasurerUpdate = i1.Trigger(
+    'CREATE TRIGGER expense_groups_treasurer_update BEFORE UPDATE OF treasurer_member_id ON expense_groups WHEN NEW.treasurer_member_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM members WHERE id = NEW.treasurer_member_id AND group_id = NEW.id) BEGIN SELECT RAISE (ABORT, \'the treasurer must be a member of the same group\');END',
+    'expense_groups_treasurer_update',
+  );
+  final i1.Index uxMembersGroupUser = i1.Index(
+    'ux_members_group_user',
+    'CREATE UNIQUE INDEX ux_members_group_user ON members (group_id, user_id) WHERE user_id IS NOT NULL',
+  );
+  final i1.Index uxMembersGroupOwner = i1.Index(
+    'ux_members_group_owner',
+    'CREATE UNIQUE INDEX ux_members_group_owner ON members (group_id) WHERE role = \'OWNER\'',
+  );
+  late final Shape16 expenses = Shape16(
+    source: i0.VersionedTable(
+      entityName: 'expenses',
+      withoutRowId: false,
+      isStrict: true,
+      tableConstraints: [
+        'CONSTRAINT ck_expenses_itemized_columns CHECK(split_type = \'ITEMIZED\' OR(subtotal_minor IS NULL AND service_bps IS NULL AND service_minor IS NULL AND tax_bps IS NULL AND tax_minor IS NULL AND tax_base IS NULL AND adjustment_minor IS NULL))',
+        'CONSTRAINT ck_expenses_itemized_charges CHECK(split_type <> \'ITEMIZED\' OR(subtotal_minor IS NOT NULL AND subtotal_minor > 0 AND service_minor IS NOT NULL AND service_minor >= 0 AND tax_minor IS NOT NULL AND tax_minor >= 0 AND adjustment_minor IS NOT NULL AND total_minor = subtotal_minor + service_minor + tax_minor + adjustment_minor AND(service_bps IS NOT NULL OR service_minor = 0)AND(tax_bps IS NOT NULL OR tax_minor = 0)AND((tax_bps IS NULL)=(tax_base IS NULL))))',
+      ],
+      columns: [
+        _column_0,
+        _column_16,
+        _column_25,
+        _column_26,
+        _column_27,
+        _column_28,
+        _column_29,
+        _column_30,
+        _column_31,
+        _column_32,
+        _column_33,
+        _column_34,
+        _column_35,
+        _column_36,
+        _column_2,
+        _column_3,
+        _column_37,
+        _column_14,
+        _column_70,
+        _column_73,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Index ixExpensesGroupList = i1.Index(
+    'ix_expenses_group_list',
+    'CREATE INDEX ix_expenses_group_list ON expenses (group_id, expense_date DESC, created_at DESC, id DESC) WHERE deleted_at IS NULL',
+  );
+  final i1.Index ixExpensesGroupCategory = i1.Index(
+    'ix_expenses_group_category',
+    'CREATE INDEX ix_expenses_group_category ON expenses (group_id, category) WHERE deleted_at IS NULL',
+  );
+  final i1.Index ixExpensesGroup = i1.Index(
+    'ix_expenses_group',
+    'CREATE INDEX ix_expenses_group ON expenses (group_id)',
+  );
+  final i1.Index ixExpensesPool = i1.Index(
+    'ix_expenses_pool',
+    'CREATE INDEX ix_expenses_pool ON expenses (group_id) WHERE paid_from_pool = 1',
+  );
+  late final Shape5 expensePayers = Shape5(
+    source: i0.VersionedTable(
+      entityName: 'expense_payers',
+      withoutRowId: false,
+      isStrict: true,
+      tableConstraints: ['PRIMARY KEY(expense_id, member_id)'],
+      columns: [_column_38, _column_39, _column_40],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Index ixExpensePayersMember = i1.Index(
+    'ix_expense_payers_member',
+    'CREATE INDEX ix_expense_payers_member ON expense_payers (member_id)',
+  );
+  late final Shape6 expenseSplits = Shape6(
+    source: i0.VersionedTable(
+      entityName: 'expense_splits',
+      withoutRowId: false,
+      isStrict: true,
+      tableConstraints: [
+        'PRIMARY KEY(expense_id, member_id)',
+        'CONSTRAINT ck_expense_splits_breakdown CHECK((items_minor IS NULL AND service_minor IS NULL AND tax_minor IS NULL AND adjustment_minor IS NULL)OR(items_minor IS NOT NULL AND items_minor >= 0 AND service_minor IS NOT NULL AND service_minor >= 0 AND tax_minor IS NOT NULL AND tax_minor >= 0 AND adjustment_minor IS NOT NULL AND owed_minor = items_minor + service_minor + tax_minor + adjustment_minor))',
+      ],
+      columns: [
+        _column_38,
+        _column_39,
+        _column_41,
+        _column_42,
+        _column_31,
+        _column_33,
+        _column_35,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Index ixExpenseSplitsMember = i1.Index(
+    'ix_expense_splits_member',
+    'CREATE INDEX ix_expense_splits_member ON expense_splits (member_id)',
+  );
+  late final Shape7 expenseItems = Shape7(
+    source: i0.VersionedTable(
+      entityName: 'expense_items',
+      withoutRowId: false,
+      isStrict: true,
+      tableConstraints: [
+        'CONSTRAINT ux_expense_items_order UNIQUE(expense_id, sort_order)',
+      ],
+      columns: [_column_0, _column_38, _column_43, _column_40, _column_44],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape8 expenseItemAssignees = Shape8(
+    source: i0.VersionedTable(
+      entityName: 'expense_item_assignees',
+      withoutRowId: false,
+      isStrict: true,
+      tableConstraints: ['PRIMARY KEY(item_id, member_id)'],
+      columns: [_column_45, _column_39],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Index ixExpenseItemAssigneesMember = i1.Index(
+    'ix_expense_item_assignees_member',
+    'CREATE INDEX ix_expense_item_assignees_member ON expense_item_assignees (member_id)',
+  );
+  late final Shape9 expenseRevisions = Shape9(
+    source: i0.VersionedTable(
+      entityName: 'expense_revisions',
+      withoutRowId: false,
+      isStrict: true,
+      tableConstraints: [
+        'CONSTRAINT ux_expense_revisions_version UNIQUE(expense_id, version)',
+      ],
+      columns: [
+        _column_0,
+        _column_38,
+        _column_46,
+        _column_47,
+        _column_48,
+        _column_49,
+        _column_50,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Trigger expenseRevisionsAppendOnly = i1.Trigger(
+    'CREATE TRIGGER expense_revisions_append_only BEFORE UPDATE ON expense_revisions BEGIN SELECT RAISE (ABORT, \'expense_revisions are append-only\');END',
+    'expense_revisions_append_only',
+  );
+  late final Shape17 settlements = Shape17(
+    source: i0.VersionedTable(
+      entityName: 'settlements',
+      withoutRowId: false,
+      isStrict: true,
+      tableConstraints: [
+        'CONSTRAINT ck_settlements_members CHECK(from_member_id <> to_member_id)',
+        'CONSTRAINT ck_settlements_confirmed_at CHECK((status = \'CONFIRMED\')=(confirmed_at IS NOT NULL))',
+        'CONSTRAINT ck_settlements_cancelled_at CHECK((status = \'CANCELLED\')=(cancelled_at IS NOT NULL))',
+        'CONSTRAINT ck_settlements_disputed_at CHECK(status <> \'DISPUTED\' OR disputed_at IS NOT NULL)',
+        'CONSTRAINT ck_settlements_pending_clean CHECK(status <> \'PENDING\' OR(disputed_at IS NULL AND confirmed_at IS NULL))',
+      ],
+      columns: [
+        _column_0,
+        _column_16,
+        _column_51,
+        _column_52,
+        _column_40,
+        _column_53,
+        _column_54,
+        _column_36,
+        _column_55,
+        _column_2,
+        _column_56,
+        _column_57,
+        _column_58,
+        _column_59,
+        _column_60,
+        _column_61,
+        _column_74,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Index ixSettlementsGroupList = i1.Index(
+    'ix_settlements_group_list',
+    'CREATE INDEX ix_settlements_group_list ON settlements (group_id, settled_on DESC, created_at DESC, id DESC)',
+  );
+  final i1.Index ixSettlementsGroupConfirmed = i1.Index(
+    'ix_settlements_group_confirmed',
+    'CREATE INDEX ix_settlements_group_confirmed ON settlements (group_id) WHERE status = \'CONFIRMED\'',
+  );
+  final i1.Index ixSettlementsFromMember = i1.Index(
+    'ix_settlements_from_member',
+    'CREATE INDEX ix_settlements_from_member ON settlements (from_member_id)',
+  );
+  final i1.Index ixSettlementsToMember = i1.Index(
+    'ix_settlements_to_member',
+    'CREATE INDEX ix_settlements_to_member ON settlements (to_member_id)',
+  );
+  final i1.Index ixSettlementsDeposits = i1.Index(
+    'ix_settlements_deposits',
+    'CREATE INDEX ix_settlements_deposits ON settlements (group_id) WHERE kind = \'POOL_DEPOSIT\'',
+  );
+  late final Shape11 paymentHandles = Shape11(
+    source: i0.VersionedTable(
+      entityName: 'payment_handles',
+      withoutRowId: false,
+      isStrict: true,
+      tableConstraints: [
+        'CONSTRAINT uq_payment_handles_user_type UNIQUE(user_id, type)',
+        'CONSTRAINT ck_payment_handles_wallet CHECK(type <> \'WALLET\' OR value GLOB \'01[0125][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]\')',
+        'CONSTRAINT ck_payment_handles_instapay CHECK(type <> \'INSTAPAY\' OR(length(value) BETWEEN 3 AND 60 AND value GLOB \'?*@?*\' AND value NOT GLOB \'*@*@*\' AND value NOT GLOB \'*[^a-z0-9._@-]*\' AND value NOT GLOB \'*@*_*\'))',
+      ],
+      columns: [
+        _column_0,
+        _column_62,
+        _column_63,
+        _column_64,
+        _column_2,
+        _column_3,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape12 idempotencyKeys = Shape12(
+    source: i0.VersionedTable(
+      entityName: 'idempotency_keys',
+      withoutRowId: false,
+      isStrict: true,
+      tableConstraints: [],
+      columns: [
+        _column_65,
+        _column_66,
+        _column_67,
+        _column_68,
+        _column_69,
+        _column_2,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Index ixIdempotencyKeysCreated = i1.Index(
+    'ix_idempotency_keys_created',
+    'CREATE INDEX ix_idempotency_keys_created ON idempotency_keys (created_at)',
+  );
+}
+
+class Shape15 extends i0.VersionedTable {
+  Shape15({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<String> get id =>
+      columnsByName['id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get ownerUserId =>
+      columnsByName['owner_user_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get name =>
+      columnsByName['name']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get type =>
+      columnsByName['type']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get currencyCode =>
+      columnsByName['currency_code']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get createdAt =>
+      columnsByName['created_at']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get updatedAt =>
+      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get version =>
+      columnsByName['version']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get memberSeq =>
+      columnsByName['member_seq']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get treasurerMemberId =>
+      columnsByName['treasurer_member_id']! as i1.GeneratedColumn<String>;
+}
+
+i1.GeneratedColumn<String> _column_72(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'treasurer_member_id',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'REFERENCES members(id)',
+    );
+
+class Shape16 extends i0.VersionedTable {
+  Shape16({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<String> get id =>
+      columnsByName['id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get groupId =>
+      columnsByName['group_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get title =>
+      columnsByName['title']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get splitType =>
+      columnsByName['split_type']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get totalMinor =>
+      columnsByName['total_minor']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get expenseDate =>
+      columnsByName['expense_date']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get subtotalMinor =>
+      columnsByName['subtotal_minor']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get serviceBps =>
+      columnsByName['service_bps']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get serviceMinor =>
+      columnsByName['service_minor']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get taxBps =>
+      columnsByName['tax_bps']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get taxMinor =>
+      columnsByName['tax_minor']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get taxBase =>
+      columnsByName['tax_base']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get adjustmentMinor =>
+      columnsByName['adjustment_minor']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get createdByUserId =>
+      columnsByName['created_by_user_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get createdAt =>
+      columnsByName['created_at']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get updatedAt =>
+      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get deletedAt =>
+      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get version =>
+      columnsByName['version']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get category =>
+      columnsByName['category']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get paidFromPool =>
+      columnsByName['paid_from_pool']! as i1.GeneratedColumn<int>;
+}
+
+i1.GeneratedColumn<int> _column_73(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'paid_from_pool',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (paid_from_pool IN (0, 1))',
+      defaultValue: const i1.CustomExpression('0'),
+    );
+
+class Shape17 extends i0.VersionedTable {
+  Shape17({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<String> get id =>
+      columnsByName['id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get groupId =>
+      columnsByName['group_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get fromMemberId =>
+      columnsByName['from_member_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get toMemberId =>
+      columnsByName['to_member_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get amountMinor =>
+      columnsByName['amount_minor']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get settledOn =>
+      columnsByName['settled_on']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get note =>
+      columnsByName['note']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get createdByUserId =>
+      columnsByName['created_by_user_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get createdByMemberId =>
+      columnsByName['created_by_member_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get createdAt =>
+      columnsByName['created_at']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get status =>
+      columnsByName['status']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get declaredAt =>
+      columnsByName['declared_at']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get confirmedAt =>
+      columnsByName['confirmed_at']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get disputedAt =>
+      columnsByName['disputed_at']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get cancelledAt =>
+      columnsByName['cancelled_at']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get recordedByAdmin =>
+      columnsByName['recorded_by_admin']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get kind =>
+      columnsByName['kind']! as i1.GeneratedColumn<String>;
+}
+
+i1.GeneratedColumn<String> _column_74(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'kind',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL DEFAULT \'PAYMENT\' CHECK (kind IN (\'PAYMENT\', \'POOL_DEPOSIT\'))',
+      defaultValue: const i1.CustomExpression('\'PAYMENT\''),
+    );
+
+final class Schema6 extends i0.VersionedSchema {
+  Schema6({required super.database}) : super(version: 6);
+  @override
+  late final List<i1.DatabaseSchemaEntity> entities = [
+    localProfile,
+    localMeta,
+    members,
+    expenseGroups,
+    ixExpenseGroupsOwnerCreated,
+    expenseGroupsTreasurerInsert,
+    expenseGroupsTreasurerUpdate,
+    uxMembersGroupUser,
+    uxMembersGroupOwner,
+    expenses,
+    ixExpensesGroupList,
+    ixExpensesGroupCategory,
+    ixExpensesGroup,
+    ixExpensesPool,
+    expensePayers,
+    ixExpensePayersMember,
+    expenseSplits,
+    ixExpenseSplitsMember,
+    expenseItems,
+    expenseItemAssignees,
+    ixExpenseItemAssigneesMember,
+    expenseRevisions,
+    expenseRevisionsAppendOnly,
+    settlements,
+    ixSettlementsGroupList,
+    ixSettlementsGroupConfirmed,
+    ixSettlementsFromMember,
+    ixSettlementsToMember,
+    ixSettlementsDeposits,
+    paymentHandles,
+    idempotencyKeys,
+    ixIdempotencyKeysCreated,
+    fuelPrices,
+  ];
+  late final Shape0 localProfile = Shape0(
+    source: i0.VersionedTable(
+      entityName: 'local_profile',
+      withoutRowId: false,
+      isStrict: true,
+      tableConstraints: [],
+      columns: [_column_0, _column_1, _column_2, _column_3, _column_4],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape14 localMeta = Shape14(
+    source: i0.VersionedTable(
+      entityName: 'local_meta',
+      withoutRowId: false,
+      isStrict: true,
+      tableConstraints: [
+        'CHECK((last_export_at IS NULL)=(last_export_format_version IS NULL))',
+      ],
+      columns: [
+        _column_5,
+        _column_6,
+        _column_2,
+        _column_7,
+        _column_8,
+        _column_9,
+        _column_71,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape3 members = Shape3(
+    source: i0.VersionedTable(
+      entityName: 'members',
+      withoutRowId: false,
+      isStrict: true,
+      tableConstraints: [
+        'CONSTRAINT uq_members_group_sort_order UNIQUE(group_id, sort_order)',
+        'CONSTRAINT uq_members_group_name_key UNIQUE(group_id, name_key)',
+        'CONSTRAINT ck_members_owner_linked_active CHECK(role <> \'OWNER\' OR(user_id IS NOT NULL AND status = \'ACTIVE\'))',
+        'CONSTRAINT ck_members_left_at CHECK((status = \'LEFT\')=(left_at IS NOT NULL))',
+        'CONSTRAINT ck_members_left_linked CHECK(status <> \'LEFT\' OR user_id IS NOT NULL)',
+      ],
+      columns: [
+        _column_0,
+        _column_16,
+        _column_17,
+        _column_18,
+        _column_19,
+        _column_20,
+        _column_21,
+        _column_22,
+        _column_23,
+        _column_24,
+        _column_2,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape15 expenseGroups = Shape15(
+    source: i0.VersionedTable(
+      entityName: 'expense_groups',
+      withoutRowId: false,
+      isStrict: true,
+      tableConstraints: [],
+      columns: [
+        _column_0,
+        _column_10,
+        _column_11,
+        _column_12,
+        _column_13,
+        _column_2,
+        _column_3,
+        _column_14,
+        _column_15,
+        _column_72,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Index ixExpenseGroupsOwnerCreated = i1.Index(
+    'ix_expense_groups_owner_created',
+    'CREATE INDEX ix_expense_groups_owner_created ON expense_groups (owner_user_id, created_at DESC, id DESC)',
+  );
+  final i1.Trigger expenseGroupsTreasurerInsert = i1.Trigger(
+    'CREATE TRIGGER expense_groups_treasurer_insert BEFORE INSERT ON expense_groups WHEN NEW.treasurer_member_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM members WHERE id = NEW.treasurer_member_id AND group_id = NEW.id) BEGIN SELECT RAISE (ABORT, \'the treasurer must be a member of the same group\');END',
+    'expense_groups_treasurer_insert',
+  );
+  final i1.Trigger expenseGroupsTreasurerUpdate = i1.Trigger(
+    'CREATE TRIGGER expense_groups_treasurer_update BEFORE UPDATE OF treasurer_member_id ON expense_groups WHEN NEW.treasurer_member_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM members WHERE id = NEW.treasurer_member_id AND group_id = NEW.id) BEGIN SELECT RAISE (ABORT, \'the treasurer must be a member of the same group\');END',
+    'expense_groups_treasurer_update',
+  );
+  final i1.Index uxMembersGroupUser = i1.Index(
+    'ux_members_group_user',
+    'CREATE UNIQUE INDEX ux_members_group_user ON members (group_id, user_id) WHERE user_id IS NOT NULL',
+  );
+  final i1.Index uxMembersGroupOwner = i1.Index(
+    'ux_members_group_owner',
+    'CREATE UNIQUE INDEX ux_members_group_owner ON members (group_id) WHERE role = \'OWNER\'',
+  );
+  late final Shape16 expenses = Shape16(
+    source: i0.VersionedTable(
+      entityName: 'expenses',
+      withoutRowId: false,
+      isStrict: true,
+      tableConstraints: [
+        'CONSTRAINT ck_expenses_itemized_columns CHECK(split_type = \'ITEMIZED\' OR(subtotal_minor IS NULL AND service_bps IS NULL AND service_minor IS NULL AND tax_bps IS NULL AND tax_minor IS NULL AND tax_base IS NULL AND adjustment_minor IS NULL))',
+        'CONSTRAINT ck_expenses_itemized_charges CHECK(split_type <> \'ITEMIZED\' OR(subtotal_minor IS NOT NULL AND subtotal_minor > 0 AND service_minor IS NOT NULL AND service_minor >= 0 AND tax_minor IS NOT NULL AND tax_minor >= 0 AND adjustment_minor IS NOT NULL AND total_minor = subtotal_minor + service_minor + tax_minor + adjustment_minor AND(service_bps IS NOT NULL OR service_minor = 0)AND(tax_bps IS NOT NULL OR tax_minor = 0)AND((tax_bps IS NULL)=(tax_base IS NULL))))',
+      ],
+      columns: [
+        _column_0,
+        _column_16,
+        _column_25,
+        _column_26,
+        _column_27,
+        _column_28,
+        _column_29,
+        _column_30,
+        _column_31,
+        _column_32,
+        _column_33,
+        _column_34,
+        _column_35,
+        _column_36,
+        _column_2,
+        _column_3,
+        _column_37,
+        _column_14,
+        _column_70,
+        _column_73,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Index ixExpensesGroupList = i1.Index(
+    'ix_expenses_group_list',
+    'CREATE INDEX ix_expenses_group_list ON expenses (group_id, expense_date DESC, created_at DESC, id DESC) WHERE deleted_at IS NULL',
+  );
+  final i1.Index ixExpensesGroupCategory = i1.Index(
+    'ix_expenses_group_category',
+    'CREATE INDEX ix_expenses_group_category ON expenses (group_id, category) WHERE deleted_at IS NULL',
+  );
+  final i1.Index ixExpensesGroup = i1.Index(
+    'ix_expenses_group',
+    'CREATE INDEX ix_expenses_group ON expenses (group_id)',
+  );
+  final i1.Index ixExpensesPool = i1.Index(
+    'ix_expenses_pool',
+    'CREATE INDEX ix_expenses_pool ON expenses (group_id) WHERE paid_from_pool = 1',
+  );
+  late final Shape5 expensePayers = Shape5(
+    source: i0.VersionedTable(
+      entityName: 'expense_payers',
+      withoutRowId: false,
+      isStrict: true,
+      tableConstraints: ['PRIMARY KEY(expense_id, member_id)'],
+      columns: [_column_38, _column_39, _column_40],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Index ixExpensePayersMember = i1.Index(
+    'ix_expense_payers_member',
+    'CREATE INDEX ix_expense_payers_member ON expense_payers (member_id)',
+  );
+  late final Shape6 expenseSplits = Shape6(
+    source: i0.VersionedTable(
+      entityName: 'expense_splits',
+      withoutRowId: false,
+      isStrict: true,
+      tableConstraints: [
+        'PRIMARY KEY(expense_id, member_id)',
+        'CONSTRAINT ck_expense_splits_breakdown CHECK((items_minor IS NULL AND service_minor IS NULL AND tax_minor IS NULL AND adjustment_minor IS NULL)OR(items_minor IS NOT NULL AND items_minor >= 0 AND service_minor IS NOT NULL AND service_minor >= 0 AND tax_minor IS NOT NULL AND tax_minor >= 0 AND adjustment_minor IS NOT NULL AND owed_minor = items_minor + service_minor + tax_minor + adjustment_minor))',
+      ],
+      columns: [
+        _column_38,
+        _column_39,
+        _column_41,
+        _column_42,
+        _column_31,
+        _column_33,
+        _column_35,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Index ixExpenseSplitsMember = i1.Index(
+    'ix_expense_splits_member',
+    'CREATE INDEX ix_expense_splits_member ON expense_splits (member_id)',
+  );
+  late final Shape7 expenseItems = Shape7(
+    source: i0.VersionedTable(
+      entityName: 'expense_items',
+      withoutRowId: false,
+      isStrict: true,
+      tableConstraints: [
+        'CONSTRAINT ux_expense_items_order UNIQUE(expense_id, sort_order)',
+      ],
+      columns: [_column_0, _column_38, _column_43, _column_40, _column_44],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape8 expenseItemAssignees = Shape8(
+    source: i0.VersionedTable(
+      entityName: 'expense_item_assignees',
+      withoutRowId: false,
+      isStrict: true,
+      tableConstraints: ['PRIMARY KEY(item_id, member_id)'],
+      columns: [_column_45, _column_39],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Index ixExpenseItemAssigneesMember = i1.Index(
+    'ix_expense_item_assignees_member',
+    'CREATE INDEX ix_expense_item_assignees_member ON expense_item_assignees (member_id)',
+  );
+  late final Shape9 expenseRevisions = Shape9(
+    source: i0.VersionedTable(
+      entityName: 'expense_revisions',
+      withoutRowId: false,
+      isStrict: true,
+      tableConstraints: [
+        'CONSTRAINT ux_expense_revisions_version UNIQUE(expense_id, version)',
+      ],
+      columns: [
+        _column_0,
+        _column_38,
+        _column_46,
+        _column_47,
+        _column_48,
+        _column_49,
+        _column_50,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Trigger expenseRevisionsAppendOnly = i1.Trigger(
+    'CREATE TRIGGER expense_revisions_append_only BEFORE UPDATE ON expense_revisions BEGIN SELECT RAISE (ABORT, \'expense_revisions are append-only\');END',
+    'expense_revisions_append_only',
+  );
+  late final Shape17 settlements = Shape17(
+    source: i0.VersionedTable(
+      entityName: 'settlements',
+      withoutRowId: false,
+      isStrict: true,
+      tableConstraints: [
+        'CONSTRAINT ck_settlements_members CHECK(from_member_id <> to_member_id)',
+        'CONSTRAINT ck_settlements_confirmed_at CHECK((status = \'CONFIRMED\')=(confirmed_at IS NOT NULL))',
+        'CONSTRAINT ck_settlements_cancelled_at CHECK((status = \'CANCELLED\')=(cancelled_at IS NOT NULL))',
+        'CONSTRAINT ck_settlements_disputed_at CHECK(status <> \'DISPUTED\' OR disputed_at IS NOT NULL)',
+        'CONSTRAINT ck_settlements_pending_clean CHECK(status <> \'PENDING\' OR(disputed_at IS NULL AND confirmed_at IS NULL))',
+      ],
+      columns: [
+        _column_0,
+        _column_16,
+        _column_51,
+        _column_52,
+        _column_40,
+        _column_53,
+        _column_54,
+        _column_36,
+        _column_55,
+        _column_2,
+        _column_56,
+        _column_57,
+        _column_58,
+        _column_59,
+        _column_60,
+        _column_61,
+        _column_74,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Index ixSettlementsGroupList = i1.Index(
+    'ix_settlements_group_list',
+    'CREATE INDEX ix_settlements_group_list ON settlements (group_id, settled_on DESC, created_at DESC, id DESC)',
+  );
+  final i1.Index ixSettlementsGroupConfirmed = i1.Index(
+    'ix_settlements_group_confirmed',
+    'CREATE INDEX ix_settlements_group_confirmed ON settlements (group_id) WHERE status = \'CONFIRMED\'',
+  );
+  final i1.Index ixSettlementsFromMember = i1.Index(
+    'ix_settlements_from_member',
+    'CREATE INDEX ix_settlements_from_member ON settlements (from_member_id)',
+  );
+  final i1.Index ixSettlementsToMember = i1.Index(
+    'ix_settlements_to_member',
+    'CREATE INDEX ix_settlements_to_member ON settlements (to_member_id)',
+  );
+  final i1.Index ixSettlementsDeposits = i1.Index(
+    'ix_settlements_deposits',
+    'CREATE INDEX ix_settlements_deposits ON settlements (group_id) WHERE kind = \'POOL_DEPOSIT\'',
+  );
+  late final Shape11 paymentHandles = Shape11(
+    source: i0.VersionedTable(
+      entityName: 'payment_handles',
+      withoutRowId: false,
+      isStrict: true,
+      tableConstraints: [
+        'CONSTRAINT uq_payment_handles_user_type UNIQUE(user_id, type)',
+        'CONSTRAINT ck_payment_handles_wallet CHECK(type <> \'WALLET\' OR value GLOB \'01[0125][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]\')',
+        'CONSTRAINT ck_payment_handles_instapay CHECK(type <> \'INSTAPAY\' OR(length(value) BETWEEN 3 AND 60 AND value GLOB \'?*@?*\' AND value NOT GLOB \'*@*@*\' AND value NOT GLOB \'*[^a-z0-9._@-]*\' AND value NOT GLOB \'*@*_*\'))',
+      ],
+      columns: [
+        _column_0,
+        _column_62,
+        _column_63,
+        _column_64,
+        _column_2,
+        _column_3,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape12 idempotencyKeys = Shape12(
+    source: i0.VersionedTable(
+      entityName: 'idempotency_keys',
+      withoutRowId: false,
+      isStrict: true,
+      tableConstraints: [],
+      columns: [
+        _column_65,
+        _column_66,
+        _column_67,
+        _column_68,
+        _column_69,
+        _column_2,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Index ixIdempotencyKeysCreated = i1.Index(
+    'ix_idempotency_keys_created',
+    'CREATE INDEX ix_idempotency_keys_created ON idempotency_keys (created_at)',
+  );
+  late final Shape18 fuelPrices = Shape18(
+    source: i0.VersionedTable(
+      entityName: 'fuel_prices',
+      withoutRowId: false,
+      isStrict: true,
+      tableConstraints: [],
+      columns: [_column_75, _column_76, _column_3],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+}
+
+class Shape18 extends i0.VersionedTable {
+  Shape18({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<String> get fuelType =>
+      columnsByName['fuel_type']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get pricePerLitreMinor =>
+      columnsByName['price_per_litre_minor']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get updatedAt =>
+      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
+}
+
+i1.GeneratedColumn<String> _column_75(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'fuel_type',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL PRIMARY KEY CHECK (fuel_type IN (\'GASOLINE_80\', \'GASOLINE_92\', \'GASOLINE_95\', \'DIESEL\'))',
+    );
+i1.GeneratedColumn<int> _column_76(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'price_per_litre_minor',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints:
+          'NOT NULL CHECK (price_per_litre_minor BETWEEN 1 AND 100000)',
+    );
 i0.MigrationStepWithVersion migrationSteps({
   required Future<void> Function(i1.Migrator m, Schema2 schema) from1To2,
   required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
   required Future<void> Function(i1.Migrator m, Schema4 schema) from3To4,
+  required Future<void> Function(i1.Migrator m, Schema5 schema) from4To5,
+  required Future<void> Function(i1.Migrator m, Schema6 schema) from5To6,
 }) {
   return (currentVersion, database) async {
     switch (currentVersion) {
@@ -2043,6 +2992,16 @@ i0.MigrationStepWithVersion migrationSteps({
         final migrator = i1.Migrator(database, schema);
         await from3To4(migrator, schema);
         return 4;
+      case 4:
+        final schema = Schema5(database: database);
+        final migrator = i1.Migrator(database, schema);
+        await from4To5(migrator, schema);
+        return 5;
+      case 5:
+        final schema = Schema6(database: database);
+        final migrator = i1.Migrator(database, schema);
+        await from5To6(migrator, schema);
+        return 6;
       default:
         throw ArgumentError.value('Unknown migration from $currentVersion');
     }
@@ -2053,10 +3012,14 @@ i1.OnUpgrade stepByStep({
   required Future<void> Function(i1.Migrator m, Schema2 schema) from1To2,
   required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
   required Future<void> Function(i1.Migrator m, Schema4 schema) from3To4,
+  required Future<void> Function(i1.Migrator m, Schema5 schema) from4To5,
+  required Future<void> Function(i1.Migrator m, Schema6 schema) from5To6,
 }) => i0.VersionedSchema.stepByStepHelper(
   step: migrationSteps(
     from1To2: from1To2,
     from2To3: from2To3,
     from3To4: from3To4,
+    from4To5: from4To5,
+    from5To6: from5To6,
   ),
 );

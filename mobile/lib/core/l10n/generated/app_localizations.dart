@@ -4634,6 +4634,522 @@ abstract class AppLocalizations {
     String amount,
     String handle,
   );
+
+  /// SA10: edit-group section and pool screen title (the pooled kitty).
+  ///
+  /// In ar, this message translates to:
+  /// **'الصندوق'**
+  String get poolSectionTitle;
+
+  /// SA10: one-line explanation of the pool under the edit-group section title.
+  ///
+  /// In ar, this message translates to:
+  /// **'واحد من المجموعة يمسك فلوس الكل، وكل واحد يسلّمه إيداعه.'**
+  String get poolSectionHint;
+
+  /// SA10: label of the treasurer field.
+  ///
+  /// In ar, this message translates to:
+  /// **'أمين الصندوق'**
+  String get poolTreasurerLabel;
+
+  /// SA10: treasurer field value when none is chosen.
+  ///
+  /// In ar, this message translates to:
+  /// **'مفيش أمين صندوق لسه'**
+  String get poolTreasurerNone;
+
+  /// SA10: title of the treasurer picker and the field's action.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختار أمين الصندوق'**
+  String get poolTreasurerChoose;
+
+  /// SA10: why the treasurer field is disabled (A137); also the copy of the 409 on save.
+  ///
+  /// In ar, this message translates to:
+  /// **'مينفعش تغيّر أمين الصندوق بعد أول إيداع أو أول مصروف من الصندوق.'**
+  String get poolTreasurerLocked;
+
+  /// SA10: who holds the pool, on the pool card and screen.
+  ///
+  /// In ar, this message translates to:
+  /// **'أمين الصندوق: {name}'**
+  String poolTreasurerIs(String name);
+
+  /// SA10: meter row, what is left in the pool.
+  ///
+  /// In ar, this message translates to:
+  /// **'الباقي في الصندوق'**
+  String get poolRemaining;
+
+  /// SA10: meter row, sum of received deposits.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجمالي الإيداعات'**
+  String get poolDeposited;
+
+  /// SA10: meter row, sum of pool expenses.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتصرف من الصندوق'**
+  String get poolSpent;
+
+  /// SA10: the meter is negative; the words carry the meaning, not the colour.
+  ///
+  /// In ar, this message translates to:
+  /// **'أمين الصندوق دفع من جيبه {amount}'**
+  String poolCovered(String amount);
+
+  /// SA10: under a negative meter: the treasurer gets it back through the balances transfers.
+  ///
+  /// In ar, this message translates to:
+  /// **'هيرجعلهم في التحويلات اللي في تبويب الحسابات.'**
+  String get poolCoveredHint;
+
+  /// SA10: the meter is exactly zero.
+  ///
+  /// In ar, this message translates to:
+  /// **'الصندوق فاضي'**
+  String get poolEmptyMeter;
+
+  /// SA10: accessible name of the tap on the pool card.
+  ///
+  /// In ar, this message translates to:
+  /// **'تفاصيل الصندوق'**
+  String get poolOpenDetails;
+
+  /// SA10: button that opens the deposit sheet.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة إيداع'**
+  String get poolAddDeposit;
+
+  /// SA10: title of the deposits list on the pool screen.
+  ///
+  /// In ar, this message translates to:
+  /// **'الإيداعات'**
+  String get poolDepositsTitle;
+
+  /// SA10: empty deposits list title.
+  ///
+  /// In ar, this message translates to:
+  /// **'لسه مفيش إيداعات'**
+  String get poolDepositsEmpty;
+
+  /// SA10: empty deposits list body.
+  ///
+  /// In ar, this message translates to:
+  /// **'سجّل الفلوس اللي كل واحد سلّمها لأمين الصندوق.'**
+  String get poolDepositsEmptyBody;
+
+  /// SA10: title of the deposit sheet.
+  ///
+  /// In ar, this message translates to:
+  /// **'إيداع في الصندوق'**
+  String get poolDepositSheetTitle;
+
+  /// SA10: deposit sheet, the depositor field.
+  ///
+  /// In ar, this message translates to:
+  /// **'مين اللي سلّم الفلوس؟'**
+  String get poolDepositFrom;
+
+  /// SA10: deposit sheet, fixed receiver line.
+  ///
+  /// In ar, this message translates to:
+  /// **'لأمين الصندوق: {name}'**
+  String poolDepositTo(String name);
+
+  /// SA10: deposit amount field label.
+  ///
+  /// In ar, this message translates to:
+  /// **'المبلغ (ج.م)'**
+  String get poolDepositAmountLabel;
+
+  /// SA10: deposit sheet primary button.
+  ///
+  /// In ar, this message translates to:
+  /// **'سجّل الإيداع'**
+  String get poolDepositSave;
+
+  /// SA10: snackbar after a deposit is recorded.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتسجّل الإيداع'**
+  String get poolDepositSaved;
+
+  /// SA10: deposit sheet when nobody but the treasurer can deposit (A138).
+  ///
+  /// In ar, this message translates to:
+  /// **'محدش غير أمين الصندوق في المجموعة. أضف أعضاء الأول عشان يودعوا.'**
+  String get poolDepositOnlyTreasurer;
+
+  /// SA10: expense form switch.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتدفع من الصندوق'**
+  String get expensePaidFromPool;
+
+  /// SA10: under the switch when on; the payer editor is off.
+  ///
+  /// In ar, this message translates to:
+  /// **'{name} (أمين الصندوق) دفع من فلوس الصندوق، فهو الدافع الوحيد.'**
+  String expensePaidFromPoolHint(String name);
+
+  /// SA10: tag on an expense paid from the pool.
+  ///
+  /// In ar, this message translates to:
+  /// **'من الصندوق'**
+  String get expensePoolTag;
+
+  /// SA10: one line on the balances tab when the group has a pool.
+  ///
+  /// In ar, this message translates to:
+  /// **'الفلوس اللي فاضلة في الصندوق، أو اللي دفعها أمين الصندوق من جيبه، بتتسوّى في التحويلات اللي تحت.'**
+  String get balancesPoolNote;
+
+  /// SA11: title of the fuel and ride calculator screen.
+  ///
+  /// In ar, this message translates to:
+  /// **'حاسبة الخروجة'**
+  String get calcTitle;
+
+  /// SA11: FAB menu row that opens the add-expense form.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة مصروف'**
+  String get calcMenuAddExpense;
+
+  /// SA11: FAB menu row subtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب المبلغ ومين هيتقسم عليهم'**
+  String get calcMenuAddExpenseHint;
+
+  /// SA11: FAB menu row that opens the calculator.
+  ///
+  /// In ar, this message translates to:
+  /// **'حاسبة البنزين والمشوار'**
+  String get calcMenuCalculator;
+
+  /// SA11: FAB menu row subtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'قسّم البنزين والكارتة، أو مشوار مشترك فيه محطات'**
+  String get calcMenuCalculatorHint;
+
+  /// SA11: calculator tab: road-trip fuel and tolls.
+  ///
+  /// In ar, this message translates to:
+  /// **'بنزين'**
+  String get calcTabFuel;
+
+  /// SA11: calculator tab: a shared ride (taxi/app) with stops.
+  ///
+  /// In ar, this message translates to:
+  /// **'مشوار مشترك'**
+  String get calcTabRide;
+
+  /// SA11: distance field label.
+  ///
+  /// In ar, this message translates to:
+  /// **'المسافة (كم)'**
+  String get calcDistance;
+
+  /// SA11: invalid distance.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب مسافة لحد 10,000 كم، وبعد العلامة رقم واحد بس'**
+  String get calcDistanceError;
+
+  /// SA11: consumption field label.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاستهلاك (لتر لكل 100 كم)'**
+  String get calcConsumption;
+
+  /// SA11: consumption helper.
+  ///
+  /// In ar, this message translates to:
+  /// **'أغلب العربيات بين 6 و 10'**
+  String get calcConsumptionHint;
+
+  /// SA11: invalid consumption.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب رقم من 1 لـ 30، وبعد العلامة رقم واحد بس'**
+  String get calcConsumptionError;
+
+  /// SA11: fuel type chips label.
+  ///
+  /// In ar, this message translates to:
+  /// **'نوع البنزين'**
+  String get calcFuelType;
+
+  /// SA11: fuel type chip.
+  ///
+  /// In ar, this message translates to:
+  /// **'بنزين 80'**
+  String get calcFuel80;
+
+  /// SA11: fuel type chip.
+  ///
+  /// In ar, this message translates to:
+  /// **'بنزين 92'**
+  String get calcFuel92;
+
+  /// SA11: fuel type chip.
+  ///
+  /// In ar, this message translates to:
+  /// **'بنزين 95'**
+  String get calcFuel95;
+
+  /// SA11: fuel type chip: diesel.
+  ///
+  /// In ar, this message translates to:
+  /// **'سولار'**
+  String get calcFuelDiesel;
+
+  /// SA11: no saved price for the chosen fuel type.
+  ///
+  /// In ar, this message translates to:
+  /// **'مفيش سعر متسجّل. اكتب سعر البنزينة النهارده.'**
+  String get calcPriceNotSet;
+
+  /// SA11: saved price line.
+  ///
+  /// In ar, this message translates to:
+  /// **'{price} للتر · آخر تحديث {date}'**
+  String calcPriceSaved(String price, String date);
+
+  /// SA11: button: edit the saved price.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل السعر'**
+  String get calcPriceEdit;
+
+  /// SA11: button: add a price when none is saved.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة السعر'**
+  String get calcPriceSet;
+
+  /// SA11: price dialog title.
+  ///
+  /// In ar, this message translates to:
+  /// **'سعر اللتر: {fuel}'**
+  String calcPriceDialogTitle(String fuel);
+
+  /// SA11: price dialog helper (A142: no fetched price).
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب السعر اللي دفعته في البنزينة. قسمة مش بتجيب الأسعار من أي مكان.'**
+  String get calcPriceDialogHint;
+
+  /// SA11: invalid price.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب سعر لحد 1,000 جنيه'**
+  String get calcPriceError;
+
+  /// SA11: tolls section title.
+  ///
+  /// In ar, this message translates to:
+  /// **'الكارتة'**
+  String get calcTolls;
+
+  /// SA11: one toll row label.
+  ///
+  /// In ar, this message translates to:
+  /// **'كارتة {number}'**
+  String calcTollLabel(String number);
+
+  /// SA11: add a toll row.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة كارتة'**
+  String get calcTollAdd;
+
+  /// SA11: remove a toll row (tooltip).
+  ///
+  /// In ar, this message translates to:
+  /// **'شيل الكارتة دي'**
+  String get calcTollRemove;
+
+  /// SA11: invalid toll amount.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب المبلغ، أو شيل الكارتة دي'**
+  String get calcTollError;
+
+  /// SA11: driver picker; the driver is the payer.
+  ///
+  /// In ar, this message translates to:
+  /// **'السواق (دفع البنزين)'**
+  String get calcDriver;
+
+  /// SA11: switch: the driver shares the cost.
+  ///
+  /// In ar, this message translates to:
+  /// **'السواق بيدفع نصيب هو كمان'**
+  String get calcDriverShares;
+
+  /// SA11: passenger chips label.
+  ///
+  /// In ar, this message translates to:
+  /// **'مين في العربية'**
+  String get calcPassengers;
+
+  /// SA11: total fare field.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأجرة كلها'**
+  String get calcFare;
+
+  /// SA11: payer of the ride fare.
+  ///
+  /// In ar, this message translates to:
+  /// **'مين دفع الأجرة'**
+  String get calcFarePayer;
+
+  /// SA11: stops section title.
+  ///
+  /// In ar, this message translates to:
+  /// **'المحطات'**
+  String get calcStops;
+
+  /// SA11: a numbered stop.
+  ///
+  /// In ar, this message translates to:
+  /// **'محطة {number}'**
+  String calcStopName(String number);
+
+  /// SA11: distance of one leg.
+  ///
+  /// In ar, this message translates to:
+  /// **'من محطة {from} لمحطة {to} (كم)'**
+  String calcLegDistance(String from, String to);
+
+  /// SA11: add a stop.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة محطة'**
+  String get calcStopAdd;
+
+  /// SA11: remove the last stop.
+  ///
+  /// In ar, this message translates to:
+  /// **'شيل آخر محطة'**
+  String get calcStopRemove;
+
+  /// SA11: riders section title.
+  ///
+  /// In ar, this message translates to:
+  /// **'مين ركب'**
+  String get calcRiders;
+
+  /// SA11: boarding stop picker.
+  ///
+  /// In ar, this message translates to:
+  /// **'ركب من'**
+  String get calcGetsIn;
+
+  /// SA11: leaving stop picker.
+  ///
+  /// In ar, this message translates to:
+  /// **'نزل عند'**
+  String get calcGetsOut;
+
+  /// SA11: result card title.
+  ///
+  /// In ar, this message translates to:
+  /// **'نصيب كل واحد'**
+  String get calcResultTitle;
+
+  /// SA11: result row: fuel cost.
+  ///
+  /// In ar, this message translates to:
+  /// **'البنزين'**
+  String get calcFuelCost;
+
+  /// SA11: result row: tolls.
+  ///
+  /// In ar, this message translates to:
+  /// **'الكارتة'**
+  String get calcTollsCost;
+
+  /// SA11: result row: total.
+  ///
+  /// In ar, this message translates to:
+  /// **'الإجمالي'**
+  String get calcTotal;
+
+  /// SA11: result row: one leg's fare.
+  ///
+  /// In ar, this message translates to:
+  /// **'من محطة {from} لمحطة {to}'**
+  String calcLegFare(String from, String to);
+
+  /// SA11: nobody shares the cost.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختار شخص واحد على الأقل يشارك في التكلفة.'**
+  String get calcErrorNoSharers;
+
+  /// SA11: a leg without riders (A141).
+  ///
+  /// In ar, this message translates to:
+  /// **'مفيش حد راكب من محطة {from} لمحطة {to}. غيّر مين ركب أو نزل فين.'**
+  String calcErrorEmptyLeg(String from, String to);
+
+  /// SA11: total is zero.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب المسافة والسعر، أو كارتة، عشان تشوف النصيب.'**
+  String get calcErrorZero;
+
+  /// SA11: total above the limit.
+  ///
+  /// In ar, this message translates to:
+  /// **'المبلغ ده كبير أوي.'**
+  String get calcErrorTooLarge;
+
+  /// SA11: any other invalid input.
+  ///
+  /// In ar, this message translates to:
+  /// **'راجع الأرقام اللي فوق.'**
+  String get calcErrorRange;
+
+  /// SA11: button: open the add-expense form filled in.
+  ///
+  /// In ar, this message translates to:
+  /// **'اعمل المصروف'**
+  String get calcCreateExpense;
+
+  /// SA11: under the create button: nothing is saved yet.
+  ///
+  /// In ar, this message translates to:
+  /// **'هتراجعه قبل ما يتحفظ.'**
+  String get calcCreateHint;
+
+  /// SA11: title of the prefilled fuel expense.
+  ///
+  /// In ar, this message translates to:
+  /// **'بنزين، {km} كم'**
+  String calcDraftFuelTitle(String km);
+
+  /// SA11: title of the prefilled expense when there is only tolls.
+  ///
+  /// In ar, this message translates to:
+  /// **'كارتة'**
+  String get calcDraftTollsTitle;
+
+  /// SA11: title of the prefilled ride expense.
+  ///
+  /// In ar, this message translates to:
+  /// **'مشوار مشترك'**
+  String get calcDraftRideTitle;
 }
 
 class _AppLocalizationsDelegate

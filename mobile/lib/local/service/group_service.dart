@@ -95,7 +95,8 @@ final class GroupService {
 
   /// Edits name and/or type under If-Match. A stale version is 409 VERSION_CONFLICT with the current GroupDto
   /// (A113), checked before the input; the version moves only when something really changed.
-  Future<GroupDto> update(String groupId, int expectedVersion, {String? name, String? type}) =>
+  /// [treasurerMemberId] null = unchanged (the treasurer cannot be cleared, as in Java); see [_requireTreasurerChange].
+  Future<GroupDto> update(String groupId, int expectedVersion, {String? name, String? type, String? treasurerMemberId}) =>
       _db.transaction(() async {
         final access = await _ctx.requireGroup(groupId);
         final group = access.group;
@@ -108,13 +109,16 @@ final class GroupService {
         }
         final newName = name == null ? group.name : FieldRules.name(name, FieldRules.groupNameMax, 'name');
         final newType = type == null ? group.type : FieldRules.groupType(type);
-        if (newName != group.name || newType != group.type) {
+        final treasurerChanges = treasurerMemberId != null && treasurerMemberId != group.treasurerMemberId;
+        if (treasurerChanges) await _requireTreasurerChange(access, treasurerMemberId);
+        if (newName != group.name || newType != group.type || treasurerChanges) {
           final changed = await _db.groupsDao.updateIfVersion(
             groupId,
             expectedVersion,
             ExpenseGroupsCompanion(
               name: Value(newName),
               type: Value(newType),
+              treasurerMemberId: treasurerChanges ? Value(treasurerMemberId) : const Value.absent(),
               updatedAt: Value(_ctx.clock()),
               version: Value(group.version + 1),
             ),
@@ -125,6 +129,20 @@ final class GroupService {
         }
         return detail(await _ctx.requireGroup(groupId));
       });
+
+  /// A137 (Java `GroupService.requireTreasurerChange`): the treasurer is an ACTIVE member of this group (422), and it
+  /// changes only while the pool has no deposit and no pool expense, cancelled and soft-deleted rows included (409).
+  Future<void> _requireTreasurerChange(GroupAccess access, String memberId) async {
+    final m = access.member(memberId);
+    if (m == null) throw LocalApiException.validation('treasurerMemberId must be a member of this group');
+    if (m.status != 'ACTIVE') throw LocalApiException.validation('The treasurer must be an active member');
+    if (await _ledger.poolUsed(access.group.id)) {
+      throw LocalApiException.conflict(
+        'INVALID_STATE_TRANSITION',
+        'The treasurer cannot change once the pool has deposits or expenses',
+      );
+    }
+  }
 
   /// Deletes a group with no ledger data at all (expenses incl. soft-deleted, settlements of any status) and no
   /// other linked member; otherwise 409 GROUP_NOT_EMPTY (A23, B12).
@@ -150,6 +168,8 @@ final class GroupService {
     final g = access.group;
     final totals = await _ledger.groupTotals(g.id);
     final net = await _ledger.netOf(g.id, access.me.id);
+    // A136: null without a treasurer; never stored.
+    final meter = g.treasurerMemberId == null ? null : await _ledger.poolBalance(g.id);
     return GroupDto((b) => b
       ..id = g.id
       ..name = g.name
@@ -164,6 +184,8 @@ final class GroupService {
       ..yourNetMinor = net
       ..yourRole = access.me.role
       ..muted = false
+      ..treasurerMemberId = g.treasurerMemberId
+      ..poolBalanceMinor = meter
       ..members = ListBuilder([for (final m in access.members) memberDto(m, access.profile.id)]));
   }
 

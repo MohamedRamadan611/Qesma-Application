@@ -1,0 +1,22 @@
+{
+  "name": "overdraft: the treasurer fronts cash, the meter is negative and the others owe the treasurer",
+  "members": ["T", "A", "B", "C"],
+  "treasurer": "T",
+  "steps": [
+    { "op": "deposit", "ref": "d1", "from": "A", "amountMinor": 20000 },
+    { "op": "deposit", "ref": "d2", "from": "B", "amountMinor": 20000 },
+    { "op": "deposit", "ref": "d3", "from": "C", "amountMinor": 20000 },
+    { "op": "poolExpense", "ref": "e1", "totalMinor": 100000 }
+  ],
+  "expected": {
+    "poolBalanceMinor": -40000,
+    "depositedMinor": 60000,
+    "spentMinor": 100000,
+    "nets": { "T": 15000, "A": -5000, "B": -5000, "C": -5000 },
+    "transfers": [
+      { "from": "A", "to": "T", "amountMinor": 5000 },
+      { "from": "B", "to": "T", "amountMinor": 5000 },
+      { "from": "C", "to": "T", "amountMinor": 5000 }
+    ]
+  }
+}

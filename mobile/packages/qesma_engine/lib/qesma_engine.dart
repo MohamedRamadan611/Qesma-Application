@@ -13,6 +13,8 @@ export 'src/itemized_calculator.dart';
 export 'src/limits.dart';
 export 'src/lrm.dart';
 export 'src/payer_validator.dart';
+export 'src/ride/fuel_split.dart';
+export 'src/ride/multi_stop_split.dart';
 export 'src/simplifier.dart';
 export 'src/split_calculator.dart';
 export 'src/values.dart';

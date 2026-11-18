@@ -15,6 +15,11 @@ import '../application/group_permissions.dart';
 import '../data/group_type.dart';
 import 'group_dialogs.dart';
 import 'group_ui.dart';
+import '../../../core/features_for_mode.dart';
+import '../../../core/theme/palette.dart';
+import '../../../local/insights/pool_summary_provider.dart';
+import '../../balances/presentation/member_picker_sheet.dart';
+import '../../expenses/presentation/expense_ui.dart';
 
 /// Edit group (P2-03): name and type via `PATCH` with `If-Match`; delete with confirm.
 /// No photo, no admin label, no status card.
@@ -30,6 +35,9 @@ class EditGroupScreen extends ConsumerStatefulWidget {
 class _EditGroupScreenState extends ConsumerState<EditGroupScreen> {
   final _name = TextEditingController();
   GroupType _type = GroupType.other;
+
+  /// SA10: the chosen treasurer (null = none yet). Only sent when it differs from the group's.
+  String? _treasurerId;
   bool _filled = false;
 
   /// The user changed the form: reloads (after a conflict) must not overwrite it.
@@ -56,19 +64,37 @@ class _EditGroupScreenState extends ConsumerState<EditGroupScreen> {
     if (_touched) return;
     if (_name.text != group.name) _name.text = group.name;
     _type = GroupType.fromWire(group.type);
+    _treasurerId = group.treasurerMemberId;
   }
 
-  void _fillOnce(String name, String type) {
+  void _fillOnce(GroupDto group) {
     if (_filled) return;
     _filled = true;
-    _name.text = name;
-    _type = GroupType.fromWire(type);
+    _name.text = group.name;
+    _type = GroupType.fromWire(group.type);
+    _treasurerId = group.treasurerMemberId;
+  }
+
+  Future<void> _pickTreasurer(GroupDto group) async {
+    final active = group.members.where((m) => m.status == 'ACTIVE').toList();
+    final id = await showMemberPicker(context, members: active, selectedId: _treasurerId, excludeId: null);
+    if (id != null && mounted) {
+      setState(() {
+        _treasurerId = id;
+        _touched = true;
+      });
+    }
   }
 
   Future<void> _save() async {
     final l10n = AppLocalizations.of(context);
     final controller = ref.read(groupDetailControllerProvider(widget.gid).notifier);
-    final failure = await controller.save(name: _name.text.trim(), type: _type.wire);
+    final current = ref.read(groupDetailControllerProvider(widget.gid)).group?.treasurerMemberId;
+    final failure = await controller.save(
+      name: _name.text.trim(),
+      type: _type.wire,
+      treasurerMemberId: _treasurerId != current ? _treasurerId : null,
+    );
     if (!mounted) return;
     if (failure == null) {
       goBackOr(context, Routes.group(widget.gid));
@@ -80,6 +106,10 @@ class _EditGroupScreenState extends ConsumerState<EditGroupScreen> {
       case ApiErrorCode.notFound:
         showAppSnackBar(context, l10n.groupOpenFailedGone);
         context.go(Routes.home);
+      case ApiErrorCode.invalidStateTransition:
+        // A137: the pool was used meanwhile; the treasurer is locked. Put the saved one back.
+        showAppSnackBar(context, l10n.poolTreasurerLocked);
+        setState(() => _treasurerId = ref.read(groupDetailControllerProvider(widget.gid)).group?.treasurerMemberId);
       default:
         showFailureSnack(context, failure);
     }
@@ -124,7 +154,10 @@ class _EditGroupScreenState extends ConsumerState<EditGroupScreen> {
       if (g != null) _sync(g);
     });
     final group = detail.group;
-    if (group != null) _fillOnce(group.name, group.type);
+    if (group != null) _fillOnce(group);
+    final poolOn = ref.watch(modeFeaturesProvider).pool;
+    // A137: locked once the pool was used (the server's 409 stays the authority).
+    final poolLocked = poolOn && (ref.watch(poolSummaryProvider(widget.gid)).value?.locked ?? false);
 
     Widget body;
     if (group == null || detail.gone) {
@@ -179,11 +212,21 @@ class _EditGroupScreenState extends ConsumerState<EditGroupScreen> {
                 ),
             ],
           ),
+          if (poolOn) ...[
+            const SizedBox(height: QesmaSpacing.lg),
+            _PoolSection(
+              group: group,
+              treasurerId: _treasurerId,
+              locked: poolLocked,
+              onPick: detail.busy || poolLocked ? null : () => _pickTreasurer(group),
+            ),
+          ],
           const SizedBox(height: QesmaSpacing.lg),
           ListenableBuilder(
             listenable: _name,
             builder: (context, _) {
-              final changed = _name.text.trim() != group.name || _type.wire != group.type;
+              final changed =
+                  _name.text.trim() != group.name || _type.wire != group.type || _treasurerId != group.treasurerMemberId;
               return AppButton(
                 label: l10n.groupSaveChanges,
                 icon: Icons.check,
@@ -209,6 +252,66 @@ class _EditGroupScreenState extends ConsumerState<EditGroupScreen> {
       showBack: true,
       onBack: () => goBackOr(context, Routes.group(widget.gid)),
       body: body,
+    );
+  }
+}
+
+/// SA10: the "Pool" section (STANDALONE_SPEC 10): pick the treasurer among the active members. Locked after the first
+/// deposit or pool expense (A137), with the reason in words. There is no "clear" (the contract cannot express it).
+class _PoolSection extends StatelessWidget {
+  const _PoolSection({required this.group, required this.treasurerId, required this.locked, required this.onPick});
+
+  final GroupDto group;
+  final String? treasurerId;
+  final bool locked;
+  final VoidCallback? onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final id = treasurerId;
+    final name = id == null ? l10n.poolTreasurerNone : memberNameResolver(group, l10n)(id);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Semantics(header: true, child: Text(l10n.poolSectionTitle, style: theme.textTheme.titleMedium)),
+        const SizedBox(height: QesmaSpacing.xs),
+        Text(l10n.poolSectionHint, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
+        const SizedBox(height: QesmaSpacing.sm),
+        Semantics(
+          button: onPick != null,
+          enabled: onPick != null,
+          excludeSemantics: true,
+          label: '${l10n.poolTreasurerLabel}: $name',
+          hint: onPick == null ? null : l10n.poolTreasurerChoose,
+          onTap: onPick,
+          child: AppCard(
+            onTap: onPick,
+            padding: const EdgeInsets.all(QesmaSpacing.sm + 4),
+            child: Row(
+              children: [
+                if (id != null) ...[MemberAvatar(memberId: id, name: name, size: 36), const SizedBox(width: QesmaSpacing.sm)]
+                else ...[Icon(Icons.savings_outlined, color: context.colors.textHelper), const SizedBox(width: QesmaSpacing.sm)],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(l10n.poolTreasurerLabel, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper)),
+                      Text(name, style: theme.textTheme.titleSmall),
+                    ],
+                  ),
+                ),
+                Icon(locked ? Icons.lock_outline : Icons.expand_more, color: context.colors.textHelper),
+              ],
+            ),
+          ),
+        ),
+        if (locked) ...[
+          const SizedBox(height: QesmaSpacing.xs),
+          Text(l10n.poolTreasurerLocked, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
+        ],
+      ],
     );
   }
 }

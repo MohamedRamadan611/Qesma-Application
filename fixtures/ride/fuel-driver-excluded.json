@@ -1,0 +1,20 @@
+{
+  "name": "fuel: the driver does not share the cost; the passengers split fuel and toll, remainder by sortOrder",
+  "kind": "fuel",
+  "input": {
+    "distanceTenthsKm": 2000,
+    "consumptionTenths": 80,
+    "pricePerLitreMinor": 1500,
+    "tollsMinor": [3001],
+    "driver": { "id": "A", "sortOrder": 0 },
+    "driverIncluded": false,
+    "passengers": [ { "id": "B", "sortOrder": 1 }, { "id": "C", "sortOrder": 2 } ]
+  },
+  "expected": {
+    "fuelMinor": 24000,
+    "tollsMinor": 3001,
+    "totalMinor": 27001,
+    "payerMemberId": "A",
+    "shares": { "B": 13501, "C": 13500 }
+  }
+}

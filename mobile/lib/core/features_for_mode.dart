@@ -27,6 +27,8 @@ class ModeFeatures {
     required this.myShare,
     required this.recap,
     required this.reminderTones,
+    required this.pool,
+    required this.calculator,
   });
 
   /// Today's app: everything on (backup is a local-mode feature, SA5).
@@ -51,6 +53,8 @@ class ModeFeatures {
     myShare: false,
     recap: false,
     reminderTones: false,
+    pool: false,
+    calculator: false,
   );
 
   /// The standalone release: every server-only feature off. `backup` (export, restore, reminder banner) is on: SA5.
@@ -75,6 +79,8 @@ class ModeFeatures {
     myShare: true,
     recap: true,
     reminderTones: true,
+    pool: true,
+    calculator: true,
   );
 
   static ModeFeatures of(AppMode mode) => mode == AppMode.local ? local : server;
@@ -101,6 +107,14 @@ class ModeFeatures {
   final bool myShare;
   final bool recap;
   final bool reminderTones;
+
+  /// SA10: pool & treasurer (edit-group section, pool card and screen, expense toggle). The breakdown comes from the
+  /// local read-model, so it is a local-mode feature.
+  final bool pool;
+
+  /// SA11: the Khorouga calculator (fuel + tolls, multi-stop ride). It runs the local engine (A149), so it is a
+  /// local-mode feature; its result only prefills the add-expense form.
+  final bool calculator;
 }
 
 final modeFeaturesProvider = Provider<ModeFeatures>((ref) => ModeFeatures.of(ref.watch(appModeProvider)));

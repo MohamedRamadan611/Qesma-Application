@@ -892,570 +892,6 @@ class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
   }
 }
 
-class ExpenseGroups extends Table with TableInfo<ExpenseGroups, GroupRow> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  ExpenseGroups(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  late final GeneratedColumn<String> id = GeneratedColumn<String>(
-    'id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL PRIMARY KEY CHECK (length(id) = 36)',
-  );
-  static const VerificationMeta _ownerUserIdMeta = const VerificationMeta(
-    'ownerUserId',
-  );
-  late final GeneratedColumn<String> ownerUserId = GeneratedColumn<String>(
-    'owner_user_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL REFERENCES local_profile(id)',
-  );
-  static const VerificationMeta _nameMeta = const VerificationMeta('name');
-  late final GeneratedColumn<String> name = GeneratedColumn<String>(
-    'name',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL CHECK (length(trim(name)) BETWEEN 1 AND 60)',
-  );
-  static const VerificationMeta _typeMeta = const VerificationMeta('type');
-  late final GeneratedColumn<String> type = GeneratedColumn<String>(
-    'type',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL CHECK (type IN (\'TRIP\', \'HOUSING\', \'OUTING\', \'OTHER\'))',
-  );
-  static const VerificationMeta _currencyCodeMeta = const VerificationMeta(
-    'currencyCode',
-  );
-  late final GeneratedColumn<String> currencyCode = GeneratedColumn<String>(
-    'currency_code',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    $customConstraints: 'NOT NULL DEFAULT \'EGP\' CHECK (length(currency_code) = 3 AND currency_code NOT GLOB \'*[^A-Z]*\')',
-    defaultValue: const CustomExpression('\'EGP\''),
-  );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
-  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
-  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
-    'updated_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
-  static const VerificationMeta _versionMeta = const VerificationMeta(
-    'version',
-  );
-  late final GeneratedColumn<int> version = GeneratedColumn<int>(
-    'version',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    $customConstraints: 'NOT NULL DEFAULT 1 CHECK (version >= 1)',
-    defaultValue: const CustomExpression('1'),
-  );
-  static const VerificationMeta _memberSeqMeta = const VerificationMeta(
-    'memberSeq',
-  );
-  late final GeneratedColumn<int> memberSeq = GeneratedColumn<int>(
-    'member_seq',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    $customConstraints: 'NOT NULL DEFAULT 0 CHECK (member_seq >= 0)',
-    defaultValue: const CustomExpression('0'),
-  );
-  @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    ownerUserId,
-    name,
-    type,
-    currencyCode,
-    createdAt,
-    updatedAt,
-    version,
-    memberSeq,
-  ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'expense_groups';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<GroupRow> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    } else if (isInserting) {
-      context.missing(_idMeta);
-    }
-    if (data.containsKey('owner_user_id')) {
-      context.handle(
-        _ownerUserIdMeta,
-        ownerUserId.isAcceptableOrUnknown(
-          data['owner_user_id']!,
-          _ownerUserIdMeta,
-        ),
-      );
-    } else if (isInserting) {
-      context.missing(_ownerUserIdMeta);
-    }
-    if (data.containsKey('name')) {
-      context.handle(
-        _nameMeta,
-        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_nameMeta);
-    }
-    if (data.containsKey('type')) {
-      context.handle(
-        _typeMeta,
-        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_typeMeta);
-    }
-    if (data.containsKey('currency_code')) {
-      context.handle(
-        _currencyCodeMeta,
-        currencyCode.isAcceptableOrUnknown(
-          data['currency_code']!,
-          _currencyCodeMeta,
-        ),
-      );
-    }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_createdAtMeta);
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_updatedAtMeta);
-    }
-    if (data.containsKey('version')) {
-      context.handle(
-        _versionMeta,
-        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
-      );
-    }
-    if (data.containsKey('member_seq')) {
-      context.handle(
-        _memberSeqMeta,
-        memberSeq.isAcceptableOrUnknown(data['member_seq']!, _memberSeqMeta),
-      );
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  GroupRow map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return GroupRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
-      ownerUserId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}owner_user_id'],
-      )!,
-      name: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}name'],
-      )!,
-      type: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}type'],
-      )!,
-      currencyCode: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}currency_code'],
-      )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}created_at'],
-      )!,
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}updated_at'],
-      )!,
-      version: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}version'],
-      )!,
-      memberSeq: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}member_seq'],
-      )!,
-    );
-  }
-
-  @override
-  ExpenseGroups createAlias(String alias) {
-    return ExpenseGroups(attachedDatabase, alias);
-  }
-
-  @override
-  bool get isStrict => true;
-  @override
-  bool get dontWriteConstraints => true;
-}
-
-class GroupRow extends DataClass implements Insertable<GroupRow> {
-  final String id;
-  final String ownerUserId;
-  final String name;
-  final String type;
-  final String currencyCode;
-  final int createdAt;
-  final int updatedAt;
-  final int version;
-  final int memberSeq;
-  const GroupRow({
-    required this.id,
-    required this.ownerUserId,
-    required this.name,
-    required this.type,
-    required this.currencyCode,
-    required this.createdAt,
-    required this.updatedAt,
-    required this.version,
-    required this.memberSeq,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<String>(id);
-    map['owner_user_id'] = Variable<String>(ownerUserId);
-    map['name'] = Variable<String>(name);
-    map['type'] = Variable<String>(type);
-    map['currency_code'] = Variable<String>(currencyCode);
-    map['created_at'] = Variable<int>(createdAt);
-    map['updated_at'] = Variable<int>(updatedAt);
-    map['version'] = Variable<int>(version);
-    map['member_seq'] = Variable<int>(memberSeq);
-    return map;
-  }
-
-  ExpenseGroupsCompanion toCompanion(bool nullToAbsent) {
-    return ExpenseGroupsCompanion(
-      id: Value(id),
-      ownerUserId: Value(ownerUserId),
-      name: Value(name),
-      type: Value(type),
-      currencyCode: Value(currencyCode),
-      createdAt: Value(createdAt),
-      updatedAt: Value(updatedAt),
-      version: Value(version),
-      memberSeq: Value(memberSeq),
-    );
-  }
-
-  factory GroupRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return GroupRow(
-      id: serializer.fromJson<String>(json['id']),
-      ownerUserId: serializer.fromJson<String>(json['owner_user_id']),
-      name: serializer.fromJson<String>(json['name']),
-      type: serializer.fromJson<String>(json['type']),
-      currencyCode: serializer.fromJson<String>(json['currency_code']),
-      createdAt: serializer.fromJson<int>(json['created_at']),
-      updatedAt: serializer.fromJson<int>(json['updated_at']),
-      version: serializer.fromJson<int>(json['version']),
-      memberSeq: serializer.fromJson<int>(json['member_seq']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<String>(id),
-      'owner_user_id': serializer.toJson<String>(ownerUserId),
-      'name': serializer.toJson<String>(name),
-      'type': serializer.toJson<String>(type),
-      'currency_code': serializer.toJson<String>(currencyCode),
-      'created_at': serializer.toJson<int>(createdAt),
-      'updated_at': serializer.toJson<int>(updatedAt),
-      'version': serializer.toJson<int>(version),
-      'member_seq': serializer.toJson<int>(memberSeq),
-    };
-  }
-
-  GroupRow copyWith({
-    String? id,
-    String? ownerUserId,
-    String? name,
-    String? type,
-    String? currencyCode,
-    int? createdAt,
-    int? updatedAt,
-    int? version,
-    int? memberSeq,
-  }) => GroupRow(
-    id: id ?? this.id,
-    ownerUserId: ownerUserId ?? this.ownerUserId,
-    name: name ?? this.name,
-    type: type ?? this.type,
-    currencyCode: currencyCode ?? this.currencyCode,
-    createdAt: createdAt ?? this.createdAt,
-    updatedAt: updatedAt ?? this.updatedAt,
-    version: version ?? this.version,
-    memberSeq: memberSeq ?? this.memberSeq,
-  );
-  GroupRow copyWithCompanion(ExpenseGroupsCompanion data) {
-    return GroupRow(
-      id: data.id.present ? data.id.value : this.id,
-      ownerUserId: data.ownerUserId.present
-          ? data.ownerUserId.value
-          : this.ownerUserId,
-      name: data.name.present ? data.name.value : this.name,
-      type: data.type.present ? data.type.value : this.type,
-      currencyCode: data.currencyCode.present
-          ? data.currencyCode.value
-          : this.currencyCode,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-      version: data.version.present ? data.version.value : this.version,
-      memberSeq: data.memberSeq.present ? data.memberSeq.value : this.memberSeq,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('GroupRow(')
-          ..write('id: $id, ')
-          ..write('ownerUserId: $ownerUserId, ')
-          ..write('name: $name, ')
-          ..write('type: $type, ')
-          ..write('currencyCode: $currencyCode, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('version: $version, ')
-          ..write('memberSeq: $memberSeq')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(
-    id,
-    ownerUserId,
-    name,
-    type,
-    currencyCode,
-    createdAt,
-    updatedAt,
-    version,
-    memberSeq,
-  );
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is GroupRow &&
-          other.id == this.id &&
-          other.ownerUserId == this.ownerUserId &&
-          other.name == this.name &&
-          other.type == this.type &&
-          other.currencyCode == this.currencyCode &&
-          other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt &&
-          other.version == this.version &&
-          other.memberSeq == this.memberSeq);
-}
-
-class ExpenseGroupsCompanion extends UpdateCompanion<GroupRow> {
-  final Value<String> id;
-  final Value<String> ownerUserId;
-  final Value<String> name;
-  final Value<String> type;
-  final Value<String> currencyCode;
-  final Value<int> createdAt;
-  final Value<int> updatedAt;
-  final Value<int> version;
-  final Value<int> memberSeq;
-  final Value<int> rowid;
-  const ExpenseGroupsCompanion({
-    this.id = const Value.absent(),
-    this.ownerUserId = const Value.absent(),
-    this.name = const Value.absent(),
-    this.type = const Value.absent(),
-    this.currencyCode = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-    this.version = const Value.absent(),
-    this.memberSeq = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  ExpenseGroupsCompanion.insert({
-    required String id,
-    required String ownerUserId,
-    required String name,
-    required String type,
-    this.currencyCode = const Value.absent(),
-    required int createdAt,
-    required int updatedAt,
-    this.version = const Value.absent(),
-    this.memberSeq = const Value.absent(),
-    this.rowid = const Value.absent(),
-  }) : id = Value(id),
-       ownerUserId = Value(ownerUserId),
-       name = Value(name),
-       type = Value(type),
-       createdAt = Value(createdAt),
-       updatedAt = Value(updatedAt);
-  static Insertable<GroupRow> custom({
-    Expression<String>? id,
-    Expression<String>? ownerUserId,
-    Expression<String>? name,
-    Expression<String>? type,
-    Expression<String>? currencyCode,
-    Expression<int>? createdAt,
-    Expression<int>? updatedAt,
-    Expression<int>? version,
-    Expression<int>? memberSeq,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (ownerUserId != null) 'owner_user_id': ownerUserId,
-      if (name != null) 'name': name,
-      if (type != null) 'type': type,
-      if (currencyCode != null) 'currency_code': currencyCode,
-      if (createdAt != null) 'created_at': createdAt,
-      if (updatedAt != null) 'updated_at': updatedAt,
-      if (version != null) 'version': version,
-      if (memberSeq != null) 'member_seq': memberSeq,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  ExpenseGroupsCompanion copyWith({
-    Value<String>? id,
-    Value<String>? ownerUserId,
-    Value<String>? name,
-    Value<String>? type,
-    Value<String>? currencyCode,
-    Value<int>? createdAt,
-    Value<int>? updatedAt,
-    Value<int>? version,
-    Value<int>? memberSeq,
-    Value<int>? rowid,
-  }) {
-    return ExpenseGroupsCompanion(
-      id: id ?? this.id,
-      ownerUserId: ownerUserId ?? this.ownerUserId,
-      name: name ?? this.name,
-      type: type ?? this.type,
-      currencyCode: currencyCode ?? this.currencyCode,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      version: version ?? this.version,
-      memberSeq: memberSeq ?? this.memberSeq,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<String>(id.value);
-    }
-    if (ownerUserId.present) {
-      map['owner_user_id'] = Variable<String>(ownerUserId.value);
-    }
-    if (name.present) {
-      map['name'] = Variable<String>(name.value);
-    }
-    if (type.present) {
-      map['type'] = Variable<String>(type.value);
-    }
-    if (currencyCode.present) {
-      map['currency_code'] = Variable<String>(currencyCode.value);
-    }
-    if (createdAt.present) {
-      map['created_at'] = Variable<int>(createdAt.value);
-    }
-    if (updatedAt.present) {
-      map['updated_at'] = Variable<int>(updatedAt.value);
-    }
-    if (version.present) {
-      map['version'] = Variable<int>(version.value);
-    }
-    if (memberSeq.present) {
-      map['member_seq'] = Variable<int>(memberSeq.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('ExpenseGroupsCompanion(')
-          ..write('id: $id, ')
-          ..write('ownerUserId: $ownerUserId, ')
-          ..write('name: $name, ')
-          ..write('type: $type, ')
-          ..write('currencyCode: $currencyCode, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('version: $version, ')
-          ..write('memberSeq: $memberSeq, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
 class Members extends Table with TableInfo<Members, MemberRow> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -2128,6 +1564,632 @@ class MembersCompanion extends UpdateCompanion<MemberRow> {
   }
 }
 
+class ExpenseGroups extends Table with TableInfo<ExpenseGroups, GroupRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  ExpenseGroups(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY CHECK (length(id) = 36)',
+  );
+  static const VerificationMeta _ownerUserIdMeta = const VerificationMeta(
+    'ownerUserId',
+  );
+  late final GeneratedColumn<String> ownerUserId = GeneratedColumn<String>(
+    'owner_user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL REFERENCES local_profile(id)',
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL CHECK (length(trim(name)) BETWEEN 1 AND 60)',
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL CHECK (type IN (\'TRIP\', \'HOUSING\', \'OUTING\', \'OTHER\'))',
+  );
+  static const VerificationMeta _currencyCodeMeta = const VerificationMeta(
+    'currencyCode',
+  );
+  late final GeneratedColumn<String> currencyCode = GeneratedColumn<String>(
+    'currency_code',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'EGP\' CHECK (length(currency_code) = 3 AND currency_code NOT GLOB \'*[^A-Z]*\')',
+    defaultValue: const CustomExpression('\'EGP\''),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 1 CHECK (version >= 1)',
+    defaultValue: const CustomExpression('1'),
+  );
+  static const VerificationMeta _memberSeqMeta = const VerificationMeta(
+    'memberSeq',
+  );
+  late final GeneratedColumn<int> memberSeq = GeneratedColumn<int>(
+    'member_seq',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0 CHECK (member_seq >= 0)',
+    defaultValue: const CustomExpression('0'),
+  );
+  static const VerificationMeta _treasurerMemberIdMeta = const VerificationMeta(
+    'treasurerMemberId',
+  );
+  late final GeneratedColumn<String> treasurerMemberId =
+      GeneratedColumn<String>(
+        'treasurer_member_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        $customConstraints: 'REFERENCES members(id)',
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    ownerUserId,
+    name,
+    type,
+    currencyCode,
+    createdAt,
+    updatedAt,
+    version,
+    memberSeq,
+    treasurerMemberId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'expense_groups';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<GroupRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('owner_user_id')) {
+      context.handle(
+        _ownerUserIdMeta,
+        ownerUserId.isAcceptableOrUnknown(
+          data['owner_user_id']!,
+          _ownerUserIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_ownerUserIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('currency_code')) {
+      context.handle(
+        _currencyCodeMeta,
+        currencyCode.isAcceptableOrUnknown(
+          data['currency_code']!,
+          _currencyCodeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    if (data.containsKey('member_seq')) {
+      context.handle(
+        _memberSeqMeta,
+        memberSeq.isAcceptableOrUnknown(data['member_seq']!, _memberSeqMeta),
+      );
+    }
+    if (data.containsKey('treasurer_member_id')) {
+      context.handle(
+        _treasurerMemberIdMeta,
+        treasurerMemberId.isAcceptableOrUnknown(
+          data['treasurer_member_id']!,
+          _treasurerMemberIdMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  GroupRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return GroupRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      ownerUserId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}owner_user_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      currencyCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency_code'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      memberSeq: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}member_seq'],
+      )!,
+      treasurerMemberId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}treasurer_member_id'],
+      ),
+    );
+  }
+
+  @override
+  ExpenseGroups createAlias(String alias) {
+    return ExpenseGroups(attachedDatabase, alias);
+  }
+
+  @override
+  bool get isStrict => true;
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class GroupRow extends DataClass implements Insertable<GroupRow> {
+  final String id;
+  final String ownerUserId;
+  final String name;
+  final String type;
+  final String currencyCode;
+  final int createdAt;
+  final int updatedAt;
+  final int version;
+  final int memberSeq;
+
+  /// Schema 5 (SA10, Java V20): the pool treasurer, a member of this group. SQLite cannot add V20's composite FK
+  /// with ADD COLUMN, so "same group" is the pair of triggers below the members table; ACTIVE is the service's.
+  final String? treasurerMemberId;
+  const GroupRow({
+    required this.id,
+    required this.ownerUserId,
+    required this.name,
+    required this.type,
+    required this.currencyCode,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.version,
+    required this.memberSeq,
+    this.treasurerMemberId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['owner_user_id'] = Variable<String>(ownerUserId);
+    map['name'] = Variable<String>(name);
+    map['type'] = Variable<String>(type);
+    map['currency_code'] = Variable<String>(currencyCode);
+    map['created_at'] = Variable<int>(createdAt);
+    map['updated_at'] = Variable<int>(updatedAt);
+    map['version'] = Variable<int>(version);
+    map['member_seq'] = Variable<int>(memberSeq);
+    if (!nullToAbsent || treasurerMemberId != null) {
+      map['treasurer_member_id'] = Variable<String>(treasurerMemberId);
+    }
+    return map;
+  }
+
+  ExpenseGroupsCompanion toCompanion(bool nullToAbsent) {
+    return ExpenseGroupsCompanion(
+      id: Value(id),
+      ownerUserId: Value(ownerUserId),
+      name: Value(name),
+      type: Value(type),
+      currencyCode: Value(currencyCode),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      version: Value(version),
+      memberSeq: Value(memberSeq),
+      treasurerMemberId: treasurerMemberId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(treasurerMemberId),
+    );
+  }
+
+  factory GroupRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return GroupRow(
+      id: serializer.fromJson<String>(json['id']),
+      ownerUserId: serializer.fromJson<String>(json['owner_user_id']),
+      name: serializer.fromJson<String>(json['name']),
+      type: serializer.fromJson<String>(json['type']),
+      currencyCode: serializer.fromJson<String>(json['currency_code']),
+      createdAt: serializer.fromJson<int>(json['created_at']),
+      updatedAt: serializer.fromJson<int>(json['updated_at']),
+      version: serializer.fromJson<int>(json['version']),
+      memberSeq: serializer.fromJson<int>(json['member_seq']),
+      treasurerMemberId: serializer.fromJson<String?>(
+        json['treasurer_member_id'],
+      ),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'owner_user_id': serializer.toJson<String>(ownerUserId),
+      'name': serializer.toJson<String>(name),
+      'type': serializer.toJson<String>(type),
+      'currency_code': serializer.toJson<String>(currencyCode),
+      'created_at': serializer.toJson<int>(createdAt),
+      'updated_at': serializer.toJson<int>(updatedAt),
+      'version': serializer.toJson<int>(version),
+      'member_seq': serializer.toJson<int>(memberSeq),
+      'treasurer_member_id': serializer.toJson<String?>(treasurerMemberId),
+    };
+  }
+
+  GroupRow copyWith({
+    String? id,
+    String? ownerUserId,
+    String? name,
+    String? type,
+    String? currencyCode,
+    int? createdAt,
+    int? updatedAt,
+    int? version,
+    int? memberSeq,
+    Value<String?> treasurerMemberId = const Value.absent(),
+  }) => GroupRow(
+    id: id ?? this.id,
+    ownerUserId: ownerUserId ?? this.ownerUserId,
+    name: name ?? this.name,
+    type: type ?? this.type,
+    currencyCode: currencyCode ?? this.currencyCode,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    version: version ?? this.version,
+    memberSeq: memberSeq ?? this.memberSeq,
+    treasurerMemberId: treasurerMemberId.present
+        ? treasurerMemberId.value
+        : this.treasurerMemberId,
+  );
+  GroupRow copyWithCompanion(ExpenseGroupsCompanion data) {
+    return GroupRow(
+      id: data.id.present ? data.id.value : this.id,
+      ownerUserId: data.ownerUserId.present
+          ? data.ownerUserId.value
+          : this.ownerUserId,
+      name: data.name.present ? data.name.value : this.name,
+      type: data.type.present ? data.type.value : this.type,
+      currencyCode: data.currencyCode.present
+          ? data.currencyCode.value
+          : this.currencyCode,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      version: data.version.present ? data.version.value : this.version,
+      memberSeq: data.memberSeq.present ? data.memberSeq.value : this.memberSeq,
+      treasurerMemberId: data.treasurerMemberId.present
+          ? data.treasurerMemberId.value
+          : this.treasurerMemberId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GroupRow(')
+          ..write('id: $id, ')
+          ..write('ownerUserId: $ownerUserId, ')
+          ..write('name: $name, ')
+          ..write('type: $type, ')
+          ..write('currencyCode: $currencyCode, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('version: $version, ')
+          ..write('memberSeq: $memberSeq, ')
+          ..write('treasurerMemberId: $treasurerMemberId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    ownerUserId,
+    name,
+    type,
+    currencyCode,
+    createdAt,
+    updatedAt,
+    version,
+    memberSeq,
+    treasurerMemberId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is GroupRow &&
+          other.id == this.id &&
+          other.ownerUserId == this.ownerUserId &&
+          other.name == this.name &&
+          other.type == this.type &&
+          other.currencyCode == this.currencyCode &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.version == this.version &&
+          other.memberSeq == this.memberSeq &&
+          other.treasurerMemberId == this.treasurerMemberId);
+}
+
+class ExpenseGroupsCompanion extends UpdateCompanion<GroupRow> {
+  final Value<String> id;
+  final Value<String> ownerUserId;
+  final Value<String> name;
+  final Value<String> type;
+  final Value<String> currencyCode;
+  final Value<int> createdAt;
+  final Value<int> updatedAt;
+  final Value<int> version;
+  final Value<int> memberSeq;
+  final Value<String?> treasurerMemberId;
+  final Value<int> rowid;
+  const ExpenseGroupsCompanion({
+    this.id = const Value.absent(),
+    this.ownerUserId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.type = const Value.absent(),
+    this.currencyCode = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.version = const Value.absent(),
+    this.memberSeq = const Value.absent(),
+    this.treasurerMemberId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ExpenseGroupsCompanion.insert({
+    required String id,
+    required String ownerUserId,
+    required String name,
+    required String type,
+    this.currencyCode = const Value.absent(),
+    required int createdAt,
+    required int updatedAt,
+    this.version = const Value.absent(),
+    this.memberSeq = const Value.absent(),
+    this.treasurerMemberId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       ownerUserId = Value(ownerUserId),
+       name = Value(name),
+       type = Value(type),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<GroupRow> custom({
+    Expression<String>? id,
+    Expression<String>? ownerUserId,
+    Expression<String>? name,
+    Expression<String>? type,
+    Expression<String>? currencyCode,
+    Expression<int>? createdAt,
+    Expression<int>? updatedAt,
+    Expression<int>? version,
+    Expression<int>? memberSeq,
+    Expression<String>? treasurerMemberId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (ownerUserId != null) 'owner_user_id': ownerUserId,
+      if (name != null) 'name': name,
+      if (type != null) 'type': type,
+      if (currencyCode != null) 'currency_code': currencyCode,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (version != null) 'version': version,
+      if (memberSeq != null) 'member_seq': memberSeq,
+      if (treasurerMemberId != null) 'treasurer_member_id': treasurerMemberId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ExpenseGroupsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? ownerUserId,
+    Value<String>? name,
+    Value<String>? type,
+    Value<String>? currencyCode,
+    Value<int>? createdAt,
+    Value<int>? updatedAt,
+    Value<int>? version,
+    Value<int>? memberSeq,
+    Value<String?>? treasurerMemberId,
+    Value<int>? rowid,
+  }) {
+    return ExpenseGroupsCompanion(
+      id: id ?? this.id,
+      ownerUserId: ownerUserId ?? this.ownerUserId,
+      name: name ?? this.name,
+      type: type ?? this.type,
+      currencyCode: currencyCode ?? this.currencyCode,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      version: version ?? this.version,
+      memberSeq: memberSeq ?? this.memberSeq,
+      treasurerMemberId: treasurerMemberId ?? this.treasurerMemberId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (ownerUserId.present) {
+      map['owner_user_id'] = Variable<String>(ownerUserId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (currencyCode.present) {
+      map['currency_code'] = Variable<String>(currencyCode.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (memberSeq.present) {
+      map['member_seq'] = Variable<int>(memberSeq.value);
+    }
+    if (treasurerMemberId.present) {
+      map['treasurer_member_id'] = Variable<String>(treasurerMemberId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ExpenseGroupsCompanion(')
+          ..write('id: $id, ')
+          ..write('ownerUserId: $ownerUserId, ')
+          ..write('name: $name, ')
+          ..write('type: $type, ')
+          ..write('currencyCode: $currencyCode, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('version: $version, ')
+          ..write('memberSeq: $memberSeq, ')
+          ..write('treasurerMemberId: $treasurerMemberId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class Expenses extends Table with TableInfo<Expenses, ExpenseRow> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -2343,6 +2405,18 @@ class Expenses extends Table with TableInfo<Expenses, ExpenseRow> {
     $customConstraints: 'NOT NULL DEFAULT \'OTHER\' CHECK (category IN (\'FOOD\', \'TRANSPORT\', \'FUEL\', \'ACCOMMODATION\', \'GROCERIES\', \'SHOPPING\', \'ENTERTAINMENT\', \'BILLS\', \'OTHER\'))',
     defaultValue: const CustomExpression('\'OTHER\''),
   );
+  static const VerificationMeta _paidFromPoolMeta = const VerificationMeta(
+    'paidFromPool',
+  );
+  late final GeneratedColumn<int> paidFromPool = GeneratedColumn<int>(
+    'paid_from_pool',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0 CHECK (paid_from_pool IN (0, 1))',
+    defaultValue: const CustomExpression('0'),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2364,6 +2438,7 @@ class Expenses extends Table with TableInfo<Expenses, ExpenseRow> {
     deletedAt,
     version,
     category,
+    paidFromPool,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2521,6 +2596,15 @@ class Expenses extends Table with TableInfo<Expenses, ExpenseRow> {
         category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
       );
     }
+    if (data.containsKey('paid_from_pool')) {
+      context.handle(
+        _paidFromPoolMeta,
+        paidFromPool.isAcceptableOrUnknown(
+          data['paid_from_pool']!,
+          _paidFromPoolMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -2606,6 +2690,10 @@ class Expenses extends Table with TableInfo<Expenses, ExpenseRow> {
         DriftSqlType.string,
         data['${effectivePrefix}category'],
       )!,
+      paidFromPool: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}paid_from_pool'],
+      )!,
     );
   }
 
@@ -2645,6 +2733,9 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
   final int? deletedAt;
   final int version;
   final String category;
+
+  /// Schema 5 (SA10, Java V20): a pool expense (its single payer is the treasurer: checked by the service).
+  final int paidFromPool;
   const ExpenseRow({
     required this.id,
     required this.groupId,
@@ -2665,6 +2756,7 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
     this.deletedAt,
     required this.version,
     required this.category,
+    required this.paidFromPool,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2704,6 +2796,7 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
     }
     map['version'] = Variable<int>(version);
     map['category'] = Variable<String>(category);
+    map['paid_from_pool'] = Variable<int>(paidFromPool);
     return map;
   }
 
@@ -2744,6 +2837,7 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
           : Value(deletedAt),
       version: Value(version),
       category: Value(category),
+      paidFromPool: Value(paidFromPool),
     );
   }
 
@@ -2772,6 +2866,7 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
       deletedAt: serializer.fromJson<int?>(json['deleted_at']),
       version: serializer.fromJson<int>(json['version']),
       category: serializer.fromJson<String>(json['category']),
+      paidFromPool: serializer.fromJson<int>(json['paid_from_pool']),
     );
   }
   @override
@@ -2797,6 +2892,7 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
       'deleted_at': serializer.toJson<int?>(deletedAt),
       'version': serializer.toJson<int>(version),
       'category': serializer.toJson<String>(category),
+      'paid_from_pool': serializer.toJson<int>(paidFromPool),
     };
   }
 
@@ -2820,6 +2916,7 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
     Value<int?> deletedAt = const Value.absent(),
     int? version,
     String? category,
+    int? paidFromPool,
   }) => ExpenseRow(
     id: id ?? this.id,
     groupId: groupId ?? this.groupId,
@@ -2844,6 +2941,7 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
     version: version ?? this.version,
     category: category ?? this.category,
+    paidFromPool: paidFromPool ?? this.paidFromPool,
   );
   ExpenseRow copyWithCompanion(ExpensesCompanion data) {
     return ExpenseRow(
@@ -2880,6 +2978,9 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       version: data.version.present ? data.version.value : this.version,
       category: data.category.present ? data.category.value : this.category,
+      paidFromPool: data.paidFromPool.present
+          ? data.paidFromPool.value
+          : this.paidFromPool,
     );
   }
 
@@ -2904,7 +3005,8 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
           ..write('version: $version, ')
-          ..write('category: $category')
+          ..write('category: $category, ')
+          ..write('paidFromPool: $paidFromPool')
           ..write(')'))
         .toString();
   }
@@ -2930,6 +3032,7 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
     deletedAt,
     version,
     category,
+    paidFromPool,
   );
   @override
   bool operator ==(Object other) =>
@@ -2953,7 +3056,8 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
           other.version == this.version &&
-          other.category == this.category);
+          other.category == this.category &&
+          other.paidFromPool == this.paidFromPool);
 }
 
 class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
@@ -2976,6 +3080,7 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
   final Value<int?> deletedAt;
   final Value<int> version;
   final Value<String> category;
+  final Value<int> paidFromPool;
   final Value<int> rowid;
   const ExpensesCompanion({
     this.id = const Value.absent(),
@@ -2997,6 +3102,7 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     this.deletedAt = const Value.absent(),
     this.version = const Value.absent(),
     this.category = const Value.absent(),
+    this.paidFromPool = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ExpensesCompanion.insert({
@@ -3019,6 +3125,7 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     this.deletedAt = const Value.absent(),
     this.version = const Value.absent(),
     this.category = const Value.absent(),
+    this.paidFromPool = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        groupId = Value(groupId),
@@ -3049,6 +3156,7 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     Expression<int>? deletedAt,
     Expression<int>? version,
     Expression<String>? category,
+    Expression<int>? paidFromPool,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -3071,6 +3179,7 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (version != null) 'version': version,
       if (category != null) 'category': category,
+      if (paidFromPool != null) 'paid_from_pool': paidFromPool,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3095,6 +3204,7 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     Value<int?>? deletedAt,
     Value<int>? version,
     Value<String>? category,
+    Value<int>? paidFromPool,
     Value<int>? rowid,
   }) {
     return ExpensesCompanion(
@@ -3117,6 +3227,7 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
       deletedAt: deletedAt ?? this.deletedAt,
       version: version ?? this.version,
       category: category ?? this.category,
+      paidFromPool: paidFromPool ?? this.paidFromPool,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3181,6 +3292,9 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     if (category.present) {
       map['category'] = Variable<String>(category.value);
     }
+    if (paidFromPool.present) {
+      map['paid_from_pool'] = Variable<int>(paidFromPool.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3209,6 +3323,7 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
           ..write('deletedAt: $deletedAt, ')
           ..write('version: $version, ')
           ..write('category: $category, ')
+          ..write('paidFromPool: $paidFromPool, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -5259,6 +5374,16 @@ class Settlements extends Table with TableInfo<Settlements, SettlementRow> {
         'NOT NULL DEFAULT 0 CHECK (recorded_by_admin IN (0, 1))',
     defaultValue: const CustomExpression('0'),
   );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'PAYMENT\' CHECK (kind IN (\'PAYMENT\', \'POOL_DEPOSIT\'))',
+    defaultValue: const CustomExpression('\'PAYMENT\''),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -5277,6 +5402,7 @@ class Settlements extends Table with TableInfo<Settlements, SettlementRow> {
     disputedAt,
     cancelledAt,
     recordedByAdmin,
+    kind,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -5427,6 +5553,12 @@ class Settlements extends Table with TableInfo<Settlements, SettlementRow> {
         ),
       );
     }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    }
     return context;
   }
 
@@ -5500,6 +5632,10 @@ class Settlements extends Table with TableInfo<Settlements, SettlementRow> {
         DriftSqlType.int,
         data['${effectivePrefix}recorded_by_admin'],
       )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
     );
   }
 
@@ -5539,6 +5675,9 @@ class SettlementRow extends DataClass implements Insertable<SettlementRow> {
   final int? disputedAt;
   final int? cancelledAt;
   final int recordedByAdmin;
+
+  /// Schema 5 (SA10, Java V20): a pool deposit is a settlement to the treasurer of kind POOL_DEPOSIT.
+  final String kind;
   const SettlementRow({
     required this.id,
     required this.groupId,
@@ -5556,6 +5695,7 @@ class SettlementRow extends DataClass implements Insertable<SettlementRow> {
     this.disputedAt,
     this.cancelledAt,
     required this.recordedByAdmin,
+    required this.kind,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -5586,6 +5726,7 @@ class SettlementRow extends DataClass implements Insertable<SettlementRow> {
       map['cancelled_at'] = Variable<int>(cancelledAt);
     }
     map['recorded_by_admin'] = Variable<int>(recordedByAdmin);
+    map['kind'] = Variable<String>(kind);
     return map;
   }
 
@@ -5615,6 +5756,7 @@ class SettlementRow extends DataClass implements Insertable<SettlementRow> {
           ? const Value.absent()
           : Value(cancelledAt),
       recordedByAdmin: Value(recordedByAdmin),
+      kind: Value(kind),
     );
   }
 
@@ -5642,6 +5784,7 @@ class SettlementRow extends DataClass implements Insertable<SettlementRow> {
       disputedAt: serializer.fromJson<int?>(json['disputed_at']),
       cancelledAt: serializer.fromJson<int?>(json['cancelled_at']),
       recordedByAdmin: serializer.fromJson<int>(json['recorded_by_admin']),
+      kind: serializer.fromJson<String>(json['kind']),
     );
   }
   @override
@@ -5664,6 +5807,7 @@ class SettlementRow extends DataClass implements Insertable<SettlementRow> {
       'disputed_at': serializer.toJson<int?>(disputedAt),
       'cancelled_at': serializer.toJson<int?>(cancelledAt),
       'recorded_by_admin': serializer.toJson<int>(recordedByAdmin),
+      'kind': serializer.toJson<String>(kind),
     };
   }
 
@@ -5684,6 +5828,7 @@ class SettlementRow extends DataClass implements Insertable<SettlementRow> {
     Value<int?> disputedAt = const Value.absent(),
     Value<int?> cancelledAt = const Value.absent(),
     int? recordedByAdmin,
+    String? kind,
   }) => SettlementRow(
     id: id ?? this.id,
     groupId: groupId ?? this.groupId,
@@ -5703,6 +5848,7 @@ class SettlementRow extends DataClass implements Insertable<SettlementRow> {
     disputedAt: disputedAt.present ? disputedAt.value : this.disputedAt,
     cancelledAt: cancelledAt.present ? cancelledAt.value : this.cancelledAt,
     recordedByAdmin: recordedByAdmin ?? this.recordedByAdmin,
+    kind: kind ?? this.kind,
   );
   SettlementRow copyWithCompanion(SettlementsCompanion data) {
     return SettlementRow(
@@ -5742,6 +5888,7 @@ class SettlementRow extends DataClass implements Insertable<SettlementRow> {
       recordedByAdmin: data.recordedByAdmin.present
           ? data.recordedByAdmin.value
           : this.recordedByAdmin,
+      kind: data.kind.present ? data.kind.value : this.kind,
     );
   }
 
@@ -5763,7 +5910,8 @@ class SettlementRow extends DataClass implements Insertable<SettlementRow> {
           ..write('confirmedAt: $confirmedAt, ')
           ..write('disputedAt: $disputedAt, ')
           ..write('cancelledAt: $cancelledAt, ')
-          ..write('recordedByAdmin: $recordedByAdmin')
+          ..write('recordedByAdmin: $recordedByAdmin, ')
+          ..write('kind: $kind')
           ..write(')'))
         .toString();
   }
@@ -5786,6 +5934,7 @@ class SettlementRow extends DataClass implements Insertable<SettlementRow> {
     disputedAt,
     cancelledAt,
     recordedByAdmin,
+    kind,
   );
   @override
   bool operator ==(Object other) =>
@@ -5806,7 +5955,8 @@ class SettlementRow extends DataClass implements Insertable<SettlementRow> {
           other.confirmedAt == this.confirmedAt &&
           other.disputedAt == this.disputedAt &&
           other.cancelledAt == this.cancelledAt &&
-          other.recordedByAdmin == this.recordedByAdmin);
+          other.recordedByAdmin == this.recordedByAdmin &&
+          other.kind == this.kind);
 }
 
 class SettlementsCompanion extends UpdateCompanion<SettlementRow> {
@@ -5826,6 +5976,7 @@ class SettlementsCompanion extends UpdateCompanion<SettlementRow> {
   final Value<int?> disputedAt;
   final Value<int?> cancelledAt;
   final Value<int> recordedByAdmin;
+  final Value<String> kind;
   final Value<int> rowid;
   const SettlementsCompanion({
     this.id = const Value.absent(),
@@ -5844,6 +5995,7 @@ class SettlementsCompanion extends UpdateCompanion<SettlementRow> {
     this.disputedAt = const Value.absent(),
     this.cancelledAt = const Value.absent(),
     this.recordedByAdmin = const Value.absent(),
+    this.kind = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SettlementsCompanion.insert({
@@ -5863,6 +6015,7 @@ class SettlementsCompanion extends UpdateCompanion<SettlementRow> {
     this.disputedAt = const Value.absent(),
     this.cancelledAt = const Value.absent(),
     this.recordedByAdmin = const Value.absent(),
+    this.kind = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        groupId = Value(groupId),
@@ -5891,6 +6044,7 @@ class SettlementsCompanion extends UpdateCompanion<SettlementRow> {
     Expression<int>? disputedAt,
     Expression<int>? cancelledAt,
     Expression<int>? recordedByAdmin,
+    Expression<String>? kind,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -5910,6 +6064,7 @@ class SettlementsCompanion extends UpdateCompanion<SettlementRow> {
       if (disputedAt != null) 'disputed_at': disputedAt,
       if (cancelledAt != null) 'cancelled_at': cancelledAt,
       if (recordedByAdmin != null) 'recorded_by_admin': recordedByAdmin,
+      if (kind != null) 'kind': kind,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -5931,6 +6086,7 @@ class SettlementsCompanion extends UpdateCompanion<SettlementRow> {
     Value<int?>? disputedAt,
     Value<int?>? cancelledAt,
     Value<int>? recordedByAdmin,
+    Value<String>? kind,
     Value<int>? rowid,
   }) {
     return SettlementsCompanion(
@@ -5950,6 +6106,7 @@ class SettlementsCompanion extends UpdateCompanion<SettlementRow> {
       disputedAt: disputedAt ?? this.disputedAt,
       cancelledAt: cancelledAt ?? this.cancelledAt,
       recordedByAdmin: recordedByAdmin ?? this.recordedByAdmin,
+      kind: kind ?? this.kind,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -6005,6 +6162,9 @@ class SettlementsCompanion extends UpdateCompanion<SettlementRow> {
     if (recordedByAdmin.present) {
       map['recorded_by_admin'] = Variable<int>(recordedByAdmin.value);
     }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -6030,6 +6190,7 @@ class SettlementsCompanion extends UpdateCompanion<SettlementRow> {
           ..write('disputedAt: $disputedAt, ')
           ..write('cancelledAt: $cancelledAt, ')
           ..write('recordedByAdmin: $recordedByAdmin, ')
+          ..write('kind: $kind, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -6895,17 +7056,310 @@ class IdempotencyKeysCompanion extends UpdateCompanion<IdempotencyRow> {
   }
 }
 
+class FuelPrices extends Table with TableInfo<FuelPrices, FuelPriceRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  FuelPrices(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _fuelTypeMeta = const VerificationMeta(
+    'fuelType',
+  );
+  late final GeneratedColumn<String> fuelType = GeneratedColumn<String>(
+    'fuel_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY CHECK (fuel_type IN (\'GASOLINE_80\', \'GASOLINE_92\', \'GASOLINE_95\', \'DIESEL\'))',
+  );
+  static const VerificationMeta _pricePerLitreMinorMeta =
+      const VerificationMeta('pricePerLitreMinor');
+  late final GeneratedColumn<int> pricePerLitreMinor = GeneratedColumn<int>(
+    'price_per_litre_minor',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints:
+        'NOT NULL CHECK (price_per_litre_minor BETWEEN 1 AND 100000)',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    fuelType,
+    pricePerLitreMinor,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'fuel_prices';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FuelPriceRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('fuel_type')) {
+      context.handle(
+        _fuelTypeMeta,
+        fuelType.isAcceptableOrUnknown(data['fuel_type']!, _fuelTypeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fuelTypeMeta);
+    }
+    if (data.containsKey('price_per_litre_minor')) {
+      context.handle(
+        _pricePerLitreMinorMeta,
+        pricePerLitreMinor.isAcceptableOrUnknown(
+          data['price_per_litre_minor']!,
+          _pricePerLitreMinorMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_pricePerLitreMinorMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {fuelType};
+  @override
+  FuelPriceRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FuelPriceRow(
+      fuelType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}fuel_type'],
+      )!,
+      pricePerLitreMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}price_per_litre_minor'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  FuelPrices createAlias(String alias) {
+    return FuelPrices(attachedDatabase, alias);
+  }
+
+  @override
+  bool get isStrict => true;
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class FuelPriceRow extends DataClass implements Insertable<FuelPriceRow> {
+  final String fuelType;
+  final int pricePerLitreMinor;
+  final int updatedAt;
+  const FuelPriceRow({
+    required this.fuelType,
+    required this.pricePerLitreMinor,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['fuel_type'] = Variable<String>(fuelType);
+    map['price_per_litre_minor'] = Variable<int>(pricePerLitreMinor);
+    map['updated_at'] = Variable<int>(updatedAt);
+    return map;
+  }
+
+  FuelPricesCompanion toCompanion(bool nullToAbsent) {
+    return FuelPricesCompanion(
+      fuelType: Value(fuelType),
+      pricePerLitreMinor: Value(pricePerLitreMinor),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory FuelPriceRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FuelPriceRow(
+      fuelType: serializer.fromJson<String>(json['fuel_type']),
+      pricePerLitreMinor: serializer.fromJson<int>(
+        json['price_per_litre_minor'],
+      ),
+      updatedAt: serializer.fromJson<int>(json['updated_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'fuel_type': serializer.toJson<String>(fuelType),
+      'price_per_litre_minor': serializer.toJson<int>(pricePerLitreMinor),
+      'updated_at': serializer.toJson<int>(updatedAt),
+    };
+  }
+
+  FuelPriceRow copyWith({
+    String? fuelType,
+    int? pricePerLitreMinor,
+    int? updatedAt,
+  }) => FuelPriceRow(
+    fuelType: fuelType ?? this.fuelType,
+    pricePerLitreMinor: pricePerLitreMinor ?? this.pricePerLitreMinor,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  FuelPriceRow copyWithCompanion(FuelPricesCompanion data) {
+    return FuelPriceRow(
+      fuelType: data.fuelType.present ? data.fuelType.value : this.fuelType,
+      pricePerLitreMinor: data.pricePerLitreMinor.present
+          ? data.pricePerLitreMinor.value
+          : this.pricePerLitreMinor,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FuelPriceRow(')
+          ..write('fuelType: $fuelType, ')
+          ..write('pricePerLitreMinor: $pricePerLitreMinor, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(fuelType, pricePerLitreMinor, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FuelPriceRow &&
+          other.fuelType == this.fuelType &&
+          other.pricePerLitreMinor == this.pricePerLitreMinor &&
+          other.updatedAt == this.updatedAt);
+}
+
+class FuelPricesCompanion extends UpdateCompanion<FuelPriceRow> {
+  final Value<String> fuelType;
+  final Value<int> pricePerLitreMinor;
+  final Value<int> updatedAt;
+  final Value<int> rowid;
+  const FuelPricesCompanion({
+    this.fuelType = const Value.absent(),
+    this.pricePerLitreMinor = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FuelPricesCompanion.insert({
+    required String fuelType,
+    required int pricePerLitreMinor,
+    required int updatedAt,
+    this.rowid = const Value.absent(),
+  }) : fuelType = Value(fuelType),
+       pricePerLitreMinor = Value(pricePerLitreMinor),
+       updatedAt = Value(updatedAt);
+  static Insertable<FuelPriceRow> custom({
+    Expression<String>? fuelType,
+    Expression<int>? pricePerLitreMinor,
+    Expression<int>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (fuelType != null) 'fuel_type': fuelType,
+      if (pricePerLitreMinor != null)
+        'price_per_litre_minor': pricePerLitreMinor,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FuelPricesCompanion copyWith({
+    Value<String>? fuelType,
+    Value<int>? pricePerLitreMinor,
+    Value<int>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return FuelPricesCompanion(
+      fuelType: fuelType ?? this.fuelType,
+      pricePerLitreMinor: pricePerLitreMinor ?? this.pricePerLitreMinor,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (fuelType.present) {
+      map['fuel_type'] = Variable<String>(fuelType.value);
+    }
+    if (pricePerLitreMinor.present) {
+      map['price_per_litre_minor'] = Variable<int>(pricePerLitreMinor.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FuelPricesCompanion(')
+          ..write('fuelType: $fuelType, ')
+          ..write('pricePerLitreMinor: $pricePerLitreMinor, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$LocalDatabase extends GeneratedDatabase {
   _$LocalDatabase(QueryExecutor e) : super(e);
   $LocalDatabaseManager get managers => $LocalDatabaseManager(this);
   late final LocalProfile localProfile = LocalProfile(this);
   late final LocalMeta localMeta = LocalMeta(this);
+  late final Members members = Members(this);
   late final ExpenseGroups expenseGroups = ExpenseGroups(this);
   late final Index ixExpenseGroupsOwnerCreated = Index(
     'ix_expense_groups_owner_created',
     'CREATE INDEX ix_expense_groups_owner_created ON expense_groups (owner_user_id, created_at DESC, id DESC)',
   );
-  late final Members members = Members(this);
+  late final Trigger expenseGroupsTreasurerInsert = Trigger(
+    'CREATE TRIGGER expense_groups_treasurer_insert BEFORE INSERT ON expense_groups WHEN NEW.treasurer_member_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM members WHERE id = NEW.treasurer_member_id AND group_id = NEW.id) BEGIN SELECT RAISE (ABORT, \'the treasurer must be a member of the same group\');END',
+    'expense_groups_treasurer_insert',
+  );
+  late final Trigger expenseGroupsTreasurerUpdate = Trigger(
+    'CREATE TRIGGER expense_groups_treasurer_update BEFORE UPDATE OF treasurer_member_id ON expense_groups WHEN NEW.treasurer_member_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM members WHERE id = NEW.treasurer_member_id AND group_id = NEW.id) BEGIN SELECT RAISE (ABORT, \'the treasurer must be a member of the same group\');END',
+    'expense_groups_treasurer_update',
+  );
   late final Index uxMembersGroupUser = Index(
     'ux_members_group_user',
     'CREATE UNIQUE INDEX ux_members_group_user ON members (group_id, user_id) WHERE user_id IS NOT NULL',
@@ -6926,6 +7380,10 @@ abstract class _$LocalDatabase extends GeneratedDatabase {
   late final Index ixExpensesGroup = Index(
     'ix_expenses_group',
     'CREATE INDEX ix_expenses_group ON expenses (group_id)',
+  );
+  late final Index ixExpensesPool = Index(
+    'ix_expenses_pool',
+    'CREATE INDEX ix_expenses_pool ON expenses (group_id) WHERE paid_from_pool = 1',
   );
   late final ExpensePayers expensePayers = ExpensePayers(this);
   late final Index ixExpensePayersMember = Index(
@@ -6967,12 +7425,17 @@ abstract class _$LocalDatabase extends GeneratedDatabase {
     'ix_settlements_to_member',
     'CREATE INDEX ix_settlements_to_member ON settlements (to_member_id)',
   );
+  late final Index ixSettlementsDeposits = Index(
+    'ix_settlements_deposits',
+    'CREATE INDEX ix_settlements_deposits ON settlements (group_id) WHERE kind = \'POOL_DEPOSIT\'',
+  );
   late final PaymentHandles paymentHandles = PaymentHandles(this);
   late final IdempotencyKeys idempotencyKeys = IdempotencyKeys(this);
   late final Index ixIdempotencyKeysCreated = Index(
     'ix_idempotency_keys_created',
     'CREATE INDEX ix_idempotency_keys_created ON idempotency_keys (created_at)',
   );
+  late final FuelPrices fuelPrices = FuelPrices(this);
   late final ProfileDao profileDao = ProfileDao(this as LocalDatabase);
   late final MetaDao metaDao = MetaDao(this as LocalDatabase);
   late final GroupsDao groupsDao = GroupsDao(this as LocalDatabase);
@@ -6988,6 +7451,7 @@ abstract class _$LocalDatabase extends GeneratedDatabase {
   late final IdempotencyDao idempotencyDao = IdempotencyDao(
     this as LocalDatabase,
   );
+  late final FuelPricesDao fuelPricesDao = FuelPricesDao(this as LocalDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -6995,15 +7459,18 @@ abstract class _$LocalDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     localProfile,
     localMeta,
+    members,
     expenseGroups,
     ixExpenseGroupsOwnerCreated,
-    members,
+    expenseGroupsTreasurerInsert,
+    expenseGroupsTreasurerUpdate,
     uxMembersGroupUser,
     uxMembersGroupOwner,
     expenses,
     ixExpensesGroupList,
     ixExpensesGroupCategory,
     ixExpensesGroup,
+    ixExpensesPool,
     expensePayers,
     ixExpensePayersMember,
     expenseSplits,
@@ -7018,12 +7485,28 @@ abstract class _$LocalDatabase extends GeneratedDatabase {
     ixSettlementsGroupConfirmed,
     ixSettlementsFromMember,
     ixSettlementsToMember,
+    ixSettlementsDeposits,
     paymentHandles,
     idempotencyKeys,
     ixIdempotencyKeysCreated,
+    fuelPrices,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'expense_groups',
+        limitUpdateKind: UpdateKind.insert,
+      ),
+      result: [],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'expense_groups',
+        limitUpdateKind: UpdateKind.update,
+      ),
+      result: [],
+    ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
         'expense_revisions',
@@ -7055,24 +7538,6 @@ final class $LocalProfileReferences
     extends BaseReferences<_$LocalDatabase, LocalProfile, LocalProfileRow> {
   $LocalProfileReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static MultiTypedResultKey<ExpenseGroups, List<GroupRow>>
-  _expenseGroupsRefsTable(_$LocalDatabase db) => MultiTypedResultKey.fromTable(
-    db.expenseGroups,
-    aliasName: 'local_profile__id__expense_groups__owner_user_id',
-  );
-
-  $ExpenseGroupsProcessedTableManager get expenseGroupsRefs {
-    final manager = $ExpenseGroupsTableManager(
-      $_db,
-      $_db.expenseGroups,
-    ).filter((f) => f.ownerUserId.id.sqlEquals($_itemColumn<String>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_expenseGroupsRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-
   static MultiTypedResultKey<Members, List<MemberRow>> _membersRefsTable(
     _$LocalDatabase db,
   ) => MultiTypedResultKey.fromTable(
@@ -7087,6 +7552,24 @@ final class $LocalProfileReferences
     ).filter((f) => f.userId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_membersRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<ExpenseGroups, List<GroupRow>>
+  _expenseGroupsRefsTable(_$LocalDatabase db) => MultiTypedResultKey.fromTable(
+    db.expenseGroups,
+    aliasName: 'local_profile__id__expense_groups__owner_user_id',
+  );
+
+  $ExpenseGroupsProcessedTableManager get expenseGroupsRefs {
+    final manager = $ExpenseGroupsTableManager(
+      $_db,
+      $_db.expenseGroups,
+    ).filter((f) => f.ownerUserId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_expenseGroupsRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -7201,31 +7684,6 @@ class $LocalProfileFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  Expression<bool> expenseGroupsRefs(
-    Expression<bool> Function($ExpenseGroupsFilterComposer f) f,
-  ) {
-    final $ExpenseGroupsFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.expenseGroups,
-      getReferencedColumn: (t) => t.ownerUserId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ExpenseGroupsFilterComposer(
-            $db: $db,
-            $table: $db.expenseGroups,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-
   Expression<bool> membersRefs(
     Expression<bool> Function($MembersFilterComposer f) f,
   ) {
@@ -7242,6 +7700,31 @@ class $LocalProfileFilterComposer
           }) => $MembersFilterComposer(
             $db: $db,
             $table: $db.members,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> expenseGroupsRefs(
+    Expression<bool> Function($ExpenseGroupsFilterComposer f) f,
+  ) {
+    final $ExpenseGroupsFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.expenseGroups,
+      getReferencedColumn: (t) => t.ownerUserId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $ExpenseGroupsFilterComposer(
+            $db: $db,
+            $table: $db.expenseGroups,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -7413,31 +7896,6 @@ class $LocalProfileAnnotationComposer
   GeneratedColumn<int> get singleton =>
       $composableBuilder(column: $table.singleton, builder: (column) => column);
 
-  Expression<T> expenseGroupsRefs<T extends Object>(
-    Expression<T> Function($ExpenseGroupsAnnotationComposer a) f,
-  ) {
-    final $ExpenseGroupsAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.expenseGroups,
-      getReferencedColumn: (t) => t.ownerUserId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ExpenseGroupsAnnotationComposer(
-            $db: $db,
-            $table: $db.expenseGroups,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-
   Expression<T> membersRefs<T extends Object>(
     Expression<T> Function($MembersAnnotationComposer a) f,
   ) {
@@ -7454,6 +7912,31 @@ class $LocalProfileAnnotationComposer
           }) => $MembersAnnotationComposer(
             $db: $db,
             $table: $db.members,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> expenseGroupsRefs<T extends Object>(
+    Expression<T> Function($ExpenseGroupsAnnotationComposer a) f,
+  ) {
+    final $ExpenseGroupsAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.expenseGroups,
+      getReferencedColumn: (t) => t.ownerUserId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $ExpenseGroupsAnnotationComposer(
+            $db: $db,
+            $table: $db.expenseGroups,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -7578,8 +8061,8 @@ class $LocalProfileTableManager
           (LocalProfileRow, $LocalProfileReferences),
           LocalProfileRow,
           PrefetchHooks Function({
-            bool expenseGroupsRefs,
             bool membersRefs,
+            bool expenseGroupsRefs,
             bool expensesRefs,
             bool expenseRevisionsRefs,
             bool settlementsRefs,
@@ -7639,8 +8122,8 @@ class $LocalProfileTableManager
               .toList(),
           prefetchHooksCallback:
               ({
-                expenseGroupsRefs = false,
                 membersRefs = false,
+                expenseGroupsRefs = false,
                 expensesRefs = false,
                 expenseRevisionsRefs = false,
                 settlementsRefs = false,
@@ -7649,8 +8132,8 @@ class $LocalProfileTableManager
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
-                    if (expenseGroupsRefs) db.expenseGroups,
                     if (membersRefs) db.members,
+                    if (expenseGroupsRefs) db.expenseGroups,
                     if (expensesRefs) db.expenses,
                     if (expenseRevisionsRefs) db.expenseRevisions,
                     if (settlementsRefs) db.settlements,
@@ -7659,26 +8142,6 @@ class $LocalProfileTableManager
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
                     return [
-                      if (expenseGroupsRefs)
-                        await $_getPrefetchedDataByColumns<
-                          LocalProfileRow,
-                          LocalProfile,
-                          GroupRow,
-                          ExpenseGroups
-                        >(
-                          currentTable: table,
-                          referencedTable: $LocalProfileReferences
-                              ._expenseGroupsRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $LocalProfileReferences(
-                                db,
-                                table,
-                                p0,
-                              ).expenseGroupsRefs,
-                          currentColumn: 'id',
-                          referencedColumn: 'owner_user_id',
-                          typedResults: items,
-                        ),
                       if (membersRefs)
                         await $_getPrefetchedDataByColumns<
                           LocalProfileRow,
@@ -7697,6 +8160,26 @@ class $LocalProfileTableManager
                               ).membersRefs,
                           currentColumn: 'id',
                           referencedColumn: 'user_id',
+                          typedResults: items,
+                        ),
+                      if (expenseGroupsRefs)
+                        await $_getPrefetchedDataByColumns<
+                          LocalProfileRow,
+                          LocalProfile,
+                          GroupRow,
+                          ExpenseGroups
+                        >(
+                          currentTable: table,
+                          referencedTable: $LocalProfileReferences
+                              ._expenseGroupsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $LocalProfileReferences(
+                                db,
+                                table,
+                                p0,
+                              ).expenseGroupsRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'owner_user_id',
                           typedResults: items,
                         ),
                       if (expensesRefs)
@@ -7800,8 +8283,8 @@ typedef $LocalProfileProcessedTableManager =
       (LocalProfileRow, $LocalProfileReferences),
       LocalProfileRow,
       PrefetchHooks Function({
-        bool expenseGroupsRefs,
         bool membersRefs,
+        bool expenseGroupsRefs,
         bool expensesRefs,
         bool expenseRevisionsRefs,
         bool settlementsRefs,
@@ -8052,684 +8535,6 @@ typedef $LocalMetaProcessedTableManager =
       LocalMetaRow,
       PrefetchHooks Function()
     >;
-typedef $ExpenseGroupsCreateCompanionBuilder = ExpenseGroupsCompanion Function({
-  required String id,
-  required String ownerUserId,
-  required String name,
-  required String type,
-  Value<String> currencyCode,
-  required int createdAt,
-  required int updatedAt,
-  Value<int> version,
-  Value<int> memberSeq,
-  Value<int> rowid,
-});
-typedef $ExpenseGroupsUpdateCompanionBuilder = ExpenseGroupsCompanion Function({
-  Value<String> id,
-  Value<String> ownerUserId,
-  Value<String> name,
-  Value<String> type,
-  Value<String> currencyCode,
-  Value<int> createdAt,
-  Value<int> updatedAt,
-  Value<int> version,
-  Value<int> memberSeq,
-  Value<int> rowid,
-});
-
-final class $ExpenseGroupsReferences
-    extends BaseReferences<_$LocalDatabase, ExpenseGroups, GroupRow> {
-  $ExpenseGroupsReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static LocalProfile _ownerUserIdTable(_$LocalDatabase db) => db.localProfile
-      .createAlias('expense_groups__owner_user_id__local_profile__id');
-
-  $LocalProfileProcessedTableManager get ownerUserId {
-    final $_column = $_itemColumn<String>('owner_user_id')!;
-
-    final manager = $LocalProfileTableManager(
-      $_db,
-      $_db.localProfile,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_ownerUserIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-
-  static MultiTypedResultKey<Members, List<MemberRow>> _membersRefsTable(
-    _$LocalDatabase db,
-  ) => MultiTypedResultKey.fromTable(
-    db.members,
-    aliasName: 'expense_groups__id__members__group_id',
-  );
-
-  $MembersProcessedTableManager get membersRefs {
-    final manager = $MembersTableManager(
-      $_db,
-      $_db.members,
-    ).filter((f) => f.groupId.id.sqlEquals($_itemColumn<String>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_membersRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-
-  static MultiTypedResultKey<Expenses, List<ExpenseRow>> _expensesRefsTable(
-    _$LocalDatabase db,
-  ) => MultiTypedResultKey.fromTable(
-    db.expenses,
-    aliasName: 'expense_groups__id__expenses__group_id',
-  );
-
-  $ExpensesProcessedTableManager get expensesRefs {
-    final manager = $ExpensesTableManager(
-      $_db,
-      $_db.expenses,
-    ).filter((f) => f.groupId.id.sqlEquals($_itemColumn<String>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_expensesRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-
-  static MultiTypedResultKey<Settlements, List<SettlementRow>>
-  _settlementsRefsTable(_$LocalDatabase db) => MultiTypedResultKey.fromTable(
-    db.settlements,
-    aliasName: 'expense_groups__id__settlements__group_id',
-  );
-
-  $SettlementsProcessedTableManager get settlementsRefs {
-    final manager = $SettlementsTableManager(
-      $_db,
-      $_db.settlements,
-    ).filter((f) => f.groupId.id.sqlEquals($_itemColumn<String>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_settlementsRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-}
-
-class $ExpenseGroupsFilterComposer
-    extends Composer<_$LocalDatabase, ExpenseGroups> {
-  $ExpenseGroupsFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get type => $composableBuilder(
-    column: $table.type,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get currencyCode => $composableBuilder(
-    column: $table.currencyCode,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get version => $composableBuilder(
-    column: $table.version,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get memberSeq => $composableBuilder(
-    column: $table.memberSeq,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  $LocalProfileFilterComposer get ownerUserId {
-    final $LocalProfileFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.ownerUserId,
-      referencedTable: $db.localProfile,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $LocalProfileFilterComposer(
-            $db: $db,
-            $table: $db.localProfile,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-
-  Expression<bool> membersRefs(
-    Expression<bool> Function($MembersFilterComposer f) f,
-  ) {
-    final $MembersFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.members,
-      getReferencedColumn: (t) => t.groupId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $MembersFilterComposer(
-            $db: $db,
-            $table: $db.members,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-
-  Expression<bool> expensesRefs(
-    Expression<bool> Function($ExpensesFilterComposer f) f,
-  ) {
-    final $ExpensesFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.expenses,
-      getReferencedColumn: (t) => t.groupId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ExpensesFilterComposer(
-            $db: $db,
-            $table: $db.expenses,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-
-  Expression<bool> settlementsRefs(
-    Expression<bool> Function($SettlementsFilterComposer f) f,
-  ) {
-    final $SettlementsFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.settlements,
-      getReferencedColumn: (t) => t.groupId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $SettlementsFilterComposer(
-            $db: $db,
-            $table: $db.settlements,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-}
-
-class $ExpenseGroupsOrderingComposer
-    extends Composer<_$LocalDatabase, ExpenseGroups> {
-  $ExpenseGroupsOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get type => $composableBuilder(
-    column: $table.type,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get currencyCode => $composableBuilder(
-    column: $table.currencyCode,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get version => $composableBuilder(
-    column: $table.version,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get memberSeq => $composableBuilder(
-    column: $table.memberSeq,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  $LocalProfileOrderingComposer get ownerUserId {
-    final $LocalProfileOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.ownerUserId,
-      referencedTable: $db.localProfile,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $LocalProfileOrderingComposer(
-            $db: $db,
-            $table: $db.localProfile,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-}
-
-class $ExpenseGroupsAnnotationComposer
-    extends Composer<_$LocalDatabase, ExpenseGroups> {
-  $ExpenseGroupsAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => column);
-
-  GeneratedColumn<String> get type =>
-      $composableBuilder(column: $table.type, builder: (column) => column);
-
-  GeneratedColumn<String> get currencyCode => $composableBuilder(
-    column: $table.currencyCode,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<int> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
-
-  GeneratedColumn<int> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-
-  GeneratedColumn<int> get version =>
-      $composableBuilder(column: $table.version, builder: (column) => column);
-
-  GeneratedColumn<int> get memberSeq =>
-      $composableBuilder(column: $table.memberSeq, builder: (column) => column);
-
-  $LocalProfileAnnotationComposer get ownerUserId {
-    final $LocalProfileAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.ownerUserId,
-      referencedTable: $db.localProfile,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $LocalProfileAnnotationComposer(
-            $db: $db,
-            $table: $db.localProfile,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-
-  Expression<T> membersRefs<T extends Object>(
-    Expression<T> Function($MembersAnnotationComposer a) f,
-  ) {
-    final $MembersAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.members,
-      getReferencedColumn: (t) => t.groupId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $MembersAnnotationComposer(
-            $db: $db,
-            $table: $db.members,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-
-  Expression<T> expensesRefs<T extends Object>(
-    Expression<T> Function($ExpensesAnnotationComposer a) f,
-  ) {
-    final $ExpensesAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.expenses,
-      getReferencedColumn: (t) => t.groupId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ExpensesAnnotationComposer(
-            $db: $db,
-            $table: $db.expenses,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-
-  Expression<T> settlementsRefs<T extends Object>(
-    Expression<T> Function($SettlementsAnnotationComposer a) f,
-  ) {
-    final $SettlementsAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.settlements,
-      getReferencedColumn: (t) => t.groupId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $SettlementsAnnotationComposer(
-            $db: $db,
-            $table: $db.settlements,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-}
-
-class $ExpenseGroupsTableManager
-    extends
-        RootTableManager<
-          _$LocalDatabase,
-          ExpenseGroups,
-          GroupRow,
-          $ExpenseGroupsFilterComposer,
-          $ExpenseGroupsOrderingComposer,
-          $ExpenseGroupsAnnotationComposer,
-          $ExpenseGroupsCreateCompanionBuilder,
-          $ExpenseGroupsUpdateCompanionBuilder,
-          (GroupRow, $ExpenseGroupsReferences),
-          GroupRow,
-          PrefetchHooks Function({
-            bool ownerUserId,
-            bool membersRefs,
-            bool expensesRefs,
-            bool settlementsRefs,
-          })
-        > {
-  $ExpenseGroupsTableManager(_$LocalDatabase db, ExpenseGroups table)
-    : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $ExpenseGroupsFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $ExpenseGroupsOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $ExpenseGroupsAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> id = const Value.absent(),
-                Value<String> ownerUserId = const Value.absent(),
-                Value<String> name = const Value.absent(),
-                Value<String> type = const Value.absent(),
-                Value<String> currencyCode = const Value.absent(),
-                Value<int> createdAt = const Value.absent(),
-                Value<int> updatedAt = const Value.absent(),
-                Value<int> version = const Value.absent(),
-                Value<int> memberSeq = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => ExpenseGroupsCompanion(
-                id: id,
-                ownerUserId: ownerUserId,
-                name: name,
-                type: type,
-                currencyCode: currencyCode,
-                createdAt: createdAt,
-                updatedAt: updatedAt,
-                version: version,
-                memberSeq: memberSeq,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String id,
-                required String ownerUserId,
-                required String name,
-                required String type,
-                Value<String> currencyCode = const Value.absent(),
-                required int createdAt,
-                required int updatedAt,
-                Value<int> version = const Value.absent(),
-                Value<int> memberSeq = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => ExpenseGroupsCompanion.insert(
-                id: id,
-                ownerUserId: ownerUserId,
-                name: name,
-                type: type,
-                currencyCode: currencyCode,
-                createdAt: createdAt,
-                updatedAt: updatedAt,
-                version: version,
-                memberSeq: memberSeq,
-                rowid: rowid,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable<ExpenseGroups, GroupRow>(table),
-                  $ExpenseGroupsReferences(db, table, e),
-                ),
-              )
-              .toList(),
-          prefetchHooksCallback:
-              ({
-                ownerUserId = false,
-                membersRefs = false,
-                expensesRefs = false,
-                settlementsRefs = false,
-              }) {
-                return PrefetchHooks(
-                  db: db,
-                  explicitlyWatchedTables: [
-                    if (membersRefs) db.members,
-                    if (expensesRefs) db.expenses,
-                    if (settlementsRefs) db.settlements,
-                  ],
-                  addJoins:
-                      <
-                        T extends TableManagerState<
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic
-                        >
-                      >(state) {
-                        if (ownerUserId) {
-                          state = state.withJoin(
-                            currentTable: table,
-                            currentColumn: table.ownerUserId,
-                            referencedTable: $ExpenseGroupsReferences
-                                ._ownerUserIdTable(db),
-                            referencedColumn: $ExpenseGroupsReferences
-                                ._ownerUserIdTable(db)
-                                .id,
-                          ) as T;
-                        }
-
-                        return state;
-                      },
-                  getPrefetchedDataCallback: (items) async {
-                    return [
-                      if (membersRefs)
-                        await $_getPrefetchedDataByColumns<
-                          GroupRow,
-                          ExpenseGroups,
-                          MemberRow,
-                          Members
-                        >(
-                          currentTable: table,
-                          referencedTable: $ExpenseGroupsReferences
-                              ._membersRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $ExpenseGroupsReferences(
-                                db,
-                                table,
-                                p0,
-                              ).membersRefs,
-                          currentColumn: 'id',
-                          referencedColumn: 'group_id',
-                          typedResults: items,
-                        ),
-                      if (expensesRefs)
-                        await $_getPrefetchedDataByColumns<
-                          GroupRow,
-                          ExpenseGroups,
-                          ExpenseRow,
-                          Expenses
-                        >(
-                          currentTable: table,
-                          referencedTable: $ExpenseGroupsReferences
-                              ._expensesRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $ExpenseGroupsReferences(
-                                db,
-                                table,
-                                p0,
-                              ).expensesRefs,
-                          currentColumn: 'id',
-                          referencedColumn: 'group_id',
-                          typedResults: items,
-                        ),
-                      if (settlementsRefs)
-                        await $_getPrefetchedDataByColumns<
-                          GroupRow,
-                          ExpenseGroups,
-                          SettlementRow,
-                          Settlements
-                        >(
-                          currentTable: table,
-                          referencedTable: $ExpenseGroupsReferences
-                              ._settlementsRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $ExpenseGroupsReferences(
-                                db,
-                                table,
-                                p0,
-                              ).settlementsRefs,
-                          currentColumn: 'id',
-                          referencedColumn: 'group_id',
-                          typedResults: items,
-                        ),
-                    ];
-                  },
-                );
-              },
-        ),
-      );
-}
-
-typedef $ExpenseGroupsProcessedTableManager =
-    ProcessedTableManager<
-      _$LocalDatabase,
-      ExpenseGroups,
-      GroupRow,
-      $ExpenseGroupsFilterComposer,
-      $ExpenseGroupsOrderingComposer,
-      $ExpenseGroupsAnnotationComposer,
-      $ExpenseGroupsCreateCompanionBuilder,
-      $ExpenseGroupsUpdateCompanionBuilder,
-      (GroupRow, $ExpenseGroupsReferences),
-      GroupRow,
-      PrefetchHooks Function({
-        bool ownerUserId,
-        bool membersRefs,
-        bool expensesRefs,
-        bool settlementsRefs,
-      })
-    >;
 typedef $MembersCreateCompanionBuilder = MembersCompanion Function({
   required String id,
   required String groupId,
@@ -8794,6 +8599,23 @@ final class $MembersReferences
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<ExpenseGroups, List<GroupRow>>
+  _expenseGroupsRefsTable(_$LocalDatabase db) => MultiTypedResultKey.fromTable(
+    db.expenseGroups,
+    aliasName: 'members__id__expense_groups__treasurer_member_id',
+  );
+
+  $ExpenseGroupsProcessedTableManager get expenseGroupsRefs {
+    final manager = $ExpenseGroupsTableManager($_db, $_db.expenseGroups).filter(
+      (f) => f.treasurerMemberId.id.sqlEquals($_itemColumn<String>('id')!),
+    );
+
+    final cache = $_typedResult.readTableOrNull(_expenseGroupsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
     );
   }
 
@@ -8952,6 +8774,31 @@ class $MembersFilterComposer extends Composer<_$LocalDatabase, Members> {
           ),
     );
     return composer;
+  }
+
+  Expression<bool> expenseGroupsRefs(
+    Expression<bool> Function($ExpenseGroupsFilterComposer f) f,
+  ) {
+    final $ExpenseGroupsFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.expenseGroups,
+      getReferencedColumn: (t) => t.treasurerMemberId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $ExpenseGroupsFilterComposer(
+            $db: $db,
+            $table: $db.expenseGroups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
   }
 
   Expression<bool> expensePayersRefs(
@@ -9213,6 +9060,31 @@ class $MembersAnnotationComposer extends Composer<_$LocalDatabase, Members> {
     return composer;
   }
 
+  Expression<T> expenseGroupsRefs<T extends Object>(
+    Expression<T> Function($ExpenseGroupsAnnotationComposer a) f,
+  ) {
+    final $ExpenseGroupsAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.expenseGroups,
+      getReferencedColumn: (t) => t.treasurerMemberId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $ExpenseGroupsAnnotationComposer(
+            $db: $db,
+            $table: $db.expenseGroups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
   Expression<T> expensePayersRefs<T extends Object>(
     Expression<T> Function($ExpensePayersAnnotationComposer a) f,
   ) {
@@ -9305,6 +9177,7 @@ class $MembersTableManager
           PrefetchHooks Function({
             bool groupId,
             bool userId,
+            bool expenseGroupsRefs,
             bool expensePayersRefs,
             bool expenseSplitsRefs,
             bool expenseItemAssigneesRefs,
@@ -9389,6 +9262,7 @@ class $MembersTableManager
               ({
                 groupId = false,
                 userId = false,
+                expenseGroupsRefs = false,
                 expensePayersRefs = false,
                 expenseSplitsRefs = false,
                 expenseItemAssigneesRefs = false,
@@ -9396,6 +9270,7 @@ class $MembersTableManager
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
+                    if (expenseGroupsRefs) db.expenseGroups,
                     if (expensePayersRefs) db.expensePayers,
                     if (expenseSplitsRefs) db.expenseSplits,
                     if (expenseItemAssigneesRefs) db.expenseItemAssignees,
@@ -9445,6 +9320,25 @@ class $MembersTableManager
                       },
                   getPrefetchedDataCallback: (items) async {
                     return [
+                      if (expenseGroupsRefs)
+                        await $_getPrefetchedDataByColumns<
+                          MemberRow,
+                          Members,
+                          GroupRow,
+                          ExpenseGroups
+                        >(
+                          currentTable: table,
+                          referencedTable: $MembersReferences
+                              ._expenseGroupsRefsTable(db),
+                          managerFromTypedResult: (p0) => $MembersReferences(
+                            db,
+                            table,
+                            p0,
+                          ).expenseGroupsRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'treasurer_member_id',
+                          typedResults: items,
+                        ),
                       if (expensePayersRefs)
                         await $_getPrefetchedDataByColumns<
                           MemberRow,
@@ -9525,9 +9419,794 @@ typedef $MembersProcessedTableManager =
       PrefetchHooks Function({
         bool groupId,
         bool userId,
+        bool expenseGroupsRefs,
         bool expensePayersRefs,
         bool expenseSplitsRefs,
         bool expenseItemAssigneesRefs,
+      })
+    >;
+typedef $ExpenseGroupsCreateCompanionBuilder = ExpenseGroupsCompanion Function({
+  required String id,
+  required String ownerUserId,
+  required String name,
+  required String type,
+  Value<String> currencyCode,
+  required int createdAt,
+  required int updatedAt,
+  Value<int> version,
+  Value<int> memberSeq,
+  Value<String?> treasurerMemberId,
+  Value<int> rowid,
+});
+typedef $ExpenseGroupsUpdateCompanionBuilder = ExpenseGroupsCompanion Function({
+  Value<String> id,
+  Value<String> ownerUserId,
+  Value<String> name,
+  Value<String> type,
+  Value<String> currencyCode,
+  Value<int> createdAt,
+  Value<int> updatedAt,
+  Value<int> version,
+  Value<int> memberSeq,
+  Value<String?> treasurerMemberId,
+  Value<int> rowid,
+});
+
+final class $ExpenseGroupsReferences
+    extends BaseReferences<_$LocalDatabase, ExpenseGroups, GroupRow> {
+  $ExpenseGroupsReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static LocalProfile _ownerUserIdTable(_$LocalDatabase db) => db.localProfile
+      .createAlias('expense_groups__owner_user_id__local_profile__id');
+
+  $LocalProfileProcessedTableManager get ownerUserId {
+    final $_column = $_itemColumn<String>('owner_user_id')!;
+
+    final manager = $LocalProfileTableManager(
+      $_db,
+      $_db.localProfile,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_ownerUserIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static Members _treasurerMemberIdTable(_$LocalDatabase db) => db.members
+      .createAlias('expense_groups__treasurer_member_id__members__id');
+
+  $MembersProcessedTableManager? get treasurerMemberId {
+    final $_column = $_itemColumn<String>('treasurer_member_id');
+    if ($_column == null) return null;
+    final manager = $MembersTableManager(
+      $_db,
+      $_db.members,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_treasurerMemberIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<Members, List<MemberRow>> _membersRefsTable(
+    _$LocalDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.members,
+    aliasName: 'expense_groups__id__members__group_id',
+  );
+
+  $MembersProcessedTableManager get membersRefs {
+    final manager = $MembersTableManager(
+      $_db,
+      $_db.members,
+    ).filter((f) => f.groupId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_membersRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<Expenses, List<ExpenseRow>> _expensesRefsTable(
+    _$LocalDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.expenses,
+    aliasName: 'expense_groups__id__expenses__group_id',
+  );
+
+  $ExpensesProcessedTableManager get expensesRefs {
+    final manager = $ExpensesTableManager(
+      $_db,
+      $_db.expenses,
+    ).filter((f) => f.groupId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_expensesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<Settlements, List<SettlementRow>>
+  _settlementsRefsTable(_$LocalDatabase db) => MultiTypedResultKey.fromTable(
+    db.settlements,
+    aliasName: 'expense_groups__id__settlements__group_id',
+  );
+
+  $SettlementsProcessedTableManager get settlementsRefs {
+    final manager = $SettlementsTableManager(
+      $_db,
+      $_db.settlements,
+    ).filter((f) => f.groupId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_settlementsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $ExpenseGroupsFilterComposer
+    extends Composer<_$LocalDatabase, ExpenseGroups> {
+  $ExpenseGroupsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get memberSeq => $composableBuilder(
+    column: $table.memberSeq,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $LocalProfileFilterComposer get ownerUserId {
+    final $LocalProfileFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ownerUserId,
+      referencedTable: $db.localProfile,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $LocalProfileFilterComposer(
+            $db: $db,
+            $table: $db.localProfile,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $MembersFilterComposer get treasurerMemberId {
+    final $MembersFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.treasurerMemberId,
+      referencedTable: $db.members,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $MembersFilterComposer(
+            $db: $db,
+            $table: $db.members,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<bool> membersRefs(
+    Expression<bool> Function($MembersFilterComposer f) f,
+  ) {
+    final $MembersFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.members,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $MembersFilterComposer(
+            $db: $db,
+            $table: $db.members,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> expensesRefs(
+    Expression<bool> Function($ExpensesFilterComposer f) f,
+  ) {
+    final $ExpensesFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.expenses,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $ExpensesFilterComposer(
+            $db: $db,
+            $table: $db.expenses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> settlementsRefs(
+    Expression<bool> Function($SettlementsFilterComposer f) f,
+  ) {
+    final $SettlementsFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.settlements,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $SettlementsFilterComposer(
+            $db: $db,
+            $table: $db.settlements,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $ExpenseGroupsOrderingComposer
+    extends Composer<_$LocalDatabase, ExpenseGroups> {
+  $ExpenseGroupsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get memberSeq => $composableBuilder(
+    column: $table.memberSeq,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $LocalProfileOrderingComposer get ownerUserId {
+    final $LocalProfileOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ownerUserId,
+      referencedTable: $db.localProfile,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $LocalProfileOrderingComposer(
+            $db: $db,
+            $table: $db.localProfile,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $MembersOrderingComposer get treasurerMemberId {
+    final $MembersOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.treasurerMemberId,
+      referencedTable: $db.members,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $MembersOrderingComposer(
+            $db: $db,
+            $table: $db.members,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $ExpenseGroupsAnnotationComposer
+    extends Composer<_$LocalDatabase, ExpenseGroups> {
+  $ExpenseGroupsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<int> get memberSeq =>
+      $composableBuilder(column: $table.memberSeq, builder: (column) => column);
+
+  $LocalProfileAnnotationComposer get ownerUserId {
+    final $LocalProfileAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ownerUserId,
+      referencedTable: $db.localProfile,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $LocalProfileAnnotationComposer(
+            $db: $db,
+            $table: $db.localProfile,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $MembersAnnotationComposer get treasurerMemberId {
+    final $MembersAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.treasurerMemberId,
+      referencedTable: $db.members,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $MembersAnnotationComposer(
+            $db: $db,
+            $table: $db.members,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<T> membersRefs<T extends Object>(
+    Expression<T> Function($MembersAnnotationComposer a) f,
+  ) {
+    final $MembersAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.members,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $MembersAnnotationComposer(
+            $db: $db,
+            $table: $db.members,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> expensesRefs<T extends Object>(
+    Expression<T> Function($ExpensesAnnotationComposer a) f,
+  ) {
+    final $ExpensesAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.expenses,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $ExpensesAnnotationComposer(
+            $db: $db,
+            $table: $db.expenses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> settlementsRefs<T extends Object>(
+    Expression<T> Function($SettlementsAnnotationComposer a) f,
+  ) {
+    final $SettlementsAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.settlements,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $SettlementsAnnotationComposer(
+            $db: $db,
+            $table: $db.settlements,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $ExpenseGroupsTableManager
+    extends
+        RootTableManager<
+          _$LocalDatabase,
+          ExpenseGroups,
+          GroupRow,
+          $ExpenseGroupsFilterComposer,
+          $ExpenseGroupsOrderingComposer,
+          $ExpenseGroupsAnnotationComposer,
+          $ExpenseGroupsCreateCompanionBuilder,
+          $ExpenseGroupsUpdateCompanionBuilder,
+          (GroupRow, $ExpenseGroupsReferences),
+          GroupRow,
+          PrefetchHooks Function({
+            bool ownerUserId,
+            bool treasurerMemberId,
+            bool membersRefs,
+            bool expensesRefs,
+            bool settlementsRefs,
+          })
+        > {
+  $ExpenseGroupsTableManager(_$LocalDatabase db, ExpenseGroups table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $ExpenseGroupsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $ExpenseGroupsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $ExpenseGroupsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> ownerUserId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<String> currencyCode = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> updatedAt = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<int> memberSeq = const Value.absent(),
+                Value<String?> treasurerMemberId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ExpenseGroupsCompanion(
+                id: id,
+                ownerUserId: ownerUserId,
+                name: name,
+                type: type,
+                currencyCode: currencyCode,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                version: version,
+                memberSeq: memberSeq,
+                treasurerMemberId: treasurerMemberId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String ownerUserId,
+                required String name,
+                required String type,
+                Value<String> currencyCode = const Value.absent(),
+                required int createdAt,
+                required int updatedAt,
+                Value<int> version = const Value.absent(),
+                Value<int> memberSeq = const Value.absent(),
+                Value<String?> treasurerMemberId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ExpenseGroupsCompanion.insert(
+                id: id,
+                ownerUserId: ownerUserId,
+                name: name,
+                type: type,
+                currencyCode: currencyCode,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                version: version,
+                memberSeq: memberSeq,
+                treasurerMemberId: treasurerMemberId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<ExpenseGroups, GroupRow>(table),
+                  $ExpenseGroupsReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({
+                ownerUserId = false,
+                treasurerMemberId = false,
+                membersRefs = false,
+                expensesRefs = false,
+                settlementsRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (membersRefs) db.members,
+                    if (expensesRefs) db.expenses,
+                    if (settlementsRefs) db.settlements,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (ownerUserId) {
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.ownerUserId,
+                            referencedTable: $ExpenseGroupsReferences
+                                ._ownerUserIdTable(db),
+                            referencedColumn: $ExpenseGroupsReferences
+                                ._ownerUserIdTable(db)
+                                .id,
+                          ) as T;
+                        }
+                        if (treasurerMemberId) {
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.treasurerMemberId,
+                            referencedTable: $ExpenseGroupsReferences
+                                ._treasurerMemberIdTable(db),
+                            referencedColumn: $ExpenseGroupsReferences
+                                ._treasurerMemberIdTable(db)
+                                .id,
+                          ) as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (membersRefs)
+                        await $_getPrefetchedDataByColumns<
+                          GroupRow,
+                          ExpenseGroups,
+                          MemberRow,
+                          Members
+                        >(
+                          currentTable: table,
+                          referencedTable: $ExpenseGroupsReferences
+                              ._membersRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $ExpenseGroupsReferences(
+                                db,
+                                table,
+                                p0,
+                              ).membersRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'group_id',
+                          typedResults: items,
+                        ),
+                      if (expensesRefs)
+                        await $_getPrefetchedDataByColumns<
+                          GroupRow,
+                          ExpenseGroups,
+                          ExpenseRow,
+                          Expenses
+                        >(
+                          currentTable: table,
+                          referencedTable: $ExpenseGroupsReferences
+                              ._expensesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $ExpenseGroupsReferences(
+                                db,
+                                table,
+                                p0,
+                              ).expensesRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'group_id',
+                          typedResults: items,
+                        ),
+                      if (settlementsRefs)
+                        await $_getPrefetchedDataByColumns<
+                          GroupRow,
+                          ExpenseGroups,
+                          SettlementRow,
+                          Settlements
+                        >(
+                          currentTable: table,
+                          referencedTable: $ExpenseGroupsReferences
+                              ._settlementsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $ExpenseGroupsReferences(
+                                db,
+                                table,
+                                p0,
+                              ).settlementsRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'group_id',
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $ExpenseGroupsProcessedTableManager =
+    ProcessedTableManager<
+      _$LocalDatabase,
+      ExpenseGroups,
+      GroupRow,
+      $ExpenseGroupsFilterComposer,
+      $ExpenseGroupsOrderingComposer,
+      $ExpenseGroupsAnnotationComposer,
+      $ExpenseGroupsCreateCompanionBuilder,
+      $ExpenseGroupsUpdateCompanionBuilder,
+      (GroupRow, $ExpenseGroupsReferences),
+      GroupRow,
+      PrefetchHooks Function({
+        bool ownerUserId,
+        bool treasurerMemberId,
+        bool membersRefs,
+        bool expensesRefs,
+        bool settlementsRefs,
       })
     >;
 typedef $ExpensesCreateCompanionBuilder = ExpensesCompanion Function({
@@ -9550,6 +10229,7 @@ typedef $ExpensesCreateCompanionBuilder = ExpensesCompanion Function({
   Value<int?> deletedAt,
   Value<int> version,
   Value<String> category,
+  Value<int> paidFromPool,
   Value<int> rowid,
 });
 typedef $ExpensesUpdateCompanionBuilder = ExpensesCompanion Function({
@@ -9572,6 +10252,7 @@ typedef $ExpensesUpdateCompanionBuilder = ExpensesCompanion Function({
   Value<int?> deletedAt,
   Value<int> version,
   Value<String> category,
+  Value<int> paidFromPool,
   Value<int> rowid,
 });
 
@@ -9780,6 +10461,11 @@ class $ExpensesFilterComposer extends Composer<_$LocalDatabase, Expenses> {
 
   ColumnFilters<String> get category => $composableBuilder(
     column: $table.category,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get paidFromPool => $composableBuilder(
+    column: $table.paidFromPool,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -10023,6 +10709,11 @@ class $ExpensesOrderingComposer extends Composer<_$LocalDatabase, Expenses> {
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get paidFromPool => $composableBuilder(
+    column: $table.paidFromPool,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $ExpenseGroupsOrderingComposer get groupId {
     final $ExpenseGroupsOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -10140,6 +10831,11 @@ class $ExpensesAnnotationComposer extends Composer<_$LocalDatabase, Expenses> {
 
   GeneratedColumn<String> get category =>
       $composableBuilder(column: $table.category, builder: (column) => column);
+
+  GeneratedColumn<int> get paidFromPool => $composableBuilder(
+    column: $table.paidFromPool,
+    builder: (column) => column,
+  );
 
   $ExpenseGroupsAnnotationComposer get groupId {
     final $ExpenseGroupsAnnotationComposer composer = $composerBuilder(
@@ -10342,6 +11038,7 @@ class $ExpensesTableManager
                 Value<int?> deletedAt = const Value.absent(),
                 Value<int> version = const Value.absent(),
                 Value<String> category = const Value.absent(),
+                Value<int> paidFromPool = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExpensesCompanion(
                 id: id,
@@ -10363,6 +11060,7 @@ class $ExpensesTableManager
                 deletedAt: deletedAt,
                 version: version,
                 category: category,
+                paidFromPool: paidFromPool,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -10386,6 +11084,7 @@ class $ExpensesTableManager
                 Value<int?> deletedAt = const Value.absent(),
                 Value<int> version = const Value.absent(),
                 Value<String> category = const Value.absent(),
+                Value<int> paidFromPool = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExpensesCompanion.insert(
                 id: id,
@@ -10407,6 +11106,7 @@ class $ExpensesTableManager
                 deletedAt: deletedAt,
                 version: version,
                 category: category,
+                paidFromPool: paidFromPool,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -12604,6 +13304,7 @@ typedef $SettlementsCreateCompanionBuilder = SettlementsCompanion Function({
   Value<int?> disputedAt,
   Value<int?> cancelledAt,
   Value<int> recordedByAdmin,
+  Value<String> kind,
   Value<int> rowid,
 });
 typedef $SettlementsUpdateCompanionBuilder = SettlementsCompanion Function({
@@ -12623,6 +13324,7 @@ typedef $SettlementsUpdateCompanionBuilder = SettlementsCompanion Function({
   Value<int?> disputedAt,
   Value<int?> cancelledAt,
   Value<int> recordedByAdmin,
+  Value<String> kind,
   Value<int> rowid,
 });
 
@@ -12778,6 +13480,11 @@ class $SettlementsFilterComposer
 
   ColumnFilters<int> get recordedByAdmin => $composableBuilder(
     column: $table.recordedByAdmin,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -12961,6 +13668,11 @@ class $SettlementsOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $ExpenseGroupsOrderingComposer get groupId {
     final $ExpenseGroupsOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -13131,6 +13843,9 @@ class $SettlementsAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
   $ExpenseGroupsAnnotationComposer get groupId {
     final $ExpenseGroupsAnnotationComposer composer = $composerBuilder(
       composer: this,
@@ -13297,6 +14012,7 @@ class $SettlementsTableManager
                 Value<int?> disputedAt = const Value.absent(),
                 Value<int?> cancelledAt = const Value.absent(),
                 Value<int> recordedByAdmin = const Value.absent(),
+                Value<String> kind = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SettlementsCompanion(
                 id: id,
@@ -13315,6 +14031,7 @@ class $SettlementsTableManager
                 disputedAt: disputedAt,
                 cancelledAt: cancelledAt,
                 recordedByAdmin: recordedByAdmin,
+                kind: kind,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -13335,6 +14052,7 @@ class $SettlementsTableManager
                 Value<int?> disputedAt = const Value.absent(),
                 Value<int?> cancelledAt = const Value.absent(),
                 Value<int> recordedByAdmin = const Value.absent(),
+                Value<String> kind = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SettlementsCompanion.insert(
                 id: id,
@@ -13353,6 +14071,7 @@ class $SettlementsTableManager
                 disputedAt: disputedAt,
                 cancelledAt: cancelledAt,
                 recordedByAdmin: recordedByAdmin,
+                kind: kind,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -14046,6 +14765,173 @@ typedef $IdempotencyKeysProcessedTableManager =
       IdempotencyRow,
       PrefetchHooks Function()
     >;
+typedef $FuelPricesCreateCompanionBuilder = FuelPricesCompanion Function({
+  required String fuelType,
+  required int pricePerLitreMinor,
+  required int updatedAt,
+  Value<int> rowid,
+});
+typedef $FuelPricesUpdateCompanionBuilder = FuelPricesCompanion Function({
+  Value<String> fuelType,
+  Value<int> pricePerLitreMinor,
+  Value<int> updatedAt,
+  Value<int> rowid,
+});
+
+class $FuelPricesFilterComposer extends Composer<_$LocalDatabase, FuelPrices> {
+  $FuelPricesFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get fuelType => $composableBuilder(
+    column: $table.fuelType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get pricePerLitreMinor => $composableBuilder(
+    column: $table.pricePerLitreMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $FuelPricesOrderingComposer
+    extends Composer<_$LocalDatabase, FuelPrices> {
+  $FuelPricesOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get fuelType => $composableBuilder(
+    column: $table.fuelType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get pricePerLitreMinor => $composableBuilder(
+    column: $table.pricePerLitreMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $FuelPricesAnnotationComposer
+    extends Composer<_$LocalDatabase, FuelPrices> {
+  $FuelPricesAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get fuelType =>
+      $composableBuilder(column: $table.fuelType, builder: (column) => column);
+
+  GeneratedColumn<int> get pricePerLitreMinor => $composableBuilder(
+    column: $table.pricePerLitreMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $FuelPricesTableManager
+    extends
+        RootTableManager<
+          _$LocalDatabase,
+          FuelPrices,
+          FuelPriceRow,
+          $FuelPricesFilterComposer,
+          $FuelPricesOrderingComposer,
+          $FuelPricesAnnotationComposer,
+          $FuelPricesCreateCompanionBuilder,
+          $FuelPricesUpdateCompanionBuilder,
+          (
+            FuelPriceRow,
+            BaseReferences<_$LocalDatabase, FuelPrices, FuelPriceRow>,
+          ),
+          FuelPriceRow,
+          PrefetchHooks Function()
+        > {
+  $FuelPricesTableManager(_$LocalDatabase db, FuelPrices table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $FuelPricesFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $FuelPricesOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $FuelPricesAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> fuelType = const Value.absent(),
+                Value<int> pricePerLitreMinor = const Value.absent(),
+                Value<int> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FuelPricesCompanion(
+                fuelType: fuelType,
+                pricePerLitreMinor: pricePerLitreMinor,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String fuelType,
+                required int pricePerLitreMinor,
+                required int updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => FuelPricesCompanion.insert(
+                fuelType: fuelType,
+                pricePerLitreMinor: pricePerLitreMinor,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<FuelPrices, FuelPriceRow>(table),
+                  BaseReferences<_$LocalDatabase, FuelPrices, FuelPriceRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $FuelPricesProcessedTableManager =
+    ProcessedTableManager<
+      _$LocalDatabase,
+      FuelPrices,
+      FuelPriceRow,
+      $FuelPricesFilterComposer,
+      $FuelPricesOrderingComposer,
+      $FuelPricesAnnotationComposer,
+      $FuelPricesCreateCompanionBuilder,
+      $FuelPricesUpdateCompanionBuilder,
+      (FuelPriceRow, BaseReferences<_$LocalDatabase, FuelPrices, FuelPriceRow>),
+      FuelPriceRow,
+      PrefetchHooks Function()
+    >;
 
 class $LocalDatabaseManager {
   final _$LocalDatabase _db;
@@ -14054,9 +14940,9 @@ class $LocalDatabaseManager {
       $LocalProfileTableManager(_db, _db.localProfile);
   $LocalMetaTableManager get localMeta =>
       $LocalMetaTableManager(_db, _db.localMeta);
+  $MembersTableManager get members => $MembersTableManager(_db, _db.members);
   $ExpenseGroupsTableManager get expenseGroups =>
       $ExpenseGroupsTableManager(_db, _db.expenseGroups);
-  $MembersTableManager get members => $MembersTableManager(_db, _db.members);
   $ExpensesTableManager get expenses =>
       $ExpensesTableManager(_db, _db.expenses);
   $ExpensePayersTableManager get expensePayers =>
@@ -14075,4 +14961,6 @@ class $LocalDatabaseManager {
       $PaymentHandlesTableManager(_db, _db.paymentHandles);
   $IdempotencyKeysTableManager get idempotencyKeys =>
       $IdempotencyKeysTableManager(_db, _db.idempotencyKeys);
+  $FuelPricesTableManager get fuelPrices =>
+      $FuelPricesTableManager(_db, _db.fuelPrices);
 }

@@ -13,8 +13,10 @@ import 'backup_format.dart';
 /// Order: size -> JSON -> versions -> caps -> strict typed rows -> referential integrity -> recompute check.
 abstract final class BackupValidator {
   /// The newest database schema this app writes (`LocalDatabase.schemaVersion`); older files are accepted: schema 3 added
-  /// expense category (optional on import, defaults to OTHER) and 4 added the reminder tone, a preference the backup does not carry.
-  static const int currentSchemaVersion = 4;
+  /// expense category (optional on import, defaults to OTHER), 4 added the reminder tone, a preference the backup does not carry,
+  /// and 5 the pool (treasurer_member_id, paid_from_pool, kind: optional on import, default none / 0 / PAYMENT); 6 added
+  /// saved fuel prices, a device setting the backup does not carry (A168).
+  static const int currentSchemaVersion = 6;
 
   static BackupData parse(Uint8List bytes, {int maxBytes = maxBackupBytes}) {
     if (bytes.isEmpty) throw const BackupException(BackupError.unreadable);
@@ -128,6 +130,7 @@ abstract final class BackupValidator {
         updatedAt: r.timestamp('updated_at'),
         version: r.integer('version', min: 1, max: _maxCount),
         memberSeq: r.integer('member_seq', min: 0, max: _maxCount),
+        treasurerMemberId: r.optId('treasurer_member_id'), // schema 5 (SA10); older files have none
       );
 
   static const int _maxCount = 1 << 40;
@@ -169,6 +172,7 @@ abstract final class BackupValidator {
               'FOOD', 'TRANSPORT', 'FUEL', 'ACCOMMODATION', 'GROCERIES', 'SHOPPING', 'ENTERTAINMENT', 'BILLS', 'OTHER'
             }) ??
             'OTHER',
+        paidFromPool: r.optInteger('paid_from_pool', min: 0, max: 1) ?? 0, // schema 5 (SA10)
       );
 
   static PayerRow _payer(_Reader r) =>
@@ -231,6 +235,7 @@ abstract final class BackupValidator {
       disputedAt: r.optTimestamp('disputed_at'),
       cancelledAt: r.optTimestamp('cancelled_at'),
       recordedByAdmin: r.integer('recorded_by_admin', min: 0, max: 1),
+      kind: r.optOneOf('kind', const {'PAYMENT', 'POOL_DEPOSIT'}) ?? 'PAYMENT', // schema 5 (SA10)
     );
   }
 
@@ -279,6 +284,13 @@ abstract final class BackupValidator {
     }
     for (final id in groupIds) {
       if (owners[id] != 1) throw BackupException(BackupError.invalid, 'members.role');
+    }
+    // SA10: a treasurer is a member of the same group (the schema's same-group triggers).
+    for (var i = 0; i < data.groups.length; i++) {
+      final t = data.groups[i].treasurerMemberId;
+      if (t != null && memberGroup[t] != data.groups[i].id) {
+        throw BackupException(BackupError.invalid, 'groups[$i].treasurer_member_id');
+      }
     }
 
     // Expenses and their children.

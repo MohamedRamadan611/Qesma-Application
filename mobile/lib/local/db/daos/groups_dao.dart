@@ -49,6 +49,9 @@ class GroupsDao extends DatabaseAccessor<LocalDatabase> with _$GroupsDaoMixin {
   /// Hard delete of a group and its members (A23), in one transaction. Fails at the foreign keys if any
   /// ledger row still references them; the "unused" decision belongs to the service.
   Future<void> deleteGroupWithMembers(String groupId) => transaction(() async {
+        // The treasurer reference points into members (circular FK): drop it first.
+        await (update(expenseGroups)..where((g) => g.id.equals(groupId)))
+            .write(const ExpenseGroupsCompanion(treasurerMemberId: Value(null)));
         await (delete(members)..where((m) => m.groupId.equals(groupId))).go();
         await (delete(expenseGroups)..where((g) => g.id.equals(groupId))).go();
       });

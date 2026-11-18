@@ -1,0 +1,15 @@
+{
+  "title": "Shared ride",
+  "expenseDate": "2026-11-19",
+  "category": "TRANSPORT",
+  "splitType": "EXACT",
+  "totalMinor": 15000,
+  "payers": [
+    { "memberId": "00000000-0000-4000-8000-0000000000b3", "amountMinor": 15000 }
+  ],
+  "shares": [
+    { "memberId": "00000000-0000-4000-8000-0000000000b1", "amountMinor": 6000 },
+    { "memberId": "00000000-0000-4000-8000-0000000000b2", "amountMinor": 3000 },
+    { "memberId": "00000000-0000-4000-8000-0000000000b3", "amountMinor": 6000 }
+  ]
+}

@@ -103,8 +103,8 @@ class GroupDetailController extends Notifier<GroupDetailState> {
 
   /// `PATCH` with `If-Match`. On `VERSION_CONFLICT` the caller shows the conflict dialog and
   /// calls [load] when the user agrees; the form keeps what they typed.
-  Future<ApiFailure?> save({required String name, required String type}) => _change(() async {
-        final updated = await _repo.update(gid, name: name, type: type);
+  Future<ApiFailure?> save({required String name, required String type, String? treasurerMemberId}) => _change(() async {
+        final updated = await _repo.update(gid, name: name, type: type, treasurerMemberId: treasurerMemberId);
         state = state.copyWith(group: updated);
       });
 

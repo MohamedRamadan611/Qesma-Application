@@ -1,0 +1,20 @@
+{
+  "name": "fuel: no distance and no price, only two tolls (كارتة)",
+  "kind": "fuel",
+  "input": {
+    "distanceTenthsKm": 0,
+    "consumptionTenths": 70,
+    "pricePerLitreMinor": 0,
+    "tollsMinor": [2500, 1500],
+    "driver": { "id": "A", "sortOrder": 0 },
+    "driverIncluded": true,
+    "passengers": [ { "id": "B", "sortOrder": 1 }, { "id": "C", "sortOrder": 2 }, { "id": "D", "sortOrder": 3 } ]
+  },
+  "expected": {
+    "fuelMinor": 0,
+    "tollsMinor": 4000,
+    "totalMinor": 4000,
+    "payerMemberId": "A",
+    "shares": { "A": 1000, "B": 1000, "C": 1000, "D": 1000 }
+  }
+}

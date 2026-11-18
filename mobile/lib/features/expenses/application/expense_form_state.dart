@@ -168,6 +168,7 @@ class ExpenseFormState {
     required this.date,
     required this.singlePayerId,
     this.category = 'OTHER',
+    this.paidFromPool = false,
     this.splitMode = SplitMode.all,
     this.selectedIds = const {},
     this.exactTexts = const {},
@@ -183,6 +184,9 @@ class ExpenseFormState {
   final String amountText;
   final Date date;
   final String category;
+
+  /// SA10: paid from the pool. While on, the treasurer is the single payer and the payer editor is off.
+  final bool paidFromPool;
   final SplitMode splitMode;
 
   /// Members who share the expense in Selected and Exact mode (All means every member).
@@ -210,6 +214,7 @@ class ExpenseFormState {
     String? amountText,
     Date? date,
     String? category,
+    bool? paidFromPool,
     SplitMode? splitMode,
     Set<String>? selectedIds,
     Map<String, String>? exactTexts,
@@ -225,6 +230,7 @@ class ExpenseFormState {
         amountText: amountText ?? this.amountText,
         date: date ?? this.date,
         category: category ?? this.category,
+        paidFromPool: paidFromPool ?? this.paidFromPool,
         splitMode: splitMode ?? this.splitMode,
         selectedIds: selectedIds ?? this.selectedIds,
         exactTexts: exactTexts ?? this.exactTexts,
@@ -336,6 +342,7 @@ class ExpenseFormState {
       title != other.title ||
       amountText != other.amountText ||
       date != other.date ||
+      paidFromPool != other.paidFromPool ||
       splitMode != other.splitMode ||
       !_sameSet(selectedIds, other.selectedIds) ||
       !_sameMap(exactTexts, other.exactTexts) ||

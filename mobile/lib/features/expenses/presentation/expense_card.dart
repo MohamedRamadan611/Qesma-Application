@@ -83,6 +83,10 @@ class ExpenseCard extends StatelessWidget {
                       const SizedBox(height: QesmaSpacing.xs),
                       AppTag(label: split.label(l10n), tone: split == SplitType.itemized ? AppTagTone.warning : AppTagTone.primary),
                     ],
+                    if (expense.paidFromPool) ...[
+                      const SizedBox(height: QesmaSpacing.xs),
+                      AppTag(label: l10n.expensePoolTag, icon: Icons.savings_outlined, tone: AppTagTone.info),
+                    ],
                   ],
                 ),
               ),

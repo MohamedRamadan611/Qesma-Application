@@ -1,0 +1,21 @@
+{
+  "name": "unequal deposits (one member deposits nothing)",
+  "members": ["T", "A", "B", "C"],
+  "treasurer": "T",
+  "steps": [
+    { "op": "deposit", "ref": "d1", "from": "A", "amountMinor": 100000 },
+    { "op": "deposit", "ref": "d2", "from": "B", "amountMinor": 50000 },
+    { "op": "poolExpense", "ref": "e1", "totalMinor": 120000 }
+  ],
+  "expected": {
+    "poolBalanceMinor": 30000,
+    "depositedMinor": 150000,
+    "spentMinor": 120000,
+    "nets": { "T": -60000, "A": 70000, "B": 20000, "C": -30000 },
+    "transfers": [
+      { "from": "T", "to": "A", "amountMinor": 60000 },
+      { "from": "C", "to": "B", "amountMinor": 20000 },
+      { "from": "C", "to": "A", "amountMinor": 10000 }
+    ]
+  }
+}

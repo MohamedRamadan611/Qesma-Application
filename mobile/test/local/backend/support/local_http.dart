@@ -18,18 +18,19 @@ class LocalHttp {
   /// The fake clock (UTC epoch ms); tests move it forward with [advance].
   final List<int> now;
 
-  static Future<LocalHttp> open({String profileName = 'Tester', bool withProfile = true, LocalDatabase? database}) async {
+  /// [newId] makes ids deterministic (goldens: avatar colours follow the member id).
+  static Future<LocalHttp> open({String profileName = 'Tester', bool withProfile = true, LocalDatabase? database, String Function()? newId}) async {
     final db = database ?? LocalDatabase.inMemory();
     final now = [DateTime.utc(2026, 11, 17, 10).millisecondsSinceEpoch];
     int clock() => now[0];
-    if (withProfile) await ProfileService(LocalContext(db, clock: clock)).ensureProfile(profileName);
+    if (withProfile) await ProfileService(LocalContext(db, clock: clock, newId: newId)).ensureProfile(profileName);
     final failures = <LocalFailure>[];
     final dio = Dio(BaseOptions(
       baseUrl: 'https://local.qesma.invalid',
       validateStatus: (_) => true,
       responseType: ResponseType.json,
     ))
-      ..httpClientAdapter = LocalBackend(db, clock: clock, failureLog: failures.add);
+      ..httpClientAdapter = LocalBackend(db, clock: clock, newId: newId, failureLog: failures.add);
     return LocalHttp._(db, dio, failures, now);
   }
 

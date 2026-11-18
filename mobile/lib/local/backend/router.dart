@@ -94,7 +94,8 @@ final class LocalRouter {
       _Route('PATCH', '/groups/{gid}', (r, p) async {
         final f = JsonFields.body(r.body);
         final version = _ifMatch(r);
-        final g = await _groups.update(p[0], version, name: f.str('name'), type: f.str('type'));
+        final g = await _groups.update(p[0], version,
+            name: f.str('name'), type: f.str('type'), treasurerMemberId: f.uuid('treasurerMemberId'));
         return _ok(GroupDto.serializer, g, etag: g.version);
       }),
       _Route('DELETE', '/groups/{gid}', (r, p) async {

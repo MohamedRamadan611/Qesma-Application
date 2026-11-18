@@ -1,0 +1,13 @@
+{
+  "name": "ride: one rider for the whole trip pays the whole fare",
+  "kind": "multiStop",
+  "input": {
+    "fareMinor": 4550,
+    "legDistancesTenthsKm": [40, 60],
+    "riders": [ { "memberId": "A", "sortOrder": 0, "boardStop": 0, "leaveStop": 2 } ]
+  },
+  "expected": {
+    "legFaresMinor": [1820, 2730],
+    "shares": { "A": 4550 }
+  }
+}

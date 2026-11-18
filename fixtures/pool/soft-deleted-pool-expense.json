@@ -1,0 +1,23 @@
+{
+  "name": "a soft-deleted pool expense restores the meter",
+  "members": ["T", "A", "B"],
+  "treasurer": "T",
+  "steps": [
+    { "op": "deposit", "ref": "d1", "from": "A", "amountMinor": 30000 },
+    { "op": "deposit", "ref": "d2", "from": "B", "amountMinor": 30000 },
+    { "op": "poolExpense", "ref": "e1", "totalMinor": 45000 },
+    { "op": "poolExpense", "ref": "e2", "totalMinor": 30000 },
+    { "op": "expectMeter", "poolBalanceMinor": -15000 },
+    { "op": "deleteExpense", "ref": "e2" }
+  ],
+  "expected": {
+    "poolBalanceMinor": 15000,
+    "depositedMinor": 60000,
+    "spentMinor": 45000,
+    "nets": { "T": -30000, "A": 15000, "B": 15000 },
+    "transfers": [
+      { "from": "T", "to": "A", "amountMinor": 15000 },
+      { "from": "T", "to": "B", "amountMinor": 15000 }
+    ]
+  }
+}

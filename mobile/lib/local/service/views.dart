@@ -53,7 +53,7 @@ SettlementView settlementView(SettlementRow s) => SettlementView((b) => b
   ..note = s.note
   ..createdAt = utc(s.createdAt)
   ..status = s.status
-  ..kind = 'PAYMENT'
+  ..kind = s.kind
   ..recordedByAdmin = s.recordedByAdmin == 1
   ..createdByMemberId = s.createdByMemberId
   ..declaredAt = utc(s.declaredAt)
@@ -80,7 +80,7 @@ ExpenseView expenseView(ExpenseGraph g, Map<String, int> sortOrders) {
       ..createdAt = utc(e.createdAt)
       ..version = e.version
       ..category = e.category
-      ..paidFromPool = false
+      ..paidFromPool = e.paidFromPool == 1
       ..payers = ListBuilder([
         for (final p in payers)
           PayerView((v) => v

@@ -25,6 +25,8 @@ final class SettlementService {
   static const int maxNote = 200;
   static const String minDate = '2000-01-01';
   static const String maxDate = '2100-12-31';
+  static const String payment = 'PAYMENT';
+  static const String poolDeposit = 'POOL_DEPOSIT';
 
   LocalDatabase get _db => _ctx.db;
 
@@ -39,11 +41,17 @@ final class SettlementService {
           'amountMinor': v.amount,
           'settledOn': v.settledOn,
           'note': v.note,
+          // Only the non-default kind is hashed (Java SettlementService.canonical), so older keys keep their hash.
+          if (v.kind != payment) 'kind': v.kind,
         });
         final replay = await _idempotency.findReplay(key, createEndpoint, fingerprint);
         if (replay != null) return replay;
         _requireActiveMember(access, v.from);
         _requireActiveMember(access, v.to);
+        // A135: a deposit goes to the treasurer only (this also refuses a deposit in a group without a treasurer).
+        if (v.kind == poolDeposit && v.to != access.group.treasurerMemberId) {
+          throw LocalApiException.validation('A pool deposit must go to the group treasurer');
+        }
         final now = _ctx.clock();
         final row = SettlementRow(
           id: _ctx.newId(),
@@ -61,6 +69,7 @@ final class SettlementService {
           confirmedAt: now,
           // A85 with the caller as Owner: recorded on someone's behalf unless the caller is the receiver.
           recordedByAdmin: v.to == access.me.id ? 0 : 1,
+          kind: v.kind,
         );
         await _db.settlementsDao.insertSettlement(row);
         final outcome = Outcome(201, toJsonText(SettlementView.serializer, settlementView(row)));
@@ -110,7 +119,7 @@ final class SettlementService {
       });
 
   /// Java `SettlementValidator`, same order.
-  static ({String from, String to, int amount, String settledOn, String? note}) _validate(SettlementIn c) {
+  static ({String from, String to, int amount, String settledOn, String? note, String kind}) _validate(SettlementIn c) {
     final from = c.fromMemberId;
     final to = c.toMemberId;
     if (from == null || to == null) throw LocalApiException.validation('fromMemberId and toMemberId are required');
@@ -130,7 +139,12 @@ final class SettlementService {
       note = javaStrip(c.note!);
       if (codePoints(note) > maxNote) throw LocalApiException.validation('note must be at most $maxNote characters');
     }
-    return (from: from, to: to, amount: amount, settledOn: settledOn, note: note);
+    final rawKind = c.kind;
+    final kind = rawKind == null || javaStrip(rawKind).isEmpty ? payment : javaStrip(rawKind).toUpperCase();
+    if (kind != payment && kind != poolDeposit) {
+      throw LocalApiException.validation('kind must be $payment or $poolDeposit');
+    }
+    return (from: from, to: to, amount: amount, settledOn: settledOn, note: note, kind: kind);
   }
 
   static void _requireActiveMember(GroupAccess access, String memberId) {

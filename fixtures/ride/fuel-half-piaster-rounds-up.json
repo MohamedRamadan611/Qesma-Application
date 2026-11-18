@@ -1,0 +1,20 @@
+{
+  "name": "fuel: 100.0 km x 8.1 L/100km x 13.75 = 111.375 EGP, exactly half a piaster rounds up",
+  "kind": "fuel",
+  "input": {
+    "distanceTenthsKm": 1000,
+    "consumptionTenths": 81,
+    "pricePerLitreMinor": 1375,
+    "tollsMinor": [],
+    "driver": { "id": "A", "sortOrder": 0 },
+    "driverIncluded": true,
+    "passengers": [ { "id": "B", "sortOrder": 1 }, { "id": "C", "sortOrder": 2 } ]
+  },
+  "expected": {
+    "fuelMinor": 11138,
+    "tollsMinor": 0,
+    "totalMinor": 11138,
+    "payerMemberId": "A",
+    "shares": { "A": 3713, "B": 3713, "C": 3712 }
+  }
+}

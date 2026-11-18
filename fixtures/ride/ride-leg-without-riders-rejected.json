@@ -1,0 +1,13 @@
+{
+  "name": "ride: nobody is on board in the middle leg, so the input is rejected (A141)",
+  "kind": "multiStop",
+  "input": {
+    "fareMinor": 5000,
+    "legDistancesTenthsKm": [10, 10, 10],
+    "riders": [
+      { "memberId": "A", "sortOrder": 0, "boardStop": 0, "leaveStop": 1 },
+      { "memberId": "B", "sortOrder": 1, "boardStop": 2, "leaveStop": 3 }
+    ]
+  },
+  "expected": { "error": "VALIDATION_ERROR" }
+}

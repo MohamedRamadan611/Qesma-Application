@@ -1,3 +1,5 @@
+import 'package:drift/drift.dart' show Value;
+
 import '../db/local_database.dart';
 import 'backup_format.dart';
 import 'backup_validator.dart';
@@ -40,6 +42,8 @@ final class BackupImporter {
     await _db.delete(_db.expenseRevisions).go();
     await _db.delete(_db.settlements).go();
     await _db.delete(_db.expenses).go();
+    // The treasurer points into members (circular reference): drop it before the members.
+    await _db.update(_db.expenseGroups).write(const ExpenseGroupsCompanion(treasurerMemberId: Value(null)));
     await _db.delete(_db.members).go();
     await _db.delete(_db.paymentHandles).go();
     await _db.delete(_db.expenseGroups).go();
@@ -51,8 +55,13 @@ final class BackupImporter {
   Future<void> _insert(BackupData d) async {
     await _db.into(_db.localProfile).insert(d.profile);
     await _db.batch((b) {
-      b.insertAll(_db.expenseGroups, d.groups);
+      // Groups go in without their treasurer (the same-group trigger needs the members first), set just below.
+      b.insertAll(_db.expenseGroups, [for (final g in d.groups) g.copyWith(treasurerMemberId: const Value(null))]);
       b.insertAll(_db.members, d.members);
+      for (final g in d.groups.where((g) => g.treasurerMemberId != null)) {
+        b.update(_db.expenseGroups, ExpenseGroupsCompanion(treasurerMemberId: Value(g.treasurerMemberId)),
+            where: (t) => t.id.equals(g.id));
+      }
       b.insertAll(_db.paymentHandles, d.paymentHandles);
       b.insertAll(_db.expenses, d.expenses);
       b.insertAll(_db.expensePayers, d.payers);

@@ -1,0 +1,14 @@
+{
+  "name": "fuel: one piaster over 10^12 is rejected",
+  "kind": "fuel",
+  "input": {
+    "distanceTenthsKm": 100000,
+    "consumptionTenths": 300,
+    "pricePerLitreMinor": 100000,
+    "tollsMinor": [999700000001],
+    "driver": { "id": "A", "sortOrder": 0 },
+    "driverIncluded": true,
+    "passengers": []
+  },
+  "expected": { "error": "VALIDATION_ERROR" }
+}

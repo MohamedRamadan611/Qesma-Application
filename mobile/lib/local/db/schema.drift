@@ -39,7 +39,10 @@ CREATE TABLE expense_groups (
     created_at    INTEGER NOT NULL,
     updated_at    INTEGER NOT NULL,
     version       INTEGER NOT NULL DEFAULT 1 CHECK (version >= 1),
-    member_seq    INTEGER NOT NULL DEFAULT 0 CHECK (member_seq >= 0)
+    member_seq    INTEGER NOT NULL DEFAULT 0 CHECK (member_seq >= 0),
+    -- Schema 5 (SA10, Java V20): the pool treasurer, a member of this group. SQLite cannot add V20's composite FK
+    -- with ADD COLUMN, so "same group" is the pair of triggers below the members table; ACTIVE is the service's.
+    treasurer_member_id TEXT REFERENCES members (id)
 ) STRICT AS GroupRow;
 
 CREATE INDEX ix_expense_groups_owner_created ON expense_groups (owner_user_id, created_at DESC, id DESC);
@@ -66,6 +69,21 @@ CREATE TABLE members (
     CONSTRAINT ck_members_left_linked CHECK (status <> 'LEFT' OR user_id IS NOT NULL)
 ) STRICT AS MemberRow;
 
+-- Schema 5 (SA10): the treasurer is a member of the same group (Java V20 fk_groups_treasurer).
+CREATE TRIGGER expense_groups_treasurer_insert BEFORE INSERT ON expense_groups
+WHEN NEW.treasurer_member_id IS NOT NULL
+    AND NOT EXISTS (SELECT 1 FROM members WHERE id = NEW.treasurer_member_id AND group_id = NEW.id)
+BEGIN
+    SELECT RAISE(ABORT, 'the treasurer must be a member of the same group');
+END;
+
+CREATE TRIGGER expense_groups_treasurer_update BEFORE UPDATE OF treasurer_member_id ON expense_groups
+WHEN NEW.treasurer_member_id IS NOT NULL
+    AND NOT EXISTS (SELECT 1 FROM members WHERE id = NEW.treasurer_member_id AND group_id = NEW.id)
+BEGIN
+    SELECT RAISE(ABORT, 'the treasurer must be a member of the same group');
+END;
+
 CREATE UNIQUE INDEX ux_members_group_user ON members (group_id, user_id) WHERE user_id IS NOT NULL;
 CREATE UNIQUE INDEX ux_members_group_owner ON members (group_id) WHERE role = 'OWNER';
 
@@ -90,6 +108,8 @@ CREATE TABLE expenses (
     deleted_at         INTEGER,
     version            INTEGER NOT NULL DEFAULT 1 CHECK (version >= 1),
     category           TEXT    NOT NULL DEFAULT 'OTHER' CHECK (category IN ('FOOD', 'TRANSPORT', 'FUEL', 'ACCOMMODATION', 'GROCERIES', 'SHOPPING', 'ENTERTAINMENT', 'BILLS', 'OTHER')),
+    -- Schema 5 (SA10, Java V20): a pool expense (its single payer is the treasurer: checked by the service).
+    paid_from_pool     INTEGER NOT NULL DEFAULT 0 CHECK (paid_from_pool IN (0, 1)),
     CONSTRAINT ck_expenses_itemized_columns CHECK (
         split_type = 'ITEMIZED' OR (
             subtotal_minor IS NULL AND service_bps IS NULL AND service_minor IS NULL AND tax_bps IS NULL
@@ -110,6 +130,7 @@ CREATE INDEX ix_expenses_group_list ON expenses (group_id, expense_date DESC, cr
     WHERE deleted_at IS NULL;
 CREATE INDEX ix_expenses_group_category ON expenses (group_id, category) WHERE deleted_at IS NULL;
 CREATE INDEX ix_expenses_group ON expenses (group_id);
+CREATE INDEX ix_expenses_pool ON expenses (group_id) WHERE paid_from_pool = 1;
 
 -- V5 expense_payers + V8 cap.
 CREATE TABLE expense_payers (
@@ -195,6 +216,8 @@ CREATE TABLE settlements (
     disputed_at          INTEGER,
     cancelled_at         INTEGER,
     recorded_by_admin    INTEGER NOT NULL DEFAULT 0 CHECK (recorded_by_admin IN (0, 1)),
+    -- Schema 5 (SA10, Java V20): a pool deposit is a settlement to the treasurer of kind POOL_DEPOSIT.
+    kind                 TEXT    NOT NULL DEFAULT 'PAYMENT' CHECK (kind IN ('PAYMENT', 'POOL_DEPOSIT')),
     CONSTRAINT ck_settlements_members CHECK (from_member_id <> to_member_id),
     CONSTRAINT ck_settlements_confirmed_at CHECK ((status = 'CONFIRMED') = (confirmed_at IS NOT NULL)),
     CONSTRAINT ck_settlements_cancelled_at CHECK ((status = 'CANCELLED') = (cancelled_at IS NOT NULL)),
@@ -206,6 +229,7 @@ CREATE INDEX ix_settlements_group_list ON settlements (group_id, settled_on DESC
 CREATE INDEX ix_settlements_group_confirmed ON settlements (group_id) WHERE status = 'CONFIRMED';
 CREATE INDEX ix_settlements_from_member ON settlements (from_member_id);
 CREATE INDEX ix_settlements_to_member ON settlements (to_member_id);
+CREATE INDEX ix_settlements_deposits ON settlements (group_id) WHERE kind = 'POOL_DEPOSIT';
 
 -- V16 payment_handles (the local profile's own handles only). The Postgres regexes are ported to GLOB so the
 -- file needs no custom SQL function:
@@ -241,3 +265,12 @@ CREATE TABLE idempotency_keys (
 ) STRICT AS IdempotencyRow;
 
 CREATE INDEX ix_idempotency_keys_created ON idempotency_keys (created_at);
+
+-- SA11 (schema 6, A168): the user's own fuel price per type for the Khorouga calculator. A device setting
+-- (A148): no official price is shipped and nothing is fetched (A142); not part of the backup file.
+CREATE TABLE fuel_prices (
+    fuel_type             TEXT    NOT NULL PRIMARY KEY
+                                  CHECK (fuel_type IN ('GASOLINE_80', 'GASOLINE_92', 'GASOLINE_95', 'DIESEL')),
+    price_per_litre_minor INTEGER NOT NULL CHECK (price_per_litre_minor BETWEEN 1 AND 100000),
+    updated_at            INTEGER NOT NULL
+) STRICT AS FuelPriceRow;

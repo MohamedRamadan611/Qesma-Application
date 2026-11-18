@@ -11,6 +11,7 @@ import '../../../core/money/money.dart';
 import '../../groups/application/group_detail_controller.dart';
 import '../data/expenses_repository.dart';
 import 'expense_command_builder.dart';
+import 'expense_draft.dart';
 import 'expense_form_prefill.dart';
 import 'expense_form_state.dart';
 import 'expense_preview_controller.dart';
@@ -171,13 +172,16 @@ class ExpenseFormController extends Notifier<ExpenseFormView> {
   // ---- opening ----
 
   /// Add mode: an empty form, today's date, you as the payer. Safe to call on every build.
-  void startCreate() {
+  ///
+  /// With a [draft] (SA11 calculator) the form opens filled in from it, while "how it was opened" stays the empty
+  /// form: leaving without saving asks first, so a calculated draft is never lost silently nor saved silently.
+  void startCreate({ExpenseDraft? draft}) {
     if (_started) return;
     _started = true;
     final today = ref.read(clockProvider)().toDate();
     final f = ExpenseFormState(title: '', amountText: '', date: today, singlePayerId: _defaultPayerId);
     _initial = f;
-    state = ExpenseFormView(form: f, phase: FormPhase.ready);
+    state = ExpenseFormView(form: draft == null ? f : formFromDraft(draft, date: today), phase: FormPhase.ready);
   }
 
   /// Edit mode: reads the expense (which also records its version for `If-Match`) and fills the form.
@@ -361,6 +365,16 @@ class ExpenseFormController extends Notifier<ExpenseFormView> {
   void setCategory(String value) {
     final f = form;
     if (f != null) _set(f.copyWith(category: value));
+  }
+
+  /// SA10 (A135): "Paid from the pool". On makes the treasurer the single payer (the payer editor is off while it
+  /// is on); off keeps the treasurer as the payer, who can then be changed as usual.
+  void setPaidFromPool(bool on, {required String treasurerId}) {
+    final f = form;
+    if (f == null) return;
+    _set(on
+        ? f.copyWith(paidFromPool: true, payerMode: PayerMode.single, singlePayerId: treasurerId, payerTexts: const {})
+        : f.copyWith(paidFromPool: false));
   }
 
   /// Switches the tab. The restaurant bill starts with one empty item so the editor shows something to fill.

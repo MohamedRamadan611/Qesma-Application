@@ -1,0 +1,20 @@
+{
+  "name": "fuel: 1003 among 4; the 3 leftover piasters go to the lowest sortOrders, not list order",
+  "kind": "fuel",
+  "input": {
+    "distanceTenthsKm": 100,
+    "consumptionTenths": 100,
+    "pricePerLitreMinor": 1003,
+    "tollsMinor": [],
+    "driver": { "id": "A", "sortOrder": 5 },
+    "driverIncluded": true,
+    "passengers": [ { "id": "B", "sortOrder": 2 }, { "id": "C", "sortOrder": 9 }, { "id": "D", "sortOrder": 0 } ]
+  },
+  "expected": {
+    "fuelMinor": 1003,
+    "tollsMinor": 0,
+    "totalMinor": 1003,
+    "payerMemberId": "A",
+    "shares": { "A": 251, "B": 251, "C": 250, "D": 251 }
+  }
+}

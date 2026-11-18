@@ -2723,4 +2723,298 @@ class AppLocalizationsEn extends AppLocalizations {
   ) {
     return 'Hey $name, my wallet asked me to remind you about $group! Your share is $amount. Save my wallet before it cries!$handle';
   }
+
+  @override
+  String get poolSectionTitle => 'Pool';
+
+  @override
+  String get poolSectionHint =>
+      'One member holds the group\'s cash; everyone hands them a deposit.';
+
+  @override
+  String get poolTreasurerLabel => 'Treasurer';
+
+  @override
+  String get poolTreasurerNone => 'No treasurer yet';
+
+  @override
+  String get poolTreasurerChoose => 'Choose the treasurer';
+
+  @override
+  String get poolTreasurerLocked =>
+      'The treasurer can\'t change after the first deposit or pool expense.';
+
+  @override
+  String poolTreasurerIs(String name) {
+    return 'Treasurer: $name';
+  }
+
+  @override
+  String get poolRemaining => 'Left in the pool';
+
+  @override
+  String get poolDeposited => 'Deposited';
+
+  @override
+  String get poolSpent => 'Spent from the pool';
+
+  @override
+  String poolCovered(String amount) {
+    return 'The treasurer paid $amount from their own pocket';
+  }
+
+  @override
+  String get poolCoveredHint =>
+      'They get it back through the transfers in the Balances tab.';
+
+  @override
+  String get poolEmptyMeter => 'The pool is empty';
+
+  @override
+  String get poolOpenDetails => 'Pool details';
+
+  @override
+  String get poolAddDeposit => 'Add deposit';
+
+  @override
+  String get poolDepositsTitle => 'Deposits';
+
+  @override
+  String get poolDepositsEmpty => 'No deposits yet';
+
+  @override
+  String get poolDepositsEmptyBody =>
+      'Record the cash each member handed to the treasurer.';
+
+  @override
+  String get poolDepositSheetTitle => 'Deposit to the pool';
+
+  @override
+  String get poolDepositFrom => 'Who handed over the cash?';
+
+  @override
+  String poolDepositTo(String name) {
+    return 'To the treasurer: $name';
+  }
+
+  @override
+  String get poolDepositAmountLabel => 'Amount (EGP)';
+
+  @override
+  String get poolDepositSave => 'Record deposit';
+
+  @override
+  String get poolDepositSaved => 'Deposit recorded';
+
+  @override
+  String get poolDepositOnlyTreasurer =>
+      'The treasurer is the only member. Add members first so they can deposit.';
+
+  @override
+  String get expensePaidFromPool => 'Paid from the pool';
+
+  @override
+  String expensePaidFromPoolHint(String name) {
+    return '$name (the treasurer) paid with the pool\'s cash, so they are the only payer.';
+  }
+
+  @override
+  String get expensePoolTag => 'From the pool';
+
+  @override
+  String get balancesPoolNote =>
+      'Leftover pool cash, or what the treasurer paid from their own pocket, is settled in the transfers below.';
+
+  @override
+  String get calcTitle => 'Trip calculator';
+
+  @override
+  String get calcMenuAddExpense => 'Add an expense';
+
+  @override
+  String get calcMenuAddExpenseHint =>
+      'Type the amount and who it\'s split between';
+
+  @override
+  String get calcMenuCalculator => 'Fuel and ride calculator';
+
+  @override
+  String get calcMenuCalculatorHint =>
+      'Split fuel and tolls, or a shared ride with stops';
+
+  @override
+  String get calcTabFuel => 'Fuel';
+
+  @override
+  String get calcTabRide => 'Shared ride';
+
+  @override
+  String get calcDistance => 'Distance (km)';
+
+  @override
+  String get calcDistanceError =>
+      'Enter up to 10,000 km, with at most one decimal';
+
+  @override
+  String get calcConsumption => 'Consumption (litres per 100 km)';
+
+  @override
+  String get calcConsumptionHint => 'Most cars use 6 to 10';
+
+  @override
+  String get calcConsumptionError => 'Enter 1 to 30, with at most one decimal';
+
+  @override
+  String get calcFuelType => 'Fuel type';
+
+  @override
+  String get calcFuel80 => 'Gasoline 80';
+
+  @override
+  String get calcFuel92 => 'Gasoline 92';
+
+  @override
+  String get calcFuel95 => 'Gasoline 95';
+
+  @override
+  String get calcFuelDiesel => 'Diesel';
+
+  @override
+  String get calcPriceNotSet => 'No price saved yet. Add today\'s pump price.';
+
+  @override
+  String calcPriceSaved(String price, String date) {
+    return '$price a litre · updated $date';
+  }
+
+  @override
+  String get calcPriceEdit => 'Edit price';
+
+  @override
+  String get calcPriceSet => 'Add price';
+
+  @override
+  String calcPriceDialogTitle(String fuel) {
+    return 'Price per litre: $fuel';
+  }
+
+  @override
+  String get calcPriceDialogHint =>
+      'Type the price you paid at the pump. Qesma doesn\'t look prices up.';
+
+  @override
+  String get calcPriceError => 'Enter a price up to 1,000 EGP';
+
+  @override
+  String get calcTolls => 'Tolls';
+
+  @override
+  String calcTollLabel(String number) {
+    return 'Toll $number';
+  }
+
+  @override
+  String get calcTollAdd => 'Add a toll';
+
+  @override
+  String get calcTollRemove => 'Remove this toll';
+
+  @override
+  String get calcTollError => 'Enter an amount, or remove this toll';
+
+  @override
+  String get calcDriver => 'Driver (paid for the fuel)';
+
+  @override
+  String get calcDriverShares => 'The driver pays a share too';
+
+  @override
+  String get calcPassengers => 'Who\'s in the car';
+
+  @override
+  String get calcFare => 'Total fare';
+
+  @override
+  String get calcFarePayer => 'Who paid the fare';
+
+  @override
+  String get calcStops => 'Stops';
+
+  @override
+  String calcStopName(String number) {
+    return 'Stop $number';
+  }
+
+  @override
+  String calcLegDistance(String from, String to) {
+    return 'Stop $from to stop $to (km)';
+  }
+
+  @override
+  String get calcStopAdd => 'Add a stop';
+
+  @override
+  String get calcStopRemove => 'Remove the last stop';
+
+  @override
+  String get calcRiders => 'Who rode';
+
+  @override
+  String get calcGetsIn => 'Gets in at';
+
+  @override
+  String get calcGetsOut => 'Gets out at';
+
+  @override
+  String get calcResultTitle => 'Each person\'s share';
+
+  @override
+  String get calcFuelCost => 'Fuel';
+
+  @override
+  String get calcTollsCost => 'Tolls';
+
+  @override
+  String get calcTotal => 'Total';
+
+  @override
+  String calcLegFare(String from, String to) {
+    return 'Stop $from to stop $to';
+  }
+
+  @override
+  String get calcErrorNoSharers =>
+      'Choose at least one person to share the cost.';
+
+  @override
+  String calcErrorEmptyLeg(String from, String to) {
+    return 'Nobody is riding from stop $from to stop $to. Change where people get in or out.';
+  }
+
+  @override
+  String get calcErrorZero =>
+      'Enter the distance and the price, or a toll, to see the shares.';
+
+  @override
+  String get calcErrorTooLarge => 'This total is too large.';
+
+  @override
+  String get calcErrorRange => 'Check the numbers above.';
+
+  @override
+  String get calcCreateExpense => 'Create the expense';
+
+  @override
+  String get calcCreateHint => 'You\'ll check it before it\'s saved.';
+
+  @override
+  String calcDraftFuelTitle(String km) {
+    return 'Fuel, $km km';
+  }
+
+  @override
+  String get calcDraftTollsTitle => 'Tolls';
+
+  @override
+  String get calcDraftRideTitle => 'Shared ride';
 }

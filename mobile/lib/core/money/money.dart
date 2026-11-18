@@ -42,6 +42,10 @@ abstract final class Money {
     return '$sign${_grouped(minor.abs())}';
   }
 
+  /// The size of an amount without its sign (SA10: a negative pool meter is shown as "the treasurer covered X",
+  /// where the words carry the direction). The only place outside the backend that drops a sign.
+  static int magnitude(int minor) => minor.abs();
+
   /// "1,061.79 ج.م". Negative values get a leading minus; use [formatSigned] for balances.
   static String format(int minor) {
     final sign = minor < 0 ? minus : '';
@@ -131,4 +135,30 @@ String _normalize(String input) {
     }
   }
   return buffer.toString();
+}
+
+/// Decimal inputs with one decimal, as integer tenths: kilometres and L/100 km in the Khorouga calculator
+/// (STANDALONE_SPEC 11, A168). String logic only, never `double`.
+abstract final class Tenths {
+  /// "12.5" -> 125, "120" -> 1200. Western and Arabic-Indic digits; `.`, `,` and `٫` are all the decimal point
+  /// (there is no thousands grouping, so "1,200" is rejected as too many decimals). At most one decimal.
+  /// Null when it is not a number or outside [min]..[max] (in tenths).
+  static int? parse(String input, {required int min, required int max}) {
+    final text = _normalize(input.trim()).replaceAll(',', '.');
+    final match = _tenths.firstMatch(text);
+    if (match == null) return null;
+    final whole = match.group(1)!;
+    if (whole.length > 12) return null; // avoids int overflow; far beyond any limit
+    final tenths = int.parse(whole) * 10 + int.parse(match.group(2) ?? '0');
+    return tenths < min || tenths > max ? null : tenths;
+  }
+
+  /// 125 -> "12.5", 1200 -> "120" (Western digits).
+  static String format(int tenths) {
+    final whole = tenths ~/ 10;
+    final frac = tenths % 10;
+    return frac == 0 ? '$whole' : '$whole.$frac';
+  }
+
+  static final RegExp _tenths = RegExp(r'^(\d+)(?:\.(\d))?$');
 }

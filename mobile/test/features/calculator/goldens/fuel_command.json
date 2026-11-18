@@ -1,0 +1,14 @@
+{
+  "title": "Fuel, 100 km",
+  "expenseDate": "2026-11-19",
+  "category": "FUEL",
+  "splitType": "EXACT",
+  "totalMinor": 13638,
+  "payers": [
+    { "memberId": "00000000-0000-4000-8000-0000000000b1", "amountMinor": 13638 }
+  ],
+  "shares": [
+    { "memberId": "00000000-0000-4000-8000-0000000000b2", "amountMinor": 6819 },
+    { "memberId": "00000000-0000-4000-8000-0000000000b3", "amountMinor": 6819 }
+  ]
+}

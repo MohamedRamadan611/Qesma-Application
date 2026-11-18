@@ -1,0 +1,20 @@
+{
+  "name": "fuel: one passenger pays everything (4468.75 rounds to 4469)",
+  "kind": "fuel",
+  "input": {
+    "distanceTenthsKm": 500,
+    "consumptionTenths": 65,
+    "pricePerLitreMinor": 1375,
+    "tollsMinor": [],
+    "driver": { "id": "A", "sortOrder": 0 },
+    "driverIncluded": false,
+    "passengers": [ { "id": "B", "sortOrder": 1 } ]
+  },
+  "expected": {
+    "fuelMinor": 4469,
+    "tollsMinor": 0,
+    "totalMinor": 4469,
+    "payerMemberId": "A",
+    "shares": { "B": 4469 }
+  }
+}

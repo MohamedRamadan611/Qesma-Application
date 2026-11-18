@@ -68,6 +68,10 @@ final class MemberService {
         if (used.read<bool>('used')) {
           throw LocalApiException.conflict('MEMBER_HAS_TRANSACTIONS', 'This member is used by expenses or payments');
         }
+        // SA10: the treasurer stays (Java's V20 foreign key refuses this delete; there is no dedicated code).
+        if (access.group.treasurerMemberId == memberId) {
+          throw LocalApiException.conflict('MEMBER_HAS_TRANSACTIONS', 'This member is the pool treasurer');
+        }
         await _db.membersDao.deleteMember(memberId);
       });
 
