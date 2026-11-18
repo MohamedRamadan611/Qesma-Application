@@ -31,7 +31,8 @@ void seedAllFixtures(FakeExpensesServer server) {
     'expense_itemized_v7_tax_only',
     'expense_itemized_v8_neither',
   ]) {
-    server.expenses.add(copyJson(fixtureMap(name)));
+    // Captured before BSA1: the contract now also requires category and paidFromPool.
+    server.expenses.add(copyJson(fixtureMap(name))..putIfAbsent('category', () => 'OTHER')..putIfAbsent('paidFromPool', () => false));
   }
   final equalId = fixtureMap('expense_equal_v2')['id'] as String;
   server.revisions[equalId] = [for (final r in (fixtureJson('revisions_equal') as List)) (r as Map).cast<String, dynamic>()];

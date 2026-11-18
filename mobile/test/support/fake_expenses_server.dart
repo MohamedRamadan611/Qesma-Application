@@ -335,6 +335,8 @@ class FakeExpensesServer extends FakeGroupsServer {
         'groupId': gid,
         'title': (body['title'] as String).trim(),
         'splitType': body['splitType'],
+        'category': body['category'] ?? 'OTHER',
+        'paidFromPool': false,
         'totalMinor': body['totalMinor'],
         'expenseDate': body['expenseDate'],
         'payers': [for (final p in (body['payers'] as List).cast<Map<String, dynamic>>()) {'memberId': p['memberId'], 'amountMinor': p['amountMinor']}],

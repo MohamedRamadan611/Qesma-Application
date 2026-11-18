@@ -7,6 +7,11 @@ void main() {
   // TODO add properties to the builder and call build()
 
   group(ExpenseView, () {
+    // String category
+    test('to test the property `category`', () async {
+      // TODO
+    });
+
     // Charges charges
     test('to test the property `charges`', () async {
       // TODO
@@ -34,6 +39,11 @@ void main() {
 
     // BuiltList<ItemView> items
     test('to test the property `items`', () async {
+      // TODO
+    });
+
+    // bool paidFromPool
+    test('to test the property `paidFromPool`', () async {
       // TODO
     });
 

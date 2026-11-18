@@ -53,6 +53,7 @@ SettlementView settlementView(SettlementRow s) => SettlementView((b) => b
   ..note = s.note
   ..createdAt = utc(s.createdAt)
   ..status = s.status
+  ..kind = 'PAYMENT'
   ..recordedByAdmin = s.recordedByAdmin == 1
   ..createdByMemberId = s.createdByMemberId
   ..declaredAt = utc(s.declaredAt)

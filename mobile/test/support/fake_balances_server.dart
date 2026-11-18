@@ -393,6 +393,7 @@ class FakeBalancesServer extends FakeExpensesServer {
       'declaredAt': stamp,
       'status': status,
       'recordedByAdmin': byAdmin,
+      'kind': 'PAYMENT',
       'createdByMemberId': you,
       if (status == 'CONFIRMED') 'confirmedAt': stamp,
     };

@@ -48,9 +48,12 @@ final class TripRecapRepository {
 
     // 3. Fetch payers for these expenses
     final expenseIds = expenseRows.map((e) => e.id).toList();
-    final payerRows = await (_db.select(_db.expensePayers)
-          ..where((p) => p.expenseId.isIn(expenseIds)))
-        .get();
+    // Chunked: older Android SQLite caps bound variables at 999 per statement.
+    final payerRows = <PayerRow>[];
+    for (var i = 0; i < expenseIds.length; i += 500) {
+      final chunk = expenseIds.sublist(i, i + 500 > expenseIds.length ? expenseIds.length : i + 500);
+      payerRows.addAll(await (_db.select(_db.expensePayers)..where((p) => p.expenseId.isIn(chunk))).get());
+    }
 
     final payersByExpense = <String, List<TripRecapPayerInput>>{};
     for (final p in payerRows) {

@@ -43,8 +43,19 @@ void main() {
     });
 
     // Integer minor units (piasters: 1 EGP = 100). Never a decimal.
+    // int poolBalanceMinor
+    test('to test the property `poolBalanceMinor`', () async {
+      // TODO
+    });
+
+    // Integer minor units (piasters: 1 EGP = 100). Never a decimal.
     // int totalSpentMinor
     test('to test the property `totalSpentMinor`', () async {
+      // TODO
+    });
+
+    // String treasurerMemberId
+    test('to test the property `treasurerMemberId`', () async {
       // TODO
     });
 

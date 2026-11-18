@@ -75,7 +75,9 @@
         "service": null,
         "tax": null,
         "adjustmentMinor": 0
-      }
+      },
+      "category": "OTHER",
+      "paidFromPool": false
     },
     {
       "id": "2260c74f-c578-4fb5-99bb-dac7ffe8e964",
@@ -156,7 +158,9 @@
           "amountMinor": 6160
         },
         "adjustmentMinor": 0
-      }
+      },
+      "category": "OTHER",
+      "paidFromPool": false
     },
     {
       "id": "b8573f79-7c89-4185-8eaf-61b169e8f913",
@@ -236,7 +240,9 @@
         },
         "tax": null,
         "adjustmentMinor": 0
-      }
+      },
+      "category": "OTHER",
+      "paidFromPool": false
     },
     {
       "id": "7e3b3a23-d844-4889-99ae-5cba254d1173",
@@ -324,7 +330,9 @@
           "amountMinor": 6899
         },
         "adjustmentMinor": 0
-      }
+      },
+      "category": "OTHER",
+      "paidFromPool": false
     },
     {
       "id": "91d890aa-7d46-458e-ad4e-e99710109445",
@@ -368,7 +376,9 @@
       "createdAt": "2026-11-08T23:38:53.273194Z",
       "version": 2,
       "items": null,
-      "charges": null
+      "charges": null,
+      "category": "OTHER",
+      "paidFromPool": false
     },
     {
       "id": "9cf70c24-3d33-41ee-aa07-38a5f1a47cc0",
@@ -416,7 +426,9 @@
       "createdAt": "2026-11-08T23:38:53.856345Z",
       "version": 1,
       "items": null,
-      "charges": null
+      "charges": null,
+      "category": "OTHER",
+      "paidFromPool": false
     }
   ],
   "page": 0,

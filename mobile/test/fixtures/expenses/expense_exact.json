@@ -44,5 +44,7 @@
   "createdAt": "2026-11-08T23:38:53.856345Z",
   "version": 1,
   "items": null,
-  "charges": null
+  "charges": null,
+  "category": "OTHER",
+  "paidFromPool": false
 }

@@ -40,4 +40,17 @@ void main() {
     expect((await db.metaDao.get()).backupReminderSnoozedUntil, 5);
     await db.close();
   });
+
+  test('v3 -> v4 keeps the existing data and adds the nullable last_reminder_tone (SA9)', () async {
+    final schema = await verifier.schemaAt(3);
+    schema.rawDatabase.execute('INSERT INTO local_meta (id, created_schema_version, created_at, last_export_at, last_export_format_version, backup_reminder_snoozed_until) VALUES (1, 1, 1000, 2000, 1, 5)');
+    schema.rawDatabase.execute("INSERT INTO local_profile (id, display_name, created_at, updated_at) VALUES ('00000000-0000-4000-8000-000000000001', 'Mona', 1, 1)");
+    final db = LocalDatabase(schema.newConnection());
+    await verifier.migrateAndValidate(db, 4);
+    final meta = await db.metaDao.get();
+    expect(meta.lastReminderTone, isNull);
+    await db.metaDao.setLastReminderTone('FUNNY');
+    expect((await db.metaDao.get()).lastReminderTone, 'FUNNY');
+    await db.close();
+  });
 }

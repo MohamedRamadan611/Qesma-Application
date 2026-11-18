@@ -22,11 +22,11 @@ class _$GroupDto extends GroupDto {
   @override
   final String name;
   @override
-  final int poolBalanceMinor;
+  final int? poolBalanceMinor;
   @override
   final int totalSpentMinor;
   @override
-  final String treasurerMemberId;
+  final String? treasurerMemberId;
   @override
   final String type;
   @override
@@ -51,9 +51,9 @@ class _$GroupDto extends GroupDto {
       required this.members,
       required this.muted,
       required this.name,
-      required this.poolBalanceMinor,
+      this.poolBalanceMinor,
       required this.totalSpentMinor,
-      required this.treasurerMemberId,
+      this.treasurerMemberId,
       required this.type,
       required this.updatedAt,
       required this.version,
@@ -265,12 +265,10 @@ class GroupDtoBuilder implements Builder<GroupDto, GroupDtoBuilder> {
                 muted, r'GroupDto', 'muted'),
             name: BuiltValueNullFieldError.checkNotNull(
                 name, r'GroupDto', 'name'),
-            poolBalanceMinor: BuiltValueNullFieldError.checkNotNull(
-                poolBalanceMinor, r'GroupDto', 'poolBalanceMinor'),
+            poolBalanceMinor: poolBalanceMinor,
             totalSpentMinor: BuiltValueNullFieldError.checkNotNull(
                 totalSpentMinor, r'GroupDto', 'totalSpentMinor'),
-            treasurerMemberId: BuiltValueNullFieldError.checkNotNull(
-                treasurerMemberId, r'GroupDto', 'treasurerMemberId'),
+            treasurerMemberId: treasurerMemberId,
             type: BuiltValueNullFieldError.checkNotNull(
                 type, r'GroupDto', 'type'),
             updatedAt: BuiltValueNullFieldError.checkNotNull(

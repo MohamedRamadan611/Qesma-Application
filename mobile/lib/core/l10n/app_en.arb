@@ -849,6 +849,12 @@
   "@myShareYouConsumedMore": {"description":"Status when user consumed more than paid"},
   "myShareBalanced": "Consumption equals payments",
   "@myShareBalanced": {"description":"Status when consumed equals paid"},
+  "myShareHint": "Tap a category to see the expenses behind it",
+  "@myShareHint": {"description":"Hint under the monthly spend header"},
+  "myShareExplainer": "These are your own spending figures, not money you owe. Open Balances to see who owes whom.",
+  "@myShareExplainer": {"description":"Explains that My share is not a debt"},
+  "myShareCategorySemantics": "{category}, {percent} percent of your consumption, {amount}",
+  "@myShareCategorySemantics": {"description":"Screen reader label for a category card","placeholders":{"category":{"type":"String"},"percent":{"type":"String"},"amount":{"type":"String"}}},
   "myShareEmptyTitle": "No expenses yet",
   "@myShareEmptyTitle": {"description":"Empty state title for My Share"},
   "myShareEmptyBody": "When expenses are recorded in your groups, your monthly consumption will appear here.",
@@ -930,5 +936,62 @@
   "recapTextSummaryAllSettled": "All expenses are settled!",
   "@recapTextSummaryAllSettled": {"description":"Text when all balances are settled"},
   "recapTextSummaryFooter": "Calculated by Qesma • qesma.app",
-  "@recapTextSummaryFooter": {"description":"Footer in text summary"}
+  "@recapTextSummaryFooter": {"description":"Footer in text summary"},
+  "reminderSheetTitle": "Send reminder",
+  "@reminderSheetTitle": {"description":"Title of reminder bottom sheet"},
+  "reminderSheetSubtitle": "WhatsApp message ready to edit and send",
+  "@reminderSheetSubtitle": {"description":"Subtitle of reminder bottom sheet"},
+  "reminderToneLabel": "Tone",
+  "@reminderToneLabel": {"description":"Label for tone picker"},
+  "reminderToneSoftChip": "Soft",
+  "@reminderToneSoftChip": {"description":"Soft tone chip"},
+  "reminderToneFirmChip": "Firm",
+  "@reminderToneFirmChip": {"description":"Firm tone chip"},
+  "reminderToneFunnyChip": "Funny",
+  "@reminderToneFunnyChip": {"description":"Funny tone chip"},
+  "reminderIncludeInstapay": "Include my InstaPay address",
+  "@reminderIncludeInstapay": {"description":"Toggle label to include InstaPay"},
+  "reminderMessageFieldLabel": "Message",
+  "@reminderMessageFieldLabel": {"description":"Label for editable message field"},
+  "reminderLaunchFailed": "Couldn't open WhatsApp or the share sheet. Try again.",
+  "@reminderLaunchFailed": {"description":"Snackbar when neither WhatsApp nor the share sheet could be opened"},
+  "reminderOpenWhatsapp": "Open WhatsApp",
+  "@reminderOpenWhatsapp": {"description":"Action button to launch WhatsApp"},
+  "reminderInstapayLine": "\n\nMy InstaPay:\n{handle}",
+  "@reminderInstapayLine": {
+    "description": "Handle line placeholder",
+    "placeholders": {
+      "handle": {"type": "String"}
+    }
+  },
+  "reminderToneSoft": "Hey {name}, just a friendly reminder about our expenses in {group} ({amount}). Whenever you have a chance!{handle}",
+  "@reminderToneSoft": {
+    "description": "Soft reminder template",
+    "placeholders": {
+      "name": {"type": "String"},
+      "group": {"type": "String"},
+      "amount": {"type": "String"},
+      "handle": {"type": "String"}
+    }
+  },
+  "reminderToneFirm": "Hi {name}, we're settling up {group} expenses. Your share is {amount}. Please transfer it when you get a moment.{handle}",
+  "@reminderToneFirm": {
+    "description": "Firm reminder template",
+    "placeholders": {
+      "name": {"type": "String"},
+      "group": {"type": "String"},
+      "amount": {"type": "String"},
+      "handle": {"type": "String"}
+    }
+  },
+  "reminderToneFunny": "Hey {name}, my wallet asked me to remind you about {group}! Your share is {amount}. Save my wallet before it cries!{handle}",
+  "@reminderToneFunny": {
+    "description": "Funny reminder template",
+    "placeholders": {
+      "name": {"type": "String"},
+      "group": {"type": "String"},
+      "amount": {"type": "String"},
+      "handle": {"type": "String"}
+    }
+  }
 }

@@ -52,6 +52,8 @@ void main() {
         final meta = ar['@$key'];
         if (meta is Map<String, dynamic> && meta['placeholders'] is Map<String, dynamic>) {
           for (final p in (meta['placeholders'] as Map<String, dynamic>).entries) {
+            // ICU plurals need a num by definition; the digits are Western through the locale's plural rules.
+            if ((ar[key] as String).contains(', plural,')) continue;
             expect((p.value as Map<String, dynamic>)['type'], 'String', reason: '$key.${p.key}');
           }
         }
@@ -59,7 +61,7 @@ void main() {
     });
 
     test('key names follow the area-prefix scheme', () {
-      const prefixes = ['app', 'bootstrap', 'common', 'field', 'balance', 'money', 'state', 'error', 'brand', 'welcome', 'legal', 'signIn', 'dev', 'sessionExpired', 'home', 'group', 'member', 'expense', 'payment', 'profile', 'language', 'account', 'appearance', 'auth', 'password', 'invite', 'settlement', 'pay', 'handles', 'remind', 'pending', 'dispute', 'incoming', 'receiver', 'stmt', 'detail', 'guidance', 'cancel', 'onboarding', 'backup'];
+      const prefixes = ['app', 'bootstrap', 'common', 'field', 'balance', 'money', 'state', 'error', 'brand', 'welcome', 'legal', 'signIn', 'dev', 'sessionExpired', 'home', 'group', 'member', 'expense', 'payment', 'profile', 'language', 'account', 'appearance', 'auth', 'password', 'invite', 'settlement', 'pay', 'handles', 'remind', 'pending', 'dispute', 'incoming', 'receiver', 'stmt', 'detail', 'guidance', 'cancel', 'onboarding', 'backup', 'category', 'myShare', 'recap', 'reminder'];
       for (final key in _keys(ar).where((k) => k != '@@locale')) {
         expect(prefixes.any(key.startsWith), isTrue, reason: '$key has no known area prefix');
       }

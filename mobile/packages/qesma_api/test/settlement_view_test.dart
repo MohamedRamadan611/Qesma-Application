@@ -58,6 +58,11 @@ void main() {
       // TODO
     });
 
+    // String kind
+    test('to test the property `kind`', () async {
+      // TODO
+    });
+
     // String note
     test('to test the property `note`', () async {
       // TODO

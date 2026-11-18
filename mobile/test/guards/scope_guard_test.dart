@@ -42,7 +42,7 @@ const phase2Features = <String, Phase2Feature>{
   ),
   'settlements': Phase2Feature(words: ['dispute'], arabic: ['نزاع'], routes: ["'/disputes"]),
   'handles': Phase2Feature(words: ['instapay', 'wallet']),
-  'reminders': Phase2Feature(words: ['remind', 'reminder'], arabic: ['تذكير']),
+  'reminders': Phase2Feature(words: ['remind', 'reminder', 'whatsapp'], arabic: ['تذكير']),
   'notifications': Phase2Feature(
     words: ['notification', 'notifications'],
     arabic: ['إشعارات', 'اشعارات'],

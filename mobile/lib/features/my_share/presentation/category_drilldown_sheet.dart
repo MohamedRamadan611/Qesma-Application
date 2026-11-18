@@ -70,16 +70,21 @@ class CategoryDrilldownSheet extends StatelessWidget {
                       children: [
                         Text(
                           cat.label(l10n),
-                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         Text(
                           l10n.myShareExpensesCount(breakdown.expenses.length),
-                          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ],
                     ),
                   ),
                   IconButton(
+                    tooltip: l10n.commonClose,
                     icon: const Icon(Icons.close),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
@@ -92,7 +97,9 @@ class CategoryDrilldownSheet extends StatelessWidget {
                 child: Center(
                   child: Text(
                     l10n.myShareNoExpensesInCategory,
-                    style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
               )
@@ -102,13 +109,17 @@ class CategoryDrilldownSheet extends StatelessWidget {
                   controller: scrollController,
                   padding: const EdgeInsets.all(QesmaSpacing.md),
                   itemCount: breakdown.expenses.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: QesmaSpacing.sm),
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(height: QesmaSpacing.sm),
                   itemBuilder: (context, index) {
                     final item = breakdown.expenses[index];
                     return AppCard(
                       onTap: () {
+                        final router = GoRouter.of(context);
                         Navigator.of(context).pop();
-                        context.push(Routes.expense(item.groupId, item.expenseId));
+                        router.push(
+                          Routes.expense(item.groupId, item.expenseId),
+                        );
                       },
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -118,7 +129,9 @@ class CategoryDrilldownSheet extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   item.expenseTitle,
-                                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -133,7 +146,9 @@ class CategoryDrilldownSheet extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             '${item.groupName} • ${ltrIsolate(item.expenseDate)}',
-                            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -145,12 +160,16 @@ class CategoryDrilldownSheet extends StatelessWidget {
                             children: [
                               Text(
                                 '${l10n.myShareConsumed}: ${moneyDisplay(l10n, item.owedMinor)}',
-                                style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               if (item.paidMinor > 0)
                                 Text(
                                   '${l10n.mySharePaidUpFront}: ${moneyDisplay(l10n, item.paidMinor)}',
-                                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
                                 ),
                             ],
                           ),

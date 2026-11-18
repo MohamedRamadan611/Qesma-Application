@@ -238,7 +238,7 @@ void main() {
       server.expenses.add(copyJson(fixtureMap('expense_exact')));
       await pumpExpensesApp(tester, server);
       // Amounts in words, no bare decimals, no invisible direction characters in what a voice reads.
-      final row = find.bySemanticsLabel(RegExp(r'^Tickets، 300 جنيه، مبالغ محددة، دفع: Mohamed \(100 جنيه\)، Asem \(200 جنيه\)، مقسومة على 3 أفراد، نصيبك: 100 جنيه$'));
+      final row = find.bySemanticsLabel(RegExp(r'^[^:]+: Tickets، 300 جنيه، مبالغ محددة، دفع: Mohamed \(100 جنيه\)، Asem \(200 جنيه\)، مقسومة على 3 أفراد، نصيبك: 100 جنيه$'));
       expect(row, findsOneWidget);
       final data = tester.getSemantics(row).getSemanticsData();
       expect(data.label.runes.where((r) => r >= 0x2066 && r <= 0x2069), isEmpty);

@@ -39,7 +39,7 @@ void main() {
       // TODO
     });
 
-    //Future<PageResponseExpenseView> listExpenses(String gid, { int page, int size, Date fromDate, Date toDate, String memberId }) async
+    //Future<PageResponseExpenseView> listExpenses(String gid, { int page, int size, Date fromDate, Date toDate, String memberId, String category }) async
     test('test listExpenses', () async {
       // TODO
     });

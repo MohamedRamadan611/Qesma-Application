@@ -475,6 +475,7 @@
           "poolBalanceMinor" : {
             "description" : "Integer minor units (piasters: 1 EGP = 100). Never a decimal.",
             "format" : "int64",
+            "nullable" : true,
             "type" : "integer"
           },
           "totalSpentMinor" : {
@@ -484,6 +485,7 @@
           },
           "treasurerMemberId" : {
             "format" : "uuid",
+            "nullable" : true,
             "type" : "string"
           },
           "type" : {
@@ -510,7 +512,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "createdAt", "currencyCode", "id", "members", "muted", "name", "poolBalanceMinor", "totalSpentMinor", "treasurerMemberId", "type", "updatedAt", "version", "yourMemberId", "yourNetMinor", "yourRole" ],
+        "required" : [ "createdAt", "currencyCode", "id", "members", "muted", "name", "totalSpentMinor", "type", "updatedAt", "version", "yourMemberId", "yourNetMinor", "yourRole" ],
         "type" : "object"
       },
       "GroupNotificationPrefsView" : {

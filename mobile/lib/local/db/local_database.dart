@@ -58,7 +58,7 @@ class LocalDatabase extends _$LocalDatabase {
   final int Function() _clock;
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -78,6 +78,10 @@ class LocalDatabase extends _$LocalDatabase {
           from2To3: (m, schema) async {
             await m.addColumn(schema.expenses, schema.expenses.category);
             await m.createIndex(schema.ixExpensesGroupCategory);
+          },
+          // SA9: last-used reminder tone (local_meta.last_reminder_tone, nullable).
+          from3To4: (m, schema) async {
+            await m.addColumn(schema.localMeta, schema.localMeta.lastReminderTone);
           },
         ),
         beforeOpen: (details) async {

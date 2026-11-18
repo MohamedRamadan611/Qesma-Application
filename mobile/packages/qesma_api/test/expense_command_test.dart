@@ -13,6 +13,11 @@ void main() {
       // TODO
     });
 
+    // String category
+    test('to test the property `category`', () async {
+      // TODO
+    });
+
     // Date expenseDate
     test('to test the property `expenseDate`', () async {
       // TODO
@@ -20,6 +25,11 @@ void main() {
 
     // BuiltList<ItemInput> items
     test('to test the property `items`', () async {
+      // TODO
+    });
+
+    // bool paidFromPool
+    test('to test the property `paidFromPool`', () async {
       // TODO
     });
 

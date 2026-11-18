@@ -580,7 +580,7 @@ void main() {
       await tester.enterText(field(0), 'Dinner');
       await tester.enterText(field(1), '500');
       await settleForm(tester);
-      await tester.ensureVisible(find.text(l10nFor(c.locale).expenseFormEditPayers));
+      await tester.scrollUntilVisible(find.text(l10nFor(c.locale).expenseFormEditPayers), 200, scrollable: find.byType(Scrollable).first); // the category row (SA6) pushes it below the built area at 2x
       await tester.pumpAndSettle();
       await tester.tap(find.text(l10nFor(c.locale).expenseFormEditPayers));
       await settleForm(tester);

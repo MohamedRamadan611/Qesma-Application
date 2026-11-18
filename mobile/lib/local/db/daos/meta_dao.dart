@@ -24,4 +24,8 @@ class MetaDao extends DatabaseAccessor<LocalDatabase> with _$MetaDaoMixin {
   /// Hides the backup reminder until [untilMillis] (UTC epoch ms).
   Future<void> snoozeBackupReminder(int untilMillis) => (update(localMeta)..where((m) => m.id.equals(1)))
       .write(LocalMetaCompanion(backupReminderSnoozedUntil: Value(untilMillis)));
+
+  /// Remembers the last-used reminder tone (A148).
+  Future<void> setLastReminderTone(String tone) => (update(localMeta)..where((m) => m.id.equals(1)))
+      .write(LocalMetaCompanion(lastReminderTone: Value(tone)));
 }

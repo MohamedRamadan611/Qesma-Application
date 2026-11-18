@@ -4352,6 +4352,28 @@ abstract class AppLocalizations {
   /// **'استهلاكك مساوٍ لما دفعته'**
   String get myShareBalanced;
 
+  /// تلميح أسفل عنوان المصاريف الشهرية
+  ///
+  /// In ar, this message translates to:
+  /// **'اضغط على فئة لعرض المصاريف الخاصة بها'**
+  String get myShareHint;
+
+  /// توضيح أن صفحة نصيبي ليست ديونًا
+  ///
+  /// In ar, this message translates to:
+  /// **'هذه أرقام إنفاقك أنت وليست مبالغ عليك. لمعرفة من يدين لمن افتح تبويب الأرصدة.'**
+  String get myShareExplainer;
+
+  /// وصف قارئ الشاشة لبطاقة الفئة
+  ///
+  /// In ar, this message translates to:
+  /// **'{category}، {percent} بالمئة من استهلاكك، {amount}'**
+  String myShareCategorySemantics(
+    String category,
+    String percent,
+    String amount,
+  );
+
   /// عنوان الحالة الفارغة لصفحة نصيبي
   ///
   /// In ar, this message translates to:
@@ -4513,6 +4535,105 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تم الحساب بواسطة تطبيق قسمة • qesma.app'**
   String get recapTextSummaryFooter;
+
+  /// عنوان نافذة إرسال تذكير بالتحويل
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير بالتحويل'**
+  String get reminderSheetTitle;
+
+  /// وصف نافذة إرسال تذكير بالتحويل
+  ///
+  /// In ar, this message translates to:
+  /// **'رسالة واتساب جاهزة للتعديل والإرسال'**
+  String get reminderSheetSubtitle;
+
+  /// عنوان اختيار نبرة التذكير
+  ///
+  /// In ar, this message translates to:
+  /// **'طريقة الكلام'**
+  String get reminderToneLabel;
+
+  /// نبرة التذكير الهادئة
+  ///
+  /// In ar, this message translates to:
+  /// **'هادي'**
+  String get reminderToneSoftChip;
+
+  /// نبرة التذكير الواضحة والمباشرة
+  ///
+  /// In ar, this message translates to:
+  /// **'واضح'**
+  String get reminderToneFirmChip;
+
+  /// نبرة التذكير المرحة
+  ///
+  /// In ar, this message translates to:
+  /// **'هزار'**
+  String get reminderToneFunnyChip;
+
+  /// زر تفعيل إضافة إنستاباي إلى الرسالة
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة حساب إنستاباي للرسالة'**
+  String get reminderIncludeInstapay;
+
+  /// عنوان حقل تعديل نص الرسالة
+  ///
+  /// In ar, this message translates to:
+  /// **'نص الرسالة'**
+  String get reminderMessageFieldLabel;
+
+  /// رسالة تظهر لما واتساب ولا قائمة المشاركة اتفتحوا
+  ///
+  /// In ar, this message translates to:
+  /// **'مقدرناش نفتح واتساب أو المشاركة. جرّب تاني.'**
+  String get reminderLaunchFailed;
+
+  /// زر فتح تطبيق واتساب بالمحادثة
+  ///
+  /// In ar, this message translates to:
+  /// **'فتح واتساب'**
+  String get reminderOpenWhatsapp;
+
+  /// سطر إضافة عنوان إنستاباي
+  ///
+  /// In ar, this message translates to:
+  /// **'\n\nبيانات إنستاباي:\n{handle}'**
+  String reminderInstapayLine(String handle);
+
+  /// قالب التذكير الهادئ
+  ///
+  /// In ar, this message translates to:
+  /// **'صباح الفل يا {name}، تذكير بسيط بس بخصوص قعدتنا في {group}، كان عليك {amount}. لما تفضى ابعتهم براحتك يا غالي{handle}'**
+  String reminderToneSoft(
+    String name,
+    String group,
+    String amount,
+    String handle,
+  );
+
+  /// قالب التذكير الواضح والمباشر
+  ///
+  /// In ar, this message translates to:
+  /// **'يا {name}، بنقفل حسابات {group} ومتبقي عليك {amount}. يا ريت تحولهم أول ما تشوف الرسالة{handle}'**
+  String reminderToneFirm(
+    String name,
+    String group,
+    String amount,
+    String handle,
+  );
+
+  /// قالب التذكير الفكاهي واللطيف
+  ///
+  /// In ar, this message translates to:
+  /// **'يا {name} يا فنان، تذكير لطيف قبل ما الجيب يعلن إفلاسه بخصوص {group}: عليك {amount}. متخليش المحفظة تعيط!{handle}'**
+  String reminderToneFunny(
+    String name,
+    String group,
+    String amount,
+    String handle,
+  );
 }
 
 class _AppLocalizationsDelegate

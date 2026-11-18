@@ -410,7 +410,7 @@ public class OpenApiConfig {
             Map.entry("Charges", java.util.Set.of("service", "tax")),
             Map.entry("ExpensePreview", java.util.Set.of("subtotalMinor", "serviceMinor", "taxMinor", "adjustmentMinor")),
             Map.entry("SettlementView", java.util.Set.of("note", "createdByMemberId", "confirmedAt", "disputedAt", "cancelledAt")),
-            Map.entry("GroupDto", java.util.Set.of("lastExpenseAt")),
+            Map.entry("GroupDto", java.util.Set.of("lastExpenseAt", "treasurerMemberId", "poolBalanceMinor")),
             Map.entry("GroupSummaryDto", java.util.Set.of("lastExpenseAt")),
             Map.entry("UserDto", java.util.Set.of("email", "username")),
             Map.entry("TransferView", java.util.Set.of("receiverHandles", "canRemindAt")),

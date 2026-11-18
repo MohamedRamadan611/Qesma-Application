@@ -54,14 +54,14 @@ abstract class GroupDto implements Built<GroupDto, GroupDtoBuilder> {
 
   /// Integer minor units (piasters: 1 EGP = 100). Never a decimal.
   @BuiltValueField(wireName: r'poolBalanceMinor')
-  int get poolBalanceMinor;
+  int? get poolBalanceMinor;
 
   /// Integer minor units (piasters: 1 EGP = 100). Never a decimal.
   @BuiltValueField(wireName: r'totalSpentMinor')
   int get totalSpentMinor;
 
   @BuiltValueField(wireName: r'treasurerMemberId')
-  String get treasurerMemberId;
+  String? get treasurerMemberId;
 
   @BuiltValueField(wireName: r'type')
   String get type;
@@ -142,21 +142,25 @@ class _$GroupDtoSerializer implements PrimitiveSerializer<GroupDto> {
       object.name,
       specifiedType: const FullType(String),
     );
-    yield r'poolBalanceMinor';
-    yield serializers.serialize(
-      object.poolBalanceMinor,
-      specifiedType: const FullType(int),
-    );
+    if (object.poolBalanceMinor != null) {
+      yield r'poolBalanceMinor';
+      yield serializers.serialize(
+        object.poolBalanceMinor,
+        specifiedType: const FullType.nullable(int),
+      );
+    }
     yield r'totalSpentMinor';
     yield serializers.serialize(
       object.totalSpentMinor,
       specifiedType: const FullType(int),
     );
-    yield r'treasurerMemberId';
-    yield serializers.serialize(
-      object.treasurerMemberId,
-      specifiedType: const FullType(String),
-    );
+    if (object.treasurerMemberId != null) {
+      yield r'treasurerMemberId';
+      yield serializers.serialize(
+        object.treasurerMemberId,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
     yield r'type';
     yield serializers.serialize(
       object.type,
@@ -263,8 +267,9 @@ class _$GroupDtoSerializer implements PrimitiveSerializer<GroupDto> {
         case r'poolBalanceMinor':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(int),
-          ) as int;
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
+          if (valueDes == null) continue;
           result.poolBalanceMinor = valueDes;
           break;
         case r'totalSpentMinor':
@@ -277,8 +282,9 @@ class _$GroupDtoSerializer implements PrimitiveSerializer<GroupDto> {
         case r'treasurerMemberId':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(String),
-          ) as String;
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
           result.treasurerMemberId = valueDes;
           break;
         case r'type':

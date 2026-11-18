@@ -46,7 +46,9 @@
       "createdAt": "2026-11-08T23:38:53.273194Z",
       "splitType": "EQUAL",
       "totalMinor": 50000,
-      "expenseDate": "2026-10-18"
+      "expenseDate": "2026-10-18",
+      "category": "OTHER",
+      "paidFromPool": false
     }
   },
   {
@@ -96,7 +98,9 @@
       "createdAt": "2026-11-08T23:38:53.273194Z",
       "splitType": "EQUAL",
       "totalMinor": 52000,
-      "expenseDate": "2026-10-18"
+      "expenseDate": "2026-10-18",
+      "category": "OTHER",
+      "paidFromPool": false
     }
   }
 ]

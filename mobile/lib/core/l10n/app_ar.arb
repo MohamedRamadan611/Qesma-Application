@@ -1625,6 +1625,12 @@
   "@myShareYouConsumedMore": {"description":"حالة عندما يستهلك المستخدم أكثر مما يدفع"},
   "myShareBalanced": "استهلاكك مساوٍ لما دفعته",
   "@myShareBalanced": {"description":"حالة التساوي بين الدفع والاستهلاك"},
+  "myShareHint": "اضغط على فئة لعرض المصاريف الخاصة بها",
+  "@myShareHint": {"description":"تلميح أسفل عنوان المصاريف الشهرية"},
+  "myShareExplainer": "هذه أرقام إنفاقك أنت وليست مبالغ عليك. لمعرفة من يدين لمن افتح تبويب الأرصدة.",
+  "@myShareExplainer": {"description":"توضيح أن صفحة نصيبي ليست ديونًا"},
+  "myShareCategorySemantics": "{category}، {percent} بالمئة من استهلاكك، {amount}",
+  "@myShareCategorySemantics": {"description":"وصف قارئ الشاشة لبطاقة الفئة","placeholders":{"category":{"type":"String"},"percent":{"type":"String"},"amount":{"type":"String"}}},
   "myShareEmptyTitle": "لا توجد مصاريف بعد",
   "@myShareEmptyTitle": {"description":"عنوان الحالة الفارغة لصفحة نصيبي"},
   "myShareEmptyBody": "عند تسجيل المصاريف في مجموعاتك، ستظهر تفاصيل استهلاكك هنا.",
@@ -1706,5 +1712,62 @@
   "recapTextSummaryAllSettled": "تمت تسوية جميع المصاريف!",
   "@recapTextSummaryAllSettled": {"description":"نص تسوية كافة المصاريف في الملخص النصي"},
   "recapTextSummaryFooter": "تم الحساب بواسطة تطبيق قسمة • qesma.app",
-  "@recapTextSummaryFooter": {"description":"تذييل الملخص النصي"}
+  "@recapTextSummaryFooter": {"description":"تذييل الملخص النصي"},
+  "reminderSheetTitle": "تذكير بالتحويل",
+  "@reminderSheetTitle": {"description":"عنوان نافذة إرسال تذكير بالتحويل"},
+  "reminderSheetSubtitle": "رسالة واتساب جاهزة للتعديل والإرسال",
+  "@reminderSheetSubtitle": {"description":"وصف نافذة إرسال تذكير بالتحويل"},
+  "reminderToneLabel": "طريقة الكلام",
+  "@reminderToneLabel": {"description":"عنوان اختيار نبرة التذكير"},
+  "reminderToneSoftChip": "هادي",
+  "@reminderToneSoftChip": {"description":"نبرة التذكير الهادئة"},
+  "reminderToneFirmChip": "واضح",
+  "@reminderToneFirmChip": {"description":"نبرة التذكير الواضحة والمباشرة"},
+  "reminderToneFunnyChip": "هزار",
+  "@reminderToneFunnyChip": {"description":"نبرة التذكير المرحة"},
+  "reminderIncludeInstapay": "إضافة حساب إنستاباي للرسالة",
+  "@reminderIncludeInstapay": {"description":"زر تفعيل إضافة إنستاباي إلى الرسالة"},
+  "reminderMessageFieldLabel": "نص الرسالة",
+  "@reminderMessageFieldLabel": {"description":"عنوان حقل تعديل نص الرسالة"},
+  "reminderLaunchFailed": "مقدرناش نفتح واتساب أو المشاركة. جرّب تاني.",
+  "@reminderLaunchFailed": {"description":"رسالة تظهر لما واتساب ولا قائمة المشاركة اتفتحوا"},
+  "reminderOpenWhatsapp": "فتح واتساب",
+  "@reminderOpenWhatsapp": {"description":"زر فتح تطبيق واتساب بالمحادثة"},
+  "reminderInstapayLine": "\n\nبيانات إنستاباي:\n{handle}",
+  "@reminderInstapayLine": {
+    "description": "سطر إضافة عنوان إنستاباي",
+    "placeholders": {
+      "handle": {"type": "String"}
+    }
+  },
+  "reminderToneSoft": "صباح الفل يا {name}، تذكير بسيط بس بخصوص قعدتنا في {group}، كان عليك {amount}. لما تفضى ابعتهم براحتك يا غالي{handle}",
+  "@reminderToneSoft": {
+    "description": "قالب التذكير الهادئ",
+    "placeholders": {
+      "name": {"type": "String"},
+      "group": {"type": "String"},
+      "amount": {"type": "String"},
+      "handle": {"type": "String"}
+    }
+  },
+  "reminderToneFirm": "يا {name}، بنقفل حسابات {group} ومتبقي عليك {amount}. يا ريت تحولهم أول ما تشوف الرسالة{handle}",
+  "@reminderToneFirm": {
+    "description": "قالب التذكير الواضح والمباشر",
+    "placeholders": {
+      "name": {"type": "String"},
+      "group": {"type": "String"},
+      "amount": {"type": "String"},
+      "handle": {"type": "String"}
+    }
+  },
+  "reminderToneFunny": "يا {name} يا فنان، تذكير لطيف قبل ما الجيب يعلن إفلاسه بخصوص {group}: عليك {amount}. متخليش المحفظة تعيط!{handle}",
+  "@reminderToneFunny": {
+    "description": "قالب التذكير الفكاهي واللطيف",
+    "placeholders": {
+      "name": {"type": "String"},
+      "group": {"type": "String"},
+      "amount": {"type": "String"},
+      "handle": {"type": "String"}
+    }
+  }
 }

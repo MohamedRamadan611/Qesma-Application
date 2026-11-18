@@ -12,7 +12,7 @@ export 'package:qesma_engine/qesma_engine.dart'
         MyShareExpenseDetail;
 
 /// Repository for reading My Share insights from the local database (STANDALONE_SPEC 8, Decision A130, A131, A149, A150).
-/// Only non-deleted expenses across groups where the user is an active linked member are included.
+/// Only non-deleted expenses across groups where the user is a linked member are included (local mode: the owner cannot leave).
 /// Excluded: settlements, soft-deleted expenses, expenses from groups where the user has no linked member.
 final class MyShareRepository {
   MyShareRepository(this._db);

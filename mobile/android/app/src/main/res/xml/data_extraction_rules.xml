@@ -5,12 +5,10 @@
         <include domain="root" path="app_flutter/qesma_local.sqlite"/>
         <exclude domain="root" path="app_flutter/qesma_local.sqlite-wal"/>
         <exclude domain="root" path="app_flutter/qesma_local.sqlite-shm"/>
-        <exclude domain="sharedpref" path="FlutterSecureStorage.xml"/>
     </cloud-backup>
     <device-transfer>
         <include domain="root" path="app_flutter/qesma_local.sqlite"/>
         <exclude domain="root" path="app_flutter/qesma_local.sqlite-wal"/>
         <exclude domain="root" path="app_flutter/qesma_local.sqlite-shm"/>
-        <exclude domain="sharedpref" path="FlutterSecureStorage.xml"/>
     </device-transfer>
 </data-extraction-rules>

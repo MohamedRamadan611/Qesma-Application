@@ -25,3 +25,6 @@ mobile/.flutter-plugins-dependencies
 .claude/settings.local.json
 !.env.prod.example
 /backups/
+
+# Flutter golden failure artifacts (test output, never committed)
+mobile/test/goldens/failures/

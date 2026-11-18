@@ -12,9 +12,9 @@ import 'backup_format.dart';
 ///
 /// Order: size -> JSON -> versions -> caps -> strict typed rows -> referential integrity -> recompute check.
 abstract final class BackupValidator {
-  /// The newest database schema this app writes (`LocalDatabase.schemaVersion`); older files are accepted because
-  /// the ledger tables did not change between schema 1 and 2 (a later schema adds a mapper here).
-  static const int currentSchemaVersion = 2;
+  /// The newest database schema this app writes (`LocalDatabase.schemaVersion`); older files are accepted: schema 3 added
+  /// expense category (optional on import, defaults to OTHER) and 4 added the reminder tone, a preference the backup does not carry.
+  static const int currentSchemaVersion = 4;
 
   static BackupData parse(Uint8List bytes, {int maxBytes = maxBackupBytes}) {
     if (bytes.isEmpty) throw const BackupException(BackupError.unreadable);

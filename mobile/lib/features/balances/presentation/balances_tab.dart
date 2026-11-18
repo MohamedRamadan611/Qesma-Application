@@ -23,6 +23,7 @@ import '../application/incoming_settlements.dart';
 import '../application/remind_controller.dart';
 import '../application/remind_rules.dart';
 import '../application/settlement_rules.dart';
+import 'reminder_sheet.dart';
 import 'receiver_card.dart';
 import '../application/record_payment_state.dart';
 import '../application/settlements_controller.dart';
@@ -93,6 +94,10 @@ class _BalancesTabState extends ConsumerState<BalancesTab> {
     }
   }
 
+  /// Local mode (SA9): the WhatsApp reminder is offered only to the receiver ("you" are owed); no server rules apply.
+  RemindState _toneRemindState(bool youAreReceiver) =>
+      RemindState(youAreReceiver ? RemindKind.enabled : RemindKind.hidden);
+
   Future<void> _remind(String fromId, String toId) async {
     final l10n = AppLocalizations.of(context);
     final result = await ref.read(remindControllerProvider(_gid).notifier).remind(fromId, toId);
@@ -158,9 +163,11 @@ class _BalancesTabState extends ConsumerState<BalancesTab> {
                         nameOf,
                         group.yourMemberId,
                         canRecordForOthers,
-                        remind: !features.serverRemind
-                            ? const RemindState(RemindKind.hidden)
-                            : remindStateFor(
+                        remind: features.reminderTones
+                            ? _toneRemindState(transfers[i].toMemberId == group.yourMemberId)
+                            : (!features.serverRemind
+                                ? const RemindState(RemindKind.hidden)
+                                : remindStateFor(
                           isCreditor: transfers[i].toMemberId == group.yourMemberId,
                           isDebtor: transfers[i].fromMemberId == group.yourMemberId,
                           canRemindAny: permissions.canRemindAny,
@@ -169,8 +176,16 @@ class _BalancesTabState extends ConsumerState<BalancesTab> {
                           canRemindAt: transfers[i].canRemindAt,
                           lockedUntil: remindState.lockedUntil[remindPairKey(transfers[i].fromMemberId, transfers[i].toMemberId)],
                           now: now,
-                        ),
+                        )),
                         remindBusy: remindState.busy,
+                        onRemind: features.reminderTones
+                            ? () => ReminderSheet.show(
+                                  context,
+                                  debtorName: nameOf(transfers[i].fromMemberId),
+                                  amountMinor: transfers[i].amountMinor,
+                                  groupName: group.name,
+                                )
+                            : null,
                       ),
                     ],
                   ],
@@ -222,6 +237,7 @@ extension on _BalancesTabState {
     bool canRecordForOthers, {
     required RemindState remind,
     required bool remindBusy,
+    VoidCallback? onRemind,
   }) {
     final role = t.fromMemberId == you ? TransferRole.payer : (t.toMemberId == you ? TransferRole.receiver : TransferRole.other);
     final seed = PaymentSeed(fromId: t.fromMemberId, toId: t.toMemberId, amountMinor: t.amountMinor);
@@ -232,7 +248,7 @@ extension on _BalancesTabState {
       onRecord: role == TransferRole.other && !canRecordForOthers ? null : () => _record(seed),
       remind: remind,
       remindBusy: remindBusy,
-      onRemind: () => _remind(t.fromMemberId, t.toMemberId),
+      onRemind: onRemind ?? () => _remind(t.fromMemberId, t.toMemberId),
     );
   }
 }

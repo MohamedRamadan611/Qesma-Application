@@ -274,7 +274,7 @@ void main() {
           'amountMinor': 100 + i,
           'settledOn': '2026-09-${(1 + i % 28).toString().padLeft(2, '0')}',
           'createdAt': '2026-11-10T10:00:00Z',
-            'declaredAt': '2026-11-10T10:00:00Z', 'status': 'CONFIRMED', 'recordedByAdmin': true,
+            'declaredAt': '2026-11-10T10:00:00Z', 'status': 'CONFIRMED', 'recordedByAdmin': true, 'kind': 'PAYMENT',
         });
       }
       keepAlive(container, settlementsControllerProvider(server.gid));

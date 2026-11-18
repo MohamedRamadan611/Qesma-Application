@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
 import 'package:qesma/features/my_share/presentation/category_drilldown_sheet.dart';
 import 'package:qesma/features/my_share/presentation/my_share_screen.dart';
 import 'package:qesma/local/insights/my_share_provider.dart';
@@ -130,8 +131,9 @@ void main() {
       expect(find.text(l10n.myShareTitle), findsOneWidget);
 
       // Months present in ChoiceChips
-      expect(find.text(isolated('2026-11')), findsOneWidget);
-      expect(find.text(isolated('2026-10')), findsOneWidget);
+      final locale = Localizations.localeOf(tester.element(find.byType(MyShareScreen))).toString();
+      expect(find.text(DateFormat.yMMMM(locale).format(DateTime(2026, 11))), findsOneWidget);
+      expect(find.text(DateFormat.yMMMM(locale).format(DateTime(2026, 10))), findsOneWidget);
 
       // Totals
       expect(find.text(l10n.myShareConsumed), findsWidgets);
@@ -140,7 +142,7 @@ void main() {
       // Categories
       expect(find.text(l10n.categoryFood), findsOneWidget);
       expect(find.text(l10n.categoryFuel), findsOneWidget);
-      expect(find.text('50%'), findsNWidgets(2)); // both FOOD and FUEL are 50%
+      expect(find.text(isolated('50%')), findsNWidgets(2)); // both FOOD and FUEL are 50%
     });
 
     testWidgets('tapping a category opens the drill-down bottom sheet and shows expenses', (tester) async {

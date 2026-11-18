@@ -256,6 +256,7 @@ void main() {
       final form = fill('expense_equal_v2');
       expect(_wire(buildExpenseCommand(form, edit: true, memberIds: _members)!), {
         'title': 'Petrol (edited)',
+        'category': 'OTHER',
         'expenseDate': '2026-10-18',
         'splitType': 'EQUAL',
         'totalMinor': 52000,

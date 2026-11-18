@@ -2506,6 +2506,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get myShareBalanced => 'استهلاكك مساوٍ لما دفعته';
 
   @override
+  String get myShareHint => 'اضغط على فئة لعرض المصاريف الخاصة بها';
+
+  @override
+  String get myShareExplainer =>
+      'هذه أرقام إنفاقك أنت وليست مبالغ عليك. لمعرفة من يدين لمن افتح تبويب الأرصدة.';
+
+  @override
+  String myShareCategorySemantics(
+    String category,
+    String percent,
+    String amount,
+  ) {
+    return '$category، $percent بالمئة من استهلاكك، $amount';
+  }
+
+  @override
   String get myShareEmptyTitle => 'لا توجد مصاريف بعد';
 
   @override
@@ -2617,4 +2633,70 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get recapTextSummaryFooter =>
       'تم الحساب بواسطة تطبيق قسمة • qesma.app';
+
+  @override
+  String get reminderSheetTitle => 'تذكير بالتحويل';
+
+  @override
+  String get reminderSheetSubtitle => 'رسالة واتساب جاهزة للتعديل والإرسال';
+
+  @override
+  String get reminderToneLabel => 'طريقة الكلام';
+
+  @override
+  String get reminderToneSoftChip => 'هادي';
+
+  @override
+  String get reminderToneFirmChip => 'واضح';
+
+  @override
+  String get reminderToneFunnyChip => 'هزار';
+
+  @override
+  String get reminderIncludeInstapay => 'إضافة حساب إنستاباي للرسالة';
+
+  @override
+  String get reminderMessageFieldLabel => 'نص الرسالة';
+
+  @override
+  String get reminderLaunchFailed =>
+      'مقدرناش نفتح واتساب أو المشاركة. جرّب تاني.';
+
+  @override
+  String get reminderOpenWhatsapp => 'فتح واتساب';
+
+  @override
+  String reminderInstapayLine(String handle) {
+    return '\n\nبيانات إنستاباي:\n$handle';
+  }
+
+  @override
+  String reminderToneSoft(
+    String name,
+    String group,
+    String amount,
+    String handle,
+  ) {
+    return 'صباح الفل يا $name، تذكير بسيط بس بخصوص قعدتنا في $group، كان عليك $amount. لما تفضى ابعتهم براحتك يا غالي$handle';
+  }
+
+  @override
+  String reminderToneFirm(
+    String name,
+    String group,
+    String amount,
+    String handle,
+  ) {
+    return 'يا $name، بنقفل حسابات $group ومتبقي عليك $amount. يا ريت تحولهم أول ما تشوف الرسالة$handle';
+  }
+
+  @override
+  String reminderToneFunny(
+    String name,
+    String group,
+    String amount,
+    String handle,
+  ) {
+    return 'يا $name يا فنان، تذكير لطيف قبل ما الجيب يعلن إفلاسه بخصوص $group: عليك $amount. متخليش المحفظة تعيط!$handle';
+  }
 }

@@ -12,6 +12,11 @@ void main() {
       // TODO
     });
 
+    // String treasurerMemberId
+    test('to test the property `treasurerMemberId`', () async {
+      // TODO
+    });
+
     // String type
     test('to test the property `type`', () async {
       // TODO

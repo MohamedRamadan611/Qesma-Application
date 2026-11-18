@@ -296,8 +296,11 @@ void main() {
 
       await tester.tap(find.text(l10n.recapConfirmShareAction));
       await tester.pump();
-      await tester.runAsync(() async => await Future<void>.delayed(const Duration(milliseconds: 200)));
-      await tester.pump();
+      // Rendering the image runs on the real event loop: wait for it instead of a fixed delay.
+      for (var i = 0; i < 20 && fakeSharer.lastSharedImage == null; i++) {
+        await tester.runAsync(() async => await Future<void>.delayed(const Duration(milliseconds: 100)));
+        await tester.pump();
+      }
 
       expect(fakeSharer.lastSharedImage, isNotNull, reason: 'Share should execute on confirm');
     });

@@ -15,9 +15,9 @@ Name | Type | Description | Notes
 **members** | [**BuiltList&lt;MemberDto&gt;**](MemberDto.md) |  | 
 **muted** | **bool** |  | 
 **name** | **String** |  | 
-**poolBalanceMinor** | **int** | Integer minor units (piasters: 1 EGP = 100). Never a decimal. | 
+**poolBalanceMinor** | **int** | Integer minor units (piasters: 1 EGP = 100). Never a decimal. | [optional] 
 **totalSpentMinor** | **int** | Integer minor units (piasters: 1 EGP = 100). Never a decimal. | 
-**treasurerMemberId** | **String** |  | 
+**treasurerMemberId** | **String** |  | [optional] 
 **type** | **String** |  | 
 **updatedAt** | [**DateTime**](DateTime.md) |  | 
 **version** | **int** |  | 

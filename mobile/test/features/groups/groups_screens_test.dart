@@ -377,7 +377,8 @@ void main() {
     test('neither ARB file has such copy', () {
       for (final (file, words) in [('ar', forbiddenAr), ('en', forbiddenEn)]) {
         final arb = jsonDecode(File('lib/core/l10n/app_$file.arb').readAsStringSync()) as Map<String, dynamic>;
-        for (final entry in arb.entries.where((e) => !e.key.startsWith('@'))) {
+        // SA7 "My share" (per-month consumption) and SA8 "recap" (shares an image) are standalone features, not the omitted design items.
+        for (final entry in arb.entries.where((e) => !e.key.startsWith('@') && !e.key.startsWith('myShare') && !e.key.startsWith('recap'))) {
           for (final word in words) {
             expect((entry.value as String).toLowerCase(), isNot(contains(word)), reason: '${entry.key} in $file');
           }

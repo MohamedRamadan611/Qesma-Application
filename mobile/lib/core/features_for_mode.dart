@@ -26,6 +26,7 @@ class ModeFeatures {
     required this.backup,
     required this.myShare,
     required this.recap,
+    required this.reminderTones,
   });
 
   /// Today's app: everything on (backup is a local-mode feature, SA5).
@@ -49,6 +50,7 @@ class ModeFeatures {
     backup: false,
     myShare: false,
     recap: false,
+    reminderTones: false,
   );
 
   /// The standalone release: every server-only feature off. `backup` (export, restore, reminder banner) is on: SA5.
@@ -72,6 +74,7 @@ class ModeFeatures {
     backup: true,
     myShare: true,
     recap: true,
+    reminderTones: true,
   );
 
   static ModeFeatures of(AppMode mode) => mode == AppMode.local ? local : server;
@@ -97,6 +100,7 @@ class ModeFeatures {
   final bool backup;
   final bool myShare;
   final bool recap;
+  final bool reminderTones;
 }
 
 final modeFeaturesProvider = Provider<ModeFeatures>((ref) => ModeFeatures.of(ref.watch(appModeProvider)));

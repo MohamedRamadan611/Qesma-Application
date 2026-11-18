@@ -2537,6 +2537,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get myShareBalanced => 'Consumption equals payments';
 
   @override
+  String get myShareHint => 'Tap a category to see the expenses behind it';
+
+  @override
+  String get myShareExplainer =>
+      'These are your own spending figures, not money you owe. Open Balances to see who owes whom.';
+
+  @override
+  String myShareCategorySemantics(
+    String category,
+    String percent,
+    String amount,
+  ) {
+    return '$category, $percent percent of your consumption, $amount';
+  }
+
+  @override
   String get myShareEmptyTitle => 'No expenses yet';
 
   @override
@@ -2641,4 +2657,70 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recapTextSummaryFooter => 'Calculated by Qesma • qesma.app';
+
+  @override
+  String get reminderSheetTitle => 'Send reminder';
+
+  @override
+  String get reminderSheetSubtitle => 'WhatsApp message ready to edit and send';
+
+  @override
+  String get reminderToneLabel => 'Tone';
+
+  @override
+  String get reminderToneSoftChip => 'Soft';
+
+  @override
+  String get reminderToneFirmChip => 'Firm';
+
+  @override
+  String get reminderToneFunnyChip => 'Funny';
+
+  @override
+  String get reminderIncludeInstapay => 'Include my InstaPay address';
+
+  @override
+  String get reminderMessageFieldLabel => 'Message';
+
+  @override
+  String get reminderLaunchFailed =>
+      'Couldn\'t open WhatsApp or the share sheet. Try again.';
+
+  @override
+  String get reminderOpenWhatsapp => 'Open WhatsApp';
+
+  @override
+  String reminderInstapayLine(String handle) {
+    return '\n\nMy InstaPay:\n$handle';
+  }
+
+  @override
+  String reminderToneSoft(
+    String name,
+    String group,
+    String amount,
+    String handle,
+  ) {
+    return 'Hey $name, just a friendly reminder about our expenses in $group ($amount). Whenever you have a chance!$handle';
+  }
+
+  @override
+  String reminderToneFirm(
+    String name,
+    String group,
+    String amount,
+    String handle,
+  ) {
+    return 'Hi $name, we\'re settling up $group expenses. Your share is $amount. Please transfer it when you get a moment.$handle';
+  }
+
+  @override
+  String reminderToneFunny(
+    String name,
+    String group,
+    String amount,
+    String handle,
+  ) {
+    return 'Hey $name, my wallet asked me to remind you about $group! Your share is $amount. Save my wallet before it cries!$handle';
+  }
 }

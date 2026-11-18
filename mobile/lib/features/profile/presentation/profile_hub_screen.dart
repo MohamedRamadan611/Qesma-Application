@@ -123,7 +123,7 @@ class ProfileHubScreen extends ConsumerWidget {
                 ProfileRow(
                   icon: Icons.pie_chart_outline,
                   title: l10n.myShareTitle,
-                  value: l10n.myShareMonthlySpend,
+                  value: l10n.myShareSubtitle,
                   onTap: () => context.push(Routes.myShare),
                 ),
               ProfileRow(icon: Icons.account_balance_wallet_outlined, title: l10n.profilePaymentDetails, onTap: () => context.push(Routes.paymentHandles)),

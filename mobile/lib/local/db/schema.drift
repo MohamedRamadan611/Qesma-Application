@@ -25,6 +25,7 @@ CREATE TABLE local_meta (
     last_export_at             INTEGER,
     last_export_format_version INTEGER CHECK (last_export_format_version IS NULL OR last_export_format_version >= 1),
     backup_reminder_snoozed_until INTEGER,
+    last_reminder_tone         TEXT CHECK (last_reminder_tone IS NULL OR last_reminder_tone IN ('SOFT', 'FIRM', 'FUNNY')),
     CHECK ((last_export_at IS NULL) = (last_export_format_version IS NULL))
 ) STRICT AS LocalMetaRow;
 

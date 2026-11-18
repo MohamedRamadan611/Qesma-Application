@@ -80,7 +80,8 @@ ExpenseCommand _commandOf(Map<String, dynamic> e) {
     b
       ..title = e['title'] as String
       ..expenseDate = _dateOf(e['expenseDate'] as String)
-      ..splitType = 'ITEMIZED';
+      ..splitType = 'ITEMIZED'
+      ..category = (e['category'] as String?) ?? 'OTHER';
     b.items.addAll([
       for (final i in (e['items'] as List).cast<Map<String, dynamic>>())
         ItemInput((x) => x

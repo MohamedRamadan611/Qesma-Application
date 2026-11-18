@@ -87,14 +87,14 @@ void main() {
     container.read(routerProvider).pop(); // back from the expense details to the group
     await tester.pumpAndSettle();
 
-    // Balances: Omar owes Mona 50.00; recording is a plain payment, no remind, no pending chip.
+    // Balances: Omar owes Mona 50.00; recording is a plain payment, no pending chip; the receiver gets the local WhatsApp reminder (SA9, no server call).
     await tester.tap(find.text(l10n.groupTabBalances));
     await tester.pumpAndSettle();
     expect(find.text(l10n.payReceived), findsOneWidget, reason: 'Mona is owed 50.00: record that it arrived');
     expect(find.text(l10n.payNoHandles('Omar')), findsNothing);
     expect(find.text(l10n.pendingBadge), findsNothing);
     expect(find.text(l10n.balancesAllSettledTitle), findsNothing);
-    expect(find.text(l10n.remindButton), findsNothing);
+    expect(find.text(l10n.remindButton), findsOneWidget, reason: 'SA9: the receiver can send a WhatsApp reminder in local mode');
 
     // Record the full payment: it counts at once (no pending, no review) and everyone is settled.
     await tester.tap(find.text(l10n.payReceived));

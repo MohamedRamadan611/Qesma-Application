@@ -9,5 +9,6 @@
   "createdAt": "2026-11-10T02:04:14.784211Z",
   "status": "CONFIRMED",
   "declaredAt": "2026-11-10T02:04:14.784211Z",
-  "recordedByAdmin": true
+  "recordedByAdmin": true,
+  "kind": "PAYMENT"
 }
