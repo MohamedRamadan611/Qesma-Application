@@ -6,6 +6,12 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// SA12: the Firebase config is downloaded from the Firebase console (not a secret, never edited by hand). Without it
+// the app still builds; receipt scanning then reports itself unavailable and the user types manually.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 // Release signing: read from android/key.properties (git-ignored) or, for CI, from the QESMA_KEYSTORE_* environment
 // variables. With neither present the release build is signed with the DEBUG key so `flutter run --release` still
 // works locally; docs/mobile-release.md and tool/check_release_artifact.sh refuse such an artifact for upload.

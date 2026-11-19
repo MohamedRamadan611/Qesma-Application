@@ -3,9 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qesma_api/qesma_api.dart';
 
 import '../../../core/l10n/generated/app_localizations.dart';
+import '../../../core/money/money.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
+import '../../receipt_scan/application/receipt_scan_providers.dart';
+import '../../receipt_scan/presentation/scan_flow.dart';
 import '../application/expense_command_builder.dart';
+import '../application/expense_draft.dart' show ScanNote;
 import '../application/expense_form_controller.dart';
 import '../application/expense_form_state.dart';
 import '../application/expense_preview_controller.dart';
@@ -100,6 +104,28 @@ class _ItemsCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: QesmaSpacing.md),
+          // SA12: scan the receipt into these items (the user still assigns members and confirms every number).
+          if (ref.watch(receiptScanVisibleProvider)) ...[
+            AppButton(
+              label: l10n.scanReceiptAction,
+              icon: Icons.document_scanner_outlined,
+              variant: AppButtonVariant.secondary,
+              onPressed: () => _scan(context, ref, formKey, form),
+            ),
+            const SizedBox(height: QesmaSpacing.md),
+          ],
+          for (final note in form.scanNotes) ...[
+            StatusBanner(
+              icon: Icons.warning_amber_outlined,
+              text: switch (note) {
+                ScanNote.flaggedItems => l10n.scanFlaggedHint,
+                ScanNote.needsPercent => l10n.scanNeedsPercent,
+                ScanNote.truncated => l10n.scanTruncated,
+              },
+              tone: BannerTone.warning,
+            ),
+            const SizedBox(height: QesmaSpacing.sm),
+          ],
           for (var i = 0; i < items.length; i++) ...[
             _ItemCard(
               key: ValueKey(items[i].id),
@@ -142,6 +168,25 @@ class _ItemsCard extends ConsumerWidget {
         ],
       ),
     );
+  }
+}
+
+/// Runs the receipt scan from the editor; a proposal replaces the items (after asking when some were typed).
+Future<void> _scan(BuildContext context, WidgetRef ref, ExpenseFormKey key, ExpenseFormState form) async {
+  final l10n = AppLocalizations.of(context);
+  final typed = form.itemized.items.any((i) => i.name.trim().isNotEmpty || i.amountText.trim().isNotEmpty);
+  if (typed) {
+    final replace = await showConfirmDialog(
+      context,
+      title: l10n.scanReplaceTitle,
+      message: l10n.scanReplaceBody,
+      confirmLabel: l10n.scanReplaceConfirm,
+    );
+    if (!replace || !context.mounted) return;
+  }
+  final result = await runReceiptScan(context, ref);
+  if (result case ScanFlowDraft(:final draft)) {
+    ref.read(expenseFormControllerProvider(key).notifier).applyScan(draft);
   }
 }
 
@@ -534,6 +579,13 @@ class _BreakdownCard extends ConsumerWidget {
               ),
             ),
           ),
+          // SA12: the total printed on a scanned receipt against the preview's own total (a comparison, no arithmetic).
+          if (form.printedTotalMinor != null) ...[
+            const SizedBox(height: QesmaSpacing.sm),
+            current!.totalMinor == form.printedTotalMinor
+                ? StatusBanner(icon: Icons.check_circle_outline, text: l10n.scanTotalMatches(Money.format(form.printedTotalMinor!)), tone: BannerTone.success)
+                : StatusBanner(icon: Icons.error_outline, text: l10n.scanTotalDiffers(Money.format(form.printedTotalMinor!)), tone: BannerTone.error),
+          ],
           if (matchKey != null) ...[const SizedBox(height: QesmaSpacing.sm), _MatchBanner(state: match, key_: matchKey!)],
         ],
       );

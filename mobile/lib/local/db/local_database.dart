@@ -60,7 +60,7 @@ class LocalDatabase extends _$LocalDatabase {
   final int Function() _clock;
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -99,6 +99,15 @@ class LocalDatabase extends _$LocalDatabase {
           // SA11: saved fuel prices for the Khorouga calculator (new table, A168). Nothing existing changes.
           from5To6: (m, schema) async {
             await m.createTable(schema.fuelPrices);
+          },
+          // SA12: receipt-scan consent, daily counter and permission-error state (local_meta, all nullable or with
+          // defaults, so every existing row stays valid).
+          from6To7: (m, schema) async {
+            await m.addColumn(schema.localMeta, schema.localMeta.ocrConsentAt);
+            await m.addColumn(schema.localMeta, schema.localMeta.ocrScanDay);
+            await m.addColumn(schema.localMeta, schema.localMeta.ocrScanCount);
+            await m.addColumn(schema.localMeta, schema.localMeta.ocrPermissionErrors);
+            await m.addColumn(schema.localMeta, schema.localMeta.ocrHiddenUntil);
           },
         ),
         beforeOpen: (details) async {

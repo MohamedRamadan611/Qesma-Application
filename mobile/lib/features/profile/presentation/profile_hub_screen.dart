@@ -16,6 +16,7 @@ import '../../auth/presentation/auth_widgets.dart';
 import '../../expenses/presentation/expense_ui.dart';
 import '../../groups/application/groups_list_controller.dart';
 import '../../backup/presentation/backup_section.dart';
+import '../../receipt_scan/presentation/scan_consent_row.dart';
 import 'appearance_sheet.dart';
 import 'language_sheet.dart';
 import 'profile_rows.dart';
@@ -148,6 +149,8 @@ class ProfileHubScreen extends ConsumerWidget {
             const SizedBox(height: QesmaSpacing.lg),
             const BackupSection(),
           ],
+          // SA12: see and revoke the receipt-scan consent (the row hides itself when scanning is not available).
+          if (features.receiptScan) const ScanConsentRow(),
           const SizedBox(height: QesmaSpacing.lg),
           ProfileSection(
             title: l10n.profileSectionAbout,

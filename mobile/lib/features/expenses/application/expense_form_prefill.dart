@@ -74,6 +74,19 @@ ItemizedDraft _itemizedFrom(ExpenseView expense, Charges? charges) {
   );
 }
 
+/// Fills the add form from a receipt scan (SA12): itemized mode with the proposed items and charges, nobody assigned,
+/// one payer (you), on [date]. The user assigns members and confirms every number; nothing is saved here.
+ExpenseFormState formFromScan(ScanDraft draft, {required Date date, required String? payerId}) => ExpenseFormState(
+      title: '',
+      amountText: '',
+      date: date,
+      singlePayerId: payerId,
+      splitMode: SplitMode.itemized,
+      itemized: draft.itemized,
+      printedTotalMinor: draft.printedTotalMinor,
+      scanNotes: draft.notes,
+    );
+
 /// Fills the add form from a draft (SA11): EXACT among the draft's members with its amounts, one payer, its
 /// category, on [date]. Amounts are shown as plain numbers, exactly as if typed.
 ExpenseFormState formFromDraft(ExpenseDraft draft, {required Date date}) => ExpenseFormState(

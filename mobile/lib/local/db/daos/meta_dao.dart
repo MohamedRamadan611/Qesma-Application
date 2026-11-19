@@ -25,6 +25,24 @@ class MetaDao extends DatabaseAccessor<LocalDatabase> with _$MetaDaoMixin {
   Future<void> snoozeBackupReminder(int untilMillis) => (update(localMeta)..where((m) => m.id.equals(1)))
       .write(LocalMetaCompanion(backupReminderSnoozedUntil: Value(untilMillis)));
 
+  /// SA12: writes the receipt-scan consent and limit state (device state, never exported).
+  Future<void> writeOcr({
+    required int? consentAt,
+    required String? scanDay,
+    required int scanCount,
+    required int permissionErrors,
+    required int? hiddenUntil,
+  }) =>
+      (update(localMeta)..where((m) => m.id.equals(1))).write(
+        LocalMetaCompanion(
+          ocrConsentAt: Value(consentAt),
+          ocrScanDay: Value(scanDay),
+          ocrScanCount: Value(scanCount),
+          ocrPermissionErrors: Value(permissionErrors),
+          ocrHiddenUntil: Value(hiddenUntil),
+        ),
+      );
+
   /// Remembers the last-used reminder tone (A148).
   Future<void> setLastReminderTone(String tone) => (update(localMeta)..where((m) => m.id.equals(1)))
       .write(LocalMetaCompanion(lastReminderTone: Value(tone)));

@@ -32,7 +32,7 @@ void main() {
     schema.rawDatabase.execute('INSERT INTO local_meta (id, created_schema_version, created_at, last_export_at, last_export_format_version) VALUES (1, 1, 1000, 2000, 1)');
     schema.rawDatabase.execute("INSERT INTO local_profile (id, display_name, created_at, updated_at) VALUES ('00000000-0000-4000-8000-000000000001', 'Mona', 1, 1)");
     final db = LocalDatabase(schema.newConnection());
-    await verifier.migrateAndValidate(db, 2);
+    await verifier.migrateAndValidate(db, db.schemaVersion); // SA12: later NOT NULL columns exist, so the row is read at the current version
     final meta = await db.metaDao.get();
     expect((meta.createdSchemaVersion, meta.createdAt, meta.lastExportAt, meta.backupReminderSnoozedUntil), (1, 1000, 2000, null));
     expect((await db.profileDao.find())!.displayName, 'Mona');
@@ -46,7 +46,7 @@ void main() {
     schema.rawDatabase.execute('INSERT INTO local_meta (id, created_schema_version, created_at, last_export_at, last_export_format_version, backup_reminder_snoozed_until) VALUES (1, 1, 1000, 2000, 1, 5)');
     schema.rawDatabase.execute("INSERT INTO local_profile (id, display_name, created_at, updated_at) VALUES ('00000000-0000-4000-8000-000000000001', 'Mona', 1, 1)");
     final db = LocalDatabase(schema.newConnection());
-    await verifier.migrateAndValidate(db, 4);
+    await verifier.migrateAndValidate(db, db.schemaVersion);
     final meta = await db.metaDao.get();
     expect(meta.lastReminderTone, isNull);
     await db.metaDao.setLastReminderTone('FUNNY');
@@ -97,11 +97,31 @@ void main() {
     schema.rawDatabase.execute("INSERT INTO local_profile (id, display_name, created_at, updated_at) VALUES ('$p', 'Mona', 1, 1)");
 
     final db = LocalDatabase(schema.newConnection());
-    await verifier.migrateAndValidate(db, 6);
+    await verifier.migrateAndValidate(db, db.schemaVersion);
     expect((await db.metaDao.get()).lastReminderTone, 'FIRM');
     expect(await db.fuelPricesDao.watchAll().first, isEmpty);
     await db.fuelPricesDao.upsert(fuelType: 'GASOLINE_92', pricePerLitreMinor: 1375, updatedAt: 5);
     expect((await db.fuelPricesDao.watchAll().first).single.pricePerLitreMinor, 1375);
+    await db.close();
+  });
+
+  test('v6 -> v7 keeps the data and adds the receipt-scan state with safe defaults (SA12)', () async {
+    const p = '00000000-0000-4000-8000-000000000001';
+    final schema = await verifier.schemaAt(6);
+    schema.rawDatabase.execute("INSERT INTO local_meta (id, created_schema_version, created_at, last_reminder_tone) VALUES (1, 6, 1000, 'SOFT')");
+    schema.rawDatabase.execute("INSERT INTO local_profile (id, display_name, created_at, updated_at) VALUES ('$p', 'Mona', 1, 1)");
+
+    final db = LocalDatabase(schema.newConnection());
+    await verifier.migrateAndValidate(db, 7);
+    final meta = await db.metaDao.get();
+    expect(meta.lastReminderTone, 'SOFT');
+    expect((meta.ocrConsentAt, meta.ocrScanDay, meta.ocrScanCount, meta.ocrPermissionErrors, meta.ocrHiddenUntil), (null, null, 0, 0, null));
+    await db.metaDao.writeOcr(consentAt: 5, scanDay: '2026-11-19', scanCount: 3, permissionErrors: 1, hiddenUntil: 99);
+    final after = await db.metaDao.get();
+    expect((after.ocrConsentAt, after.ocrScanDay, after.ocrScanCount, after.ocrPermissionErrors, after.ocrHiddenUntil), (5, '2026-11-19', 3, 1, 99));
+    // The schema refuses a malformed day and a negative counter.
+    await expectLater(db.metaDao.writeOcr(consentAt: null, scanDay: '19/11/2026', scanCount: 0, permissionErrors: 0, hiddenUntil: null), throwsA(anything));
+    await expectLater(db.metaDao.writeOcr(consentAt: null, scanDay: null, scanCount: -1, permissionErrors: 0, hiddenUntil: null), throwsA(anything));
     await db.close();
   });
 }

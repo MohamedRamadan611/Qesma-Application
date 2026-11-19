@@ -2991,4 +2991,136 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get calcDraftRideTitle => 'مشوار مشترك';
+
+  @override
+  String get scanReceiptAction => 'تصوير الإيصال';
+
+  @override
+  String get scanReceiptHint => 'الأصناف تتكتب من الصورة، وانت بتراجع كل رقم.';
+
+  @override
+  String get scanSourceTitle => 'صورة الإيصال';
+
+  @override
+  String get scanSourceCamera => 'صوّر دلوقتي';
+
+  @override
+  String get scanSourceGallery => 'اختار من المعرض';
+
+  @override
+  String get scanTypeManually => 'اكتب بإيدك';
+
+  @override
+  String get scanReading => 'بنقرأ الإيصال…';
+
+  @override
+  String get scanReadingHint => 'ممكن ياخد كام ثانية.';
+
+  @override
+  String get scanErrorTitle => 'مقدرناش نقرأ الإيصال';
+
+  @override
+  String get scanErrorOffline =>
+      'مفيش إنترنت. اتصل وجرب تاني، أو اكتب الأصناف بنفسك.';
+
+  @override
+  String get scanErrorTimeout =>
+      'أخد وقت طويل. جرب تاني، أو اكتب الأصناف بنفسك.';
+
+  @override
+  String get scanErrorQuota =>
+      'القراءة المجانية خلصت دلوقتي. جرب بعدين، أو اكتب الأصناف بنفسك.';
+
+  @override
+  String get scanErrorPermission =>
+      'قراءة الإيصال مش متاحة على التليفون ده دلوقتي. اكتب الأصناف بنفسك.';
+
+  @override
+  String get scanErrorPhoto =>
+      'ملقيناش أصناف في الصورة دي. صوّر الإيصال مستقيم وواضح أكتر، أو اكتب الأصناف بنفسك.';
+
+  @override
+  String get scanErrorInvalid =>
+      'الرد مكانش مفهوم. جرب تاني، أو اكتب الأصناف بنفسك.';
+
+  @override
+  String get scanErrorCap =>
+      'وصلت للحد النهاردة: 20 إيصال. اكتب الأصناف بنفسك، أو صوّر بكرة.';
+
+  @override
+  String get scanErrorUnavailable =>
+      'قراءة الإيصال مش متاحة دلوقتي. اكتب الأصناف بنفسك.';
+
+  @override
+  String get scanTryAgain => 'جرب تاني';
+
+  @override
+  String get scanConsentTitle => 'قبل ما تصوّر';
+
+  @override
+  String get scanConsentSent =>
+      'صورة الإيصال بتتبعت لجوجل (Gemini) عشان تتقرأ. مفيش حاجة تانية بتتبعت: لا أسماء ولا بيانات المجموعة.';
+
+  @override
+  String get scanConsentFree =>
+      'ده بيستخدم الخدمة المجانية من جوجل. ممكن جوجل تستخدم اللي بتبعته لتحسين منتجاتها، وممكن ناس تراجعه. متصوّرش حاجة خاصة.';
+
+  @override
+  String get scanConsentKept =>
+      'قسمة مش بتحتفظ بالصورة. بتتمسح بعد القراءة على طول.';
+
+  @override
+  String get scanConsentAvoid =>
+      'مش لازم تصوّر. تقدر دايمًا تكتب الأصناف بنفسك.';
+
+  @override
+  String get scanConsentRevoke => 'تقدر توقّف ده في أي وقت من الملف الشخصي.';
+
+  @override
+  String get scanConsentAccept => 'موافق، كمّل';
+
+  @override
+  String get scanConsentDecline => 'اكتب بإيدك بدل كده';
+
+  @override
+  String get scanProfileTitle => 'قراءة الإيصالات';
+
+  @override
+  String get scanProfileOn => 'شغّالة. الصورة بتتبعت لجوجل عشان تتقرأ.';
+
+  @override
+  String get scanProfileOff => 'مقفولة. هنسألك قبل المرة الجاية.';
+
+  @override
+  String get scanProfileHidden => 'مش متاحة دلوقتي. اكتب الأصناف بنفسك.';
+
+  @override
+  String get scanReplaceTitle => 'تستبدل الأصناف؟';
+
+  @override
+  String get scanReplaceBody => 'القراءة هتستبدل الأصناف اللي كتبتها.';
+
+  @override
+  String get scanReplaceConfirm => 'استبدل';
+
+  @override
+  String scanTotalMatches(String total) {
+    return 'الإجمالي زي إجمالي الإيصال ($total).';
+  }
+
+  @override
+  String scanTotalDiffers(String total) {
+    return 'الإجمالي مش زي إجمالي الإيصال ($total). راجع المبالغ.';
+  }
+
+  @override
+  String get scanFlaggedHint =>
+      'في مبالغ مقدرناش نقرأها. راجع الأصناف المعلّمة.';
+
+  @override
+  String get scanNeedsPercent =>
+      'الإيصال مكتوب عليه مبلغ خدمة أو ضريبة. اكتب نسبته.';
+
+  @override
+  String get scanTruncated => 'الإيصال فيه أكتر من 100 صنف. قرأنا أول 100 بس.';
 }

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "183241765398",
+    "project_id": "qesma-v0",
+    "storage_bucket": "qesma-v0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:183241765398:android:dc80ef5bd805138198bb37",
+        "android_client_info": {
+          "package_name": "app.qesma.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCy5P9O7XwI0soSV7inju0Y_-9bAJuwUPM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

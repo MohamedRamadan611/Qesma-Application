@@ -225,6 +225,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => ExpenseFormScreen(
               gid: state.pathParameters['gid']!,
               draft: state.extra is ExpenseDraft ? state.extra! as ExpenseDraft : null,
+              // SA12: the receipt scan hands over an unsaved itemized bill the same way.
+              scanDraft: state.extra is ScanDraft ? state.extra! as ScanDraft : null,
             ),
           ),
           GoRoute(

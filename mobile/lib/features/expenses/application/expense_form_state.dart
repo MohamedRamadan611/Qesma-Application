@@ -2,6 +2,7 @@ import 'package:qesma_api/qesma_api.dart';
 
 import '../../../core/money/money.dart';
 import '../../../core/widgets/code_point_limit.dart';
+import 'expense_draft.dart' show ScanNote;
 
 /// Which people share the expense and how: everyone or some members equally, typed exact
 /// amounts, or a restaurant bill with items, service, tax and an adjustment (itemized).
@@ -176,6 +177,8 @@ class ExpenseFormState {
     this.payerTexts = const {},
     this.itemized = const ItemizedDraft(),
     this.serverTotalMinor,
+    this.printedTotalMinor,
+    this.scanNotes = const {},
   });
 
   final String title;
@@ -209,6 +212,12 @@ class ExpenseFormState {
   /// `totalMinor`). Null while the inputs changed and no answer for them has arrived yet.
   final int? serverTotalMinor;
 
+  /// SA12: the total printed on a scanned receipt, kept only to compare with the preview's total (never sent).
+  final int? printedTotalMinor;
+
+  /// SA12: what the scan could not settle (notices above the items).
+  final Set<ScanNote> scanNotes;
+
   ExpenseFormState copyWith({
     String? title,
     String? amountText,
@@ -223,6 +232,8 @@ class ExpenseFormState {
     Map<String, String>? payerTexts,
     ItemizedDraft? itemized,
     int? serverTotalMinor,
+    int? printedTotalMinor,
+    Set<ScanNote>? scanNotes,
     bool clearServerTotal = false,
   }) =>
       ExpenseFormState(
@@ -239,6 +250,8 @@ class ExpenseFormState {
         payerTexts: payerTexts ?? this.payerTexts,
         itemized: itemized ?? this.itemized,
         serverTotalMinor: clearServerTotal ? null : (serverTotalMinor ?? this.serverTotalMinor),
+        printedTotalMinor: printedTotalMinor ?? this.printedTotalMinor,
+        scanNotes: scanNotes ?? this.scanNotes,
       );
 
   // ---- title, total, date ----

@@ -15,6 +15,8 @@ import '../../expenses/application/expenses_list_controller.dart';
 import '../../expenses/presentation/expenses_tab.dart';
 import '../../invites/presentation/invite_sheet.dart';
 import '../../pool/presentation/pool_card.dart';
+import '../../receipt_scan/application/receipt_scan_providers.dart';
+import '../../receipt_scan/presentation/scan_flow.dart';
 import '../application/group_detail_controller.dart';
 import '../application/group_permissions.dart';
 import '../data/group_type.dart';
@@ -128,7 +130,7 @@ class _GroupHomeScreenState extends ConsumerState<GroupHomeScreen> {
       floatingActionButton: _tab == 0
           ? FloatingActionButton.extended(
               // SA11: in local mode the button offers the calculator next to a plain expense.
-              onPressed: ref.watch(modeFeaturesProvider).calculator
+              onPressed: ref.watch(modeFeaturesProvider).calculator || ref.watch(receiptScanVisibleProvider)
                   ? () => _showAddMenu(context, group.id)
                   : () => context.push(Routes.addExpense(group.id)),
               icon: const Icon(Icons.add),
@@ -182,17 +184,42 @@ class _GroupHomeScreenState extends ConsumerState<GroupHomeScreen> {
               context.push(Routes.addExpense(gid));
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.local_gas_station_outlined),
-            title: Text(l10n.calcMenuCalculator),
-            subtitle: Text(l10n.calcMenuCalculatorHint),
-            onTap: () {
-              Navigator.of(context).pop();
-              context.push(Routes.calculator(gid));
-            },
-          ),
+          if (ref.read(modeFeaturesProvider).calculator)
+            ListTile(
+              leading: const Icon(Icons.local_gas_station_outlined),
+              title: Text(l10n.calcMenuCalculator),
+              subtitle: Text(l10n.calcMenuCalculatorHint),
+              onTap: () {
+                Navigator.of(context).pop();
+                context.push(Routes.calculator(gid));
+              },
+            ),
+          // SA12: a photo of the receipt becomes an unsaved itemized bill.
+          if (ref.read(receiptScanVisibleProvider))
+            ListTile(
+              leading: const Icon(Icons.document_scanner_outlined),
+              title: Text(l10n.scanReceiptAction),
+              subtitle: Text(l10n.scanReceiptHint),
+              onTap: () {
+                Navigator.of(context).pop();
+                _scanReceipt(gid);
+              },
+            ),
         ],
       ),
     );
+  }
+
+  Future<void> _scanReceipt(String gid) async {
+    final result = await runReceiptScan(context, ref);
+    if (!mounted) return;
+    switch (result) {
+      case ScanFlowDraft(:final draft):
+        await context.push(Routes.addExpense(gid), extra: draft);
+      case ScanFlowManual():
+        await context.push(Routes.addExpense(gid));
+      case ScanFlowCancelled():
+        break;
+    }
   }
 }

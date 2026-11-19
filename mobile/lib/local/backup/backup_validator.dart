@@ -15,8 +15,9 @@ abstract final class BackupValidator {
   /// The newest database schema this app writes (`LocalDatabase.schemaVersion`); older files are accepted: schema 3 added
   /// expense category (optional on import, defaults to OTHER), 4 added the reminder tone, a preference the backup does not carry,
   /// and 5 the pool (treasurer_member_id, paid_from_pool, kind: optional on import, default none / 0 / PAYMENT); 6 added
-  /// saved fuel prices, a device setting the backup does not carry (A168).
-  static const int currentSchemaVersion = 6;
+  /// saved fuel prices, a device setting the backup does not carry (A168), and 7 the receipt-scan consent and counters,
+  /// device state the backup does not carry either (SA12).
+  static const int currentSchemaVersion = 7;
 
   static BackupData parse(Uint8List bytes, {int maxBytes = maxBackupBytes}) {
     if (bytes.isEmpty) throw const BackupException(BackupError.unreadable);

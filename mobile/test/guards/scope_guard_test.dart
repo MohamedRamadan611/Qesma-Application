@@ -22,6 +22,7 @@ const enabledFeatures = <String>{
   'recap', // SA8: trip recap image & text summary
   'pool', // SA10: pool & treasurer (edit-group section, pool card and screen, deposit sheet, expense toggle)
   'calculator', // SA11: Khorouga calculator (fuel + tolls, multi-stop ride), prefills an EXACT expense
+  'receiptScan', // SA12: receipt photo -> unsaved itemized bill (consent, scan entry points, profile switch)
 };
 
 /// Words, Arabic words, phrases, icons and routes of one Phase 2 feature.
@@ -78,13 +79,18 @@ const phase2Features = <String, Phase2Feature>{
     arabic: ['حاسبة', 'كارتة', 'الكارتة'],
     routes: ["'/calculator", "/calculator'"],
   ),
+  // SA12: receipt photo -> unsaved itemized bill (STANDALONE_SPEC 13). Camera and photo icons of the picker sheet use
+  // the outlined variants, which the whole-name match below does not flag; the three named here are the scanner's own.
+  'receiptScan': Phase2Feature(
+    words: ['receipt', 'scan'],
+    arabic: ['إيصال', 'الإيصال', 'إيصالات', 'الإيصالات'],
+    icons: ['Icons.camera', 'Icons.receipt', 'Icons.document_scanner'],
+  ),
 };
 
 /// Omitted for good (not Phase 2): never enabled.
 const _permanentWords = <String, String>{
   'guest': 'guest mode (SCREEN_MAP: no guest mode)',
-  'receipt': 'receipt photo / scan (omitted)',
-  'scan': 'scan the receipt (omitted)',
   'contacts': 'add from contacts (no contacts access)',
   'coupon': 'not a concept of the app',
   'premium': 'not a concept of the app',
@@ -92,9 +98,9 @@ const _permanentWords = <String, String>{
   'ads': 'not a concept of the app',
 };
 const _permanentPhrases = <String>['coming soon', 'sign out everywhere', 'cover photo', 'pay now', 'ready to settle'];
-const _permanentArabic = <String>['ضيف', 'قريبا', 'قريباً', 'إيصال'];
+const _permanentArabic = <String>['ضيف', 'قريبا', 'قريباً'];
 const _permanentIcons = <String>[
-  'Icons.camera', 'Icons.qr_code', 'Icons.document_scanner', 'Icons.receipt', 'Icons.contacts',
+  'Icons.qr_code', 'Icons.contacts',
 ];
 const _permanentRoutes = <String>["'/guest"];
 
@@ -215,7 +221,7 @@ void main() {
       expect(copyViolations({'en': <String, dynamic>{'k': 'Coming soon'}}, all), isNotEmpty);
       expect(copyViolations({'en': <String, dynamic>{'k': 'Continue as guest'}}, all), isNotEmpty);
       expect(copyViolations({'ar': <String, dynamic>{'k': 'قريبا'}}, all), isNotEmpty);
-      expect(sourceViolations({'lib/c.dart': 'Icon(Icons.camera, size: 8)'}, all), isNotEmpty);
+      expect(sourceViolations({'lib/c.dart': 'Icon(Icons.qr_code, size: 8)'}, all), isNotEmpty);
       expect(sourceViolations({'lib/d.dart': "go('/guest')"}, all), isNotEmpty);
     });
 
@@ -233,6 +239,16 @@ void main() {
       expect(sourceViolations({'lib/f.dart': "GoRoute(path: 'calculator', x: Routes.calculator, p: '/groups/1/calculator')"}, const {}), isNotEmpty);
       expect(copyViolations({'en': <String, dynamic>{'k': 'Add a toll'}}, const {'calculator'}), isEmpty);
       expect(copyViolations({'ar': <String, dynamic>{'k': 'إضافة كارتة'}}, const {'calculator'}), isEmpty);
+    });
+
+    test('receipt-scan words and icons are caught until the receiptScan key is enabled (SA12)', () {
+      expect(copyViolations({'en': <String, dynamic>{'k': 'Scan receipt'}}, const {}), isNotEmpty);
+      expect(copyViolations({'ar': <String, dynamic>{'k': 'تصوير الإيصال'}}, const {}), isNotEmpty);
+      expect(sourceViolations({'lib/g.dart': 'Icon(Icons.document_scanner, size: 8)'}, const {}), isNotEmpty);
+      expect(sourceViolations({'lib/g.dart': 'Icon(Icons.camera, size: 8)'}, const {}), isNotEmpty);
+      expect(copyViolations({'en': <String, dynamic>{'k': 'Scan receipt'}}, const {'receiptScan'}), isEmpty);
+      expect(copyViolations({'ar': <String, dynamic>{'k': 'تصوير الإيصال'}}, const {'receiptScan'}), isEmpty);
+      expect(sourceViolations({'lib/g.dart': 'Icon(Icons.document_scanner, size: 8)'}, const {'receiptScan'}), isEmpty);
     });
 
     test('whole words only: the Arabic "adds" is not "guest"', () {

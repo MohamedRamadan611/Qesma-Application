@@ -453,6 +453,62 @@ class LocalMeta extends Table with TableInfo<LocalMeta, LocalMetaRow> {
     requiredDuringInsert: false,
     $customConstraints: 'CHECK (last_reminder_tone IS NULL OR last_reminder_tone IN (\'SOFT\', \'FIRM\', \'FUNNY\'))',
   );
+  static const VerificationMeta _ocrConsentAtMeta = const VerificationMeta(
+    'ocrConsentAt',
+  );
+  late final GeneratedColumn<int> ocrConsentAt = GeneratedColumn<int>(
+    'ocr_consent_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _ocrScanDayMeta = const VerificationMeta(
+    'ocrScanDay',
+  );
+  late final GeneratedColumn<String> ocrScanDay = GeneratedColumn<String>(
+    'ocr_scan_day',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'CHECK (ocr_scan_day IS NULL OR ocr_scan_day GLOB \'[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]\')',
+  );
+  static const VerificationMeta _ocrScanCountMeta = const VerificationMeta(
+    'ocrScanCount',
+  );
+  late final GeneratedColumn<int> ocrScanCount = GeneratedColumn<int>(
+    'ocr_scan_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0 CHECK (ocr_scan_count >= 0)',
+    defaultValue: const CustomExpression('0'),
+  );
+  static const VerificationMeta _ocrPermissionErrorsMeta =
+      const VerificationMeta('ocrPermissionErrors');
+  late final GeneratedColumn<int> ocrPermissionErrors = GeneratedColumn<int>(
+    'ocr_permission_errors',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0 CHECK (ocr_permission_errors >= 0)',
+    defaultValue: const CustomExpression('0'),
+  );
+  static const VerificationMeta _ocrHiddenUntilMeta = const VerificationMeta(
+    'ocrHiddenUntil',
+  );
+  late final GeneratedColumn<int> ocrHiddenUntil = GeneratedColumn<int>(
+    'ocr_hidden_until',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -462,6 +518,11 @@ class LocalMeta extends Table with TableInfo<LocalMeta, LocalMetaRow> {
     lastExportFormatVersion,
     backupReminderSnoozedUntil,
     lastReminderTone,
+    ocrConsentAt,
+    ocrScanDay,
+    ocrScanCount,
+    ocrPermissionErrors,
+    ocrHiddenUntil,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -533,6 +594,51 @@ class LocalMeta extends Table with TableInfo<LocalMeta, LocalMetaRow> {
         ),
       );
     }
+    if (data.containsKey('ocr_consent_at')) {
+      context.handle(
+        _ocrConsentAtMeta,
+        ocrConsentAt.isAcceptableOrUnknown(
+          data['ocr_consent_at']!,
+          _ocrConsentAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('ocr_scan_day')) {
+      context.handle(
+        _ocrScanDayMeta,
+        ocrScanDay.isAcceptableOrUnknown(
+          data['ocr_scan_day']!,
+          _ocrScanDayMeta,
+        ),
+      );
+    }
+    if (data.containsKey('ocr_scan_count')) {
+      context.handle(
+        _ocrScanCountMeta,
+        ocrScanCount.isAcceptableOrUnknown(
+          data['ocr_scan_count']!,
+          _ocrScanCountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('ocr_permission_errors')) {
+      context.handle(
+        _ocrPermissionErrorsMeta,
+        ocrPermissionErrors.isAcceptableOrUnknown(
+          data['ocr_permission_errors']!,
+          _ocrPermissionErrorsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('ocr_hidden_until')) {
+      context.handle(
+        _ocrHiddenUntilMeta,
+        ocrHiddenUntil.isAcceptableOrUnknown(
+          data['ocr_hidden_until']!,
+          _ocrHiddenUntilMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -570,6 +676,26 @@ class LocalMeta extends Table with TableInfo<LocalMeta, LocalMetaRow> {
         DriftSqlType.string,
         data['${effectivePrefix}last_reminder_tone'],
       ),
+      ocrConsentAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}ocr_consent_at'],
+      ),
+      ocrScanDay: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ocr_scan_day'],
+      ),
+      ocrScanCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}ocr_scan_count'],
+      )!,
+      ocrPermissionErrors: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}ocr_permission_errors'],
+      )!,
+      ocrHiddenUntil: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}ocr_hidden_until'],
+      ),
     );
   }
 
@@ -596,6 +722,13 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
   final int? lastExportFormatVersion;
   final int? backupReminderSnoozedUntil;
   final String? lastReminderTone;
+
+  /// SA12 (schema 7): receipt-scan consent and limits, device state (not part of the backup).
+  final int? ocrConsentAt;
+  final String? ocrScanDay;
+  final int ocrScanCount;
+  final int ocrPermissionErrors;
+  final int? ocrHiddenUntil;
   const LocalMetaRow({
     required this.id,
     required this.createdSchemaVersion,
@@ -604,6 +737,11 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
     this.lastExportFormatVersion,
     this.backupReminderSnoozedUntil,
     this.lastReminderTone,
+    this.ocrConsentAt,
+    this.ocrScanDay,
+    required this.ocrScanCount,
+    required this.ocrPermissionErrors,
+    this.ocrHiddenUntil,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -627,6 +765,17 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
     if (!nullToAbsent || lastReminderTone != null) {
       map['last_reminder_tone'] = Variable<String>(lastReminderTone);
     }
+    if (!nullToAbsent || ocrConsentAt != null) {
+      map['ocr_consent_at'] = Variable<int>(ocrConsentAt);
+    }
+    if (!nullToAbsent || ocrScanDay != null) {
+      map['ocr_scan_day'] = Variable<String>(ocrScanDay);
+    }
+    map['ocr_scan_count'] = Variable<int>(ocrScanCount);
+    map['ocr_permission_errors'] = Variable<int>(ocrPermissionErrors);
+    if (!nullToAbsent || ocrHiddenUntil != null) {
+      map['ocr_hidden_until'] = Variable<int>(ocrHiddenUntil);
+    }
     return map;
   }
 
@@ -648,6 +797,17 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
       lastReminderTone: lastReminderTone == null && nullToAbsent
           ? const Value.absent()
           : Value(lastReminderTone),
+      ocrConsentAt: ocrConsentAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ocrConsentAt),
+      ocrScanDay: ocrScanDay == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ocrScanDay),
+      ocrScanCount: Value(ocrScanCount),
+      ocrPermissionErrors: Value(ocrPermissionErrors),
+      ocrHiddenUntil: ocrHiddenUntil == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ocrHiddenUntil),
     );
   }
 
@@ -672,6 +832,13 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
       lastReminderTone: serializer.fromJson<String?>(
         json['last_reminder_tone'],
       ),
+      ocrConsentAt: serializer.fromJson<int?>(json['ocr_consent_at']),
+      ocrScanDay: serializer.fromJson<String?>(json['ocr_scan_day']),
+      ocrScanCount: serializer.fromJson<int>(json['ocr_scan_count']),
+      ocrPermissionErrors: serializer.fromJson<int>(
+        json['ocr_permission_errors'],
+      ),
+      ocrHiddenUntil: serializer.fromJson<int?>(json['ocr_hidden_until']),
     );
   }
   @override
@@ -689,6 +856,11 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
         backupReminderSnoozedUntil,
       ),
       'last_reminder_tone': serializer.toJson<String?>(lastReminderTone),
+      'ocr_consent_at': serializer.toJson<int?>(ocrConsentAt),
+      'ocr_scan_day': serializer.toJson<String?>(ocrScanDay),
+      'ocr_scan_count': serializer.toJson<int>(ocrScanCount),
+      'ocr_permission_errors': serializer.toJson<int>(ocrPermissionErrors),
+      'ocr_hidden_until': serializer.toJson<int?>(ocrHiddenUntil),
     };
   }
 
@@ -700,6 +872,11 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
     Value<int?> lastExportFormatVersion = const Value.absent(),
     Value<int?> backupReminderSnoozedUntil = const Value.absent(),
     Value<String?> lastReminderTone = const Value.absent(),
+    Value<int?> ocrConsentAt = const Value.absent(),
+    Value<String?> ocrScanDay = const Value.absent(),
+    int? ocrScanCount,
+    int? ocrPermissionErrors,
+    Value<int?> ocrHiddenUntil = const Value.absent(),
   }) => LocalMetaRow(
     id: id ?? this.id,
     createdSchemaVersion: createdSchemaVersion ?? this.createdSchemaVersion,
@@ -714,6 +891,13 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
     lastReminderTone: lastReminderTone.present
         ? lastReminderTone.value
         : this.lastReminderTone,
+    ocrConsentAt: ocrConsentAt.present ? ocrConsentAt.value : this.ocrConsentAt,
+    ocrScanDay: ocrScanDay.present ? ocrScanDay.value : this.ocrScanDay,
+    ocrScanCount: ocrScanCount ?? this.ocrScanCount,
+    ocrPermissionErrors: ocrPermissionErrors ?? this.ocrPermissionErrors,
+    ocrHiddenUntil: ocrHiddenUntil.present
+        ? ocrHiddenUntil.value
+        : this.ocrHiddenUntil,
   );
   LocalMetaRow copyWithCompanion(LocalMetaCompanion data) {
     return LocalMetaRow(
@@ -734,6 +918,21 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
       lastReminderTone: data.lastReminderTone.present
           ? data.lastReminderTone.value
           : this.lastReminderTone,
+      ocrConsentAt: data.ocrConsentAt.present
+          ? data.ocrConsentAt.value
+          : this.ocrConsentAt,
+      ocrScanDay: data.ocrScanDay.present
+          ? data.ocrScanDay.value
+          : this.ocrScanDay,
+      ocrScanCount: data.ocrScanCount.present
+          ? data.ocrScanCount.value
+          : this.ocrScanCount,
+      ocrPermissionErrors: data.ocrPermissionErrors.present
+          ? data.ocrPermissionErrors.value
+          : this.ocrPermissionErrors,
+      ocrHiddenUntil: data.ocrHiddenUntil.present
+          ? data.ocrHiddenUntil.value
+          : this.ocrHiddenUntil,
     );
   }
 
@@ -746,7 +945,12 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
           ..write('lastExportAt: $lastExportAt, ')
           ..write('lastExportFormatVersion: $lastExportFormatVersion, ')
           ..write('backupReminderSnoozedUntil: $backupReminderSnoozedUntil, ')
-          ..write('lastReminderTone: $lastReminderTone')
+          ..write('lastReminderTone: $lastReminderTone, ')
+          ..write('ocrConsentAt: $ocrConsentAt, ')
+          ..write('ocrScanDay: $ocrScanDay, ')
+          ..write('ocrScanCount: $ocrScanCount, ')
+          ..write('ocrPermissionErrors: $ocrPermissionErrors, ')
+          ..write('ocrHiddenUntil: $ocrHiddenUntil')
           ..write(')'))
         .toString();
   }
@@ -760,6 +964,11 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
     lastExportFormatVersion,
     backupReminderSnoozedUntil,
     lastReminderTone,
+    ocrConsentAt,
+    ocrScanDay,
+    ocrScanCount,
+    ocrPermissionErrors,
+    ocrHiddenUntil,
   );
   @override
   bool operator ==(Object other) =>
@@ -771,7 +980,12 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
           other.lastExportAt == this.lastExportAt &&
           other.lastExportFormatVersion == this.lastExportFormatVersion &&
           other.backupReminderSnoozedUntil == this.backupReminderSnoozedUntil &&
-          other.lastReminderTone == this.lastReminderTone);
+          other.lastReminderTone == this.lastReminderTone &&
+          other.ocrConsentAt == this.ocrConsentAt &&
+          other.ocrScanDay == this.ocrScanDay &&
+          other.ocrScanCount == this.ocrScanCount &&
+          other.ocrPermissionErrors == this.ocrPermissionErrors &&
+          other.ocrHiddenUntil == this.ocrHiddenUntil);
 }
 
 class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
@@ -782,6 +996,11 @@ class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
   final Value<int?> lastExportFormatVersion;
   final Value<int?> backupReminderSnoozedUntil;
   final Value<String?> lastReminderTone;
+  final Value<int?> ocrConsentAt;
+  final Value<String?> ocrScanDay;
+  final Value<int> ocrScanCount;
+  final Value<int> ocrPermissionErrors;
+  final Value<int?> ocrHiddenUntil;
   const LocalMetaCompanion({
     this.id = const Value.absent(),
     this.createdSchemaVersion = const Value.absent(),
@@ -790,6 +1009,11 @@ class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
     this.lastExportFormatVersion = const Value.absent(),
     this.backupReminderSnoozedUntil = const Value.absent(),
     this.lastReminderTone = const Value.absent(),
+    this.ocrConsentAt = const Value.absent(),
+    this.ocrScanDay = const Value.absent(),
+    this.ocrScanCount = const Value.absent(),
+    this.ocrPermissionErrors = const Value.absent(),
+    this.ocrHiddenUntil = const Value.absent(),
   });
   LocalMetaCompanion.insert({
     this.id = const Value.absent(),
@@ -799,6 +1023,11 @@ class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
     this.lastExportFormatVersion = const Value.absent(),
     this.backupReminderSnoozedUntil = const Value.absent(),
     this.lastReminderTone = const Value.absent(),
+    this.ocrConsentAt = const Value.absent(),
+    this.ocrScanDay = const Value.absent(),
+    this.ocrScanCount = const Value.absent(),
+    this.ocrPermissionErrors = const Value.absent(),
+    this.ocrHiddenUntil = const Value.absent(),
   }) : createdSchemaVersion = Value(createdSchemaVersion),
        createdAt = Value(createdAt);
   static Insertable<LocalMetaRow> custom({
@@ -809,6 +1038,11 @@ class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
     Expression<int>? lastExportFormatVersion,
     Expression<int>? backupReminderSnoozedUntil,
     Expression<String>? lastReminderTone,
+    Expression<int>? ocrConsentAt,
+    Expression<String>? ocrScanDay,
+    Expression<int>? ocrScanCount,
+    Expression<int>? ocrPermissionErrors,
+    Expression<int>? ocrHiddenUntil,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -821,6 +1055,12 @@ class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
       if (backupReminderSnoozedUntil != null)
         'backup_reminder_snoozed_until': backupReminderSnoozedUntil,
       if (lastReminderTone != null) 'last_reminder_tone': lastReminderTone,
+      if (ocrConsentAt != null) 'ocr_consent_at': ocrConsentAt,
+      if (ocrScanDay != null) 'ocr_scan_day': ocrScanDay,
+      if (ocrScanCount != null) 'ocr_scan_count': ocrScanCount,
+      if (ocrPermissionErrors != null)
+        'ocr_permission_errors': ocrPermissionErrors,
+      if (ocrHiddenUntil != null) 'ocr_hidden_until': ocrHiddenUntil,
     });
   }
 
@@ -832,6 +1072,11 @@ class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
     Value<int?>? lastExportFormatVersion,
     Value<int?>? backupReminderSnoozedUntil,
     Value<String?>? lastReminderTone,
+    Value<int?>? ocrConsentAt,
+    Value<String?>? ocrScanDay,
+    Value<int>? ocrScanCount,
+    Value<int>? ocrPermissionErrors,
+    Value<int?>? ocrHiddenUntil,
   }) {
     return LocalMetaCompanion(
       id: id ?? this.id,
@@ -843,6 +1088,11 @@ class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
       backupReminderSnoozedUntil:
           backupReminderSnoozedUntil ?? this.backupReminderSnoozedUntil,
       lastReminderTone: lastReminderTone ?? this.lastReminderTone,
+      ocrConsentAt: ocrConsentAt ?? this.ocrConsentAt,
+      ocrScanDay: ocrScanDay ?? this.ocrScanDay,
+      ocrScanCount: ocrScanCount ?? this.ocrScanCount,
+      ocrPermissionErrors: ocrPermissionErrors ?? this.ocrPermissionErrors,
+      ocrHiddenUntil: ocrHiddenUntil ?? this.ocrHiddenUntil,
     );
   }
 
@@ -874,6 +1124,21 @@ class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
     if (lastReminderTone.present) {
       map['last_reminder_tone'] = Variable<String>(lastReminderTone.value);
     }
+    if (ocrConsentAt.present) {
+      map['ocr_consent_at'] = Variable<int>(ocrConsentAt.value);
+    }
+    if (ocrScanDay.present) {
+      map['ocr_scan_day'] = Variable<String>(ocrScanDay.value);
+    }
+    if (ocrScanCount.present) {
+      map['ocr_scan_count'] = Variable<int>(ocrScanCount.value);
+    }
+    if (ocrPermissionErrors.present) {
+      map['ocr_permission_errors'] = Variable<int>(ocrPermissionErrors.value);
+    }
+    if (ocrHiddenUntil.present) {
+      map['ocr_hidden_until'] = Variable<int>(ocrHiddenUntil.value);
+    }
     return map;
   }
 
@@ -886,7 +1151,12 @@ class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
           ..write('lastExportAt: $lastExportAt, ')
           ..write('lastExportFormatVersion: $lastExportFormatVersion, ')
           ..write('backupReminderSnoozedUntil: $backupReminderSnoozedUntil, ')
-          ..write('lastReminderTone: $lastReminderTone')
+          ..write('lastReminderTone: $lastReminderTone, ')
+          ..write('ocrConsentAt: $ocrConsentAt, ')
+          ..write('ocrScanDay: $ocrScanDay, ')
+          ..write('ocrScanCount: $ocrScanCount, ')
+          ..write('ocrPermissionErrors: $ocrPermissionErrors, ')
+          ..write('ocrHiddenUntil: $ocrHiddenUntil')
           ..write(')'))
         .toString();
   }
@@ -8299,6 +8569,11 @@ typedef $LocalMetaCreateCompanionBuilder = LocalMetaCompanion Function({
   Value<int?> lastExportFormatVersion,
   Value<int?> backupReminderSnoozedUntil,
   Value<String?> lastReminderTone,
+  Value<int?> ocrConsentAt,
+  Value<String?> ocrScanDay,
+  Value<int> ocrScanCount,
+  Value<int> ocrPermissionErrors,
+  Value<int?> ocrHiddenUntil,
 });
 typedef $LocalMetaUpdateCompanionBuilder = LocalMetaCompanion Function({
   Value<int> id,
@@ -8308,6 +8583,11 @@ typedef $LocalMetaUpdateCompanionBuilder = LocalMetaCompanion Function({
   Value<int?> lastExportFormatVersion,
   Value<int?> backupReminderSnoozedUntil,
   Value<String?> lastReminderTone,
+  Value<int?> ocrConsentAt,
+  Value<String?> ocrScanDay,
+  Value<int> ocrScanCount,
+  Value<int> ocrPermissionErrors,
+  Value<int?> ocrHiddenUntil,
 });
 
 class $LocalMetaFilterComposer extends Composer<_$LocalDatabase, LocalMeta> {
@@ -8350,6 +8630,31 @@ class $LocalMetaFilterComposer extends Composer<_$LocalDatabase, LocalMeta> {
 
   ColumnFilters<String> get lastReminderTone => $composableBuilder(
     column: $table.lastReminderTone,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get ocrConsentAt => $composableBuilder(
+    column: $table.ocrConsentAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get ocrScanDay => $composableBuilder(
+    column: $table.ocrScanDay,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get ocrScanCount => $composableBuilder(
+    column: $table.ocrScanCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get ocrPermissionErrors => $composableBuilder(
+    column: $table.ocrPermissionErrors,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get ocrHiddenUntil => $composableBuilder(
+    column: $table.ocrHiddenUntil,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -8396,6 +8701,31 @@ class $LocalMetaOrderingComposer extends Composer<_$LocalDatabase, LocalMeta> {
     column: $table.lastReminderTone,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get ocrConsentAt => $composableBuilder(
+    column: $table.ocrConsentAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get ocrScanDay => $composableBuilder(
+    column: $table.ocrScanDay,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get ocrScanCount => $composableBuilder(
+    column: $table.ocrScanCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get ocrPermissionErrors => $composableBuilder(
+    column: $table.ocrPermissionErrors,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get ocrHiddenUntil => $composableBuilder(
+    column: $table.ocrHiddenUntil,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $LocalMetaAnnotationComposer
@@ -8435,6 +8765,31 @@ class $LocalMetaAnnotationComposer
 
   GeneratedColumn<String> get lastReminderTone => $composableBuilder(
     column: $table.lastReminderTone,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get ocrConsentAt => $composableBuilder(
+    column: $table.ocrConsentAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get ocrScanDay => $composableBuilder(
+    column: $table.ocrScanDay,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get ocrScanCount => $composableBuilder(
+    column: $table.ocrScanCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get ocrPermissionErrors => $composableBuilder(
+    column: $table.ocrPermissionErrors,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get ocrHiddenUntil => $composableBuilder(
+    column: $table.ocrHiddenUntil,
     builder: (column) => column,
   );
 }
@@ -8477,6 +8832,11 @@ class $LocalMetaTableManager
                 Value<int?> lastExportFormatVersion = const Value.absent(),
                 Value<int?> backupReminderSnoozedUntil = const Value.absent(),
                 Value<String?> lastReminderTone = const Value.absent(),
+                Value<int?> ocrConsentAt = const Value.absent(),
+                Value<String?> ocrScanDay = const Value.absent(),
+                Value<int> ocrScanCount = const Value.absent(),
+                Value<int> ocrPermissionErrors = const Value.absent(),
+                Value<int?> ocrHiddenUntil = const Value.absent(),
               }) => LocalMetaCompanion(
                 id: id,
                 createdSchemaVersion: createdSchemaVersion,
@@ -8485,6 +8845,11 @@ class $LocalMetaTableManager
                 lastExportFormatVersion: lastExportFormatVersion,
                 backupReminderSnoozedUntil: backupReminderSnoozedUntil,
                 lastReminderTone: lastReminderTone,
+                ocrConsentAt: ocrConsentAt,
+                ocrScanDay: ocrScanDay,
+                ocrScanCount: ocrScanCount,
+                ocrPermissionErrors: ocrPermissionErrors,
+                ocrHiddenUntil: ocrHiddenUntil,
               ),
           createCompanionCallback:
               ({
@@ -8495,6 +8860,11 @@ class $LocalMetaTableManager
                 Value<int?> lastExportFormatVersion = const Value.absent(),
                 Value<int?> backupReminderSnoozedUntil = const Value.absent(),
                 Value<String?> lastReminderTone = const Value.absent(),
+                Value<int?> ocrConsentAt = const Value.absent(),
+                Value<String?> ocrScanDay = const Value.absent(),
+                Value<int> ocrScanCount = const Value.absent(),
+                Value<int> ocrPermissionErrors = const Value.absent(),
+                Value<int?> ocrHiddenUntil = const Value.absent(),
               }) => LocalMetaCompanion.insert(
                 id: id,
                 createdSchemaVersion: createdSchemaVersion,
@@ -8503,6 +8873,11 @@ class $LocalMetaTableManager
                 lastExportFormatVersion: lastExportFormatVersion,
                 backupReminderSnoozedUntil: backupReminderSnoozedUntil,
                 lastReminderTone: lastReminderTone,
+                ocrConsentAt: ocrConsentAt,
+                ocrScanDay: ocrScanDay,
+                ocrScanCount: ocrScanCount,
+                ocrPermissionErrors: ocrPermissionErrors,
+                ocrHiddenUntil: ocrHiddenUntil,
               ),
           withReferenceMapper: (p0) => p0
               .map(

@@ -31,7 +31,7 @@ import '../../../core/theme/palette.dart';
 /// (everyone / selected / exact amounts; the restaurant bill is FL6). Every per-member number
 /// is the server's; the form only adds up what the user typed.
 class ExpenseFormScreen extends ConsumerStatefulWidget {
-  const ExpenseFormScreen({super.key, required this.gid, this.eid, this.draft});
+  const ExpenseFormScreen({super.key, required this.gid, this.eid, this.draft, this.scanDraft});
 
   final String gid;
 
@@ -40,6 +40,9 @@ class ExpenseFormScreen extends ConsumerStatefulWidget {
 
   /// Add mode only: open filled in from another screen (SA11 calculator); the user still reviews and saves.
   final ExpenseDraft? draft;
+
+  /// Add mode only: a restaurant bill proposed by the receipt scan (SA12), opened as an unsaved itemized draft.
+  final ScanDraft? scanDraft;
 
   @override
   ConsumerState<ExpenseFormScreen> createState() => _ExpenseFormScreenState();
@@ -171,7 +174,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
           if (_isEdit) {
             _controller.startEdit();
           } else {
-            _controller.startCreate(draft: widget.draft);
+            _controller.startCreate(draft: widget.draft, scanDraft: widget.scanDraft);
           }
         });
         return scaffold(const SkeletonList(itemCount: 3));

@@ -175,13 +175,18 @@ class ExpenseFormController extends Notifier<ExpenseFormView> {
   ///
   /// With a [draft] (SA11 calculator) the form opens filled in from it, while "how it was opened" stays the empty
   /// form: leaving without saving asks first, so a calculated draft is never lost silently nor saved silently.
-  void startCreate({ExpenseDraft? draft}) {
+  void startCreate({ExpenseDraft? draft, ScanDraft? scanDraft}) {
     if (_started) return;
     _started = true;
     final today = ref.read(clockProvider)().toDate();
     final f = ExpenseFormState(title: '', amountText: '', date: today, singlePayerId: _defaultPayerId);
     _initial = f;
-    state = ExpenseFormView(form: draft == null ? f : formFromDraft(draft, date: today), phase: FormPhase.ready);
+    final filled = scanDraft != null
+        ? formFromScan(scanDraft, date: today, payerId: _defaultPayerId)
+        : draft != null
+            ? formFromDraft(draft, date: today)
+            : f;
+    state = ExpenseFormView(form: filled, phase: FormPhase.ready);
   }
 
   /// Edit mode: reads the expense (which also records its version for `If-Match`) and fills the form.
@@ -267,6 +272,14 @@ class ExpenseFormController extends Notifier<ExpenseFormView> {
   }
 
   ItemDraft _newItem() => ItemDraft(id: 'new-${_itemSeq++}', assigneeIds: {...memberIds});
+
+  /// SA12: replaces the bill with a scan's proposal (called from the itemized editor, after the user agreed). The
+  /// scan proposes only: nothing is saved and nobody is assigned.
+  void applyScan(ScanDraft scan) {
+    final f = form;
+    if (f == null) return;
+    _set(f.copyWith(splitMode: SplitMode.itemized, itemized: scan.itemized, printedTotalMinor: scan.printedTotalMinor, scanNotes: scan.notes));
+  }
 
   /// A new item starts with everyone selected (the user unchecks).
   void addItem() {

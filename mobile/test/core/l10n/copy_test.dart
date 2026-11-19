@@ -61,7 +61,7 @@ void main() {
     });
 
     test('key names follow the area-prefix scheme', () {
-      const prefixes = ['app', 'bootstrap', 'common', 'field', 'balance', 'money', 'state', 'error', 'brand', 'welcome', 'legal', 'signIn', 'dev', 'sessionExpired', 'home', 'group', 'member', 'expense', 'payment', 'profile', 'language', 'account', 'appearance', 'auth', 'password', 'invite', 'settlement', 'pay', 'handles', 'remind', 'pending', 'dispute', 'incoming', 'receiver', 'stmt', 'detail', 'guidance', 'cancel', 'onboarding', 'backup', 'category', 'myShare', 'recap', 'reminder', 'pool', 'calc'];
+      const prefixes = ['app', 'bootstrap', 'common', 'field', 'balance', 'money', 'state', 'error', 'brand', 'welcome', 'legal', 'signIn', 'dev', 'sessionExpired', 'home', 'group', 'member', 'expense', 'payment', 'profile', 'language', 'account', 'appearance', 'auth', 'password', 'invite', 'settlement', 'pay', 'handles', 'remind', 'pending', 'dispute', 'incoming', 'receiver', 'stmt', 'detail', 'guidance', 'cancel', 'onboarding', 'backup', 'category', 'myShare', 'recap', 'reminder', 'pool', 'calc', 'scan'];
       for (final key in _keys(ar).where((k) => k != '@@locale')) {
         expect(prefixes.any(key.startsWith), isTrue, reason: '$key has no known area prefix');
       }

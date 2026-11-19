@@ -3017,4 +3017,140 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get calcDraftRideTitle => 'Shared ride';
+
+  @override
+  String get scanReceiptAction => 'Scan receipt';
+
+  @override
+  String get scanReceiptHint =>
+      'Fill the items from a photo. You check every number.';
+
+  @override
+  String get scanSourceTitle => 'Receipt photo';
+
+  @override
+  String get scanSourceCamera => 'Take a photo';
+
+  @override
+  String get scanSourceGallery => 'Choose from gallery';
+
+  @override
+  String get scanTypeManually => 'Type manually';
+
+  @override
+  String get scanReading => 'Reading the receipt…';
+
+  @override
+  String get scanReadingHint => 'This can take a few seconds.';
+
+  @override
+  String get scanErrorTitle => 'Couldn\'t read the receipt';
+
+  @override
+  String get scanErrorOffline =>
+      'No internet connection. Connect and try again, or type the items yourself.';
+
+  @override
+  String get scanErrorTimeout =>
+      'It took too long. Try again, or type the items yourself.';
+
+  @override
+  String get scanErrorQuota =>
+      'The free scanning is used up for now. Try again later, or type the items yourself.';
+
+  @override
+  String get scanErrorPermission =>
+      'Receipt scanning isn\'t available on this phone right now. Type the items yourself.';
+
+  @override
+  String get scanErrorPhoto =>
+      'We couldn\'t find any items in this photo. Take a clearer, straight photo, or type the items yourself.';
+
+  @override
+  String get scanErrorInvalid =>
+      'The answer wasn\'t readable. Try again, or type the items yourself.';
+
+  @override
+  String get scanErrorCap =>
+      'You\'ve reached today\'s limit of 20 scans. Type the items yourself, or scan again tomorrow.';
+
+  @override
+  String get scanErrorUnavailable =>
+      'Receipt scanning isn\'t available right now. Type the items yourself.';
+
+  @override
+  String get scanTryAgain => 'Try again';
+
+  @override
+  String get scanConsentTitle => 'Before you scan';
+
+  @override
+  String get scanConsentSent =>
+      'The photo of the receipt is sent to Google (Gemini) to read it. Nothing else is sent: no names and no group data.';
+
+  @override
+  String get scanConsentFree =>
+      'This uses Google\'s free service. Google may use what you send to improve its products, and people may review it. Don\'t photograph anything private.';
+
+  @override
+  String get scanConsentKept =>
+      'Qesma doesn\'t keep the photo. It is deleted right after reading.';
+
+  @override
+  String get scanConsentAvoid =>
+      'You never have to scan. You can always type the items yourself.';
+
+  @override
+  String get scanConsentRevoke =>
+      'You can turn this off at any time from Profile.';
+
+  @override
+  String get scanConsentAccept => 'I agree, continue';
+
+  @override
+  String get scanConsentDecline => 'Type manually instead';
+
+  @override
+  String get scanProfileTitle => 'Receipt scanning';
+
+  @override
+  String get scanProfileOn => 'On. The photo is sent to Google to be read.';
+
+  @override
+  String get scanProfileOff => 'Off. You\'ll be asked before the next scan.';
+
+  @override
+  String get scanProfileHidden =>
+      'Unavailable for now. Type the items yourself.';
+
+  @override
+  String get scanReplaceTitle => 'Replace the items?';
+
+  @override
+  String get scanReplaceBody => 'The scan will replace the items you typed.';
+
+  @override
+  String get scanReplaceConfirm => 'Replace';
+
+  @override
+  String scanTotalMatches(String total) {
+    return 'The total matches the receipt ($total).';
+  }
+
+  @override
+  String scanTotalDiffers(String total) {
+    return 'The total doesn\'t match the receipt total ($total). Check the amounts.';
+  }
+
+  @override
+  String get scanFlaggedHint =>
+      'Some amounts couldn\'t be read. Check the marked items.';
+
+  @override
+  String get scanNeedsPercent =>
+      'A service or tax amount was printed. Type its percentage.';
+
+  @override
+  String get scanTruncated =>
+      'The receipt has more than 100 items. Only the first 100 were read.';
 }

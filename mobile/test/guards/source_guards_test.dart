@@ -232,9 +232,35 @@ void main() {
   test('no analytics, tracking or crash SDKs and no extra preference/connectivity/version packages (FL8 constraint)', () {
     final pubspec = File('pubspec.yaml').readAsStringSync();
     final deps = pubspec.split('dev_dependencies:').first;
-    for (final banned in ['firebase', 'analytics', 'sentry', 'crashlytics', 'amplitude', 'mixpanel', 'shared_preferences', 'connectivity_plus', 'package_info_plus']) {
+    for (final banned in ['analytics', 'sentry', 'crashlytics', 'amplitude', 'mixpanel', 'shared_preferences', 'connectivity_plus', 'package_info_plus']) {
       expect(deps.contains(banned), isFalse, reason: 'pubspec depends on $banned');
     }
+  });
+
+  test('Firebase is limited to exactly firebase_core, firebase_ai and firebase_app_check (ADR-012, SA12)', () {
+    final deps = File('pubspec.yaml').readAsStringSync().split('dev_dependencies:').first;
+    final firebase = RegExp(r'^\s*(firebase\w*):', multiLine: true).allMatches(deps).map((m) => m.group(1)).toSet();
+    expect(firebase, {'firebase_core', 'firebase_ai', 'firebase_app_check'});
+  });
+
+  test('Firebase and image_picker are imported only by the receipt scan (and main for startup)', () {
+    final hits = _scan(
+      RegExp(r"import 'package:(firebase\w*|image_picker)/"),
+      skip: (p) => p.startsWith('lib/features/receipt_scan/'),
+    );
+    expect(hits, isEmpty, reason: 'only lib/features/receipt_scan may import Firebase or image_picker:\n${hits.join('\n')}');
+  });
+
+  test('the receipt scan writes no file: the photo lives in memory and the picker copy is deleted (SA12)', () {
+    final hits = <String>[];
+    for (final file in Directory('lib/features/receipt_scan').listSync(recursive: true).whereType<File>().where((f) => f.path.endsWith('.dart'))) {
+      for (final line in _codeLines(file)) {
+        if (RegExp(r'writeAsBytes|writeAsString|openWrite|\.copy\(|getApplicationDocumentsDirectory|getExternalStorage|ImageGallerySaver').hasMatch(line.value)) {
+          hits.add('${_rel(file)}:${line.key}: ${line.value}');
+        }
+      }
+    }
+    expect(hits, isEmpty, reason: 'the image must never be stored:\n${hits.join('\n')}');
   });
 
   test('Android auto-backup is on and limited to the local database file (A128, replaces the FL2 allowBackup=false rule)', () {

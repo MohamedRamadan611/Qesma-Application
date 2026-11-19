@@ -5150,6 +5150,234 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'مشوار مشترك'**
   String get calcDraftRideTitle;
+
+  /// SA12: menu item and button that fill the bill from a receipt photo.
+  ///
+  /// In ar, this message translates to:
+  /// **'تصوير الإيصال'**
+  String get scanReceiptAction;
+
+  /// SA12: one-line explanation under the scan menu item.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأصناف تتكتب من الصورة، وانت بتراجع كل رقم.'**
+  String get scanReceiptHint;
+
+  /// SA12: title of the camera/gallery sheet.
+  ///
+  /// In ar, this message translates to:
+  /// **'صورة الإيصال'**
+  String get scanSourceTitle;
+
+  /// SA12: take a photo with the camera.
+  ///
+  /// In ar, this message translates to:
+  /// **'صوّر دلوقتي'**
+  String get scanSourceCamera;
+
+  /// SA12: pick a photo from the gallery.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختار من المعرض'**
+  String get scanSourceGallery;
+
+  /// SA12: fall back to typing the items by hand.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب بإيدك'**
+  String get scanTypeManually;
+
+  /// SA12: progress text while the photo is read.
+  ///
+  /// In ar, this message translates to:
+  /// **'بنقرأ الإيصال…'**
+  String get scanReading;
+
+  /// SA12: progress hint.
+  ///
+  /// In ar, this message translates to:
+  /// **'ممكن ياخد كام ثانية.'**
+  String get scanReadingHint;
+
+  /// SA12: title of the scan failure sheet.
+  ///
+  /// In ar, this message translates to:
+  /// **'مقدرناش نقرأ الإيصال'**
+  String get scanErrorTitle;
+
+  /// SA12: failure, no internet.
+  ///
+  /// In ar, this message translates to:
+  /// **'مفيش إنترنت. اتصل وجرب تاني، أو اكتب الأصناف بنفسك.'**
+  String get scanErrorOffline;
+
+  /// SA12: failure, timeout.
+  ///
+  /// In ar, this message translates to:
+  /// **'أخد وقت طويل. جرب تاني، أو اكتب الأصناف بنفسك.'**
+  String get scanErrorTimeout;
+
+  /// SA12: failure, free quota used up.
+  ///
+  /// In ar, this message translates to:
+  /// **'القراءة المجانية خلصت دلوقتي. جرب بعدين، أو اكتب الأصناف بنفسك.'**
+  String get scanErrorQuota;
+
+  /// SA12: failure, App Check or permission refused.
+  ///
+  /// In ar, this message translates to:
+  /// **'قراءة الإيصال مش متاحة على التليفون ده دلوقتي. اكتب الأصناف بنفسك.'**
+  String get scanErrorPermission;
+
+  /// SA12: failure, nothing readable in the photo.
+  ///
+  /// In ar, this message translates to:
+  /// **'ملقيناش أصناف في الصورة دي. صوّر الإيصال مستقيم وواضح أكتر، أو اكتب الأصناف بنفسك.'**
+  String get scanErrorPhoto;
+
+  /// SA12: failure, the answer was not valid.
+  ///
+  /// In ar, this message translates to:
+  /// **'الرد مكانش مفهوم. جرب تاني، أو اكتب الأصناف بنفسك.'**
+  String get scanErrorInvalid;
+
+  /// SA12: failure, the daily limit of 20 scans was reached.
+  ///
+  /// In ar, this message translates to:
+  /// **'وصلت للحد النهاردة: 20 إيصال. اكتب الأصناف بنفسك، أو صوّر بكرة.'**
+  String get scanErrorCap;
+
+  /// SA12: failure, scanning is not available.
+  ///
+  /// In ar, this message translates to:
+  /// **'قراءة الإيصال مش متاحة دلوقتي. اكتب الأصناف بنفسك.'**
+  String get scanErrorUnavailable;
+
+  /// SA12: retry the scan.
+  ///
+  /// In ar, this message translates to:
+  /// **'جرب تاني'**
+  String get scanTryAgain;
+
+  /// SA12: consent screen title.
+  ///
+  /// In ar, this message translates to:
+  /// **'قبل ما تصوّر'**
+  String get scanConsentTitle;
+
+  /// SA12: consent, what is sent and to whom.
+  ///
+  /// In ar, this message translates to:
+  /// **'صورة الإيصال بتتبعت لجوجل (Gemini) عشان تتقرأ. مفيش حاجة تانية بتتبعت: لا أسماء ولا بيانات المجموعة.'**
+  String get scanConsentSent;
+
+  /// SA12: consent, free-tier data use (A146).
+  ///
+  /// In ar, this message translates to:
+  /// **'ده بيستخدم الخدمة المجانية من جوجل. ممكن جوجل تستخدم اللي بتبعته لتحسين منتجاتها، وممكن ناس تراجعه. متصوّرش حاجة خاصة.'**
+  String get scanConsentFree;
+
+  /// SA12: consent, the photo is not kept.
+  ///
+  /// In ar, this message translates to:
+  /// **'قسمة مش بتحتفظ بالصورة. بتتمسح بعد القراءة على طول.'**
+  String get scanConsentKept;
+
+  /// SA12: consent, how to avoid it.
+  ///
+  /// In ar, this message translates to:
+  /// **'مش لازم تصوّر. تقدر دايمًا تكتب الأصناف بنفسك.'**
+  String get scanConsentAvoid;
+
+  /// SA12: consent, it can be revoked in the profile.
+  ///
+  /// In ar, this message translates to:
+  /// **'تقدر توقّف ده في أي وقت من الملف الشخصي.'**
+  String get scanConsentRevoke;
+
+  /// SA12: consent, agree.
+  ///
+  /// In ar, this message translates to:
+  /// **'موافق، كمّل'**
+  String get scanConsentAccept;
+
+  /// SA12: consent, decline and type manually.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب بإيدك بدل كده'**
+  String get scanConsentDecline;
+
+  /// SA12: profile switch title.
+  ///
+  /// In ar, this message translates to:
+  /// **'قراءة الإيصالات'**
+  String get scanProfileTitle;
+
+  /// SA12: profile switch, on.
+  ///
+  /// In ar, this message translates to:
+  /// **'شغّالة. الصورة بتتبعت لجوجل عشان تتقرأ.'**
+  String get scanProfileOn;
+
+  /// SA12: profile switch, off.
+  ///
+  /// In ar, this message translates to:
+  /// **'مقفولة. هنسألك قبل المرة الجاية.'**
+  String get scanProfileOff;
+
+  /// SA12: profile switch, hidden after repeated permission errors.
+  ///
+  /// In ar, this message translates to:
+  /// **'مش متاحة دلوقتي. اكتب الأصناف بنفسك.'**
+  String get scanProfileHidden;
+
+  /// SA12: confirm replacing typed items.
+  ///
+  /// In ar, this message translates to:
+  /// **'تستبدل الأصناف؟'**
+  String get scanReplaceTitle;
+
+  /// SA12: confirm replacing typed items, body.
+  ///
+  /// In ar, this message translates to:
+  /// **'القراءة هتستبدل الأصناف اللي كتبتها.'**
+  String get scanReplaceBody;
+
+  /// SA12: confirm replacing typed items, button.
+  ///
+  /// In ar, this message translates to:
+  /// **'استبدل'**
+  String get scanReplaceConfirm;
+
+  /// SA12: the bill total equals the printed total.
+  ///
+  /// In ar, this message translates to:
+  /// **'الإجمالي زي إجمالي الإيصال ({total}).'**
+  String scanTotalMatches(String total);
+
+  /// SA12: the bill total differs from the printed total.
+  ///
+  /// In ar, this message translates to:
+  /// **'الإجمالي مش زي إجمالي الإيصال ({total}). راجع المبالغ.'**
+  String scanTotalDiffers(String total);
+
+  /// SA12: some amounts could not be read.
+  ///
+  /// In ar, this message translates to:
+  /// **'في مبالغ مقدرناش نقرأها. راجع الأصناف المعلّمة.'**
+  String get scanFlaggedHint;
+
+  /// SA12: only a service or tax amount was printed.
+  ///
+  /// In ar, this message translates to:
+  /// **'الإيصال مكتوب عليه مبلغ خدمة أو ضريبة. اكتب نسبته.'**
+  String get scanNeedsPercent;
+
+  /// SA12: more than 100 items, the rest were dropped.
+  ///
+  /// In ar, this message translates to:
+  /// **'الإيصال فيه أكتر من 100 صنف. قرأنا أول 100 بس.'**
+  String get scanTruncated;
 }
 
 class _AppLocalizationsDelegate

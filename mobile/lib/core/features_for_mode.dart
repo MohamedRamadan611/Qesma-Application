@@ -29,6 +29,7 @@ class ModeFeatures {
     required this.reminderTones,
     required this.pool,
     required this.calculator,
+    required this.receiptScan,
   });
 
   /// Today's app: everything on (backup is a local-mode feature, SA5).
@@ -55,6 +56,7 @@ class ModeFeatures {
     reminderTones: false,
     pool: false,
     calculator: false,
+    receiptScan: false,
   );
 
   /// The standalone release: every server-only feature off. `backup` (export, restore, reminder banner) is on: SA5.
@@ -81,6 +83,7 @@ class ModeFeatures {
     reminderTones: true,
     pool: true,
     calculator: true,
+    receiptScan: true,
   );
 
   static ModeFeatures of(AppMode mode) => mode == AppMode.local ? local : server;
@@ -115,6 +118,10 @@ class ModeFeatures {
   /// SA11: the Khorouga calculator (fuel + tolls, multi-stop ride). It runs the local engine (A149), so it is a
   /// local-mode feature; its result only prefills the add-expense form.
   final bool calculator;
+
+  /// SA12: scan a receipt photo into an unsaved itemized bill (Firebase AI Logic, consent first). Local mode only;
+  /// whether it is usable right now (Firebase ready, not hidden) is decided at run time by `receiptScanVisibleProvider`.
+  final bool receiptScan;
 }
 
 final modeFeaturesProvider = Provider<ModeFeatures>((ref) => ModeFeatures.of(ref.watch(appModeProvider)));

@@ -36,3 +36,5 @@ The test in `mobile/test/guards/source_guards_test.dart` that bans the substring
 - Small settings are stored in drift, not `shared_preferences` (A148).
 - No analytics or crash SDK ships at launch (privacy, $0); Phase 3's Crashlytics plan is deferred.
 - OCR is the only feature that sends data off the phone at launch; the privacy policy (SA13) and the in-app consent say so.
+
+**SA12 (2026-11-19):** `image_picker` 1.2.4, `firebase_core` 5.2.0, `firebase_ai` 5.2.0 and `firebase_app_check` 0.5.2 added with exact pins (APIs read from the package sources: `FirebaseAI.googleAI(useLimitedUseAppCheckTokens:)`, `activate(providerAndroid:)` with `AndroidDebugProvider` / `AndroidPlayIntegrityProvider`). The Google-services Gradle plugin 4.6.0 is applied only when `android/app/google-services.json` exists. APK size impact not measured here (NOT VERIFIED). The source guard now allows exactly the three Firebase packages and confines their imports to `lib/features/receipt_scan/`.
