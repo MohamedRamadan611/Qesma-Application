@@ -4,7 +4,7 @@ import '../l10n/generated/app_localizations.dart';
 import '../theme/tokens.dart';
 import '../theme/palette.dart';
 
-enum AppButtonVariant { primary, secondary, destructive, text }
+enum AppButtonVariant { primary, secondary, tonal, destructive, text }
 
 /// The app's button: 48 px minimum, 12 px radius, optional leading icon and a loading state.
 ///
@@ -40,6 +40,7 @@ class AppButton extends StatelessWidget {
       AppButtonVariant.primary => context.colors.onPrimary,
       AppButtonVariant.destructive => context.colors.onError,
       AppButtonVariant.secondary => context.colors.textPrimary,
+      AppButtonVariant.tonal => context.colors.onPrimaryContainer,
       AppButtonVariant.text => scheme.primary,
     };
 
@@ -76,6 +77,11 @@ class AppButton extends StatelessWidget {
           child: content,
         ),
       AppButtonVariant.secondary => OutlinedButton(onPressed: callback, child: content),
+      AppButtonVariant.tonal => FilledButton(
+          onPressed: callback,
+          style: FilledButton.styleFrom(backgroundColor: context.colors.primaryContainer, foregroundColor: context.colors.onPrimaryContainer),
+          child: content,
+        ),
       AppButtonVariant.text => TextButton(onPressed: callback, child: content),
     };
 

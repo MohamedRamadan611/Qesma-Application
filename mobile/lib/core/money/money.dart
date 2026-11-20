@@ -162,3 +162,16 @@ abstract final class Tenths {
 
   static final RegExp _tenths = RegExp(r'^(\d+)(?:\.(\d))?$');
 }
+
+/// A1/A174 (STANDALONE_SPEC 18.3): a scanned receipt's printed total is accepted as a match when the preview
+/// differs from it by at most this many piasters (1 EGP). Defined here and nowhere else.
+const int kPrintedTotalTolerance = 100;
+
+/// The adjustment that would make the preview's [total] equal the receipt's [printed] total: `printed - total`
+/// when that is between 1 and [kPrintedTotalTolerance] piasters in either direction, otherwise null (no gap, or too
+/// big to be rounding). The only arithmetic the tolerance needs; kept here with the other money logic.
+int? toleratedGap(int printed, int total) {
+  final gap = printed - total;
+  final size = gap < 0 ? -gap : gap;
+  return size >= 1 && size <= kPrintedTotalTolerance ? gap : null;
+}

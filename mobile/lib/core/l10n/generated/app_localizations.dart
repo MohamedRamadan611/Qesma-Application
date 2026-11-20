@@ -5378,6 +5378,396 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'الإيصال فيه أكتر من 100 صنف. قرأنا أول 100 بس.'**
   String get scanTruncated;
+
+  /// SA16: assignment mode, one card per item.
+  ///
+  /// In ar, this message translates to:
+  /// **'حسب الصنف'**
+  String get expenseItzModeByItem;
+
+  /// SA16: assignment mode, choose a person then tick items.
+  ///
+  /// In ar, this message translates to:
+  /// **'حسب الشخص'**
+  String get expenseItzModeByPerson;
+
+  /// SA16: screen-reader label of the mode switch.
+  ///
+  /// In ar, this message translates to:
+  /// **'طريقة توزيع الأصناف'**
+  String get expenseItzModeLabel;
+
+  /// SA16: item quantity.
+  ///
+  /// In ar, this message translates to:
+  /// **'الكمية'**
+  String get expenseItzQuantityLabel;
+
+  /// SA16: stepper button.
+  ///
+  /// In ar, this message translates to:
+  /// **'قلّل الكمية'**
+  String get expenseItzQuantityMinus;
+
+  /// SA16: stepper button.
+  ///
+  /// In ar, this message translates to:
+  /// **'زوّد الكمية'**
+  String get expenseItzQuantityPlus;
+
+  /// SA16: spoken stepper value.
+  ///
+  /// In ar, this message translates to:
+  /// **'الكمية {n}'**
+  String expenseItzQuantitySpoken(String n);
+
+  /// SA16: quantity error.
+  ///
+  /// In ar, this message translates to:
+  /// **'الكمية من 1 لـ 999.'**
+  String get expenseItzQuantityInvalid;
+
+  /// SA16: price field when quantity is above 1.
+  ///
+  /// In ar, this message translates to:
+  /// **'سعر الوحدة'**
+  String get expenseItzUnitPriceLabel;
+
+  /// SA16: screen-reader suffix of a required field.
+  ///
+  /// In ar, this message translates to:
+  /// **'مطلوب'**
+  String get expenseItzRequired;
+
+  /// SA16: quantity times unit price, shown as typed (never multiplied).
+  ///
+  /// In ar, this message translates to:
+  /// **'{qty} × {price}'**
+  String expenseItzLineTimes(String qty, String price);
+
+  /// SA16: tooltip of the item menu.
+  ///
+  /// In ar, this message translates to:
+  /// **'خيارات الصنف'**
+  String get expenseItzItemMenu;
+
+  /// SA16: spoken item menu.
+  ///
+  /// In ar, this message translates to:
+  /// **'خيارات الصنف {n}'**
+  String expenseItzItemMenuSpoken(String n);
+
+  /// SA16: item menu.
+  ///
+  /// In ar, this message translates to:
+  /// **'تكرار الصنف'**
+  String get expenseItzDuplicate;
+
+  /// SA16: item menu (quantity above 1).
+  ///
+  /// In ar, this message translates to:
+  /// **'وزّع الوحدات على الأشخاص'**
+  String get expenseItzSplitUnits;
+
+  /// SA16: item menu.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف الصنف'**
+  String get expenseItzDeleteItem;
+
+  /// SA16: snackbar after deleting an item.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتحذف الصنف.'**
+  String get expenseItzItemDeleted;
+
+  /// SA16: snackbar action.
+  ///
+  /// In ar, this message translates to:
+  /// **'تراجع'**
+  String get expenseItzUndo;
+
+  /// SA16: split sheet title.
+  ///
+  /// In ar, this message translates to:
+  /// **'وزّع الوحدات'**
+  String get expenseItzSplitTitle;
+
+  /// SA16: split sheet subtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب كام وحدة من «{name}» لكل شخص (الإجمالي {n}). هيتحوّل لصنف لكل شخص.'**
+  String expenseItzSplitHint(String name, String n);
+
+  /// SA16: units not yet given to anyone.
+  ///
+  /// In ar, this message translates to:
+  /// **'فاضل {n} وحدة'**
+  String expenseItzSplitRemaining(String n);
+
+  /// SA16: more units than the item has.
+  ///
+  /// In ar, this message translates to:
+  /// **'زيادة {n} وحدة'**
+  String expenseItzSplitOver(String n);
+
+  /// SA16: split matches the quantity.
+  ///
+  /// In ar, this message translates to:
+  /// **'كل الوحدات موزّعة'**
+  String get expenseItzSplitMatches;
+
+  /// SA16: split sheet button.
+  ///
+  /// In ar, this message translates to:
+  /// **'تقسيم'**
+  String get expenseItzSplitConfirm;
+
+  /// SA16: spoken row of the split sheet.
+  ///
+  /// In ar, this message translates to:
+  /// **'{name}: {n} وحدة'**
+  String expenseItzSplitPersonSpoken(String name, String n);
+
+  /// SA16: assignee summary chip when everyone shares.
+  ///
+  /// In ar, this message translates to:
+  /// **'الكل'**
+  String get expenseItzSummaryAll;
+
+  /// SA16: summary chip with nobody chosen.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر المشاركين'**
+  String get expenseItzSummaryNone;
+
+  /// SA16: more people than avatars.
+  ///
+  /// In ar, this message translates to:
+  /// **'+{n}'**
+  String expenseItzSummaryMore(String n);
+
+  /// SA16: spoken summary chip.
+  ///
+  /// In ar, this message translates to:
+  /// **'المشاركون: {names}. اضغط للتعديل.'**
+  String expenseItzSummarySpoken(String names);
+
+  /// SA16: picker sheet title.
+  ///
+  /// In ar, this message translates to:
+  /// **'مين شارك في «{item}»؟'**
+  String expenseItzPickerTitle(String item);
+
+  /// SA16: picker search field.
+  ///
+  /// In ar, this message translates to:
+  /// **'دوّر على عضو'**
+  String get expenseItzPickerSearch;
+
+  /// SA16: select everyone.
+  ///
+  /// In ar, this message translates to:
+  /// **'الكل'**
+  String get expenseItzPickerAll;
+
+  /// SA16: clear the selection.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا أحد'**
+  String get expenseItzPickerNone;
+
+  /// SA16: picker selection count.
+  ///
+  /// In ar, this message translates to:
+  /// **'{n} من {total}'**
+  String expenseItzPickerCount(String n, String total);
+
+  /// SA16: sticky confirm button of the picker.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم ({n})'**
+  String expenseItzPickerDone(String n);
+
+  /// SA16: empty search result.
+  ///
+  /// In ar, this message translates to:
+  /// **'مفيش حد بالاسم ده.'**
+  String get expenseItzPickerNoResults;
+
+  /// SA16: person selector label.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر الشخص'**
+  String get expenseItzPersonPick;
+
+  /// SA16: by-person hint.
+  ///
+  /// In ar, this message translates to:
+  /// **'علّم الأصناف اللي شارك فيها {name}.'**
+  String expenseItzPersonHint(String name);
+
+  /// SA16: by-person: tick everything.
+  ///
+  /// In ar, this message translates to:
+  /// **'كل الأصناف'**
+  String get expenseItzPersonAllItems;
+
+  /// SA16: by-person: clear everything.
+  ///
+  /// In ar, this message translates to:
+  /// **'ولا صنف'**
+  String get expenseItzPersonNoItems;
+
+  /// SA16: flag of an item with nobody.
+  ///
+  /// In ar, this message translates to:
+  /// **'«{item}» لم يشارك فيه أحد'**
+  String expenseItzPersonUnassigned(String item);
+
+  /// SA16: by-person with no items.
+  ///
+  /// In ar, this message translates to:
+  /// **'أضف أصناف الأول.'**
+  String get expenseItzPersonNoItemsYet;
+
+  /// SA16: charges card title.
+  ///
+  /// In ar, this message translates to:
+  /// **'الخصم والخدمة والضريبة'**
+  String get expenseItzChargesTitle;
+
+  /// SA16: discount row.
+  ///
+  /// In ar, this message translates to:
+  /// **'الخصم'**
+  String get expenseItzDiscountLabel;
+
+  /// SA16: percent toggle label.
+  ///
+  /// In ar, this message translates to:
+  /// **'%'**
+  String get expenseItzModePercent;
+
+  /// SA16: amount toggle label.
+  ///
+  /// In ar, this message translates to:
+  /// **'ج.م'**
+  String get expenseItzModeAmount;
+
+  /// SA16: spoken toggle.
+  ///
+  /// In ar, this message translates to:
+  /// **'{title}: نسبة مئوية أم مبلغ'**
+  String expenseItzModeSpoken(String title);
+
+  /// SA16: spoken percent option.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسبة مئوية'**
+  String get expenseItzModePercentSpoken;
+
+  /// SA16: spoken amount option.
+  ///
+  /// In ar, this message translates to:
+  /// **'مبلغ بالجنيه'**
+  String get expenseItzModeAmountSpoken;
+
+  /// SA16: charge amount box label.
+  ///
+  /// In ar, this message translates to:
+  /// **'المبلغ (ج.م)'**
+  String get expenseItzAmountLabel;
+
+  /// SA16: charge amount hint.
+  ///
+  /// In ar, this message translates to:
+  /// **'مثال 50'**
+  String get expenseItzAmountHint;
+
+  /// SA16: discount rate error.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب خصم من 0.01 لـ 99.99%.'**
+  String get expenseItzDiscountPercentInvalid;
+
+  /// SA16: charge amount error.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب مبلغ صحيح أكبر من صفر.'**
+  String get expenseItzChargeAmountInvalid;
+
+  /// SA16: discount amount error.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب مبلغ الخصم.'**
+  String get expenseItzDiscountNeedsAmount;
+
+  /// SA16: note after the printed-total tolerance set the adjustment.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم ضبط فرق {x} قرش تلقائيًا لمطابقة إجمالي الإيصال'**
+  String expenseItzAutoAdjusted(String x);
+
+  /// SA16: spoken expand.
+  ///
+  /// In ar, this message translates to:
+  /// **'عرض تفاصيل {name}'**
+  String expenseItzExpandPerson(String name);
+
+  /// SA16: spoken collapse.
+  ///
+  /// In ar, this message translates to:
+  /// **'إخفاء تفاصيل {name}'**
+  String expenseItzCollapsePerson(String name);
+
+  /// SA16: share breakdown part: discount.
+  ///
+  /// In ar, this message translates to:
+  /// **'خصم {amount}'**
+  String expenseItzPartDiscount(String amount);
+
+  /// SA16: bottom bar count of missing fields.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =1{حقل واحد ناقص} =2{حقلان ناقصان} few{{count} حقول ناقصة} many{{count} حقلًا ناقصًا} other{{count} حقل ناقص}}'**
+  String expenseItzMissingCount(int count);
+
+  /// SA16: primary button of the restaurant bill (add).
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ الفاتورة'**
+  String get expenseItzSave;
+
+  /// SA16: note under the items title.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحقول اللي عليها * مطلوبة.'**
+  String get expenseItzRequiredFieldsNote;
+
+  /// SA16: details: discount row.
+  ///
+  /// In ar, this message translates to:
+  /// **'خصم'**
+  String get expenseItzDetailsDiscount;
+
+  /// SA16: details: first names and how many more.
+  ///
+  /// In ar, this message translates to:
+  /// **'{names} +{n}'**
+  String expenseItzAssigneesMore(String names, String n);
+
+  /// SA16: details: expand.
+  ///
+  /// In ar, this message translates to:
+  /// **'عرض كل الأسماء'**
+  String get expenseItzAssigneesExpandSpoken;
+
+  /// SA16: details: collapse.
+  ///
+  /// In ar, this message translates to:
+  /// **'عرض أقل'**
+  String get expenseItzAssigneesCollapseSpoken;
 }
 
 class _AppLocalizationsDelegate

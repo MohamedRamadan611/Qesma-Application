@@ -35,20 +35,24 @@ int paidTotalMinor(ExpenseView expense) => expense.payers.fold<int>(0, (sum, p) 
 /// The breakdown parts of one share worth printing: only fields the server sent and that
 /// are not zero (a service-only bill has no tax part). Empty for EQUAL/EXACT.
 class BreakdownParts {
-  const BreakdownParts({this.itemsMinor, this.serviceMinor, this.taxMinor, this.adjustmentMinor});
+  const BreakdownParts({this.itemsMinor, this.discountMinor, this.serviceMinor, this.taxMinor, this.adjustmentMinor});
 
   final int? itemsMinor;
+
+  /// The share of the bill discount (A171), as the server sent it (positive); null when there is none.
+  final int? discountMinor;
   final int? serviceMinor;
   final int? taxMinor;
   final int? adjustmentMinor;
 
-  bool get isEmpty => itemsMinor == null && serviceMinor == null && taxMinor == null && adjustmentMinor == null;
+  bool get isEmpty => itemsMinor == null && discountMinor == null && serviceMinor == null && taxMinor == null && adjustmentMinor == null;
 }
 
 BreakdownParts breakdownOf(ShareView share) {
   int? nonZero(int? v) => (v == null || v == 0) ? null : v;
   return BreakdownParts(
     itemsMinor: share.itemsMinor,
+    discountMinor: nonZero(share.discountMinor),
     serviceMinor: nonZero(share.serviceMinor),
     taxMinor: nonZero(share.taxMinor),
     adjustmentMinor: nonZero(share.adjustmentMinor),

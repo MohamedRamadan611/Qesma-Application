@@ -255,8 +255,33 @@ class ExpenseFormController extends Notifier<ExpenseFormView> {
     final f = form;
     if (f == null || f.splitMode != SplitMode.itemized) return;
     final key = _itemizedKey(f);
-    if (key == null || !next.isCurrentFor(key)) return;
+    if (key == null) return;
+
+    // A174: the engine refused the adjustment the tolerance set (A12): take it back and keep the mismatch banner.
+    if (next.key == key && next.status == PreviewStatus.failed && f.itemized.adjustmentAuto) {
+      final base = f.itemized.copyWith(adjustmentText: '', adjustmentAuto: false);
+      _autoRejectedKey = _itemizedKey(f.copyWith(itemized: base));
+      _set(f.copyWith(itemized: base, clearAutoAdjusted: true));
+      return;
+    }
+    if (!next.isCurrentFor(key)) return;
     final total = next.preview!.totalMinor;
+
+    // A174 (STANDALONE_SPEC 18.3): a scanned receipt's printed total within the tolerance of the preview, and an
+    // adjustment the user never touched: set the adjustment to the difference and ask again.
+    final printed = f.printedTotalMinor;
+    final draft = f.itemized;
+    if (printed != null && !draft.adjustmentManual && !draft.adjustmentAuto && draft.adjustmentText.trim().isEmpty && key != _autoRejectedKey) {
+      final gap = toleratedGap(printed, total);
+      if (gap != null) {
+        _set(f.copyWith(
+          itemized: draft.copyWith(adjustmentText: Money.formatPlain(gap), adjustmentAuto: true),
+          autoAdjustedPiasters: Money.magnitude(gap),
+        ));
+        return;
+      }
+    }
+
     if (f.serverTotalMinor == total) return;
     state = state.copyWith(form: f.copyWith(serverTotalMinor: total));
     _syncItemizedPreviews(); // the payers are valid now that the total is known
@@ -266,9 +291,22 @@ class ExpenseFormController extends Notifier<ExpenseFormView> {
 
   int _itemSeq = 0;
 
+  /// The base key (the bill without the automatic adjustment) the engine refused an automatic adjustment for: the
+  /// tolerance is not tried again for it, so a rejection cannot loop (A174).
+  String? _autoRejectedKey;
+
+  /// Every user edit of the bill goes through here. An automatic adjustment (A174) belongs to the inputs it was
+  /// measured for, so any other edit drops it; the next preview measures the bill again.
   void _setItemized(ItemizedDraft draft) {
     final f = form;
-    if (f != null) _set(f.copyWith(itemized: draft));
+    if (f == null) return;
+    var next = draft;
+    var clearAuto = false;
+    if (f.itemized.adjustmentAuto && next.adjustmentAuto) {
+      next = next.copyWith(adjustmentText: '', adjustmentAuto: false);
+      clearAuto = true;
+    }
+    _set(f.copyWith(itemized: next, clearAutoAdjusted: clearAuto || !next.adjustmentAuto));
   }
 
   ItemDraft _newItem() => ItemDraft(id: 'new-${_itemSeq++}', assigneeIds: {...memberIds});
@@ -278,7 +316,14 @@ class ExpenseFormController extends Notifier<ExpenseFormView> {
   void applyScan(ScanDraft scan) {
     final f = form;
     if (f == null) return;
-    _set(f.copyWith(splitMode: SplitMode.itemized, itemized: scan.itemized, printedTotalMinor: scan.printedTotalMinor, scanNotes: scan.notes));
+    _autoRejectedKey = null;
+    _set(f.copyWith(
+      splitMode: SplitMode.itemized,
+      itemized: scan.itemized,
+      printedTotalMinor: scan.printedTotalMinor,
+      scanNotes: scan.notes,
+      clearAutoAdjusted: true,
+    ));
   }
 
   /// A new item starts with everyone selected (the user unchecks).
@@ -288,9 +333,57 @@ class ExpenseFormController extends Notifier<ExpenseFormView> {
     _setItemized(f.itemized.copyWith(items: [...f.itemized.items, _newItem()]));
   }
 
-  void removeItem(String id) {
+  /// Removes an item and returns it with its position, so the screen can offer "undo" ([restoreItem]).
+  ({ItemDraft item, int index})? removeItem(String id) {
     final f = form;
-    if (f != null) _setItemized(f.itemized.copyWith(items: [for (final i in f.itemized.items) if (i.id != id) i]));
+    if (f == null) return null;
+    final index = f.itemized.items.indexWhere((i) => i.id == id);
+    if (index < 0) return null;
+    final removed = f.itemized.items[index];
+    _setItemized(f.itemized.copyWith(items: [for (final i in f.itemized.items) if (i.id != id) i]));
+    return (item: removed, index: index);
+  }
+
+  /// Puts back an item removed by [removeItem] at its old position (clamped).
+  void restoreItem(ItemDraft item, int index) {
+    final f = form;
+    if (f == null || f.itemized.items.length >= kMaxItems || f.itemized.items.any((i) => i.id == item.id)) return;
+    final items = [...f.itemized.items];
+    items.insert(index.clamp(0, items.length), item);
+    _setItemized(f.itemized.copyWith(items: items));
+  }
+
+  /// A copy of the item (same name, price, quantity and people) right after it.
+  void duplicateItem(String id) {
+    final f = form;
+    if (f == null || f.itemized.items.length >= kMaxItems) return;
+    final items = [...f.itemized.items];
+    final index = items.indexWhere((i) => i.id == id);
+    if (index < 0) return;
+    items.insert(index + 1, items[index].withId('new-${_itemSeq++}'));
+    _setItemized(f.itemized.copyWith(items: items));
+  }
+
+  /// "X got 2, Y got 1": replaces the item with one item per person, each with that person's number of units and the
+  /// same unit price (STANDALONE_SPEC 18.5, A172: units are not assigned per person inside one item, so the split is
+  /// made of separate items and the engine's normal rules apply). People with 0 units get none. Returns false when
+  /// nothing changed (no units, or the bill would pass [kMaxItems]).
+  bool splitItemUnits(String id, Map<String, int> unitsByMember) {
+    final f = form;
+    if (f == null) return false;
+    final items = [...f.itemized.items];
+    final index = items.indexWhere((i) => i.id == id);
+    if (index < 0) return false;
+    final people = [for (final memberId in memberIds) if ((unitsByMember[memberId] ?? 0) > 0) memberId];
+    if (people.isEmpty || items.length - 1 + people.length > kMaxItems) return false;
+    final source = items[index];
+    final parts = [
+      for (final memberId in people)
+        source.withId('new-${_itemSeq++}', assigneeIds: {memberId}, quantity: unitsByMember[memberId]!.clamp(kMinQuantity, kMaxQuantity)).copyWith(touched: true),
+    ];
+    items.replaceRange(index, index + 1, parts);
+    _setItemized(f.itemized.copyWith(items: items));
+    return true;
   }
 
   void _changeItem(String id, ItemDraft Function(ItemDraft) change) {
@@ -301,13 +394,60 @@ class ExpenseFormController extends Notifier<ExpenseFormView> {
 
   void setItemName(String id, String value) => _changeItem(id, (i) => i.copyWith(name: value, touched: true));
 
+  /// The unit price as typed.
   void setItemAmount(String id, String value) => _changeItem(id, (i) => i.copyWith(amountText: value, touched: true));
+
+  void setItemQuantity(String id, int value) =>
+      _changeItem(id, (i) => i.copyWith(quantity: value.clamp(kMinQuantity, kMaxQuantity), touched: true));
+
+  void stepItemQuantity(String id, int delta) {
+    final item = form?.itemized.items.where((i) => i.id == id).firstOrNull;
+    if (item != null) setItemQuantity(id, item.quantity + delta);
+  }
 
   void toggleAssignee(String id, String memberId) => _changeItem(id, (i) {
         final next = {...i.assigneeIds};
         if (!next.add(memberId)) next.remove(memberId);
         return i.copyWith(assigneeIds: next, touched: true);
       });
+
+  /// The member picker's result: exactly these people share the item.
+  void setAssignees(String id, Set<String> memberIdSet) => _changeItem(id, (i) => i.copyWith(assigneeIds: {...memberIdSet}, touched: true));
+
+  /// Everyone (or nobody) shares the item.
+  void setAllAssignees(String id, {required bool all}) => setAssignees(id, all ? {...memberIds} : <String>{});
+
+  /// By-person mode: ticks or unticks one item for one person.
+  void toggleAssigneeForPerson(String personId, String itemId) => toggleAssignee(itemId, personId);
+
+  /// By-person mode: puts a person on every item, or takes them off every item.
+  void setPersonOnAllItems(String personId, {required bool on}) {
+    final f = form;
+    if (f == null) return;
+    _setItemized(f.itemized.copyWith(items: [
+      for (final i in f.itemized.items)
+        i.copyWith(assigneeIds: on ? {...i.assigneeIds, personId} : ({...i.assigneeIds}..remove(personId)), touched: true),
+    ]));
+  }
+
+  /// The user tapped Save on an incomplete bill: every item is marked touched so each missing field shows its error.
+  void revealErrors() {
+    final f = form;
+    if (f == null) return;
+    state = state.copyWith(
+      form: f.copyWith(
+        itemized: f.itemized.copyWith(items: [for (final i in f.itemized.items) i.copyWith(touched: true)]),
+        showAllErrors: true,
+      ),
+    );
+  }
+
+  // ---- charges ----
+
+  void setDiscountOn(bool on) {
+    final f = form;
+    if (f != null) _setItemized(f.itemized.copyWith(discountOn: on));
+  }
 
   void setServiceOn(bool on) {
     final f = form;
@@ -317,11 +457,6 @@ class ExpenseFormController extends Notifier<ExpenseFormView> {
     _setItemized(f.itemized.copyWith(serviceOn: on, servicePercentText: on && empty ? kDefaultServicePercent : null));
   }
 
-  void setServicePercent(String text) {
-    final f = form;
-    if (f != null) _setItemized(f.itemized.copyWith(servicePercentText: text));
-  }
-
   void setTaxOn(bool on) {
     final f = form;
     if (f == null) return;
@@ -329,9 +464,38 @@ class ExpenseFormController extends Notifier<ExpenseFormView> {
     _setItemized(f.itemized.copyWith(taxOn: on, taxPercentText: on && empty ? kDefaultTaxPercent : null));
   }
 
+  /// The `% | ج.م` toggle. The text of the other mode is kept, so switching back restores what was typed.
+  void setChargeMode(ChargeKind kind, ChargeMode mode) {
+    final f = form;
+    if (f == null) return;
+    final d = f.itemized;
+    _setItemized(switch (kind) {
+      ChargeKind.discount => d.copyWith(discountMode: mode),
+      ChargeKind.service => d.copyWith(serviceMode: mode),
+      ChargeKind.tax => d.copyWith(taxMode: mode),
+    });
+  }
+
+  /// The value box of a charge row: written to the text of the row's current mode.
+  void setChargeText(ChargeKind kind, String text) {
+    final f = form;
+    if (f == null) return;
+    final d = f.itemized;
+    _setItemized(switch (kind) {
+      ChargeKind.discount => d.discountMode == ChargeMode.percent ? d.copyWith(discountPercentText: text) : d.copyWith(discountAmountText: text),
+      ChargeKind.service => d.serviceMode == ChargeMode.percent ? d.copyWith(servicePercentText: text) : d.copyWith(serviceAmountText: text),
+      ChargeKind.tax => d.taxMode == ChargeMode.percent ? d.copyWith(taxPercentText: text) : d.copyWith(taxAmountText: text),
+    });
+  }
+
+  void setServicePercent(String text) {
+    final f = form;
+    if (f != null) _setItemized(f.itemized.copyWith(serviceMode: ChargeMode.percent, servicePercentText: text));
+  }
+
   void setTaxPercent(String text) {
     final f = form;
-    if (f != null) _setItemized(f.itemized.copyWith(taxPercentText: text));
+    if (f != null) _setItemized(f.itemized.copyWith(taxMode: ChargeMode.percent, taxPercentText: text));
   }
 
   void setTaxBase(TaxBase base) {
@@ -339,9 +503,10 @@ class ExpenseFormController extends Notifier<ExpenseFormView> {
     if (f != null) _setItemized(f.itemized.copyWith(taxBase: base));
   }
 
+  /// A typed adjustment: the user's own, so the printed-total tolerance leaves it alone from now on.
   void setAdjustment(String text) {
     final f = form;
-    if (f != null) _setItemized(f.itemized.copyWith(adjustmentText: text));
+    if (f != null) _setItemized(f.itemized.copyWith(adjustmentText: text, adjustmentAuto: false, adjustmentManual: true));
   }
 
   /// The +/- buttons of the adjustment: one piaster (0.01 EGP) more or less than what was typed.
@@ -353,7 +518,7 @@ class ExpenseFormController extends Notifier<ExpenseFormView> {
     if (current == null) return; // unreadable text: nothing to step from
     final next = current + piasters;
     if (next.abs() > Money.maxMinor) return;
-    _setItemized(f.itemized.copyWith(adjustmentText: next == 0 ? '' : Money.formatPlain(next)));
+    _setItemized(f.itemized.copyWith(adjustmentText: next == 0 ? '' : Money.formatPlain(next), adjustmentAuto: false, adjustmentManual: true));
   }
 
   void setTitle(String value) {

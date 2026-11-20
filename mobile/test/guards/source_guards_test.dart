@@ -48,6 +48,7 @@ List<String> _scan(
 void main() {
   _fl14TimeGuard();
   _sa10PoolGuard();
+  _sa16ItemizedGuard();
   test('no money arithmetic or floating point outside core/money', () {
     final hits = <String>[
       // Floating point types and conversions: allowed only for pixel sizes in theme/widgets.
@@ -349,5 +350,52 @@ void _sa10PoolGuard() {
     expect(_poolArithmetic.hasMatch('final total = s.deposits.fold(0, (a, d) => a + d.amountMinor);'), isTrue);
     expect(_poolArithmetic.hasMatch('Text(moneyDisplay(l10n, meter.abs()))'), isTrue);
     expect(_poolArithmetic.hasMatch('MoneyText(group.poolBalanceMinor ?? 0)'), isFalse);
+  });
+}
+
+// SA16 (STANDALONE_SPEC 18.5): the itemized editor does no money math. Every computed amount (subtotal, discount,
+// service, tax, per-person parts, totals) is the preview's; the item line shows the typed quantity and price as typed and
+// never multiplies them. The one calculation of the printed-total tolerance (A174) lives in core/money.
+final _itemizedArithmetic = RegExp(
+  r'\b\w*Minor\w*\b\s*[-+*/%]\s*[\w(]'
+  r'|[\w)]\s*[-+*/%]=?\s*\w*\.?\b\w*Minor\w*\b'
+  r'|\bquantity\b\s*\*|\*\s*\w*\.?\bquantity\b'
+  r'|\.fold\(|\.reduce\(|\.abs\(\)',
+);
+
+bool _isItemizedUi(String path) =>
+    path.startsWith('lib/features/expenses/presentation/itemized_') ||
+    path == 'lib/features/expenses/presentation/member_picker_sheet.dart' ||
+    path == 'lib/features/expenses/presentation/assignee_summary_chip.dart' ||
+    path == 'lib/features/expenses/presentation/unit_split_sheet.dart' ||
+    path == 'lib/features/expenses/presentation/expense_blocks.dart';
+
+void _sa16ItemizedGuard() {
+  test('no money arithmetic in the itemized editor and the details blocks (SA16)', () {
+    final hits = _scan(_itemizedArithmetic, skip: (p) => !_isItemizedUi(p));
+    expect(hits, isEmpty, reason: 'Amounts come from the preview and are shown as sent; quantity x price is never worked out here.\n${hits.join('\n')}');
+  });
+
+  test('the itemized guard is alive: files are scanned and the pattern catches widget-side money math', () {
+    final scanned = _dartFiles().map(_rel).where(_isItemizedUi).toList();
+    expect(scanned.length, greaterThanOrEqualTo(8), reason: scanned.join('\n'));
+    expect(_itemizedArithmetic.hasMatch('final line = item.unitAmountMinor * item.quantity;'), isTrue);
+    expect(_itemizedArithmetic.hasMatch('final left = share.owedMinor - share.discountMinor!;'), isTrue);
+    expect(_itemizedArithmetic.hasMatch('final sum = shares.fold(0, (a, s) => a + s.owedMinor);'), isTrue);
+    expect(_itemizedArithmetic.hasMatch("Text(l10n.expenseItzLineTimes('\${item.quantity}', moneyDisplay(l10n, unit)))"), isFalse);
+  });
+
+  test('the printed-total tolerance constant is defined once, in core/money', () {
+    final defs = _scan(RegExp(r'\bkPrintedTotalTolerance\s*='));
+    expect(defs, hasLength(1), reason: defs.join('\n'));
+    expect(defs.single, contains('lib/core/money/money.dart'));
+  });
+
+  test('only the request builder constructs the discount, service, tax and item inputs', () {
+    final hits = _scan(
+      RegExp(r'\b(DiscountInput|ServiceInput|TaxInput|ItemInput)\('),
+      skip: (p) => p == 'lib/features/expenses/application/expense_command_builder.dart' || p.startsWith('lib/local/'),
+    );
+    expect(hits, isEmpty, reason: 'Build the request with buildItemizedCommand.\n${hits.join('\n')}');
   });
 }

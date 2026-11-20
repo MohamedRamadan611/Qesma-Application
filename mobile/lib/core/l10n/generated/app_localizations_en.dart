@@ -3153,4 +3153,249 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get scanTruncated =>
       'The receipt has more than 100 items. Only the first 100 were read.';
+
+  @override
+  String get expenseItzModeByItem => 'By item';
+
+  @override
+  String get expenseItzModeByPerson => 'By person';
+
+  @override
+  String get expenseItzModeLabel => 'How to assign items';
+
+  @override
+  String get expenseItzQuantityLabel => 'Quantity';
+
+  @override
+  String get expenseItzQuantityMinus => 'Decrease quantity';
+
+  @override
+  String get expenseItzQuantityPlus => 'Increase quantity';
+
+  @override
+  String expenseItzQuantitySpoken(String n) {
+    return 'Quantity $n';
+  }
+
+  @override
+  String get expenseItzQuantityInvalid => 'Quantity must be 1 to 999.';
+
+  @override
+  String get expenseItzUnitPriceLabel => 'Unit price';
+
+  @override
+  String get expenseItzRequired => 'required';
+
+  @override
+  String expenseItzLineTimes(String qty, String price) {
+    return '$qty × $price';
+  }
+
+  @override
+  String get expenseItzItemMenu => 'Item options';
+
+  @override
+  String expenseItzItemMenuSpoken(String n) {
+    return 'Options of item $n';
+  }
+
+  @override
+  String get expenseItzDuplicate => 'Duplicate item';
+
+  @override
+  String get expenseItzSplitUnits => 'Split units between people';
+
+  @override
+  String get expenseItzDeleteItem => 'Delete item';
+
+  @override
+  String get expenseItzItemDeleted => 'Item deleted.';
+
+  @override
+  String get expenseItzUndo => 'Undo';
+
+  @override
+  String get expenseItzSplitTitle => 'Split the units';
+
+  @override
+  String expenseItzSplitHint(String name, String n) {
+    return 'Enter how many units of \"$name\" each person had ($n in total). It becomes one item per person.';
+  }
+
+  @override
+  String expenseItzSplitRemaining(String n) {
+    return '$n units left to give';
+  }
+
+  @override
+  String expenseItzSplitOver(String n) {
+    return '$n units too many';
+  }
+
+  @override
+  String get expenseItzSplitMatches => 'All units are given out';
+
+  @override
+  String get expenseItzSplitConfirm => 'Split';
+
+  @override
+  String expenseItzSplitPersonSpoken(String name, String n) {
+    return '$name: $n units';
+  }
+
+  @override
+  String get expenseItzSummaryAll => 'Everyone';
+
+  @override
+  String get expenseItzSummaryNone => 'Choose people';
+
+  @override
+  String expenseItzSummaryMore(String n) {
+    return '+$n';
+  }
+
+  @override
+  String expenseItzSummarySpoken(String names) {
+    return 'Shared by: $names. Tap to change.';
+  }
+
+  @override
+  String expenseItzPickerTitle(String item) {
+    return 'Who shared \"$item\"?';
+  }
+
+  @override
+  String get expenseItzPickerSearch => 'Search for a member';
+
+  @override
+  String get expenseItzPickerAll => 'All';
+
+  @override
+  String get expenseItzPickerNone => 'None';
+
+  @override
+  String expenseItzPickerCount(String n, String total) {
+    return '$n of $total';
+  }
+
+  @override
+  String expenseItzPickerDone(String n) {
+    return 'Done ($n)';
+  }
+
+  @override
+  String get expenseItzPickerNoResults => 'No one has that name.';
+
+  @override
+  String get expenseItzPersonPick => 'Choose a person';
+
+  @override
+  String expenseItzPersonHint(String name) {
+    return 'Tick the items $name shared.';
+  }
+
+  @override
+  String get expenseItzPersonAllItems => 'All items';
+
+  @override
+  String get expenseItzPersonNoItems => 'No items';
+
+  @override
+  String expenseItzPersonUnassigned(String item) {
+    return 'Nobody shares \"$item\"';
+  }
+
+  @override
+  String get expenseItzPersonNoItemsYet => 'Add items first.';
+
+  @override
+  String get expenseItzChargesTitle => 'Discount, service and tax';
+
+  @override
+  String get expenseItzDiscountLabel => 'Discount';
+
+  @override
+  String get expenseItzModePercent => '%';
+
+  @override
+  String get expenseItzModeAmount => 'EGP';
+
+  @override
+  String expenseItzModeSpoken(String title) {
+    return '$title: percentage or amount';
+  }
+
+  @override
+  String get expenseItzModePercentSpoken => 'Percentage';
+
+  @override
+  String get expenseItzModeAmountSpoken => 'Amount in pounds';
+
+  @override
+  String get expenseItzAmountLabel => 'Amount (EGP)';
+
+  @override
+  String get expenseItzAmountHint => 'For example 50';
+
+  @override
+  String get expenseItzDiscountPercentInvalid =>
+      'Enter a discount from 0.01 to 99.99%.';
+
+  @override
+  String get expenseItzChargeAmountInvalid =>
+      'Enter a valid amount above zero.';
+
+  @override
+  String get expenseItzDiscountNeedsAmount => 'Enter the discount amount.';
+
+  @override
+  String expenseItzAutoAdjusted(String x) {
+    return 'Adjusted by $x piasters automatically to match the receipt total';
+  }
+
+  @override
+  String expenseItzExpandPerson(String name) {
+    return 'Show the details of $name';
+  }
+
+  @override
+  String expenseItzCollapsePerson(String name) {
+    return 'Hide the details of $name';
+  }
+
+  @override
+  String expenseItzPartDiscount(String amount) {
+    return 'discount $amount';
+  }
+
+  @override
+  String expenseItzMissingCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count fields missing',
+      one: '1 field missing',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get expenseItzSave => 'Save bill';
+
+  @override
+  String get expenseItzRequiredFieldsNote => 'Fields marked * are required.';
+
+  @override
+  String get expenseItzDetailsDiscount => 'Discount';
+
+  @override
+  String expenseItzAssigneesMore(String names, String n) {
+    return '$names +$n';
+  }
+
+  @override
+  String get expenseItzAssigneesExpandSpoken => 'Show all names';
+
+  @override
+  String get expenseItzAssigneesCollapseSpoken => 'Show fewer';
 }

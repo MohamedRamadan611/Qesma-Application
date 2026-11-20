@@ -11,6 +11,7 @@ import '../application/expense_command_builder.dart';
 import '../application/expense_form_controller.dart';
 import '../application/expense_form_state.dart';
 import '../application/expense_preview_controller.dart';
+import 'member_picker_sheet.dart';
 import 'status_banner.dart';
 import '../../../core/theme/palette.dart';
 
@@ -46,6 +47,7 @@ class _PayersSheetState extends ConsumerState<PayersSheet> {
   late Map<String, String> _texts;
   bool _splitting = false;
   bool _splitFailed = false;
+  String _query = '';
 
   ExpenseFormController get _controller => ref.read(expenseFormControllerProvider(widget.formKey).notifier);
 
@@ -203,7 +205,12 @@ class _PayersSheetState extends ConsumerState<PayersSheet> {
               child: Semantics(liveRegion: true, child: Text(l10n.expensePayersFailed, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.error))),
             ),
           const SizedBox(height: QesmaSpacing.md),
-          for (final member in members)
+          // SA16: with many members the rows are searchable (the same field as the member picker).
+          if (members.length > kPickerSearchThreshold) ...[
+            MemberSearchField(onChanged: (value) => setState(() => _query = value)),
+            const SizedBox(height: QesmaSpacing.sm),
+          ],
+          for (final member in filterMembers(members, _query))
             Padding(
               padding: const EdgeInsets.only(bottom: QesmaSpacing.sm),
               child: _PayerRow(

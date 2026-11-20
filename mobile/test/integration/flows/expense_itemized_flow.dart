@@ -119,4 +119,67 @@ Future<void> runExpenseItemizedFlow(ProviderContainer container) async {
     stale = e;
   }
   expect((stale! as ApiHttpFailure).problem?.code, ApiErrorCode.versionConflict);
+
+  // ---- SA16: the editor's v2 fields through the app's own builder (discount, quantity, charges as amounts) ----
+  ExpenseFormState v2(ItemizedDraft Function(ItemizedDraft) change, {List<ItemDraft>? withItems}) {
+    final base = bill();
+    return base.copyWith(itemized: change(base.itemized.copyWith(items: withItems ?? items)));
+  }
+
+  // V9: discount 10%, service 12%, tax 14% on items + service.
+  final v9 = await preview(v2((d) => d.copyWith(discountOn: true, discountPercentText: '10', serviceOn: true, servicePercentText: '12', taxOn: true, taxPercentText: '14')));
+  expect(v9.totalMinor, 50561);
+  expect(v9.discountMinor, 4400);
+  expect(v9.members.map((m) => m.owedMinor).toList(), [14939, 14938, 20684]);
+  expect(v9.members.map((m) => m.discountMinor).toList(), [1300, 1300, 1800]);
+
+  // V10: the discount as an amount (50.00), no service or tax.
+  final v10 = await preview(v2((d) => d.copyWith(discountOn: true, discountMode: ChargeMode.amount, discountAmountText: '50')));
+  expect(v10.totalMinor, 39000);
+  expect(v10.members.map((m) => m.owedMinor).toList(), [11523, 11523, 15954]);
+
+  // V12 and V13: service and tax given as amounts.
+  expect((await preview(v2((d) => d.copyWith(serviceOn: true, serviceMode: ChargeMode.amount, serviceAmountText: '50')))).totalMinor, 49000);
+  final v13 = await preview(v2((d) => d.copyWith(serviceOn: true, servicePercentText: '12', taxOn: true, taxMode: ChargeMode.amount, taxAmountText: '60')));
+  expect(v13.totalMinor, 55280);
+  expect(v13.members.map((m) => m.owedMinor).toList(), [16333, 16333, 22614]);
+
+  // V11: a quantity. Pepsi 3 x 15.25 {you, Asem}, Shawarma 85.00 {you}: the client sends the unit price and the quantity,
+  // the server multiplies.
+  final lunch = [
+    ItemDraft(id: 'p', name: 'Pepsi', amountText: '15.25', quantity: 3, assigneeIds: {you, asem}),
+    ItemDraft(id: 's', name: 'Shawarma', amountText: '85', assigneeIds: {you}),
+  ];
+  final v11 = await preview(v2((d) => d, withItems: lunch));
+  expect(v11.totalMinor, 13075);
+  expect(v11.members.map((m) => m.owedMinor).toList(), [10788, 2287]);
+
+  // The refusals the engine gives (V15): a discount of the whole subtotal (440.00), or more.
+  for (final text in ['440', '500']) {
+    Object? tooBig;
+    try {
+      await repo.preview(gid, buildItemizedPreview(v2((d) => d.copyWith(discountOn: true, discountMode: ChargeMode.amount, discountAmountText: text)), memberIds: members)!).result;
+    } catch (e) {
+      tooBig = e;
+    }
+    expect((tooBig! as ApiHttpFailure).problem?.code, ApiErrorCode.validationError, reason: 'discount equal to the subtotal ($text)');
+  }
+
+  // Create a v2 bill, read it back into the form and send the same request again (quantity, unit price and charge modes survive).
+  final v2Form = v2((d) => d.copyWith(discountOn: true, discountPercentText: '10', serviceOn: true, serviceMode: ChargeMode.amount, serviceAmountText: '50'), withItems: [
+    ...lunch,
+    ItemDraft(id: 'd', name: 'Drinks', amountText: '90', assigneeIds: {you, asem, mohsen}),
+  ]);
+  final v2Preview = await preview(v2Form);
+  final v2Command = buildExpenseCommand(v2Form.copyWith(serverTotalMinor: v2Preview.totalMinor), edit: false, memberIds: members)!;
+  final v2Created = await IdempotentAction().run(commandJson(v2Command), (key) => repo.create(gid, v2Command, key));
+  expect(v2Created.expense.totalMinor, v2Preview.totalMinor);
+  expect(v2Created.expense.items!.first.quantity, 3);
+  expect(v2Created.expense.items!.first.unitAmountMinor, 1525);
+  expect(v2Created.expense.charges!.discount?.bps, 1000);
+  final v2Back = formFromExpense(await repo.get(gid, v2Created.expense.id), memberIds: members, fallbackPayerId: you);
+  expect(v2Back.itemized.items.first.quantity, 3);
+  expect((v2Back.itemized.discountMode, v2Back.itemized.discountPercentText), (ChargeMode.percent, '10'));
+  expect((v2Back.itemized.serviceMode, v2Back.itemized.serviceAmountText), (ChargeMode.amount, '50'));
+  expect(commandKey(buildExpenseCommand(v2Back, edit: true, memberIds: members)!), commandKey(v2Command), reason: 'GET -> form -> request is the same v2 bill');
 }

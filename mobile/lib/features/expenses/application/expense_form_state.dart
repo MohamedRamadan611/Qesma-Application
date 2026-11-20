@@ -8,6 +8,9 @@ import 'expense_draft.dart' show ScanNote;
 /// amounts, or a restaurant bill with items, service, tax and an adjustment (itemized).
 enum SplitMode { all, selected, exact, itemized }
 
+/// Sections of the form a missing field can be in, in screen order (scroll-to-first-error).
+enum ErrorSection { title, payers, items, charges }
+
 /// One payer who covers the whole total, or several who each type what they paid.
 enum PayerMode { single, multiple }
 
@@ -37,25 +40,55 @@ enum TaxBase {
   static TaxBase fromWire(String? value) => value == 'SUBTOTAL' ? TaxBase.subtotal : TaxBase.subtotalPlusService;
 }
 
-/// One line of a restaurant bill as the user typed it.
+/// Which kind of charge a row edits (discount, service or tax).
+enum ChargeKind { discount, service, tax }
+
+/// A charge is typed as a percentage or as an amount (A171, A173).
+enum ChargeMode { percent, amount }
+
+/// Quantity limits of an item (A172).
+const int kMinQuantity = 1;
+const int kMaxQuantity = 999;
+
+/// One line of a restaurant bill as the user typed it. [amountText] is the UNIT price; with a [quantity] above 1 the
+/// server multiplies (the client never does).
 class ItemDraft {
-  const ItemDraft({required this.id, this.name = '', this.amountText = '', this.assigneeIds = const {}, this.touched = false});
+  const ItemDraft({
+    required this.id,
+    this.name = '',
+    this.amountText = '',
+    this.quantity = 1,
+    this.assigneeIds = const {},
+    this.touched = false,
+  });
 
   /// Local key for the list (never sent).
   final String id;
   final String name;
   final String amountText;
+  final int quantity;
   final Set<String> assigneeIds;
 
   /// The user has typed or chosen something in this item (errors are shown only for touched items).
   final bool touched;
 
-  ItemDraft copyWith({String? name, String? amountText, Set<String>? assigneeIds, bool? touched}) => ItemDraft(
+  ItemDraft copyWith({String? name, String? amountText, int? quantity, Set<String>? assigneeIds, bool? touched}) => ItemDraft(
         id: id,
         name: name ?? this.name,
         amountText: amountText ?? this.amountText,
+        quantity: quantity ?? this.quantity,
         assigneeIds: assigneeIds ?? this.assigneeIds,
         touched: touched ?? this.touched,
+      );
+
+  /// The same item under a new local id (duplicate and split).
+  ItemDraft withId(String newId, {Set<String>? assigneeIds, int? quantity}) => ItemDraft(
+        id: newId,
+        name: name,
+        amountText: amountText,
+        quantity: quantity ?? this.quantity,
+        assigneeIds: assigneeIds ?? this.assigneeIds,
+        touched: touched,
       );
 
   String get trimmedName => name.trim();
@@ -65,71 +98,134 @@ class ItemDraft {
     return count >= 1 && count <= kItemNameMax;
   }
 
-  /// The amount in piasters (> 0), or null while empty or unreadable.
+  bool get quantityValid => quantity >= kMinQuantity && quantity <= kMaxQuantity;
+
+  /// The unit price in piasters (> 0), or null while empty or unreadable.
   int? get amountMinor => Money.parse(amountText);
 
   /// Assignees who are current members (a removed member's chip is ignored).
   Set<String> assigneesAmong(List<String> memberIds) => {for (final id in memberIds) if (assigneeIds.contains(id)) id};
 
-  bool validFor(List<String> memberIds) => nameValid && amountMinor != null && assigneesAmong(memberIds).isNotEmpty;
+  bool validFor(List<String> memberIds) => nameValid && amountMinor != null && quantityValid && assigneesAmong(memberIds).isNotEmpty;
+
+  /// How many of name, price, quantity and assignees are missing or unreadable (for the validation summary).
+  int missingCount(List<String> memberIds) =>
+      (nameValid ? 0 : 1) + (amountMinor != null ? 0 : 1) + (quantityValid ? 0 : 1) + (assigneesAmong(memberIds).isNotEmpty ? 0 : 1);
 
   bool sameAs(ItemDraft other) =>
       id == other.id &&
       name == other.name &&
       amountText == other.amountText &&
+      quantity == other.quantity &&
       assigneeIds.length == other.assigneeIds.length &&
       assigneeIds.containsAll(other.assigneeIds);
 }
 
-/// The restaurant bill being edited: items, service and tax (each independently on or off, with
-/// the percentage as typed), the tax base and a signed adjustment. Pure text and flags: the
+/// The restaurant bill being edited: items, an optional discount, service and tax (each independently on or off, as a
+/// percentage or an amount, with the text as typed), the tax base and a signed adjustment. Pure text and flags: the
 /// amounts they produce come from the backend preview, never from here.
 class ItemizedDraft {
   const ItemizedDraft({
     this.items = const [],
+    this.discountOn = false,
+    this.discountMode = ChargeMode.percent,
+    this.discountPercentText = '',
+    this.discountAmountText = '',
     this.serviceOn = false,
+    this.serviceMode = ChargeMode.percent,
     this.servicePercentText = '',
+    this.serviceAmountText = '',
     this.taxOn = false,
+    this.taxMode = ChargeMode.percent,
     this.taxPercentText = '',
+    this.taxAmountText = '',
     this.taxBase = TaxBase.subtotalPlusService,
     this.adjustmentText = '',
+    this.adjustmentAuto = false,
+    this.adjustmentManual = false,
   });
 
   final List<ItemDraft> items;
+  final bool discountOn;
+  final ChargeMode discountMode;
+  final String discountPercentText;
+  final String discountAmountText;
   final bool serviceOn;
+  final ChargeMode serviceMode;
   final String servicePercentText;
+  final String serviceAmountText;
   final bool taxOn;
+  final ChargeMode taxMode;
   final String taxPercentText;
+  final String taxAmountText;
   final TaxBase taxBase;
 
   /// Signed, as typed; empty means no adjustment.
   final String adjustmentText;
 
+  /// A174: the adjustment was set by the printed-total tolerance, not typed by the user.
+  final bool adjustmentAuto;
+
+  /// The user typed or stepped the adjustment: the tolerance never overrides it.
+  final bool adjustmentManual;
+
   ItemizedDraft copyWith({
     List<ItemDraft>? items,
+    bool? discountOn,
+    ChargeMode? discountMode,
+    String? discountPercentText,
+    String? discountAmountText,
     bool? serviceOn,
+    ChargeMode? serviceMode,
     String? servicePercentText,
+    String? serviceAmountText,
     bool? taxOn,
+    ChargeMode? taxMode,
     String? taxPercentText,
+    String? taxAmountText,
     TaxBase? taxBase,
     String? adjustmentText,
+    bool? adjustmentAuto,
+    bool? adjustmentManual,
   }) =>
       ItemizedDraft(
         items: items ?? this.items,
+        discountOn: discountOn ?? this.discountOn,
+        discountMode: discountMode ?? this.discountMode,
+        discountPercentText: discountPercentText ?? this.discountPercentText,
+        discountAmountText: discountAmountText ?? this.discountAmountText,
         serviceOn: serviceOn ?? this.serviceOn,
+        serviceMode: serviceMode ?? this.serviceMode,
         servicePercentText: servicePercentText ?? this.servicePercentText,
+        serviceAmountText: serviceAmountText ?? this.serviceAmountText,
         taxOn: taxOn ?? this.taxOn,
+        taxMode: taxMode ?? this.taxMode,
         taxPercentText: taxPercentText ?? this.taxPercentText,
+        taxAmountText: taxAmountText ?? this.taxAmountText,
         taxBase: taxBase ?? this.taxBase,
         adjustmentText: adjustmentText ?? this.adjustmentText,
+        adjustmentAuto: adjustmentAuto ?? this.adjustmentAuto,
+        adjustmentManual: adjustmentManual ?? this.adjustmentManual,
       );
 
-  /// Service rate in basis points when it is on and readable (string parsing, no floating point).
-  int? get serviceBps => serviceOn ? Bps.parse(servicePercentText) : null;
-  int? get taxBps => taxOn ? Bps.parse(taxPercentText) : null;
+  /// Discount in basis points: 1..9,999 (a 0% or 100% discount is not a discount, A171).
+  int? get discountBps {
+    if (!discountOn || discountMode != ChargeMode.percent) return null;
+    final bps = Bps.parse(discountPercentText);
+    return bps != null && bps >= 1 && bps < Bps.max ? bps : null;
+  }
 
-  bool get serviceValid => !serviceOn || serviceBps != null;
-  bool get taxValid => !taxOn || taxBps != null;
+  int? get discountMinor => discountOn && discountMode == ChargeMode.amount ? Money.parse(discountAmountText) : null;
+
+  /// Service rate in basis points when it is on, in percent mode and readable (string parsing, no floating point).
+  int? get serviceBps => serviceOn && serviceMode == ChargeMode.percent ? Bps.parse(servicePercentText) : null;
+  int? get serviceAmountMinor => serviceOn && serviceMode == ChargeMode.amount ? Money.parse(serviceAmountText) : null;
+  int? get taxBps => taxOn && taxMode == ChargeMode.percent ? Bps.parse(taxPercentText) : null;
+  int? get taxAmountMinor => taxOn && taxMode == ChargeMode.amount ? Money.parse(taxAmountText) : null;
+
+  bool get discountValid => !discountOn || discountBps != null || discountMinor != null;
+  bool get serviceValid => !serviceOn || serviceBps != null || serviceAmountMinor != null;
+  bool get taxValid => !taxOn || taxBps != null || taxAmountMinor != null;
 
   /// The adjustment in piasters: 0 when empty, null when unreadable.
   int? get adjustmentMinor => adjustmentText.trim().isEmpty ? 0 : Money.parse(adjustmentText, allowNegative: true, allowZero: true);
@@ -139,13 +235,28 @@ class ItemizedDraft {
   bool itemsValid(List<String> memberIds) =>
       items.isNotEmpty && items.length <= kMaxItems && items.every((item) => item.validFor(memberIds));
 
-  bool valid(List<String> memberIds) => itemsValid(memberIds) && serviceValid && taxValid && adjustmentValid;
+  bool valid(List<String> memberIds) => itemsValid(memberIds) && discountValid && serviceValid && taxValid && adjustmentValid;
+
+  /// Fields still missing in the items (an empty list counts as one).
+  int itemsMissing(List<String> memberIds) =>
+      items.isEmpty ? 1 : items.fold<int>(0, (sum, item) => sum + item.missingCount(memberIds));
+
+  /// Fields missing in the charges and the adjustment.
+  int get chargesMissing => (discountValid ? 0 : 1) + (serviceValid ? 0 : 1) + (taxValid ? 0 : 1) + (adjustmentValid ? 0 : 1);
 
   bool sameAs(ItemizedDraft other) {
-    if (serviceOn != other.serviceOn ||
+    if (discountOn != other.discountOn ||
+        discountMode != other.discountMode ||
+        discountPercentText != other.discountPercentText ||
+        discountAmountText != other.discountAmountText ||
+        serviceOn != other.serviceOn ||
+        serviceMode != other.serviceMode ||
         servicePercentText != other.servicePercentText ||
+        serviceAmountText != other.serviceAmountText ||
         taxOn != other.taxOn ||
+        taxMode != other.taxMode ||
         taxPercentText != other.taxPercentText ||
+        taxAmountText != other.taxAmountText ||
         taxBase != other.taxBase ||
         adjustmentText != other.adjustmentText ||
         items.length != other.items.length) {
@@ -179,6 +290,8 @@ class ExpenseFormState {
     this.serverTotalMinor,
     this.printedTotalMinor,
     this.scanNotes = const {},
+    this.autoAdjustedPiasters,
+    this.showAllErrors = false,
   });
 
   final String title;
@@ -218,6 +331,12 @@ class ExpenseFormState {
   /// SA12: what the scan could not settle (notices above the items).
   final Set<ScanNote> scanNotes;
 
+  /// A174: the size (in piasters, no sign) of the adjustment the printed-total tolerance set, for the note; null otherwise.
+  final int? autoAdjustedPiasters;
+
+  /// The user tapped Save on an incomplete restaurant bill: every missing field is shown as an error.
+  final bool showAllErrors;
+
   ExpenseFormState copyWith({
     String? title,
     String? amountText,
@@ -234,6 +353,9 @@ class ExpenseFormState {
     int? serverTotalMinor,
     int? printedTotalMinor,
     Set<ScanNote>? scanNotes,
+    int? autoAdjustedPiasters,
+    bool? showAllErrors,
+    bool clearAutoAdjusted = false,
     bool clearServerTotal = false,
   }) =>
       ExpenseFormState(
@@ -252,6 +374,8 @@ class ExpenseFormState {
         serverTotalMinor: clearServerTotal ? null : (serverTotalMinor ?? this.serverTotalMinor),
         printedTotalMinor: printedTotalMinor ?? this.printedTotalMinor,
         scanNotes: scanNotes ?? this.scanNotes,
+        autoAdjustedPiasters: clearAutoAdjusted ? null : (autoAdjustedPiasters ?? this.autoAdjustedPiasters),
+        showAllErrors: showAllErrors ?? this.showAllErrors,
       );
 
   // ---- title, total, date ----
@@ -343,6 +467,26 @@ class ExpenseFormState {
       if (Money.parse(text) == null) return false;
     }
     return payerRemaining() == 0;
+  }
+
+
+  // ---- validation summary (restaurant bill) ----
+
+  /// Several payers cannot be judged while the bill total is still unknown (the bill itself is what is missing then).
+  bool get _payersMissing => !payersValid && !(payerMode == PayerMode.multiple && totalMinor == null);
+
+  /// Required things still missing on a restaurant bill: the title, the payers, each item's name, price, quantity and
+  /// assignees, and unreadable charges or adjustment. The total being unknown is not counted (it is only pending).
+  int itemizedErrorCount(List<String> memberIds) =>
+      (titleValid ? 0 : 1) + (_payersMissing ? 1 : 0) + itemized.itemsMissing(memberIds) + itemized.chargesMissing;
+
+  /// The first section with something missing, in screen order (null when complete).
+  ErrorSection? firstErrorSection(List<String> memberIds) {
+    if (!titleValid) return ErrorSection.title;
+    if (_payersMissing) return ErrorSection.payers;
+    if (itemized.itemsMissing(memberIds) > 0) return ErrorSection.items;
+    if (itemized.chargesMissing > 0) return ErrorSection.charges;
+    return null;
   }
 
   // ---- whole form ----

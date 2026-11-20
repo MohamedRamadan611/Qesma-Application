@@ -144,6 +144,8 @@ ExpenseCommand buildPayersCheck({
 /// request.
 ///
 /// - `items`: name (trimmed), amount, assignees (current members, in member order).
+///   Quantity 1 sends `amountMinor`; above 1 it sends `unitAmountMinor` and `quantity` (SA16, A172).
+/// - `discount {bps|amountMinor}` only when the discount switch is on; service and tax likewise take either form (A171, A173).
 /// - `service {bps}` ONLY when the service switch is on; `tax {bps, base}` ONLY when the tax switch is
 ///   on (base always explicit). Off means the field is absent, never 0 bps; a 0% charge that is
 ///   switched on is sent as `bps: 0`.
@@ -183,19 +185,52 @@ ExpenseCommand? buildItemizedCommand(
       for (final item in draft.items)
         ItemInput((i) {
           final assignees = item.assigneesAmong(memberIds);
+          // Quantity 1 stays the legacy shape (`amountMinor`), so older bills and their keys are unchanged (A175).
+          if (item.quantity == 1) {
+            i.amountMinor = item.amountMinor!;
+          } else {
+            i
+              ..unitAmountMinor = item.amountMinor!
+              ..quantity = item.quantity;
+          }
           i
             ..name = item.trimmedName
-            ..amountMinor = item.amountMinor!
             ..assigneeMemberIds.addAll([for (final id in memberIds) if (assignees.contains(id)) id]);
         }),
     ]);
-    final service = draft.serviceBps;
-    if (service != null) b.service = ServiceInput((s) => s..bps = service).toBuilder();
-    final tax = draft.taxBps;
-    if (tax != null) {
-      b.tax = TaxInput((t) => t
-        ..bps = tax
-        ..base_ = draft.taxBase.wire).toBuilder();
+    final discountBps = draft.discountBps;
+    final discountAmount = draft.discountMinor;
+    if (discountBps != null || discountAmount != null) {
+      b.discount = DiscountInput((d) {
+        if (discountBps != null) {
+          d.bps = discountBps;
+        } else {
+          d.amountMinor = discountAmount;
+        }
+      }).toBuilder();
+    }
+    final serviceBps = draft.serviceBps;
+    final serviceAmount = draft.serviceAmountMinor;
+    if (serviceBps != null || serviceAmount != null) {
+      b.service = ServiceInput((s) {
+        if (serviceBps != null) {
+          s.bps = serviceBps;
+        } else {
+          s.amountMinor = serviceAmount;
+        }
+      }).toBuilder();
+    }
+    final taxBps = draft.taxBps;
+    final taxAmount = draft.taxAmountMinor;
+    if (taxBps != null || taxAmount != null) {
+      b.tax = TaxInput((t) {
+        if (taxBps != null) {
+          t.bps = taxBps;
+        } else {
+          t.amountMinor = taxAmount;
+        }
+        t.base_ = draft.taxBase.wire;
+      }).toBuilder();
     }
     final adjustment = draft.adjustmentMinor ?? 0;
     if (adjustment != 0) b.adjustmentMinor = adjustment;

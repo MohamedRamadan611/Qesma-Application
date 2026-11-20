@@ -50,28 +50,40 @@ ExpenseFormState formFromExpense(
 }
 
 ItemizedDraft _itemizedFrom(ExpenseView expense, Charges? charges) {
+  final discount = charges?.discount;
   final service = charges?.service;
   final tax = charges?.tax;
   final adjustment = charges?.adjustmentMinor ?? 0;
   final items = expense.items?.toList() ?? const <ItemView>[];
+  // A charge saved with a rate opens as a percentage; one saved as an amount opens as an amount (A171, A173).
+  ChargeMode modeOf(bool on, int? bps) => on && bps == null ? ChargeMode.amount : ChargeMode.percent;
   return ItemizedDraft(
     items: [
       for (var i = 0; i < items.length; i++)
         ItemDraft(
           id: 'saved-$i',
           name: items[i].name,
-          amountText: Money.formatPlain(items[i].amountMinor),
+          amountText: Money.formatPlain(items[i].unitAmountMinor),
+          quantity: items[i].quantity,
           assigneeIds: items[i].assigneeMemberIds.toSet(),
           touched: true,
         ),
     ],
+    discountOn: discount != null,
+    discountMode: modeOf(discount != null, discount?.bps),
+    discountPercentText: discount?.bps == null ? '' : Bps.format(discount!.bps!),
+    discountAmountText: discount != null && discount.bps == null ? Money.formatPlain(discount.amountMinor) : '',
     serviceOn: service != null,
-    // BSA2: an amount-form charge has no bps; the current editor is percent-only (SA16 adds the amount form).
+    serviceMode: modeOf(service != null, service?.bps),
     servicePercentText: service?.bps == null ? '' : Bps.format(service!.bps!),
+    serviceAmountText: service != null && service.bps == null ? Money.formatPlain(service.amountMinor) : '',
     taxOn: tax != null,
+    taxMode: modeOf(tax != null, tax?.bps),
     taxPercentText: tax?.bps == null ? '' : Bps.format(tax!.bps!),
+    taxAmountText: tax != null && tax.bps == null ? Money.formatPlain(tax.amountMinor) : '',
     taxBase: TaxBase.fromWire(tax?.base_),
     adjustmentText: adjustment == 0 ? '' : Money.formatPlain(adjustment),
+    adjustmentManual: adjustment != 0,
   );
 }
 

@@ -84,8 +84,8 @@ class PayersBlock extends StatelessWidget {
   }
 }
 
-class _PersonRow extends StatelessWidget {
-  const _PersonRow({required this.memberId, required this.name, required this.isYou, required this.amountMinor, this.subline, this.sublineSpoken});
+class _PersonRow extends StatefulWidget {
+  const _PersonRow({required this.memberId, required this.name, required this.isYou, required this.amountMinor, this.subline, this.sublineSpoken, this.expandable = false});
 
   final String memberId;
   final String name;
@@ -96,53 +96,86 @@ class _PersonRow extends StatelessWidget {
   /// The same line with amounts in words, for a screen reader.
   final String? sublineSpoken;
 
+  /// The parts are folded under the name and total until tapped (the editor's breakdown, SA16).
+  final bool expandable;
+
+  @override
+  State<_PersonRow> createState() => _PersonRowState();
+}
+
+class _PersonRowState extends State<_PersonRow> {
+  bool _expanded = false;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     // At large text sizes the amount drops under the name instead of squeezing it.
     final stacked = MediaQuery.textScalerOf(context).scale(1) > 1.3;
-    final amount = MoneyText(amountMinor, size: MoneySize.medium);
-    return MergeSemantics(
-      child: DecoratedBox(
-      decoration: BoxDecoration(color: context.colors.tint, borderRadius: BorderRadius.circular(QesmaRadii.control)),
-      child: Padding(
-        padding: const EdgeInsets.all(QesmaSpacing.sm + 4),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+    final amount = MoneyText(widget.amountMinor, size: MoneySize.medium);
+    final canFold = widget.expandable && widget.subline != null;
+    final showSubline = widget.subline != null && (!widget.expandable || _expanded);
+
+    final header = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
           children: [
-            Row(
-              children: [
-                MemberAvatar(memberId: memberId, name: name, size: 36),
-                const SizedBox(width: QesmaSpacing.sm + 4),
-                Expanded(
-                  child: Wrap(
-                    spacing: QesmaSpacing.sm,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      Text(name, style: theme.textTheme.titleMedium),
-                      if (isYou) AppTag(label: l10n.membersYouTag, tone: AppTagTone.primary),
-                    ],
-                  ),
-                ),
-                if (!stacked) ...[const SizedBox(width: QesmaSpacing.sm), amount],
-              ],
-            ),
-            if (stacked) ...[
-              const SizedBox(height: QesmaSpacing.xs),
-              Align(alignment: AlignmentDirectional.centerStart, child: amount),
-            ],
-            if (subline != null) ...[
-              const SizedBox(height: QesmaSpacing.sm),
-              Semantics(
-                label: sublineSpoken ?? subline,
-                child: ExcludeSemantics(child: Text(subline!, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary))),
+            MemberAvatar(memberId: widget.memberId, name: widget.name, size: 36),
+            const SizedBox(width: QesmaSpacing.sm + 4),
+            Expanded(
+              child: Wrap(
+                spacing: QesmaSpacing.sm,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(widget.name, style: theme.textTheme.titleMedium),
+                  if (widget.isYou) AppTag(label: l10n.membersYouTag, tone: AppTagTone.primary),
+                ],
               ),
-            ],
+            ),
+            if (!stacked) ...[const SizedBox(width: QesmaSpacing.sm), amount],
+            if (canFold) Icon(_expanded ? Icons.expand_less : Icons.expand_more),
           ],
         ),
+        if (stacked) ...[
+          const SizedBox(height: QesmaSpacing.xs),
+          Align(alignment: AlignmentDirectional.centerStart, child: amount),
+        ],
+      ],
+    );
+
+    return MergeSemantics(
+      child: DecoratedBox(
+        decoration: BoxDecoration(color: context.colors.tint, borderRadius: BorderRadius.circular(QesmaRadii.control)),
+        child: Padding(
+          padding: const EdgeInsets.all(QesmaSpacing.sm + 4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (canFold)
+                Semantics(
+                  button: true,
+                  expanded: _expanded,
+                  onTapHint: _expanded ? l10n.expenseItzCollapsePerson(widget.name) : l10n.expenseItzExpandPerson(widget.name),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(QesmaRadii.control),
+                    onTap: () => setState(() => _expanded = !_expanded),
+                    child: ConstrainedBox(constraints: const BoxConstraints(minHeight: kMinTouch), child: header),
+                  ),
+                )
+              else
+                header,
+              if (showSubline) ...[
+                const SizedBox(height: QesmaSpacing.sm),
+                Semantics(
+                  label: widget.sublineSpoken ?? widget.subline,
+                  child: ExcludeSemantics(child: Text(widget.subline!, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary))),
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
-    ),
     );
   }
 }
@@ -179,43 +212,68 @@ class ItemsAndChargesBlock extends StatelessWidget {
   }
 }
 
-class _ItemRow extends StatelessWidget {
+class _ItemRow extends StatefulWidget {
   const _ItemRow({required this.item, required this.nameOf});
 
   final ItemView item;
   final String Function(String) nameOf;
 
   @override
+  State<_ItemRow> createState() => _ItemRowState();
+}
+
+class _ItemRowState extends State<_ItemRow> {
+  static const int _shownNames = 3;
+  bool _expanded = false;
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final item = widget.item;
+    final names = [for (final id in item.assigneeMemberIds) widget.nameOf(id)];
+    final folds = names.length > _shownNames;
+    final shown = folds && !_expanded ? names.take(_shownNames).toList() : names;
+    final extra = names.length - _shownNames;
+    // Quantity and unit price exactly as saved; the amount on the right is the server's line total.
+    final qtyLine = item.quantity > 1 ? l10n.expenseItzLineTimes(ltrIsolate('${item.quantity}'), moneyDisplay(l10n, item.unitAmountMinor)) : null;
     return MergeSemantics(
       child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(item.name, style: theme.textTheme.titleMedium),
-              const SizedBox(height: QesmaSpacing.xs),
-              Semantics(
-                label: l10n.expenseAssignedTo(item.assigneeMemberIds.map(nameOf).join(l10n.expenseListSeparator)),
-                child: ExcludeSemantics(
-                  child: Wrap(
-                    spacing: QesmaSpacing.xs,
-                    runSpacing: QesmaSpacing.xs,
-                    children: [for (final id in item.assigneeMemberIds) AppTag(label: nameOf(id))],
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(item.name, style: theme.textTheme.titleMedium),
+                if (qtyLine != null) Text(qtyLine, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
+                const SizedBox(height: QesmaSpacing.xs),
+                Semantics(
+                  label: l10n.expenseAssignedTo(names.join(l10n.expenseListSeparator)),
+                  child: ExcludeSemantics(
+                    child: Wrap(
+                      spacing: QesmaSpacing.xs,
+                      runSpacing: QesmaSpacing.xs,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        for (final name in shown) AppTag(label: name),
+                        if (folds)
+                          TextButton(
+                            style: TextButton.styleFrom(minimumSize: const Size(kMinTouch, kMinTouch)),
+                            onPressed: () => setState(() => _expanded = !_expanded),
+                            child: Text(_expanded ? l10n.expenseItzAssigneesCollapseSpoken : l10n.expenseItzSummaryMore('$extra')),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-        const SizedBox(width: QesmaSpacing.sm),
-        MoneyText(item.amountMinor, size: MoneySize.small),
-      ],
-    ),
+          const SizedBox(width: QesmaSpacing.sm),
+          MoneyText(item.amountMinor, size: MoneySize.small),
+        ],
+      ),
     );
   }
 }
@@ -230,6 +288,7 @@ class _ChargesBox extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final discount = charges.discount;
     final service = charges.service;
     final tax = charges.tax;
     final adjustment = charges.adjustmentMinor;
@@ -272,6 +331,17 @@ class _ChargesBox extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             row(Text(l10n.expenseSubtotal, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)), charges.subtotalMinor),
+            if (discount != null)
+              Padding(
+                padding: const EdgeInsetsDirectional.only(bottom: QesmaSpacing.sm),
+                child: Row(
+                  children: [
+                    Expanded(child: labelWithRate(l10n.expenseItzDetailsDiscount, discount.bps)),
+                    const SizedBox(width: QesmaSpacing.sm),
+                    Text('${Money.minus}${moneyDisplay(l10n, discount.amountMinor)}', style: theme.textTheme.titleSmall),
+                  ],
+                ),
+              ),
             if (service != null) row(labelWithRate(l10n.expenseServiceLabel, service.bps), service.amountMinor, signed: true),
             if (tax != null) row(labelWithRate(l10n.expenseTaxLabel, tax.bps, caption: taxBase), tax.amountMinor, signed: true),
             if (adjustment != 0)
@@ -295,11 +365,14 @@ class _ChargesBox extends StatelessWidget {
 /// (items, service, tax, adjustment). Used by the details page (saved numbers) and by the bill
 /// editor (the preview's numbers). Nothing is added up here; there is no "a + b + c = total" line.
 class ShareRows extends StatelessWidget {
-  const ShareRows({super.key, required this.shares, required this.nameOf, required this.yourMemberId});
+  const ShareRows({super.key, required this.shares, required this.nameOf, required this.yourMemberId, this.expandable = false});
 
   final List<ShareView> shares;
   final String Function(String) nameOf;
   final String? yourMemberId;
+
+  /// The editor's breakdown: the parts of each person's share are folded under their name and total until tapped.
+  final bool expandable;
 
   /// The breakdown line, shown with amounts as digits and said with amounts in words.
   ({String shown, String said})? _subline(AppLocalizations l10n, ShareView share) {
@@ -308,6 +381,7 @@ class ShareRows extends StatelessWidget {
     String line(String Function(int) m, String Function(int) adj) {
       final texts = [
         if (parts.itemsMinor != null) l10n.expensePartItems(m(parts.itemsMinor!)),
+        if (parts.discountMinor != null) l10n.expenseItzPartDiscount('${Money.minus}${m(parts.discountMinor!)}'),
         if (parts.serviceMinor != null) l10n.expensePartService(m(parts.serviceMinor!)),
         if (parts.taxMinor != null) l10n.expensePartTax(m(parts.taxMinor!)),
         if (parts.adjustmentMinor != null) l10n.expensePartAdjustment(adj(parts.adjustmentMinor!)),
@@ -335,6 +409,7 @@ class ShareRows extends StatelessWidget {
             amountMinor: share.owedMinor,
             subline: _subline(l10n, share)?.shown,
             sublineSpoken: _subline(l10n, share)?.said,
+            expandable: expandable,
           ),
           const SizedBox(height: QesmaSpacing.sm),
         ],

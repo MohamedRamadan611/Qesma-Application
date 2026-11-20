@@ -92,6 +92,10 @@ class FakeExpensesServer extends FakeGroupsServer {
   /// The next preview fails with a 500.
   bool failNextPreview = false;
 
+  /// Every preview of a bill with a non-zero adjustment is refused with 422 `VALIDATION_ERROR`, as the engine would
+  /// when an adjustment makes a share negative (A12). For the printed-total tolerance test (A174).
+  bool rejectAdjustments = false;
+
   /// Every create request: the key and the body, in arrival order (including replays).
   final List<({String? key, Map<String, dynamic> body})> creates = [];
 
@@ -122,6 +126,7 @@ class FakeExpensesServer extends FakeGroupsServer {
   /// The inputs of a restaurant bill that decide its numbers (not the title, date or payers).
   String itemizedKey(Map<String, dynamic> body) => _canonical({
         'items': body['items'],
+        'discount': body['discount'],
         'service': body['service'],
         'tax': body['tax'],
         'adjustmentMinor': body['adjustmentMinor'] ?? 0,
@@ -319,21 +324,22 @@ class FakeExpensesServer extends FakeGroupsServer {
         {
           'id': '$id-item-$i',
           'name': calc.items[i]['name'],
-          'quantity': 1,
-          'unitAmountMinor': calc.items[i]['amountMinor'],
+          'quantity': calc.items[i]['quantity'],
+          'unitAmountMinor': calc.items[i]['unitAmountMinor'],
           'amountMinor': calc.items[i]['amountMinor'],
           'assigneeMemberIds': calc.items[i]['assigneeMemberIds'],
         },
     ];
     json['charges'] = {
       'subtotalMinor': calc.subtotal,
-      'service': calc.serviceBps == null ? null : {'bps': calc.serviceBps, 'amountMinor': calc.service},
-      'tax': calc.taxBps == null ? null : {'bps': calc.taxBps, 'base': calc.taxBase, 'amountMinor': calc.tax},
+      'discount': calc.discount == 0 ? null : {'bps': calc.discountBps, 'amountMinor': calc.discount},
+      'service': !calc.hasService ? null : {'bps': calc.serviceBps, 'amountMinor': calc.service},
+      'tax': !calc.hasTax ? null : {'bps': calc.taxBps, 'base': calc.taxBase, 'amountMinor': calc.tax},
       'adjustmentMinor': calc.adjustment,
     };
     json['shares'] = [
       for (final m in calc.members)
-        {'memberId': m['memberId'], 'owedMinor': m['owedMinor'], 'itemsMinor': m['itemsMinor'], 'serviceMinor': m['serviceMinor'], 'taxMinor': m['taxMinor'], 'adjustmentMinor': m['adjustmentMinor']},
+        {'memberId': m['memberId'], 'owedMinor': m['owedMinor'], 'itemsMinor': m['itemsMinor'], 'discountMinor': m['discountMinor'], 'serviceMinor': m['serviceMinor'], 'taxMinor': m['taxMinor'], 'adjustmentMinor': m['adjustmentMinor']},
     ];
     return json;
   }
@@ -395,6 +401,7 @@ class FakeExpensesServer extends FakeGroupsServer {
       failNextPreview = false;
       return problemResponse(500, 'INTERNAL_ERROR');
     }
+    if (rejectAdjustments && ((body['adjustmentMinor'] as int?) ?? 0) != 0) return problemResponse(422, 'VALIDATION_ERROR');
     if (body['splitType'] == 'ITEMIZED' && (body['payers'] == null || (body['payers'] as List).isEmpty)) {
       final canned = cannedPreviews[itemizedKey(body)];
       if (canned != null) return jsonOk(200, canned);
@@ -408,6 +415,7 @@ class FakeExpensesServer extends FakeGroupsServer {
       return jsonOk(200, {
         'totalMinor': body['totalMinor'],
         'subtotalMinor': calc.subtotal,
+        'discountMinor': calc.discount == 0 ? null : calc.discount,
         'serviceMinor': calc.service,
         'taxMinor': calc.tax,
         'adjustmentMinor': calc.adjustment,
@@ -528,9 +536,18 @@ class FakeExpensesServer extends FakeGroupsServer {
     }
     final itemsByMember = <String, int>{};
     var subtotal = 0;
+    final normalized = <Map<String, dynamic>>[];
     for (final item in items) {
       final name = (item['name'] as String?)?.trim() ?? '';
-      final amount = item['amountMinor'] as int?;
+      // BSA2 / A172: either legacy `amountMinor` (quantity 1) or `unitAmountMinor` with an optional quantity (1..999).
+      final legacy = item['amountMinor'] as int?;
+      final unit = item['unitAmountMinor'] as int?;
+      final quantity = (item['quantity'] as int?) ?? 1;
+      if ((legacy != null && (unit != null || item.containsKey('quantity'))) || quantity < 1 || quantity > 999) {
+        fail('VALIDATION_ERROR');
+        return null;
+      }
+      final amount = legacy ?? (unit == null ? null : unit * quantity);
       final assignees = (item['assigneeMemberIds'] as List?)?.cast<String>() ?? const [];
       if (name.isEmpty || name.runes.length > 100 || amount == null || amount <= 0 || assignees.isEmpty) {
         fail('VALIDATION_ERROR');
@@ -541,12 +558,36 @@ class FakeExpensesServer extends FakeGroupsServer {
         return null;
       }
       subtotal += amount;
+      normalized.add({'name': item['name'], 'quantity': quantity, 'unitAmountMinor': legacy ?? unit, 'amountMinor': amount, 'assigneeMemberIds': item['assigneeMemberIds']});
       _lrm(amount, {for (final id in assignees) id: 1}).forEach((id, v) => itemsByMember[id] = (itemsByMember[id] ?? 0) + v);
     }
 
-    final serviceBps = (body['service'] as Map?)?['bps'] as int?;
+    // A171: one bill discount, a percentage or an amount, 0 < discount < subtotal; allocated over the item shares.
+    final discountMap = body['discount'] as Map?;
+    final discountBps = discountMap?['bps'] as int?;
+    final discountAmount = discountMap?['amountMinor'] as int?;
+    var discount = 0;
+    if (discountMap != null) {
+      if ((discountBps == null) == (discountAmount == null) || (discountBps != null && (discountBps < 1 || discountBps > 9999))) {
+        fail('VALIDATION_ERROR');
+        return null;
+      }
+      discount = discountBps != null ? (subtotal * discountBps + 5000) ~/ 10000 : discountAmount!;
+      if (discount <= 0 || discount >= subtotal) {
+        fail('VALIDATION_ERROR');
+        return null;
+      }
+    }
+    final discountShares = discount == 0 ? <String, int>{} : _lrm(discount, itemsByMember);
+    final netByMember = {for (final id in itemsByMember.keys) id: itemsByMember[id]! - (discountShares[id] ?? 0)};
+    final netSubtotal = subtotal - discount;
+
+    final serviceMap = body['service'] as Map?;
+    final serviceBps = serviceMap?['bps'] as int?;
+    final serviceAmountForm = serviceMap?['amountMinor'] as int?;
     final taxMap = body['tax'] as Map?;
     final taxBps = taxMap?['bps'] as int?;
+    final taxAmountForm = taxMap?['amountMinor'] as int?;
     final taxBase = (taxMap?['base'] as String?) ?? 'SUBTOTAL_PLUS_SERVICE';
     if ((serviceBps != null && (serviceBps < 0 || serviceBps > 10000)) || (taxBps != null && (taxBps < 0 || taxBps > 10000))) {
       fail('VALIDATION_ERROR');
@@ -554,20 +595,22 @@ class FakeExpensesServer extends FakeGroupsServer {
     }
     final adjustment = (body['adjustmentMinor'] as int?) ?? 0;
 
-    final service = serviceBps == null ? 0 : (subtotal * serviceBps + 5000) ~/ 10000;
-    final serviceShares = serviceBps == null ? <String, int>{} : _lrm(service, itemsByMember);
-    final withService = {for (final id in itemsByMember.keys) id: itemsByMember[id]! + (serviceShares[id] ?? 0)};
-    final taxBaseTotal = taxBase == 'SUBTOTAL' ? subtotal : subtotal + service;
-    final tax = taxBps == null ? 0 : (taxBaseTotal * taxBps + 5000) ~/ 10000;
-    final taxShares = taxBps == null ? <String, int>{} : _lrm(tax, taxBase == 'SUBTOTAL' ? itemsByMember : withService);
-    final adjustmentShares = adjustment == 0 ? <String, int>{} : _lrm(adjustment, itemsByMember);
+    final hasService = serviceBps != null || serviceAmountForm != null;
+    final hasTax = taxBps != null || taxAmountForm != null;
+    final service = serviceBps != null ? (netSubtotal * serviceBps + 5000) ~/ 10000 : (serviceAmountForm ?? 0);
+    final serviceShares = hasService ? _lrm(service, netByMember) : <String, int>{};
+    final withService = {for (final id in netByMember.keys) id: netByMember[id]! + (serviceShares[id] ?? 0)};
+    final taxBaseTotal = taxBase == 'SUBTOTAL' ? netSubtotal : netSubtotal + service;
+    final tax = taxBps != null ? (taxBaseTotal * taxBps + 5000) ~/ 10000 : (taxAmountForm ?? 0);
+    final taxShares = hasTax ? _lrm(tax, taxBase == 'SUBTOTAL' ? netByMember : withService) : <String, int>{};
+    final adjustmentShares = adjustment == 0 ? <String, int>{} : _lrm(adjustment, netByMember);
 
-    final total = subtotal + service + tax + adjustment;
+    final total = netSubtotal + service + tax + adjustment;
     final members = <Map<String, dynamic>>[];
     final owedByMember = <String, int>{};
     for (final id in memberOrder) {
       if (!itemsByMember.containsKey(id)) continue;
-      final owed = itemsByMember[id]! + (serviceShares[id] ?? 0) + (taxShares[id] ?? 0) + (adjustmentShares[id] ?? 0);
+      final owed = netByMember[id]! + (serviceShares[id] ?? 0) + (taxShares[id] ?? 0) + (adjustmentShares[id] ?? 0);
       if (owed < 0) {
         fail('VALIDATION_ERROR');
         return null;
@@ -578,6 +621,7 @@ class FakeExpensesServer extends FakeGroupsServer {
         'memberId': id,
         'owedMinor': owed,
         'itemsMinor': itemsByMember[id],
+        'discountMinor': discountShares[id] ?? 0,
         'serviceMinor': serviceShares[id] ?? 0,
         'taxMinor': taxShares[id] ?? 0,
         'adjustmentMinor': adjustmentShares[id] ?? 0,
@@ -607,13 +651,17 @@ class FakeExpensesServer extends FakeGroupsServer {
       return null;
     }
     _itemized = _ItemizedCalc(
-      items: items,
+      items: normalized,
       subtotal: subtotal,
+      discount: discount,
+      discountBps: discountBps,
       service: service,
       tax: tax,
       adjustment: adjustment,
       serviceBps: serviceBps,
+      hasService: hasService,
       taxBps: taxBps,
+      hasTax: hasTax,
       taxBase: taxBase,
       members: members,
     );
@@ -626,22 +674,30 @@ class _ItemizedCalc {
   _ItemizedCalc({
     required this.items,
     required this.subtotal,
+    required this.discount,
+    required this.discountBps,
     required this.service,
     required this.tax,
     required this.adjustment,
     required this.serviceBps,
+    required this.hasService,
     required this.taxBps,
+    required this.hasTax,
     required this.taxBase,
     required this.members,
   });
 
   final List<Map<String, dynamic>> items;
   final int subtotal;
+  final int discount;
+  final int? discountBps;
   final int service;
   final int tax;
   final int adjustment;
   final int? serviceBps;
+  final bool hasService;
   final int? taxBps;
+  final bool hasTax;
   final String taxBase;
   final List<Map<String, dynamic>> members;
 }

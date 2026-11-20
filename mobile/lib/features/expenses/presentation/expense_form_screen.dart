@@ -51,8 +51,12 @@ class ExpenseFormScreen extends ConsumerStatefulWidget {
 class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
   final _title = TextEditingController();
   final _amount = TextEditingController();
+  final ScrollController _scroll = ScrollController();
   bool _synced = false;
   bool _titleTouched = false;
+
+  /// One key per section, so Save can scroll to the first thing that is missing (SA16).
+  final Map<ErrorSection, GlobalKey> _sectionKeys = {for (final s in ErrorSection.values) s: GlobalKey(debugLabel: 'section-${s.name}')};
 
   ExpenseFormKey get _key => (gid: widget.gid, eid: widget.eid);
   bool get _isEdit => widget.eid != null;
@@ -61,6 +65,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
   void dispose() {
     _title.dispose();
     _amount.dispose();
+    _scroll.dispose();
     super.dispose();
   }
 
@@ -131,7 +136,37 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
     if (picked != null && mounted) _controller.setDate(picked.toDate());
   }
 
+  /// Scrolls to [section]. The list builds lazily, so a section far from the screen has no context yet: go to the top and
+  /// walk down until it is built (the sections are in screen order), then bring it into view.
+  Future<void> _scrollToSection(ErrorSection section) async {
+    final key = _sectionKeys[section];
+    if (key == null) return;
+    var steps = 0;
+    while (mounted && key.currentContext == null && _scroll.hasClients && steps++ < 80) {
+      final position = _scroll.position;
+      final next = steps == 1 ? 0.0 : position.pixels + position.viewportDimension * 0.8;
+      if (steps > 1 && position.pixels >= position.maxScrollExtent) return;
+      _scroll.jumpTo(next.clamp(position.minScrollExtent, position.maxScrollExtent));
+      await WidgetsBinding.instance.endOfFrame;
+    }
+    final context = key.currentContext;
+    if (mounted && context != null && context.mounted) {
+      await Scrollable.ensureVisible(context, duration: const Duration(milliseconds: 250), alignment: 0.05);
+    }
+  }
+
   Future<void> _save() async {
+    final form = _controller.form;
+    // A restaurant bill keeps Save enabled: with something missing, show every error, say how many and scroll to the first.
+    if (form != null && form.splitMode == SplitMode.itemized && !form.canSave(_controller.memberIds)) {
+      final first = form.firstErrorSection(_controller.memberIds);
+      setState(() => _titleTouched = true);
+      _controller.revealErrors();
+      if (first != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToSection(first));
+      }
+      return;
+    }
     final outcome = await _controller.save();
     if (!mounted) return;
     if (outcome == SaveOutcome.invalid) setState(() => _titleTouched = true);
@@ -239,13 +274,16 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
         if (!didPop) _confirmLeave();
       },
       child: ListView(
+        controller: _scroll,
         padding: const EdgeInsets.all(QesmaSpacing.margin),
         children: [
           if (view.latestReloaded) ...[
             _Note(text: l10n.expenseFormConflictNote),
             const SizedBox(height: QesmaSpacing.md),
           ],
-          AppCard(
+          KeyedSubtree(
+            key: _sectionKeys[ErrorSection.title],
+            child: AppCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -293,8 +331,11 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
               ],
             ),
           ),
+          ),
           const SizedBox(height: QesmaSpacing.md),
-          _PaidByCard(
+          KeyedSubtree(
+            key: _sectionKeys[ErrorSection.payers],
+            child: _PaidByCard(
             form: form,
             nameOf: nameOf,
             mismatch: payersMismatch,
@@ -307,11 +348,19 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
               if (t != null) _controller.setPaidFromPool(on, treasurerId: t);
             },
           ),
+          ),
           const SizedBox(height: QesmaSpacing.md),
           SplitSection(formKey: _key, form: form, members: members, previewKey: previewKey),
           if (isItemized) ...[
             const SizedBox(height: QesmaSpacing.md),
-            ItemizedEditor(formKey: _key, form: form, members: members, nameOf: nameOf),
+            ItemizedEditor(
+              formKey: _key,
+              form: form,
+              members: members,
+              nameOf: nameOf,
+              itemsSectionKey: _sectionKeys[ErrorSection.items],
+              chargesSectionKey: _sectionKeys[ErrorSection.charges],
+            ),
           ],
           if (splitBanner != null) ...[const SizedBox(height: QesmaSpacing.sm), ErrorBanner(splitBanner)],
           if (generalFailure) ...[
@@ -329,6 +378,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
         form: form,
         memberIds: memberIds,
         canSave: canSave,
+        missingCount: isItemized && form.showAllErrors ? form.itemizedErrorCount(memberIds) : 0,
         billTotalMinor: isItemized ? total : null,
         submitting: view.submitting,
         isEdit: _isEdit,
@@ -477,7 +527,7 @@ class _SaveFailure extends StatelessWidget {
 
 /// Exact mode's "typed so far against the total" line and the save button.
 class _BottomBar extends StatelessWidget {
-  const _BottomBar({required this.form, required this.memberIds, required this.canSave, required this.submitting, required this.isEdit, required this.onSave, this.billTotalMinor});
+  const _BottomBar({required this.form, required this.memberIds, required this.canSave, required this.submitting, required this.isEdit, required this.onSave, this.billTotalMinor, this.missingCount = 0});
 
   final ExpenseFormState form;
   final List<String> memberIds;
@@ -488,6 +538,9 @@ class _BottomBar extends StatelessWidget {
 
   /// A restaurant bill's total (the server's), shown next to the save button.
   final int? billTotalMinor;
+
+  /// A restaurant bill after Save was tapped with fields missing: how many (icon and words, never colour alone).
+  final int missingCount;
 
   @override
   Widget build(BuildContext context) {
@@ -544,11 +597,26 @@ class _BottomBar extends StatelessWidget {
                 ],
               ),
             ),
+          if (missingCount > 0)
+            Padding(
+              padding: const EdgeInsets.only(bottom: QesmaSpacing.sm),
+              child: Semantics(
+                liveRegion: true,
+                child: Row(
+                  children: [
+                    ExcludeSemantics(child: Icon(Icons.error_outline, color: context.colors.error, size: 20)),
+                    const SizedBox(width: QesmaSpacing.xs),
+                    Expanded(child: Text(l10n.expenseItzMissingCount(missingCount), style: theme.textTheme.titleSmall?.copyWith(color: context.colors.error))),
+                  ],
+                ),
+              ),
+            ),
           AppButton(
-            label: isEdit ? l10n.expenseFormSaveChanges : l10n.expenseFormSave,
+            label: isEdit ? l10n.expenseFormSaveChanges : (form.splitMode == SplitMode.itemized ? l10n.expenseItzSave : l10n.expenseFormSave),
             icon: Icons.check,
             loading: submitting,
-            onPressed: canSave && !submitting ? onSave : null,
+            // A restaurant bill keeps Save enabled so a tap can show what is missing; the others wait until valid.
+            onPressed: (canSave || form.splitMode == SplitMode.itemized) && !submitting ? onSave : null,
           ),
         ],
       ),

@@ -8,6 +8,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:qesma/core/router/app_router.dart';
 import 'package:qesma/core/theme/tokens.dart';
 import 'package:qesma/core/widgets/widgets.dart';
+import 'package:qesma/features/expenses/presentation/expense_blocks.dart' show ShareRows;
+import 'package:qesma/features/expenses/presentation/itemized_items_card.dart' show ItemCard;
 
 import '../../support/expenses_rig.dart';
 import '../../support/expenses_ui.dart';
@@ -54,6 +56,17 @@ void main() {
     await settleForm(tester);
   }
 
+  /// Opens every person's row in the breakdown (the parts are folded until tapped).
+  Future<void> expandBreakdown(WidgetTester tester) async {
+    final more = find.descendant(of: find.byType(ShareRows), matching: find.byIcon(Icons.expand_more));
+    for (var i = more.evaluate().length; i > 0; i--) {
+      await tester.ensureVisible(more.first);
+      await tester.pumpAndSettle();
+      await tester.tap(more.first);
+      await tester.pumpAndSettle();
+    }
+  }
+
   String m(int minor, {bool signed = false}) => money(_ar, minor, signed: signed);
 
   Finder fieldWithText(String text) => find.byWidgetPredicate((w) => w is TextField && w.controller?.text == text);
@@ -68,8 +81,8 @@ void main() {
       expect(fieldWithText('90'), findsOneWidget);
 
       // The switches show what was saved, as the percent that was typed.
-      expect(tester.widget<Switch>(find.byType(Switch).at(0)).value, isTrue);
       expect(tester.widget<Switch>(find.byType(Switch).at(1)).value, isTrue);
+      expect(tester.widget<Switch>(find.byType(Switch).at(2)).value, isTrue);
       expect(fieldWithText('12'), findsOneWidget);
       expect(fieldWithText('14'), findsOneWidget);
       final withService = find.widgetWithText(AppChoiceChip, 'المجموع + الخدمة');
@@ -81,7 +94,8 @@ void main() {
       expect(find.text(m(6899, signed: true)), findsOneWidget);
       expect(find.text(m(56179)), findsNWidgets(3), reason: 'the header total, the breakdown total and the bar');
 
-      // Per person: owed and the server's own parts.
+      // Per person: owed and the server's own parts (folded until the row is opened).
+      await expandBreakdown(tester);
       for (final owed in [16599, 16598, 22982]) {
         expect(find.text(m(owed)), findsOneWidget, reason: '$owed');
       }
@@ -93,8 +107,8 @@ void main() {
 
     testWidgets('V6: service only (492.80); the tax switch is off and has no rate or base', (tester) async {
       await openBill(tester, 'v6');
-      expect(tester.widget<Switch>(find.byType(Switch).at(0)).value, isTrue);
-      expect(tester.widget<Switch>(find.byType(Switch).at(1)).value, isFalse);
+      expect(tester.widget<Switch>(find.byType(Switch).at(1)).value, isTrue);
+      expect(tester.widget<Switch>(find.byType(Switch).at(2)).value, isFalse);
       expect(find.text('المجموع فقط'), findsNothing, reason: 'the tax base chips appear only with tax on');
       expect(find.text(m(49280)), findsWidgets);
       expect(find.text(m(5280, signed: true)), findsOneWidget);
@@ -106,9 +120,9 @@ void main() {
 
     testWidgets('V7: tax only on the subtotal (501.60)', (tester) async {
       await openBill(tester, 'v7');
-      expect(tester.widget<Switch>(find.byType(Switch).at(0)).value, isFalse);
-      expect(tester.widget<Switch>(find.byType(Switch).at(1)).value, isTrue);
-      expect(tester.widget<AppChoiceChip>(find.widgetWithText(AppChoiceChip, 'المجموع فقط')).selected, isTrue);
+      expect(tester.widget<Switch>(find.byType(Switch).at(1)).value, isFalse);
+      expect(tester.widget<Switch>(find.byType(Switch).at(2)).value, isTrue);
+      expect(find.widgetWithText(AppChoiceChip, 'المجموع فقط'), findsNothing, reason: 'the tax base chips appear only when both service and tax are on');
       expect(find.text(m(50160)), findsWidgets);
       expect(find.text(m(6160, signed: true)), findsOneWidget);
       expect(find.textContaining('+ خدمة'), findsNothing, reason: 'no service part in anybody\'s breakdown');
@@ -116,8 +130,8 @@ void main() {
 
     testWidgets('V8: neither (440.00): both switches off, items only', (tester) async {
       await openBill(tester, 'v8');
-      expect(tester.widget<Switch>(find.byType(Switch).at(0)).value, isFalse);
       expect(tester.widget<Switch>(find.byType(Switch).at(1)).value, isFalse);
+      expect(tester.widget<Switch>(find.byType(Switch).at(2)).value, isFalse);
       expect(find.text(m(44000)), findsWidgets);
       for (final owed in [13000, 18000]) {
         expect(find.text(m(owed)), findsWidgets);
@@ -156,16 +170,21 @@ void main() {
       await openNew(tester);
       await tapText(tester, 'فاتورة مفصلة');
       await settleForm(tester);
-      expect(find.text('الصنف 1'), findsOneWidget);
+      expect(find.byType(ItemCard), findsOneWidget);
       await tapText(tester, 'إضافة صنف جديد');
       await tapText(tester, 'إضافة صنف جديد');
-      expect(find.text('الصنف 3'), findsOneWidget);
+      expect(find.byType(ItemCard), findsNWidgets(3));
       expect(find.text('دافعين'), findsNothing);
 
-      await tester.tap(find.byTooltip('امسح الصنف 2'));
+      // Delete lives in the item's menu and can be undone.
+      await tester.tap(find.byTooltip('خيارات الصنف 2'));
       await tester.pumpAndSettle();
-      expect(find.text('الصنف 3'), findsNothing);
-      expect(find.text('الصنف 2'), findsOneWidget);
+      await tester.tap(find.text('حذف الصنف'));
+      await tester.pumpAndSettle();
+      expect(find.byType(ItemCard), findsNWidgets(2));
+      await tester.tap(find.text('تراجع'));
+      await tester.pumpAndSettle();
+      expect(find.byType(ItemCard), findsNWidgets(3));
     });
 
     testWidgets('a new item starts with everyone selected; unchecking all shows "item without an assignee" once touched', (tester) async {
@@ -210,7 +229,7 @@ void main() {
   group('service, tax and the adjustment', () {
     testWidgets('switching the service off removes its rate and its amount; the request has no service', (tester) async {
       await openBill(tester, 'v5');
-      await tester.tap(find.byType(Switch).at(0));
+      await tester.tap(find.byType(Switch).at(1));
       await settleForm(tester);
       expect(fieldWithText('12'), findsNothing);
       expect(find.text(m(5280, signed: true)), findsNothing);
@@ -227,12 +246,19 @@ void main() {
       await settleForm(tester);
       expect(find.text('اكتب نسبة من 0 لـ 100، بحد أقصى رقمين بعد العلامة.'), findsOneWidget);
       expect(find.text('كمّل الأصناف والنسب عشان تظهر الحسابات.'), findsOneWidget);
+      // Save stays enabled on a restaurant bill: tapping it says what is missing and sends nothing.
       final save = find.widgetWithText(FilledButton, 'حفظ التعديلات');
-      expect(tester.widget<FilledButton>(save).onPressed, isNull);
+      expect(tester.widget<FilledButton>(save).onPressed, isNotNull);
+      await tester.tap(save);
+      await tester.pumpAndSettle();
+      expect(find.text('حقل واحد ناقص'), findsOneWidget);
+      expect(server.requests.where((r) => r.startsWith('PUT')), isEmpty);
     });
 
     testWidgets('tax base chips: choosing "items only" changes the question and the total comes from the server', (tester) async {
       await openBill(tester, 'v5');
+      await tester.ensureVisible(find.widgetWithText(AppChoiceChip, 'المجموع فقط'));
+      await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(AppChoiceChip, 'المجموع فقط'));
       await settleForm(tester);
       expect((server.previewBodies.last['tax'] as Map)['base'], 'SUBTOTAL');
@@ -265,7 +291,9 @@ void main() {
       await tester.enterText(find.byWidgetPredicate((w) => w is TextField && w.keyboardType.signed == true), '-1000');
       await settleForm(tester);
       expect(find.text('معرفناش نحسب الفاتورة.'), findsOneWidget, reason: 'VALIDATION_ERROR from the server');
-      expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'حفظ التعديلات')).onPressed, isNull);
+      await tester.tap(find.widgetWithText(FilledButton, 'حفظ التعديلات'));
+      await tester.pumpAndSettle();
+      expect(server.requests.where((r) => r.startsWith('PUT')), isEmpty, reason: 'no total from the server, nothing to save');
     });
 
     testWidgets('an unreadable adjustment says so', (tester) async {
@@ -282,21 +310,25 @@ void main() {
       await tester.enterText(find.byType(TextField).at(0), 'Sea Food');
       await tapText(tester, 'فاتورة مفصلة');
       await settleForm(tester);
-      expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'حفظ المصروف')).onPressed, isNull, reason: 'nothing to save yet');
+      // Save is enabled; with nothing filled in it counts what is missing (the two fields of the first item) and sends nothing.
+      await tester.tap(find.widgetWithText(FilledButton, 'حفظ الفاتورة'));
+      await tester.pumpAndSettle();
+      expect(find.text('حقلان ناقصان'), findsOneWidget);
+      expect(server.creates, isEmpty);
 
       await tester.enterText(find.byType(TextField).at(1), 'Pizza');
       await tester.enterText(find.byType(TextField).at(2), '200');
       await settleForm(tester);
       expect(find.text(m(20000)), findsWidgets, reason: 'one item, no charges: the server says 200.00');
 
-      await tester.tap(find.byType(Switch).at(0));
+      await tester.tap(find.byType(Switch).at(1));
       await settleForm(tester);
       await tester.enterText(find.byWidgetPredicate((w) => w is TextField && w.decoration?.hintText == 'مثلاً 12'), '12');
       await settleForm(tester);
       expect(find.text(m(22400)), findsWidgets, reason: '200.00 + 12% service, worked out by the server');
       expect(find.text(m(2400, signed: true)), findsOneWidget);
 
-      final save = find.widgetWithText(FilledButton, 'حفظ المصروف');
+      final save = find.widgetWithText(FilledButton, 'حفظ الفاتورة');
       expect(tester.widget<FilledButton>(save).onPressed, isNotNull);
       await tester.tap(save);
       await tester.pumpAndSettle();
@@ -319,11 +351,15 @@ void main() {
       await tester.enterText(find.byType(TextField).at(2), '200');
       await tester.pump(const Duration(milliseconds: 30));
       expect(find.text('بنحسب الفاتورة…'), findsOneWidget);
-      expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'حفظ المصروف')).onPressed, isNull);
+      await tester.tap(find.widgetWithText(FilledButton, 'حفظ الفاتورة'));
+      await tester.pump(const Duration(milliseconds: 30));
+      expect(server.creates, isEmpty, reason: 'the total is not known yet, so nothing is sent');
 
       gate.complete();
       await settleForm(tester);
-      expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'حفظ المصروف')).onPressed, isNotNull);
+      await tester.tap(find.widgetWithText(FilledButton, 'حفظ الفاتورة'));
+      await tester.pumpAndSettle();
+      expect(server.creates, hasLength(1));
     });
 
     testWidgets('a failed calculation keeps save off and offers a retry that works', (tester) async {
@@ -336,10 +372,14 @@ void main() {
       await tester.enterText(find.byType(TextField).at(2), '200');
       await settleForm(tester);
       expect(find.text('معرفناش نحسب الفاتورة.'), findsOneWidget);
-      expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'حفظ المصروف')).onPressed, isNull);
+      await tester.tap(find.widgetWithText(FilledButton, 'حفظ الفاتورة'));
+      await tester.pumpAndSettle();
+      expect(server.creates, isEmpty, reason: 'a failed calculation keeps the bill from being saved');
       await tapText(tester, 'حاول تاني');
       await settleForm(tester);
-      expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'حفظ المصروف')).onPressed, isNotNull);
+      await tester.tap(find.widgetWithText(FilledButton, 'حفظ الفاتورة'));
+      await tester.pumpAndSettle();
+      expect(server.creates, hasLength(1));
     });
 
     testWidgets('editing: rename an item and save; the PUT carries If-Match and the whole bill', (tester) async {
@@ -361,8 +401,8 @@ void main() {
       await openBill(tester, 'v5');
       final chip = tester.getSemantics(find.bySemanticsLabel('Mohsen').first).getSemanticsData();
       expect(chip.hasAction(SemanticsAction.tap), isTrue);
-      for (final label in ['زوّد قرش', 'نقّص قرش', 'امسح الصنف 1']) {
-        final data = tester.getSemantics(find.byTooltip(label)).getSemanticsData();
+      for (final label in ['زوّد قرش', 'نقّص قرش', 'خيارات الصنف 1', 'زوّد الكمية']) {
+        final data = tester.getSemantics(find.byTooltip(label).first).getSemanticsData();
         expect(data.hasAction(SemanticsAction.tap), isTrue, reason: label);
       }
       final service = tester.getSemantics(find.bySemanticsLabel(RegExp('رسوم الخدمة')).first).getSemanticsData();
@@ -373,6 +413,7 @@ void main() {
     testWidgets('the breakdown rows are one stop each with amounts in words', (tester) async {
       final handle = tester.ensureSemantics();
       await openBill(tester, 'v5');
+      await expandBreakdown(tester);
       final row = find.bySemanticsLabel(RegExp('أصناف 130 جنيه، خدمة 15 جنيه و60 قرش، ضريبة 20 جنيه و39 قرش'));
       expect(row, findsOneWidget);
       expect(tester.getSemantics(row).getSemanticsData().label, contains('165 جنيه و99 قرش'));
