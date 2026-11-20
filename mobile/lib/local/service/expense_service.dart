@@ -35,7 +35,8 @@ final class ExpenseService {
         ExpenseValidator.requirePoolRules(request, access.group.treasurerMemberId);
         final fingerprint = IdempotencyService.fingerprint(canonical(createEndpoint, groupId, request));
         final replay = await _idempotency.findReplay(key, createEndpoint, fingerprint);
-        if (replay != null) return replay;
+        // A body stored before SA15 lacks the itemized v2 fields; it is upgraded on the way out, never rewritten.
+        if (replay != null) return Outcome(replay.status, upgradeExpenseJsonText(replay.body), replayed: replay.replayed);
         final calc = ExpenseCalculator.compute(request, access.members);
         ExpenseCalculator.requirePayersMatch(calc);
         final now = _ctx.clock();
@@ -67,6 +68,7 @@ final class ExpenseService {
         return ExpensePreview((b) => b
           ..totalMinor = calc.totalMinor
           ..subtotalMinor = calc.subtotalMinor
+          ..discountMinor = calc.itemized ? calc.discountMinor : null
           ..serviceMinor = calc.itemized ? calc.serviceMinor : null
           ..taxMinor = calc.itemized ? calc.taxMinor : null
           ..adjustmentMinor = calc.itemized ? calc.adjustmentMinor : null
@@ -206,12 +208,15 @@ final class ExpenseService {
               ..changeType = r.changeType
               ..changedAt = utc(r.changedAt)
               ..changedByUserId = r.changedByUserId
-              ..snapshot = fromJsonText(ExpenseView.serializer, r.snapshot).toBuilder()),
+              // Snapshots written before SA15 read back as quantity 1, no discount (A177); never rewritten.
+              ..snapshot = fromJsonText(ExpenseView.serializer, upgradeExpenseJsonText(r.snapshot)).toBuilder()),
         ];
       });
 
   /// Canonical request of Java `RequestHasher`: fixed key order, payers/shares sorted by member id then amount,
   /// participant and assignee ids sorted, item order kept; an omitted participant list differs from an explicit one.
+  /// BSA2 (A175): an item's amountMinor is its line, so `{amountMinor: 500}` and `{unitAmountMinor: 500}` are the same
+  /// request; quantity and the new charge forms are hashed only when not default, so a pre-SA15 key keeps its hash.
   static Map<String, Object?> canonical(String endpoint, String groupId, ValidExpense v) {
     List<Map<String, Object?>> amounts(List<ValidAmount> list) {
       final sorted = [...list]..sort((a, b) {
@@ -238,12 +243,21 @@ final class ExpenseService {
       if (v.items != null) ...{
         'items': [
           for (final i in v.items!)
-            {'name': i.name, 'amountMinor': i.amountMinor, 'assigneeMemberIds': [...i.assigneeMemberIds]..sort()},
+            {
+              'name': i.name,
+              'amountMinor': i.amountMinor,
+              if (i.quantity != 1) 'quantity': i.quantity,
+              'assigneeMemberIds': [...i.assigneeMemberIds]..sort(),
+            },
         ],
         'serviceBps': v.serviceBps,
         'taxBps': v.taxBps,
         'taxBase': v.taxBase,
         'adjustmentMinor': v.adjustmentMinor,
+        'serviceAmountMinor': ?v.serviceAmountMinor,
+        'taxAmountMinor': ?v.taxAmountMinor,
+        'discountBps': ?v.discountBps,
+        'discountAmountMinor': ?v.discountAmountMinor,
       },
     };
   }
@@ -297,7 +311,15 @@ final class ExpenseService {
       var position = 0;
       for (final input in request.items!) {
         final itemId = _ctx.newId();
-        items.add(ItemRow(id: itemId, expenseId: id, name: input.name, amountMinor: input.amountMinor, sortOrder: position++));
+        items.add(ItemRow(
+          id: itemId,
+          expenseId: id,
+          name: input.name,
+          amountMinor: input.amountMinor,
+          sortOrder: position++,
+          quantity: input.quantity,
+          unitAmountMinor: input.unitAmountMinor,
+        ));
         for (final memberId in input.assigneeMemberIds.toSet()) {
           assignees.add(AssigneeRow(itemId: itemId, memberId: memberId));
         }
@@ -318,6 +340,11 @@ final class ExpenseService {
         taxMinor: itemized ? calc.taxMinor : null,
         taxBase: itemized ? calc.taxBase : null,
         adjustmentMinor: itemized ? calc.adjustmentMinor : null,
+        discountBps: itemized ? calc.discountBps : null,
+        discountAmountMinor: itemized ? calc.discountAmountMinor : null,
+        discountMinor: itemized ? calc.discountMinor : null,
+        serviceAmountMinor: itemized ? calc.serviceAmountMinor : null,
+        taxAmountMinor: itemized ? calc.taxAmountMinor : null,
         createdByUserId: createdByUserId,
         createdAt: createdAt,
         updatedAt: updatedAt,
@@ -333,6 +360,7 @@ final class ExpenseService {
             memberId: s.memberId,
             owedMinor: s.owedMinor,
             itemsMinor: s.itemsMinor,
+            discountMinor: s.discountMinor,
             serviceMinor: s.serviceMinor,
             taxMinor: s.taxMinor,
             adjustmentMinor: s.adjustmentMinor,
@@ -347,6 +375,7 @@ final class ExpenseService {
     ..memberId = s.memberId
     ..owedMinor = s.owedMinor
     ..itemsMinor = s.itemsMinor
+    ..discountMinor = s.discountMinor
     ..serviceMinor = s.serviceMinor
     ..taxMinor = s.taxMinor
     ..adjustmentMinor = s.adjustmentMinor);

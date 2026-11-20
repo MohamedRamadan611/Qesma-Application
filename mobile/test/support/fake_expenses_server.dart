@@ -315,7 +315,15 @@ class FakeExpensesServer extends FakeGroupsServer {
     if (calc == null) return json;
     json['items'] = [
       for (var i = 0; i < calc.items.length; i++)
-        {'id': '$id-item-$i', 'name': calc.items[i]['name'], 'amountMinor': calc.items[i]['amountMinor'], 'assigneeMemberIds': calc.items[i]['assigneeMemberIds']},
+        // BSA2 response shape: the app still sends legacy amountMinor items, which the server stores as 1 x amount.
+        {
+          'id': '$id-item-$i',
+          'name': calc.items[i]['name'],
+          'quantity': 1,
+          'unitAmountMinor': calc.items[i]['amountMinor'],
+          'amountMinor': calc.items[i]['amountMinor'],
+          'assigneeMemberIds': calc.items[i]['assigneeMemberIds'],
+        },
     ];
     json['charges'] = {
       'subtotalMinor': calc.subtotal,

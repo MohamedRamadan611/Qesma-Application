@@ -150,6 +150,85 @@ void main() {
     });
   });
 
+  group('itemized v2 (schema 8, Java V21)', () {
+    // Baseline: subtotal 10000, service 12% = 1200, tax 1568, total 12768, discount 0.
+    // A fresh id per attempt, so a wrongly accepted row cannot make the next case fail on its primary key instead.
+    var next = 500;
+    Future<void> withExpense(ExpenseRow Function(ExpenseRow e) change) {
+      final g = itemizedExpense(tid(next++));
+      return insertExpense(ExpenseGraph(expense: change(g.expense), payers: g.payers, splits: g.splits));
+    }
+
+    test('a discount in one form, below the subtotal, that the total subtracts, is accepted', () async {
+      await withExpense((e) => e.copyWith(
+          discountAmountMinor: const Value(1000), discountMinor: const Value(1000), totalMinor: 11768));
+    });
+
+    test('a discount in both forms, at or above the subtotal, out of range, or without its total is refused', () async {
+      await expectLater(withExpense((e) => e.copyWith(
+          discountBps: const Value(1000), discountAmountMinor: const Value(1000), discountMinor: const Value(1000),
+          totalMinor: 11768)), rejected);
+      await expectLater(withExpense((e) => e.copyWith(
+          discountAmountMinor: const Value(10000), discountMinor: const Value(10000), totalMinor: 2768)), rejected);
+      await expectLater(withExpense((e) => e.copyWith(
+          discountBps: const Value(10000), discountMinor: const Value(9999), totalMinor: 2769)), rejected);
+      await expectLater(withExpense((e) => e.copyWith(discountBps: const Value(1000))), rejected); // form, discount 0
+      await expectLater(withExpense((e) => e.copyWith(discountMinor: const Value(1000), totalMinor: 11768)), rejected);
+      await expectLater(withExpense((e) => e.copyWith(
+          discountAmountMinor: const Value(1000), discountMinor: const Value(999), totalMinor: 11769)), rejected);
+      await expectLater(withExpense((e) => e.copyWith(discountMinor: const Value(null))), rejected);
+      await expectLater(withExpense((e) => e.copyWith(
+          discountAmountMinor: const Value(1000), discountMinor: const Value(1000))), rejected); // total not reduced
+    });
+
+    test('a service or tax given as an amount must equal its total and cannot also have a rate', () async {
+      await withExpense((e) => e.copyWith(serviceBps: const Value(null), serviceAmountMinor: const Value(1200)));
+
+
+
+      await expectLater(
+          withExpense((e) => e.copyWith(serviceBps: const Value(null), serviceAmountMinor: const Value(1300))), rejected);
+      await expectLater(withExpense((e) => e.copyWith(serviceAmountMinor: const Value(1200))), rejected);
+      await expectLater(withExpense((e) => e.copyWith(taxAmountMinor: const Value(1568))), rejected);
+      await expectLater(withExpense((e) => e.copyWith(
+          taxBps: const Value(null), taxAmountMinor: const Value(1568), taxBase: const Value(null))), rejected);
+      await expectLater(withExpense((e) => e.copyWith(serviceAmountMinor: const Value(0))), rejected);
+    });
+
+    test('an item line must be quantity x unit price, quantity 1..999', () async {
+      final g = itemizedExpense(tid(101));
+      Future<void> withItem(ItemRow Function(ItemRow i) change) => insertExpense(ExpenseGraph(
+          expense: g.expense, payers: g.payers, splits: g.splits, items: [change(g.items.first)], assignees: const []));
+      await expectLater(withItem((i) => i.copyWith(quantity: 3)), rejected);
+      await expectLater(withItem((i) => i.copyWith(quantity: 0, unitAmountMinor: 6000)), rejected);
+      await expectLater(withItem((i) => i.copyWith(quantity: 1000, amountMinor: 6000, unitAmountMinor: 6)), rejected);
+      await expectLater(withItem((i) => i.copyWith(unitAmountMinor: 0)), rejected);
+      await withItem((i) => i.copyWith(quantity: 3, unitAmountMinor: 2000));
+    });
+
+    test('a split discount part is in the breakdown, never above the items, and subtracted from owed', () async {
+      final g = itemizedExpense(tid(101));
+      Future<void> withSplit(SplitRow Function(SplitRow s) change) =>
+          insertExpense(ExpenseGraph(expense: g.expense, payers: g.payers, splits: [change(g.splits.first)]));
+      await expectLater(withSplit((s) => s.copyWith(discountMinor: const Value(null))), rejected);
+      await expectLater(withSplit((s) => s.copyWith(discountMinor: const Value(100))), rejected); // owed not reduced
+      await expectLater(withSplit((s) => s.copyWith(discountMinor: const Value(3001), owedMinor: 829)), rejected);
+      await withSplit((s) => s.copyWith(discountMinor: const Value(100), owedMinor: 3730));
+    });
+
+    test('the v2 columns are refused on an EQUAL expense', () async {
+      final g = equalExpense(tid(100));
+      for (final e in [
+        g.expense.copyWith(discountMinor: const Value(0)),
+        g.expense.copyWith(discountBps: const Value(1000)),
+        g.expense.copyWith(serviceAmountMinor: const Value(100)),
+        g.expense.copyWith(taxAmountMinor: const Value(100)),
+      ]) {
+        await expectLater(insertExpense(ExpenseGraph(expense: e, payers: g.payers, splits: g.splits)), rejected);
+      }
+    });
+  });
+
   test('impossible or malformed dates are refused', () async {
     for (final date in ['2026-02-30', '2026-2-03', '03/02/2026', '']) {
       final g = equalExpense(tid(100));

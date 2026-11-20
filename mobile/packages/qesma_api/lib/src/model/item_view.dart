@@ -16,6 +16,8 @@ part 'item_view.g.dart';
 /// * [assigneeMemberIds] 
 /// * [id] 
 /// * [name] 
+/// * [quantity] 
+/// * [unitAmountMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
 @BuiltValue()
 abstract class ItemView implements Built<ItemView, ItemViewBuilder> {
   /// Integer minor units (piasters: 1 EGP = 100). Never a decimal.
@@ -30,6 +32,13 @@ abstract class ItemView implements Built<ItemView, ItemViewBuilder> {
 
   @BuiltValueField(wireName: r'name')
   String get name;
+
+  @BuiltValueField(wireName: r'quantity')
+  int get quantity;
+
+  /// Integer minor units (piasters: 1 EGP = 100). Never a decimal.
+  @BuiltValueField(wireName: r'unitAmountMinor')
+  int get unitAmountMinor;
 
   ItemView._();
 
@@ -73,6 +82,16 @@ class _$ItemViewSerializer implements PrimitiveSerializer<ItemView> {
     yield serializers.serialize(
       object.name,
       specifiedType: const FullType(String),
+    );
+    yield r'quantity';
+    yield serializers.serialize(
+      object.quantity,
+      specifiedType: const FullType(int),
+    );
+    yield r'unitAmountMinor';
+    yield serializers.serialize(
+      object.unitAmountMinor,
+      specifiedType: const FullType(int),
     );
   }
 
@@ -124,6 +143,20 @@ class _$ItemViewSerializer implements PrimitiveSerializer<ItemView> {
             specifiedType: const FullType(String),
           ) as String;
           result.name = valueDes;
+          break;
+        case r'quantity':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(int),
+          ) as int;
+          result.quantity = valueDes;
+          break;
+        case r'unitAmountMinor':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(int),
+          ) as int;
+          result.unitAmountMinor = valueDes;
           break;
         default:
           unhandled.add(key);

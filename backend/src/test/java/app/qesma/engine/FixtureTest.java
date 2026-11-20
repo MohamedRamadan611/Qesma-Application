@@ -1,9 +1,11 @@
 package app.qesma.engine;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import app.qesma.engine.BalanceCalculator.ExpenseLedgerEntry;
 import app.qesma.engine.BalanceCalculator.SettlementEntry;
+import app.qesma.engine.ItemizedCalculator.ChargeSpec;
 import app.qesma.engine.ItemizedCalculator.Item;
 import app.qesma.engine.ItemizedCalculator.ItemizedInput;
 import app.qesma.engine.ItemizedCalculator.ItemizedResult;
@@ -25,7 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
 
 /**
- * Runs every shared vector in /fixtures/engine (spec section 10, V1-V8). Format:
+ * Runs every shared vector in /fixtures/engine (spec section 10, V1-V8; STANDALONE_SPEC 18.6, V9-V16). Format:
  * { name, input: { members, expenses[], settlements[] }, expected: { expenses[], nets, transfers } }.
  * Only the keys present under "expected" are asserted, so a future Dart engine can reuse the files.
  */
@@ -35,14 +37,15 @@ class FixtureTest {
     private static final ObjectMapper JSON = new ObjectMapper();
 
     @Test
-    void allEightSpecVectorsArePresent() throws IOException {
+    void allSpecVectorsArePresent() throws IOException {
+        List<String> names;
         try (Stream<Path> s = Files.list(DIR)) {
-            assertThat(s.map(p -> p.getFileName().toString()).filter(n -> n.endsWith(".json")).toList())
-                    .hasSizeGreaterThanOrEqualTo(8)
-                    .anyMatch(n -> n.startsWith("V1-")).anyMatch(n -> n.startsWith("V2-"))
-                    .anyMatch(n -> n.startsWith("V3-")).anyMatch(n -> n.startsWith("V4-"))
-                    .anyMatch(n -> n.startsWith("V5-")).anyMatch(n -> n.startsWith("V6-"))
-                    .anyMatch(n -> n.startsWith("V7-")).anyMatch(n -> n.startsWith("V8-"));
+            names = s.map(p -> p.getFileName().toString()).filter(n -> n.endsWith(".json")).toList();
+        }
+        assertThat(names).hasSizeGreaterThanOrEqualTo(16);
+        for (int v = 1; v <= 16; v++) {
+            String prefix = "V" + v + "-";
+            assertThat(names).as("vector %s", prefix).anyMatch(n -> n.startsWith(prefix));
         }
     }
 
@@ -93,21 +96,16 @@ class FixtureTest {
                     owed.putAll(SplitCalculator.exact(total, shares));
                 }
                 case "ITEMIZED" -> {
-                    List<Item> items = new ArrayList<>();
-                    for (JsonNode it : e.get("items")) {
-                        List<String> assignees = new ArrayList<>();
-                        it.get("assigneeMemberIds").forEach(a -> assignees.add(a.asText()));
-                        items.add(new Item(it.get("name").asText(), it.get("amountMinor").asLong(), assignees));
+                    JsonNode rejected = expected.path("expenses").path(i);
+                    if (rejected.has("error")) {
+                        // A rejected bill: the engine (input shape included) must refuse it with this code.
+                        int index = i;
+                        assertThatThrownBy(() -> ItemizedCalculator.calculate(itemizedInput(e, members)))
+                                .as("expense %d", index).isInstanceOf(EngineException.class)
+                                .extracting("code").isEqualTo(EngineErrorCode.valueOf(rejected.get("error").asText()));
+                        continue;
                     }
-                    Integer serviceBps = e.hasNonNull("serviceBps") ? e.get("serviceBps").asInt() : null;
-                    TaxSpec tax = null;
-                    if (e.hasNonNull("tax")) {
-                        JsonNode t = e.get("tax");
-                        tax = new TaxSpec(t.get("bps").asInt(),
-                                t.hasNonNull("base") ? TaxBase.valueOf(t.get("base").asText()) : null);
-                    }
-                    itemized = ItemizedCalculator.calculate(new ItemizedInput(members, items, serviceBps, tax,
-                            e.path("adjustmentMinor").asLong(0)));
+                    itemized = ItemizedCalculator.calculate(itemizedInput(e, members));
                     total = itemized.totalMinor();
                     for (MemberBreakdown b : itemized.members()) {
                         owed.put(b.memberId(), b.owedMinor());
@@ -135,6 +133,12 @@ class FixtureTest {
                     assertField(exp, "subtotalMinor", itemized.subtotalMinor());
                     assertField(exp, "serviceMinor", itemized.serviceMinor());
                     assertField(exp, "taxMinor", itemized.taxMinor());
+                    assertField(exp, "discountMinor", itemized.discountMinor());
+                    if (exp.has("discounts")) {
+                        Map<String, Long> discounts = new LinkedHashMap<>();
+                        itemized.members().forEach(b -> discounts.put(b.memberId(), b.discountMinor()));
+                        assertThat(discounts).as("expense %d discounts", i).isEqualTo(longMap(exp.get("discounts")));
+                    }
                 }
             }
         }
@@ -159,6 +163,46 @@ class FixtureTest {
             }
             assertThat(Simplifier.simplify(nets, members)).as("transfers").containsExactlyElementsOf(exp);
         }
+    }
+
+    /**
+     * Maps a fixture bill to the engine input through the engine's own shape rules ({@link Item#of},
+     * {@link ChargeSpec#of}), so a rejected shape (V16) fails exactly as it does behind the API.
+     * Legacy {@code serviceBps} is still read; {@code service}/{@code tax}/{@code discount} take bps or amountMinor.
+     */
+    private static ItemizedInput itemizedInput(JsonNode e, List<MemberRef> members) {
+        List<Item> items = new ArrayList<>();
+        for (JsonNode it : e.get("items")) {
+            List<String> assignees = new ArrayList<>();
+            it.get("assigneeMemberIds").forEach(a -> assignees.add(a.asText()));
+            items.add(Item.of(it.get("name").asText(), longOrNull(it, "amountMinor"),
+                    longOrNull(it, "unitAmountMinor"), intOrNull(it, "quantity"), assignees));
+        }
+        ChargeSpec service = null;
+        if (e.hasNonNull("serviceBps")) {
+            service = ChargeSpec.percent(e.get("serviceBps").asInt());
+        } else if (e.hasNonNull("service")) {
+            service = charge(e.get("service"));
+        }
+        TaxSpec tax = null;
+        if (e.hasNonNull("tax")) {
+            JsonNode t = e.get("tax");
+            tax = new TaxSpec(charge(t), t.hasNonNull("base") ? TaxBase.valueOf(t.get("base").asText()) : null);
+        }
+        ChargeSpec discount = e.hasNonNull("discount") ? charge(e.get("discount")) : null;
+        return new ItemizedInput(members, items, discount, service, tax, e.path("adjustmentMinor").asLong(0));
+    }
+
+    private static ChargeSpec charge(JsonNode node) {
+        return ChargeSpec.of(intOrNull(node, "bps"), longOrNull(node, "amountMinor"));
+    }
+
+    private static Long longOrNull(JsonNode node, String field) {
+        return node.hasNonNull(field) ? node.get(field).asLong() : null;
+    }
+
+    private static Integer intOrNull(JsonNode node, String field) {
+        return node.hasNonNull(field) ? node.get(field).asInt() : null;
     }
 
     private static void assertField(JsonNode exp, String field, long actual) {

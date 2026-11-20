@@ -136,6 +136,83 @@ class RequestHasherTest {
                 .isNotEqualTo(h(itemized(twoItems(), 0, 1400, "SUBTOTAL", 0)));
     }
 
+    // ---- BSA2 (A175): new fields are hashed only when not default ------------------------------------------------
+
+    private static ExpenseCommand legacyCommand(List<ExpenseCommand.ItemInput> items) {
+        return new ExpenseCommand("Dinner", LocalDate.of(2026, 10, 18), "ITEMIZED", null,
+                List.of(new PayerInput(A, 100L)), null, null, items, new ExpenseCommand.ServiceInput(1200),
+                new ExpenseCommand.TaxInput(1400, "SUBTOTAL"), 0L);
+    }
+
+    /** The pre-BSA2 canonical form of an itemized request, copied from the hasher before BSA2. */
+    private static String preBsa2Hash(ExpenseValidator.Valid v) throws Exception {
+        java.util.Map<String, Object> canonical = new java.util.LinkedHashMap<>();
+        canonical.put("endpoint", ENDPOINT);
+        canonical.put("groupId", GROUP.toString());
+        canonical.put("title", v.title());
+        canonical.put("expenseDate", v.expenseDate().toString());
+        canonical.put("splitType", v.splitType());
+        canonical.put("totalMinor", v.totalMinor());
+        canonical.put("payers", v.payers().stream().map(p -> {
+            java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
+            m.put("memberId", p.memberId().toString());
+            m.put("amountMinor", p.amountMinor());
+            return m;
+        }).toList());
+        canonical.put("participantMemberIds", null);
+        canonical.put("shares", null);
+        canonical.put("items", v.items().stream().map(i -> {
+            java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
+            m.put("name", i.name());
+            m.put("amountMinor", i.amountMinor());
+            m.put("assigneeMemberIds", i.assigneeMemberIds().stream().map(UUID::toString).sorted().toList());
+            return m;
+        }).toList());
+        canonical.put("serviceBps", v.serviceBps());
+        canonical.put("taxBps", v.taxBps());
+        canonical.put("taxBase", v.taxBase());
+        canonical.put("adjustmentMinor", v.adjustmentMinor());
+        byte[] json = new ObjectMapper().writeValueAsString(canonical).getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        return java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(json));
+    }
+
+    @Test
+    void aPreBsa2ItemizedRequestKeepsItsHash() throws Exception {
+        ExpenseValidator.Valid v = ExpenseValidator.validate(legacyCommand(twoItems()));
+        assertThat(h(v)).isEqualTo(preBsa2Hash(v));
+    }
+
+    @Test
+    void aUnitPriceWithQuantityOneIsTheSameRequestAsTheLegacyAmount() {
+        List<ExpenseCommand.ItemInput> unitShaped = List.of(
+                new ExpenseCommand.ItemInput("Pizza", null, 200L, 1, List.of(A, B)),
+                new ExpenseCommand.ItemInput("Pasta", null, 150L, null, List.of(C)));
+        assertThat(h(ExpenseValidator.validate(legacyCommand(unitShaped))))
+                .isEqualTo(h(ExpenseValidator.validate(legacyCommand(twoItems()))));
+    }
+
+    @Test
+    void quantityDiscountAndAmountChargesChangeTheHash() {
+        String base = h(ExpenseValidator.validate(legacyCommand(twoItems())));
+        List<ExpenseCommand.ItemInput> twoPizzas = List.of(
+                new ExpenseCommand.ItemInput("Pizza", null, 100L, 2, List.of(A, B)), twoItems().get(1));
+        assertThat(h(ExpenseValidator.validate(legacyCommand(twoPizzas)))).isNotEqualTo(base);  // same line amount
+
+        ExpenseCommand c = legacyCommand(twoItems());
+        ExpenseCommand discounted = new ExpenseCommand(c.title(), c.expenseDate(), c.splitType(), null, c.payers(), null,
+                null, c.items(), c.service(), c.tax(), 0L, null, null, new ExpenseCommand.DiscountInput(1000, null));
+        ExpenseCommand discountAmount = new ExpenseCommand(c.title(), c.expenseDate(), c.splitType(), null, c.payers(),
+                null, null, c.items(), c.service(), c.tax(), 0L, null, null, new ExpenseCommand.DiscountInput(null, 1000L));
+        ExpenseCommand serviceAmount = new ExpenseCommand(c.title(), c.expenseDate(), c.splitType(), null, c.payers(),
+                null, null, c.items(), new ExpenseCommand.ServiceInput(null, 1200L), c.tax(), 0L);
+        ExpenseCommand taxAmount = new ExpenseCommand(c.title(), c.expenseDate(), c.splitType(), null, c.payers(),
+                null, null, c.items(), c.service(), new ExpenseCommand.TaxInput(null, 1400L, "SUBTOTAL"), 0L);
+        java.util.Set<String> hashes = new java.util.HashSet<>(List.of(base,
+                h(ExpenseValidator.validate(discounted)), h(ExpenseValidator.validate(discountAmount)),
+                h(ExpenseValidator.validate(serviceAmount)), h(ExpenseValidator.validate(taxAmount))));
+        assertThat(hashes).hasSize(5);
+    }
+
     @Test
     void amountsAreNotConfusedAcrossMembers() {
         // swapping which member holds which amount is a different request even though the multiset is equal

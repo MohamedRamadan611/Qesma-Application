@@ -1,0 +1,24 @@
+{
+  "name": "V16 itemized, an item with both amountMinor and unitAmountMinor, or quantity 0 or 1000, is rejected",
+  "input": {
+    "members": [ { "id": "A", "sortOrder": 1 }, { "id": "B", "sortOrder": 2 } ],
+    "expenses": [
+      { "type": "ITEMIZED",
+        "payers": [ { "memberId": "A", "amountMinor": 1000 } ],
+        "items": [ { "name": "Both", "amountMinor": 1000, "unitAmountMinor": 1000, "assigneeMemberIds": [ "A" ] } ],
+        "adjustmentMinor": 0 },
+      { "type": "ITEMIZED",
+        "payers": [ { "memberId": "A", "amountMinor": 1000 } ],
+        "items": [ { "name": "None", "quantity": 0, "unitAmountMinor": 1000, "assigneeMemberIds": [ "A" ] } ],
+        "adjustmentMinor": 0 },
+      { "type": "ITEMIZED",
+        "payers": [ { "memberId": "A", "amountMinor": 1000 } ],
+        "items": [ { "name": "Many", "quantity": 1000, "unitAmountMinor": 1, "assigneeMemberIds": [ "A" ] } ],
+        "adjustmentMinor": 0 }
+    ],
+    "settlements": []
+  },
+  "expected": {
+    "expenses": [ { "error": "VALIDATION_ERROR" }, { "error": "VALIDATION_ERROR" }, { "error": "VALIDATION_ERROR" } ]
+  }
+}

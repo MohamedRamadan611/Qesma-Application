@@ -13,6 +13,11 @@ void main() {
       // TODO
     });
 
+    // DiscountCharge discount
+    test('to test the property `discount`', () async {
+      // TODO
+    });
+
     // ServiceCharge service
     test('to test the property `service`', () async {
       // TODO

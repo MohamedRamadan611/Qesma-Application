@@ -1,0 +1,22 @@
+{
+  "name": "V15 itemized, a discount equal to the subtotal (amount or 100%) is rejected",
+  "input": {
+    "members": [ { "id": "A", "sortOrder": 1 }, { "id": "B", "sortOrder": 2 } ],
+    "expenses": [
+      { "type": "ITEMIZED",
+        "payers": [ { "memberId": "A", "amountMinor": 1 } ],
+        "items": [ { "name": "Meal", "amountMinor": 10000, "assigneeMemberIds": [ "A", "B" ] } ],
+        "discount": { "amountMinor": 10000 },
+        "adjustmentMinor": 0 },
+      { "type": "ITEMIZED",
+        "payers": [ { "memberId": "A", "amountMinor": 1 } ],
+        "items": [ { "name": "Meal", "amountMinor": 10000, "assigneeMemberIds": [ "A", "B" ] } ],
+        "discount": { "bps": 10000 },
+        "adjustmentMinor": 0 }
+    ],
+    "settlements": []
+  },
+  "expected": {
+    "expenses": [ { "error": "VALIDATION_ERROR" }, { "error": "VALIDATION_ERROR" } ]
+  }
+}

@@ -116,20 +116,41 @@ CREATE TABLE expenses (
     category           TEXT    NOT NULL DEFAULT 'OTHER' CHECK (category IN ('FOOD', 'TRANSPORT', 'FUEL', 'ACCOMMODATION', 'GROCERIES', 'SHOPPING', 'ENTERTAINMENT', 'BILLS', 'OTHER')),
     -- Schema 5 (SA10, Java V20): a pool expense (its single payer is the treasurer: checked by the service).
     paid_from_pool     INTEGER NOT NULL DEFAULT 0 CHECK (paid_from_pool IN (0, 1)),
+    -- Schema 8 (SA15, Java V21, A171-A177): one bill discount (percent or amount) and service/tax as amounts.
+    -- *_bps / *_amount_minor are the request (which form); discount_minor is the computed total like service_minor.
+    discount_bps          INTEGER CHECK (discount_bps IS NULL OR discount_bps BETWEEN 1 AND 9999),
+    discount_amount_minor INTEGER CHECK (discount_amount_minor IS NULL OR discount_amount_minor BETWEEN 1 AND 1000000000000),
+    discount_minor        INTEGER,
+    service_amount_minor  INTEGER CHECK (service_amount_minor IS NULL OR service_amount_minor BETWEEN 1 AND 1000000000000),
+    tax_amount_minor      INTEGER CHECK (tax_amount_minor IS NULL OR tax_amount_minor BETWEEN 1 AND 1000000000000),
+    -- Each charge is in one form at most: a percentage or an amount (A171, A173).
+    CONSTRAINT ck_expenses_charge_one_form CHECK (
+        NOT (discount_bps IS NOT NULL AND discount_amount_minor IS NOT NULL)
+        AND NOT (service_bps IS NOT NULL AND service_amount_minor IS NOT NULL)
+        AND NOT (tax_bps IS NOT NULL AND tax_amount_minor IS NOT NULL)),
     CONSTRAINT ck_expenses_itemized_columns CHECK (
         split_type = 'ITEMIZED' OR (
             subtotal_minor IS NULL AND service_bps IS NULL AND service_minor IS NULL AND tax_bps IS NULL
-            AND tax_minor IS NULL AND tax_base IS NULL AND adjustment_minor IS NULL)),
+            AND tax_minor IS NULL AND tax_base IS NULL AND adjustment_minor IS NULL
+            AND discount_bps IS NULL AND discount_amount_minor IS NULL AND discount_minor IS NULL
+            AND service_amount_minor IS NULL AND tax_amount_minor IS NULL)),
+    -- total = subtotal - discount + service + tax + adjustment; a charge > 0 has a form; an amount-form charge is
+    -- exactly its amount; 0 <= discount < subtotal; a tax base exists exactly when a tax does (Java V21).
     CONSTRAINT ck_expenses_itemized_charges CHECK (
         split_type <> 'ITEMIZED' OR (
             subtotal_minor IS NOT NULL AND subtotal_minor > 0
+            AND discount_minor IS NOT NULL AND discount_minor >= 0 AND discount_minor < subtotal_minor
             AND service_minor IS NOT NULL AND service_minor >= 0
             AND tax_minor IS NOT NULL AND tax_minor >= 0
             AND adjustment_minor IS NOT NULL
-            AND total_minor = subtotal_minor + service_minor + tax_minor + adjustment_minor
-            AND (service_bps IS NOT NULL OR service_minor = 0)
-            AND (tax_bps IS NOT NULL OR tax_minor = 0)
-            AND ((tax_bps IS NULL) = (tax_base IS NULL))))
+            AND total_minor = subtotal_minor - discount_minor + service_minor + tax_minor + adjustment_minor
+            AND ((discount_bps IS NOT NULL OR discount_amount_minor IS NOT NULL) = (discount_minor > 0))
+            AND (discount_amount_minor IS NULL OR discount_minor = discount_amount_minor)
+            AND (service_bps IS NOT NULL OR service_amount_minor IS NOT NULL OR service_minor = 0)
+            AND (service_amount_minor IS NULL OR service_minor = service_amount_minor)
+            AND (tax_bps IS NOT NULL OR tax_amount_minor IS NOT NULL OR tax_minor = 0)
+            AND (tax_amount_minor IS NULL OR tax_minor = tax_amount_minor)
+            AND ((tax_bps IS NULL AND tax_amount_minor IS NULL) = (tax_base IS NULL))))
 ) STRICT AS ExpenseRow;
 
 CREATE INDEX ix_expenses_group_list ON expenses (group_id, expense_date DESC, created_at DESC, id DESC)
@@ -157,12 +178,18 @@ CREATE TABLE expense_splits (
     service_minor    INTEGER,
     tax_minor        INTEGER,
     adjustment_minor INTEGER,
+    -- Schema 8 (SA15, Java V21): this member's part of the bill discount (ITEMIZED breakdown only).
+    discount_minor   INTEGER,
     PRIMARY KEY (expense_id, member_id),
+    -- The breakdown is all-or-nothing and explains owed exactly; a member's discount part never exceeds their items.
     CONSTRAINT ck_expense_splits_breakdown CHECK (
-        (items_minor IS NULL AND service_minor IS NULL AND tax_minor IS NULL AND adjustment_minor IS NULL)
-        OR (items_minor IS NOT NULL AND items_minor >= 0 AND service_minor IS NOT NULL AND service_minor >= 0
+        (items_minor IS NULL AND discount_minor IS NULL AND service_minor IS NULL AND tax_minor IS NULL
+            AND adjustment_minor IS NULL)
+        OR (items_minor IS NOT NULL AND items_minor >= 0
+            AND discount_minor IS NOT NULL AND discount_minor >= 0 AND discount_minor <= items_minor
+            AND service_minor IS NOT NULL AND service_minor >= 0
             AND tax_minor IS NOT NULL AND tax_minor >= 0 AND adjustment_minor IS NOT NULL
-            AND owed_minor = items_minor + service_minor + tax_minor + adjustment_minor))
+            AND owed_minor = items_minor - discount_minor + service_minor + tax_minor + adjustment_minor))
 ) STRICT AS SplitRow;
 
 CREATE INDEX ix_expense_splits_member ON expense_splits (member_id);
@@ -174,7 +201,11 @@ CREATE TABLE expense_items (
     name         TEXT    NOT NULL CHECK (length(trim(name)) BETWEEN 1 AND 100),
     amount_minor INTEGER NOT NULL CHECK (amount_minor BETWEEN 1 AND 1000000000000),
     sort_order   INTEGER NOT NULL CHECK (sort_order >= 0),
-    CONSTRAINT ux_expense_items_order UNIQUE (expense_id, sort_order)
+    -- Schema 8 (SA15, Java V21, A172): quantity x unit price = the line amount (999 x 10^12 fits in 64 bits).
+    quantity          INTEGER NOT NULL DEFAULT 1 CHECK (quantity BETWEEN 1 AND 999),
+    unit_amount_minor INTEGER NOT NULL CHECK (unit_amount_minor BETWEEN 1 AND 1000000000000),
+    CONSTRAINT ux_expense_items_order UNIQUE (expense_id, sort_order),
+    CONSTRAINT ck_expense_items_line CHECK (amount_minor = quantity * unit_amount_minor)
 ) STRICT AS ItemRow;
 
 -- V6 expense_item_assignees.

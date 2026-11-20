@@ -8,7 +8,8 @@ import 'package:qesma_api/api.dart';
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**bps** | **int** | Integer basis points: 1200 = 12.00%. | 
+**amountMinor** | **int** | Integer minor units (piasters: 1 EGP = 100). Never a decimal. | [optional] 
+**bps** | **int** | Integer basis points: 1200 = 12.00%. | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

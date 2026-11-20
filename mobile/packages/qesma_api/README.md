@@ -138,6 +138,8 @@ Class | Method | HTTP request | Description
  - [CreateGroupRequest](doc/CreateGroupRequest.md)
  - [CreateMemberRequest](doc/CreateMemberRequest.md)
  - [DeleteAccountRequest](doc/DeleteAccountRequest.md)
+ - [DiscountCharge](doc/DiscountCharge.md)
+ - [DiscountInput](doc/DiscountInput.md)
  - [EventPayload](doc/EventPayload.md)
  - [ExpenseCommand](doc/ExpenseCommand.md)
  - [ExpensePreview](doc/ExpensePreview.md)

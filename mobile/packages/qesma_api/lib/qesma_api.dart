@@ -36,6 +36,8 @@ export 'package:qesma_api/src/model/charges.dart';
 export 'package:qesma_api/src/model/create_group_request.dart';
 export 'package:qesma_api/src/model/create_member_request.dart';
 export 'package:qesma_api/src/model/delete_account_request.dart';
+export 'package:qesma_api/src/model/discount_charge.dart';
+export 'package:qesma_api/src/model/discount_input.dart';
 export 'package:qesma_api/src/model/event_payload.dart';
 export 'package:qesma_api/src/model/expense_command.dart';
 export 'package:qesma_api/src/model/expense_preview.dart';

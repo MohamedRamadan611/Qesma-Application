@@ -71,9 +71,6 @@ final class FirebaseReceiptReader implements ReceiptReader {
 /// the observed classes are recorded in the SA12 gate (manual check M2).
 ReceiptScanException classifyScanError(Object error) {
   if (error is ReceiptScanException) return error;
-  // TEMP-SA12-DEBUG: remove after the first real scan.
-  // ignore: avoid_print
-  print('SCANERR ${error.runtimeType}: $error');
   if (error is TimeoutException) return const ReceiptScanException(ReceiptScanFailure.timeout);
   if (error is SocketException || error is HandshakeException) {
     return const ReceiptScanException(ReceiptScanFailure.offline);

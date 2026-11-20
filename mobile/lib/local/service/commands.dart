@@ -14,22 +14,40 @@ final class PayerIn {
   }
 }
 
+/// `ItemInput`: legacy [amountMinor] (quantity 1) or [unitAmountMinor] with an optional [quantity] (A172, BSA2).
 final class ItemIn {
-  const ItemIn(this.name, this.amountMinor, this.assigneeMemberIds);
+  const ItemIn(this.name, this.amountMinor, this.assigneeMemberIds, {this.unitAmountMinor, this.quantity});
   final String? name;
   final int? amountMinor;
+  final int? unitAmountMinor;
+  final int? quantity;
   final List<String?>? assigneeMemberIds;
 
   static ItemIn? read(Object? v) {
     final f = JsonFields.object(v);
-    return f == null ? null : ItemIn(f.str('name'), f.integer('amountMinor'), f.uuidList('assigneeMemberIds'));
+    return f == null
+        ? null
+        : ItemIn(f.str('name'), f.integer('amountMinor'), f.uuidList('assigneeMemberIds'),
+            unitAmountMinor: f.integer('unitAmountMinor'), quantity: f.integer('quantity'));
   }
 }
 
+/// `DiscountInput` / `ServiceInput`: `{bps}` or `{amountMinor}` (A171, A173). An object that was sent is present even
+/// when both fields are missing (`{}`), so the validator can refuse it like Java does.
+final class ChargeIn {
+  const ChargeIn(this.bps, this.amountMinor);
+  final int? bps;
+  final int? amountMinor;
+
+  static ChargeIn? read(JsonFields? f) => f == null ? null : ChargeIn(f.integer('bps'), f.integer('amountMinor'));
+}
+
+/// `TaxInput`: `{bps, base}` or `{amountMinor, base}`.
 final class TaxIn {
-  const TaxIn(this.bps, this.base);
+  const TaxIn(this.bps, this.base, [this.amountMinor]);
   final int? bps;
   final String? base;
+  final int? amountMinor;
 }
 
 /// `ExpenseCommand` (create, preview and update share it).
@@ -43,8 +61,8 @@ final class ExpenseIn {
     this.participantMemberIds,
     this.shares,
     this.items,
-    this.serviceBps,
-    this.hasService = false,
+    this.discount,
+    this.service,
     this.tax,
     this.adjustmentMinor,
     this.category,
@@ -62,9 +80,11 @@ final class ExpenseIn {
   final List<PayerIn?>? shares;
   final List<ItemIn?>? items;
 
-  /// `service` was sent (an object) and its `bps`, which may itself be missing.
-  final bool hasService;
-  final int? serviceBps;
+  /// BSA2: one bill discount, null = none.
+  final ChargeIn? discount;
+
+  /// null = no service; present (possibly `{}`) when the client sent the object.
+  final ChargeIn? service;
   final TaxIn? tax;
   final int? adjustmentMinor;
   final String? category;
@@ -73,7 +93,6 @@ final class ExpenseIn {
   final bool? paidFromPool;
 
   static ExpenseIn read(JsonFields f) {
-    final service = f.obj('service');
     final tax = f.obj('tax');
     return ExpenseIn(
       title: f.str('title'),
@@ -84,16 +103,15 @@ final class ExpenseIn {
       participantMemberIds: f.uuidList('participantMemberIds'),
       shares: f.list('shares')?.map(PayerIn.read).toList(),
       items: f.list('items')?.map(ItemIn.read).toList(),
-      hasService: service != null,
-      serviceBps: service?.integer('bps'),
-      tax: tax == null ? null : TaxIn(tax.integer('bps'), tax.str('base')),
+      discount: ChargeIn.read(f.obj('discount')),
+      service: ChargeIn.read(f.obj('service')),
+      tax: tax == null ? null : TaxIn(tax.integer('bps'), tax.str('base'), tax.integer('amountMinor')),
       adjustmentMinor: f.integer('adjustmentMinor'),
       category: f.str('category'),
       paidFromPool: f.boolean('paidFromPool'),
     );
   }
 }
-
 /// `SettlementCommand`.
 final class SettlementIn {
   const SettlementIn(this.fromMemberId, this.toMemberId, this.amountMinor, this.settledOn, this.note, [this.kind]);

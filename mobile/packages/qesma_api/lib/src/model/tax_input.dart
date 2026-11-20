@@ -11,16 +11,21 @@ part 'tax_input.g.dart';
 /// TaxInput
 ///
 /// Properties:
+/// * [amountMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
 /// * [base_] 
 /// * [bps] - Integer basis points: 1200 = 12.00%.
 @BuiltValue()
 abstract class TaxInput implements Built<TaxInput, TaxInputBuilder> {
+  /// Integer minor units (piasters: 1 EGP = 100). Never a decimal.
+  @BuiltValueField(wireName: r'amountMinor')
+  int? get amountMinor;
+
   @BuiltValueField(wireName: r'base')
   String? get base_;
 
   /// Integer basis points: 1200 = 12.00%.
   @BuiltValueField(wireName: r'bps')
-  int get bps;
+  int? get bps;
 
   TaxInput._();
 
@@ -45,6 +50,13 @@ class _$TaxInputSerializer implements PrimitiveSerializer<TaxInput> {
     TaxInput object, {
     FullType specifiedType = FullType.unspecified,
   }) sync* {
+    if (object.amountMinor != null) {
+      yield r'amountMinor';
+      yield serializers.serialize(
+        object.amountMinor,
+        specifiedType: const FullType(int),
+      );
+    }
     if (object.base_ != null) {
       yield r'base';
       yield serializers.serialize(
@@ -52,11 +64,13 @@ class _$TaxInputSerializer implements PrimitiveSerializer<TaxInput> {
         specifiedType: const FullType(String),
       );
     }
-    yield r'bps';
-    yield serializers.serialize(
-      object.bps,
-      specifiedType: const FullType(int),
-    );
+    if (object.bps != null) {
+      yield r'bps';
+      yield serializers.serialize(
+        object.bps,
+        specifiedType: const FullType(int),
+      );
+    }
   }
 
   @override
@@ -80,6 +94,13 @@ class _$TaxInputSerializer implements PrimitiveSerializer<TaxInput> {
       final key = serializedList[i] as String;
       final value = serializedList[i + 1];
       switch (key) {
+        case r'amountMinor':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(int),
+          ) as int;
+          result.amountMinor = valueDes;
+          break;
         case r'base':
           final valueDes = serializers.deserialize(
             value,

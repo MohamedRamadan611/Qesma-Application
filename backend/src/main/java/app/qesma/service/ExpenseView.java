@@ -33,27 +33,46 @@ public record ExpenseView(UUID id, UUID groupId, String title, String splitType,
     }
 
     /**
-     * What one member owes. The four breakdown fields are set for ITEMIZED expenses only
-     * (owed = items + service + tax + adjustment) and are null for EQUAL/EXACT.
+     * What one member owes. The five breakdown fields are set for ITEMIZED expenses only
+     * (owed = items - discount + service + tax + adjustment) and are null for EQUAL/EXACT.
      */
-    public record ShareView(UUID memberId, long owedMinor, Long itemsMinor, Long serviceMinor, Long taxMinor,
-                            Long adjustmentMinor) {
+    public record ShareView(UUID memberId, long owedMinor, Long itemsMinor, Long discountMinor, Long serviceMinor,
+                            Long taxMinor, Long adjustmentMinor) {
 
         public ShareView(UUID memberId, long owedMinor) {
-            this(memberId, owedMinor, null, null, null, null);
+            this(memberId, owedMinor, null, null, null, null, null);
+        }
+
+        /** ITEMIZED without a discount. */
+        public ShareView(UUID memberId, long owedMinor, Long itemsMinor, Long serviceMinor, Long taxMinor,
+                         Long adjustmentMinor) {
+            this(memberId, owedMinor, itemsMinor, itemsMinor == null ? null : 0L, serviceMinor, taxMinor,
+                    adjustmentMinor);
         }
     }
 
-    public record ItemView(UUID id, String name, long amountMinor, List<UUID> assigneeMemberIds) {
+    /** One bill line; {@code amountMinor} = quantity x unitAmountMinor (BSA2). */
+    public record ItemView(UUID id, String name, int quantity, long unitAmountMinor, long amountMinor,
+                           List<UUID> assigneeMemberIds) {
     }
 
-    /** ITEMIZED totals. {@code service}/{@code tax} are null when that charge was not applied. */
-    public record Charges(long subtotalMinor, ServiceCharge service, TaxCharge tax, long adjustmentMinor) {
+    /**
+     * ITEMIZED totals. {@code discount}/{@code service}/{@code tax} are null when that charge was not applied.
+     * {@code subtotalMinor} is the item sum before the discount.
+     */
+    public record Charges(long subtotalMinor, DiscountCharge discount, ServiceCharge service, TaxCharge tax,
+                          long adjustmentMinor) {
     }
 
-    public record ServiceCharge(int bps, long amountMinor) {
+    /** {@code bps} is null when the discount was given as an amount. */
+    public record DiscountCharge(Integer bps, long amountMinor) {
     }
 
-    public record TaxCharge(int bps, String base, long amountMinor) {
+    /** {@code bps} is null when the service charge was given as an amount. */
+    public record ServiceCharge(Integer bps, long amountMinor) {
+    }
+
+    /** {@code bps} is null when the tax was given as an amount ({@code base} then sets only the weights). */
+    public record TaxCharge(Integer bps, String base, long amountMinor) {
     }
 }

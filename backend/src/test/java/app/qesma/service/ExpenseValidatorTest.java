@@ -163,6 +163,82 @@ class ExpenseValidatorTest {
         assertInvalid(itemized(items, null, new ExpenseCommand.TaxInput(100, "TOTAL"), null));
     }
 
+    // ---- BSA2: quantity, discount, charges as amounts --------------------------------------------------------
+
+    private static ExpenseCommand withDiscount(ExpenseCommand.DiscountInput discount) {
+        ExpenseCommand c = validItemized();
+        return new ExpenseCommand(c.title(), c.expenseDate(), c.splitType(), null, c.payers(), null, null, c.items(),
+                null, null, null, null, null, discount);
+    }
+
+    @Test
+    void itemsAreNormalizedToQuantityUnitAndLineAmount() {
+        ExpenseValidator.Valid legacy = ExpenseValidator.validate(validItemized());
+        assertThat(legacy.items().get(0)).isEqualTo(new ExpenseCommand.ItemInput("Pizza", 20000L, 20000L, 1, List.of(A, B)));
+        ExpenseValidator.Valid unit = ExpenseValidator.validate(itemized(List.of(
+                new ExpenseCommand.ItemInput("Pepsi", null, 1525L, 3, List.of(A))), null, null, null));
+        assertThat(unit.items().get(0)).isEqualTo(new ExpenseCommand.ItemInput("Pepsi", 4575L, 1525L, 3, List.of(A)));
+        ExpenseValidator.Valid unitNoQuantity = ExpenseValidator.validate(itemized(List.of(
+                new ExpenseCommand.ItemInput("Pepsi", null, 1525L, null, List.of(A))), null, null, null));
+        assertThat(unitNoQuantity.items().get(0).quantity()).isEqualTo(1);
+    }
+
+    @Test
+    void itemShapeAndQuantityRangeAreEnforced() {
+        UUID[] a = {A};
+        assertInvalid(itemized(List.of(new ExpenseCommand.ItemInput("P", 100L, 100L, null, List.of(a))), null, null, null));
+        assertInvalid(itemized(List.of(new ExpenseCommand.ItemInput("P", 100L, null, 2, List.of(a))), null, null, null));
+        assertInvalid(itemized(List.of(new ExpenseCommand.ItemInput("P", null, null, 2, List.of(a))), null, null, null));
+        for (Integer bad : new Integer[] {0, -1, 1000}) {
+            assertInvalid(itemized(List.of(new ExpenseCommand.ItemInput("P", null, 100L, bad, List.of(a))), null, null,
+                    null));
+        }
+        assertInvalid(itemized(List.of(new ExpenseCommand.ItemInput("P", null, 0L, 1, List.of(a))), null, null, null));
+        assertInvalid(itemized(List.of(new ExpenseCommand.ItemInput("P", null, 1_000_000_000_001L, 1, List.of(a))), null,
+                null, null));
+        assertInvalid(itemized(List.of(new ExpenseCommand.ItemInput("P", null, 1_000_000_000_000L, 2, List.of(a))), null,
+                null, null));                                                   // line above the A43 cap
+        assertInvalid(itemized(List.of(new ExpenseCommand.ItemInput("P", null, Long.MAX_VALUE, 999, List.of(a))), null,
+                null, null));                                                   // overflow is a 422, not a 500
+        ExpenseValidator.validate(itemized(List.of(new ExpenseCommand.ItemInput("P", null, 1L, 999, List.of(a))), null,
+                null, null));
+    }
+
+    @Test
+    void chargesTakeExactlyOneFormWithinRange() {
+        List<ExpenseCommand.ItemInput> items = validItemized().items();
+        ExpenseValidator.Valid amounts = ExpenseValidator.validate(itemized(items,
+                new ExpenseCommand.ServiceInput(null, 500L), new ExpenseCommand.TaxInput(null, 700L, null), null));
+        assertThat(amounts.serviceBps()).isNull();
+        assertThat(amounts.serviceAmountMinor()).isEqualTo(500L);
+        assertThat(amounts.taxAmountMinor()).isEqualTo(700L);
+        assertThat(amounts.taxBase()).isEqualTo("SUBTOTAL_PLUS_SERVICE");
+
+        assertInvalid(itemized(items, new ExpenseCommand.ServiceInput(1200, 500L), null, null));
+        assertInvalid(itemized(items, new ExpenseCommand.ServiceInput(null, null), null, null));
+        assertInvalid(itemized(items, new ExpenseCommand.ServiceInput(null, 0L), null, null));
+        assertInvalid(itemized(items, null, new ExpenseCommand.TaxInput(1400, 700L, null), null));
+        assertInvalid(itemized(items, null, new ExpenseCommand.TaxInput(null, null, "SUBTOTAL"), null));
+        assertInvalid(itemized(items, null, new ExpenseCommand.TaxInput(null, 1_000_000_000_001L, null), null));
+    }
+
+    @Test
+    void discountTakesExactlyOneFormWithinRangeAndOnlyOnItemized() {
+        assertThat(ExpenseValidator.validate(withDiscount(new ExpenseCommand.DiscountInput(1000, null))).discountBps())
+                .isEqualTo(1000);
+        assertThat(ExpenseValidator.validate(withDiscount(new ExpenseCommand.DiscountInput(null, 500L)))
+                .discountAmountMinor()).isEqualTo(500L);
+        ExpenseValidator.validate(withDiscount(new ExpenseCommand.DiscountInput(9999, null)));
+        for (ExpenseCommand.DiscountInput bad : List.of(new ExpenseCommand.DiscountInput(0, null),
+                new ExpenseCommand.DiscountInput(10000, null), new ExpenseCommand.DiscountInput(null, 0L),
+                new ExpenseCommand.DiscountInput(1000, 500L), new ExpenseCommand.DiscountInput(null, null))) {
+            assertInvalid(withDiscount(bad));
+        }
+        ExpenseCommand e = equal();
+        assertInvalid(new ExpenseCommand(e.title(), e.expenseDate(), e.splitType(), e.totalMinor(), e.payers(), null,
+                null, null, null, null, null, null, null, new ExpenseCommand.DiscountInput(1000, null)));
+    }
+
     @Test
     void itemsAndAssigneesAreCapped() {
         List<ExpenseCommand.ItemInput> many = new ArrayList<>();

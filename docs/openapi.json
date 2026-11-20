@@ -103,6 +103,9 @@
             "format" : "int64",
             "type" : "integer"
           },
+          "discount" : {
+            "$ref" : "#/components/schemas/DiscountCharge"
+          },
           "service" : {
             "$ref" : "#/components/schemas/ServiceCharge"
           },
@@ -153,6 +156,38 @@
             "maxLength" : 256,
             "minLength" : 0,
             "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "DiscountCharge" : {
+        "properties" : {
+          "amountMinor" : {
+            "description" : "Integer minor units (piasters: 1 EGP = 100). Never a decimal.",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "bps" : {
+            "description" : "Integer basis points: 1200 = 12.00%.",
+            "format" : "int32",
+            "nullable" : true,
+            "type" : "integer"
+          }
+        },
+        "required" : [ "amountMinor" ],
+        "type" : "object"
+      },
+      "DiscountInput" : {
+        "properties" : {
+          "amountMinor" : {
+            "description" : "Integer minor units (piasters: 1 EGP = 100). Never a decimal.",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "bps" : {
+            "description" : "Integer basis points: 1200 = 12.00%.",
+            "format" : "int32",
+            "type" : "integer"
           }
         },
         "type" : "object"
@@ -234,6 +269,9 @@
           "category" : {
             "type" : "string"
           },
+          "discount" : {
+            "$ref" : "#/components/schemas/DiscountInput"
+          },
           "expenseDate" : {
             "format" : "date",
             "type" : "string"
@@ -290,6 +328,12 @@
       "ExpensePreview" : {
         "properties" : {
           "adjustmentMinor" : {
+            "description" : "Integer minor units (piasters: 1 EGP = 100). Never a decimal.",
+            "format" : "int64",
+            "nullable" : true,
+            "type" : "integer"
+          },
+          "discountMinor" : {
             "description" : "Integer minor units (piasters: 1 EGP = 100). Never a decimal.",
             "format" : "int64",
             "nullable" : true,
@@ -676,9 +720,18 @@
           },
           "name" : {
             "type" : "string"
+          },
+          "quantity" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "unitAmountMinor" : {
+            "description" : "Integer minor units (piasters: 1 EGP = 100). Never a decimal.",
+            "format" : "int64",
+            "type" : "integer"
           }
         },
-        "required" : [ "amountMinor", "assigneeMemberIds", "name" ],
+        "required" : [ "assigneeMemberIds", "name" ],
         "type" : "object"
       },
       "ItemView" : {
@@ -701,9 +754,18 @@
           },
           "name" : {
             "type" : "string"
+          },
+          "quantity" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "unitAmountMinor" : {
+            "description" : "Integer minor units (piasters: 1 EGP = 100). Never a decimal.",
+            "format" : "int64",
+            "type" : "integer"
           }
         },
-        "required" : [ "amountMinor", "assigneeMemberIds", "id", "name" ],
+        "required" : [ "amountMinor", "assigneeMemberIds", "id", "name", "quantity", "unitAmountMinor" ],
         "type" : "object"
       },
       "JoinCommand" : {
@@ -1288,21 +1350,26 @@
           "bps" : {
             "description" : "Integer basis points: 1200 = 12.00%.",
             "format" : "int32",
+            "nullable" : true,
             "type" : "integer"
           }
         },
-        "required" : [ "amountMinor", "bps" ],
+        "required" : [ "amountMinor" ],
         "type" : "object"
       },
       "ServiceInput" : {
         "properties" : {
+          "amountMinor" : {
+            "description" : "Integer minor units (piasters: 1 EGP = 100). Never a decimal.",
+            "format" : "int64",
+            "type" : "integer"
+          },
           "bps" : {
             "description" : "Integer basis points: 1200 = 12.00%.",
             "format" : "int32",
             "type" : "integer"
           }
         },
-        "required" : [ "bps" ],
         "type" : "object"
       },
       "SettlementCommand" : {
@@ -1429,6 +1496,12 @@
             "nullable" : true,
             "type" : "integer"
           },
+          "discountMinor" : {
+            "description" : "Integer minor units (piasters: 1 EGP = 100). Never a decimal.",
+            "format" : "int64",
+            "nullable" : true,
+            "type" : "integer"
+          },
           "itemsMinor" : {
             "description" : "Integer minor units (piasters: 1 EGP = 100). Never a decimal.",
             "format" : "int64",
@@ -1473,14 +1546,20 @@
           "bps" : {
             "description" : "Integer basis points: 1200 = 12.00%.",
             "format" : "int32",
+            "nullable" : true,
             "type" : "integer"
           }
         },
-        "required" : [ "amountMinor", "base", "bps" ],
+        "required" : [ "amountMinor", "base" ],
         "type" : "object"
       },
       "TaxInput" : {
         "properties" : {
+          "amountMinor" : {
+            "description" : "Integer minor units (piasters: 1 EGP = 100). Never a decimal.",
+            "format" : "int64",
+            "type" : "integer"
+          },
           "base" : {
             "type" : "string"
           },
@@ -1490,7 +1569,6 @@
             "type" : "integer"
           }
         },
-        "required" : [ "bps" ],
         "type" : "object"
       },
       "TokenResponse" : {

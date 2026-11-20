@@ -28,6 +28,12 @@ Discipline (same as Phase 1 and 2): one prompt per fresh session; Step 0 plan an
 | 14 | `/sa12-receipt-ocr` | Receipt OCR via Firebase AI Logic + App Check | SA11, Firebase project | medium |
 | 15 | `/sa13-release` | Integration, a11y/perf, privacy, Play listing, 1.0.0 | SA12 | — |
 | Update 1 | `/sa14-voice-entry` | Egyptian Arabic voice entry | 1.0.0 released | medium |
+| 16 | `/bsa2-itemized-v2-contract` | Java: discount, item quantity, service/tax as amounts; migration; OpenAPI; fixtures V9–V16; regenerate client (STANDALONE_SPEC 18, A171–A175) | SA12, Docker | **high** |
+| 17 | `/sa15-itemized-v2-local` | Dart engine parity on V9–V16; drift migration; local validator, calculator and backup version | BSA2 | **high** |
+| 18 | `/sa16-itemized-editor-ux` | P8-01 revised: by-item / by-person modes, compact cards, member picker sheet, discount and `%`/amount rows, quantity, validation summary, printed-total tolerance (A174), CTA pass, read-only details | SA15 | medium |
+| 19 | `/sa17-receipt-ocr-v2` | OCR reads quantity, unit price, discount, merchant (→ title) and category (A176) | SA16 | medium |
+
+Rows 16–19 were added on 2026-11-20 and run before `/sa13-release`. Their command files are in `.claude/commands/`. Verification: `/bsa2` then `/r-review` and `/v-verify bsa2`; `/sa15` then `/flr-review` and `/flv-verify sa15` (money); `/sa16` and `/sa17` then `/flr-review`.
 
 SA9, SA11 and SA12 do not depend on each other's code; the order above only keeps one change in flight at a time. SA12 may move earlier if the Firebase setup is ready.
 

@@ -157,6 +157,27 @@ class ApiContractCoverageIT extends AbstractApiIT {
 
         // ---- expenses ---------------------------------------------------------------------------------------------
         assertThat(status(hit(POST, g + "/expenses/preview", me, equalBody("P", 1000, null, a, 1000L)))).isEqualTo(200);
+        // BSA2: the itemized v2 request fields (unit price + quantity, discount, service/tax as amounts) and the
+        // response fields they produce (ItemView.quantity/unitAmountMinor, Charges.discount, discountMinor).
+        Map<String, Object> v2 = new java.util.LinkedHashMap<>(Map.of("title", "Snacks", "expenseDate", "2026-10-18",
+                "splitType", "ITEMIZED", "payers", List.of(Map.of("memberId", a, "amountMinor", 5800L)),
+                "items", List.of(Map.of("name", "Pepsi", "unitAmountMinor", 1500L, "quantity", 4,
+                        "assigneeMemberIds", List.of(a, b))),
+                "discount", Map.of("amountMinor", 500L), "service", Map.of("amountMinor", 100L),
+                "tax", Map.of("amountMinor", 200L, "base", "SUBTOTAL")));
+        JsonNode v2Preview = body(hit(POST, g + "/expenses/preview", me, v2));
+        assertThat(v2Preview.get("discountMinor").asLong()).isEqualTo(500);
+        assertThat(v2Preview.get("totalMinor").asLong()).isEqualTo(5800);
+        JsonNode v2Expense = body(hit(POST, g + "/expenses", me, v2, "Idempotency-Key", key()));
+        assertThat(v2Expense.get("items").get(0).get("quantity").asInt()).isEqualTo(4);
+        assertThat(v2Expense.get("items").get(0).get("unitAmountMinor").asLong()).isEqualTo(1500);
+        assertThat(v2Expense.get("charges").get("discount").get("bps").isNull()).isTrue();
+        assertThat(v2Expense.get("charges").get("service").get("bps").isNull()).isTrue();
+        assertThat(v2Expense.get("shares").get(0).get("discountMinor").asLong()).isEqualTo(250);
+        assertThat(code(hit(POST, g + "/expenses/preview", me, Map.of("title", "Bad", "expenseDate", "2026-10-18",
+                "splitType", "ITEMIZED", "items", List.of(Map.of("name", "X", "amountMinor", 1L, "unitAmountMinor", 1L,
+                        "assigneeMemberIds", List.of(a)))))))
+                .isEqualTo("VALIDATION_ERROR");
         JsonNode expense = body(hit(POST, g + "/expenses", me, equalBody("Dinner", 3000, null, a, 3000L),
                 "Idempotency-Key", key()));
         String eid = expense.get("id").asText();

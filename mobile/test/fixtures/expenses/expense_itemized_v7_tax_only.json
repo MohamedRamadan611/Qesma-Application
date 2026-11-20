@@ -43,6 +43,8 @@
     {
       "id": "2eb4dc14-f945-4d78-ab1f-25bcf1f6d515",
       "name": "Pizza",
+      "quantity": 1,
+      "unitAmountMinor": 20000,
       "amountMinor": 20000,
       "assigneeMemberIds": [
         "77e31a5d-f072-4568-9115-0259fb131e9a",
@@ -52,6 +54,8 @@
     {
       "id": "e0998c2d-e5f7-4cee-9274-06cac430915d",
       "name": "Pasta",
+      "quantity": 1,
+      "unitAmountMinor": 15000,
       "amountMinor": 15000,
       "assigneeMemberIds": [
         "014bf05a-7ba1-432e-9c17-35881f72d003"
@@ -60,6 +64,8 @@
     {
       "id": "31309b48-cdee-46fe-9331-95eeacc35014",
       "name": "Drinks",
+      "quantity": 1,
+      "unitAmountMinor": 9000,
       "amountMinor": 9000,
       "assigneeMemberIds": [
         "77e31a5d-f072-4568-9115-0259fb131e9a",

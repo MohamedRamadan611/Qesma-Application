@@ -4,10 +4,16 @@ import '../errors.dart';
 import 'commands.dart';
 import 'field_rules.dart';
 
-/// An item after validation: name stripped, amount and assignees present.
+/// An item after validation, normalized (BSA2): name stripped, quantity, unit price and the line amount
+/// (`quantity x unitAmountMinor`, computed by the engine) all set, assignees present.
 final class ValidItem {
-  const ValidItem(this.name, this.amountMinor, this.assigneeMemberIds);
+  const ValidItem(this.name, this.amountMinor, this.assigneeMemberIds, {int? unitAmountMinor, this.quantity = 1})
+      : unitAmountMinor = unitAmountMinor ?? amountMinor;
   final String name;
+  final int quantity;
+  final int unitAmountMinor;
+
+  /// The line amount.
   final int amountMinor;
   final List<String> assigneeMemberIds;
 }
@@ -20,7 +26,8 @@ final class ValidAmount {
 }
 
 /// A request that passed shape validation, with normalized text (Java `ExpenseValidator.Valid`).
-/// [totalMinor] 0 means "not stated" (ITEMIZED only); [taxBase] is present exactly when [taxBps] is.
+/// [totalMinor] 0 means "not stated" (ITEMIZED only); [taxBase] is present exactly when a tax (either form) is.
+/// Each charge is in at most one form: `*Bps` or `*AmountMinor` (BSA2, A171, A173); both null = the charge is off.
 final class ValidExpense {
   const ValidExpense({
     required this.title,
@@ -33,11 +40,22 @@ final class ValidExpense {
     this.shares,
     this.items,
     this.serviceBps,
+    this.serviceAmountMinor,
     this.taxBps,
+    this.taxAmountMinor,
     this.taxBase,
+    this.discountBps,
+    this.discountAmountMinor,
     this.adjustmentMinor = 0,
     this.paidFromPool = false,
   });
+
+  final int? serviceAmountMinor;
+  final int? taxAmountMinor;
+  final int? discountBps;
+  final int? discountAmountMinor;
+
+  bool get hasTax => taxBps != null || taxAmountMinor != null;
 
   final String title;
   final String expenseDate;
@@ -66,6 +84,7 @@ abstract final class ExpenseValidator {
   static const int maxItemName = 100;
   static const int maxList = 100;
   static const int maxBps = 10000;
+  static const int maxDiscountBps = ItemizedCalculator.maxDiscountBps;
   static const String minDate = '2000-01-01';
   static const String maxDate = '2100-12-31';
   static const String defaultCategory = 'OTHER';
@@ -202,12 +221,11 @@ abstract final class ExpenseValidator {
     if (items.length > maxList) throw LocalApiException.validation('At most $maxList items are allowed');
     final clean = <ValidItem>[];
     for (final item in items) {
-      if (item == null || item.amountMinor == null || item.assigneeMemberIds == null) {
-        throw LocalApiException.validation('Every item needs name, amountMinor and assigneeMemberIds');
+      if (item == null || item.assigneeMemberIds == null) {
+        throw LocalApiException.validation('Every item needs name, an amount and assigneeMemberIds');
       }
       final name = FieldRules.name(item.name, maxItemName, 'item name');
-      if (item.amountMinor! <= 0) throw LocalApiException.validation('Item amounts must be greater than zero');
-      capped(item.amountMinor!, 'item amountMinor');
+      final line = _itemLine(name, item);
       final assignees = item.assigneeMemberIds!;
       if (assignees.isEmpty) throw LocalApiException.validation('Every item needs at least one assignee');
       if (assignees.length > maxList) {
@@ -216,16 +234,20 @@ abstract final class ExpenseValidator {
       if (assignees.any((a) => a == null)) {
         throw LocalApiException.validation('assigneeMemberIds must not contain null');
       }
-      clean.add(ValidItem(name, item.amountMinor!, assignees.cast<String>().toList()));
+      clean.add(ValidItem(name, line.amountMinor, assignees.cast<String>().toList(),
+          unitAmountMinor: line.unitAmountMinor, quantity: line.quantity));
     }
-    int? serviceBps;
-    if (c.hasService) serviceBps = _bps(c.serviceBps, 'service.bps');
-    int? taxBps;
+    ChargeSpec? service;
+    if (c.service != null) service = _charge(c.service!.bps, c.service!.amountMinor, 'service', 0, maxBps);
+    ChargeSpec? tax;
     String? taxBase;
-    final tax = c.tax;
-    if (tax != null) {
-      taxBps = _bps(tax.bps, 'tax.bps');
-      taxBase = _taxBase(tax.base);
+    if (c.tax != null) {
+      tax = _charge(c.tax!.bps, c.tax!.amountMinor, 'tax', 0, maxBps);
+      taxBase = _taxBase(c.tax!.base);
+    }
+    ChargeSpec? discount;
+    if (c.discount != null) {
+      discount = _charge(c.discount!.bps, c.discount!.amountMinor, 'discount', 1, maxDiscountBps);
     }
     final adjustment = c.adjustmentMinor ?? 0;
     if (adjustment > Limits.maxAmountMinor || adjustment < -Limits.maxAmountMinor) {
@@ -242,11 +264,51 @@ abstract final class ExpenseValidator {
       category: category(c.category),
       paidFromPool: c.paidFromPool == true,
       items: clean,
-      serviceBps: serviceBps,
-      taxBps: taxBps,
+      serviceBps: service?.bps,
+      serviceAmountMinor: service?.amountMinor,
+      taxBps: tax?.bps,
+      taxAmountMinor: tax?.amountMinor,
       taxBase: taxBase,
+      discountBps: discount?.bps,
+      discountAmountMinor: discount?.amountMinor,
       adjustmentMinor: adjustment,
     );
+  }
+
+  /// A172 shape and ranges (Java `ExpenseValidator.itemLine`): legacy amountMinor or unitAmountMinor with an optional
+  /// quantity, never both; quantity 1..999; unit price > 0 and within the cap; the line (computed exactly by the
+  /// engine) within the cap.
+  static Item _itemLine(String name, ItemIn item) {
+    try {
+      final line = Item.of(name, const [],
+          amountMinor: item.amountMinor, unitAmountMinor: item.unitAmountMinor, quantity: item.quantity);
+      if (line.quantity < Item.minQuantity || line.quantity > Item.maxQuantity) {
+        throw LocalApiException.validation('Item quantity must be between ${Item.minQuantity} and ${Item.maxQuantity}');
+      }
+      if (line.unitAmountMinor <= 0) throw LocalApiException.validation('Item amounts must be greater than zero');
+      capped(line.unitAmountMinor, 'item amount');
+      capped(line.amountMinor, 'item line amount (quantity x unitAmountMinor)');
+      return line;
+    } on EngineException catch (e) {
+      throw LocalApiException.fromEngine(e);
+    }
+  }
+
+  /// A charge in exactly one form (A171, A173): bps within [minBps]..[maxBps] or an amount 1..cap.
+  static ChargeSpec _charge(int? bps, int? amountMinor, String field, int minBps, int maxBps) {
+    if ((bps == null) == (amountMinor == null)) {
+      throw LocalApiException.validation('$field needs either bps or amountMinor, not both');
+    }
+    if (bps != null) {
+      if (bps < minBps || bps > maxBps) {
+        throw LocalApiException.validation('$field.bps must be between $minBps and $maxBps');
+      }
+      return ChargeSpec.percent(bps);
+    }
+    if (amountMinor! < 1 || amountMinor > Limits.maxAmountMinor) {
+      throw LocalApiException.validation('$field.amountMinor must be between 1 and ${Limits.maxAmountMinor}');
+    }
+    return ChargeSpec.amount(amountMinor);
   }
 
   /// Every amount has an upper bound so ledger sums cannot overflow (CP2-001).
@@ -257,18 +319,11 @@ abstract final class ExpenseValidator {
   }
 
   static void _rejectItemizedFields(ExpenseIn c, String type) {
-    if (c.items != null || c.hasService || c.tax != null || c.adjustmentMinor != null) {
+    if (c.items != null || c.service != null || c.tax != null || c.adjustmentMinor != null || c.discount != null) {
       throw LocalApiException.validation(
-        'items, service, tax and adjustmentMinor are only allowed for ITEMIZED expenses (this is $type)',
+        'items, discount, service, tax and adjustmentMinor are only allowed for ITEMIZED expenses (this is $type)',
       );
     }
-  }
-
-  static int _bps(int? value, String field) {
-    if (value == null || value < 0 || value > maxBps) {
-      throw LocalApiException.validation('$field must be between 0 and $maxBps');
-    }
-    return value;
   }
 
   /// Null or blank defaults to SUBTOTAL_PLUS_SERVICE (A1); the default is made explicit for storage and hashing.

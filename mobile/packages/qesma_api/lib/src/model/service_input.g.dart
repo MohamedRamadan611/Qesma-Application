@@ -8,12 +8,14 @@ part of 'service_input.dart';
 
 class _$ServiceInput extends ServiceInput {
   @override
-  final int bps;
+  final int? amountMinor;
+  @override
+  final int? bps;
 
   factory _$ServiceInput([void Function(ServiceInputBuilder)? updates]) =>
       (ServiceInputBuilder()..update(updates))._build();
 
-  _$ServiceInput._({required this.bps}) : super._();
+  _$ServiceInput._({this.amountMinor, this.bps}) : super._();
   @override
   ServiceInput rebuild(void Function(ServiceInputBuilder) updates) =>
       (toBuilder()..update(updates)).build();
@@ -24,12 +26,15 @@ class _$ServiceInput extends ServiceInput {
   @override
   bool operator ==(Object other) {
     if (identical(other, this)) return true;
-    return other is ServiceInput && bps == other.bps;
+    return other is ServiceInput &&
+        amountMinor == other.amountMinor &&
+        bps == other.bps;
   }
 
   @override
   int get hashCode {
     var _$hash = 0;
+    _$hash = $jc(_$hash, amountMinor.hashCode);
     _$hash = $jc(_$hash, bps.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
@@ -37,7 +42,9 @@ class _$ServiceInput extends ServiceInput {
 
   @override
   String toString() {
-    return (newBuiltValueToStringHelper(r'ServiceInput')..add('bps', bps))
+    return (newBuiltValueToStringHelper(r'ServiceInput')
+          ..add('amountMinor', amountMinor)
+          ..add('bps', bps))
         .toString();
   }
 }
@@ -45,6 +52,10 @@ class _$ServiceInput extends ServiceInput {
 class ServiceInputBuilder
     implements Builder<ServiceInput, ServiceInputBuilder> {
   _$ServiceInput? _$v;
+
+  int? _amountMinor;
+  int? get amountMinor => _$this._amountMinor;
+  set amountMinor(int? amountMinor) => _$this._amountMinor = amountMinor;
 
   int? _bps;
   int? get bps => _$this._bps;
@@ -57,6 +68,7 @@ class ServiceInputBuilder
   ServiceInputBuilder get _$this {
     final $v = _$v;
     if ($v != null) {
+      _amountMinor = $v.amountMinor;
       _bps = $v.bps;
       _$v = null;
     }
@@ -79,8 +91,8 @@ class ServiceInputBuilder
   _$ServiceInput _build() {
     final _$result = _$v ??
         _$ServiceInput._(
-          bps: BuiltValueNullFieldError.checkNotNull(
-              bps, r'ServiceInput', 'bps'),
+          amountMinor: amountMinor,
+          bps: bps,
         );
     replace(_$result);
     return _$result;

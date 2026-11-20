@@ -25,7 +25,7 @@ abstract class TaxCharge implements Built<TaxCharge, TaxChargeBuilder> {
 
   /// Integer basis points: 1200 = 12.00%.
   @BuiltValueField(wireName: r'bps')
-  int get bps;
+  int? get bps;
 
   TaxCharge._();
 
@@ -60,11 +60,13 @@ class _$TaxChargeSerializer implements PrimitiveSerializer<TaxCharge> {
       object.base_,
       specifiedType: const FullType(String),
     );
-    yield r'bps';
-    yield serializers.serialize(
-      object.bps,
-      specifiedType: const FullType(int),
-    );
+    if (object.bps != null) {
+      yield r'bps';
+      yield serializers.serialize(
+        object.bps,
+        specifiedType: const FullType.nullable(int),
+      );
+    }
   }
 
   @override
@@ -105,8 +107,9 @@ class _$TaxChargeSerializer implements PrimitiveSerializer<TaxCharge> {
         case r'bps':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(int),
-          ) as int;
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
+          if (valueDes == null) continue;
           result.bps = valueDes;
           break;
         default:

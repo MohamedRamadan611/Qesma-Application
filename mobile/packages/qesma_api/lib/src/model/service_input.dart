@@ -11,12 +11,17 @@ part 'service_input.g.dart';
 /// ServiceInput
 ///
 /// Properties:
+/// * [amountMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
 /// * [bps] - Integer basis points: 1200 = 12.00%.
 @BuiltValue()
 abstract class ServiceInput implements Built<ServiceInput, ServiceInputBuilder> {
+  /// Integer minor units (piasters: 1 EGP = 100). Never a decimal.
+  @BuiltValueField(wireName: r'amountMinor')
+  int? get amountMinor;
+
   /// Integer basis points: 1200 = 12.00%.
   @BuiltValueField(wireName: r'bps')
-  int get bps;
+  int? get bps;
 
   ServiceInput._();
 
@@ -41,11 +46,20 @@ class _$ServiceInputSerializer implements PrimitiveSerializer<ServiceInput> {
     ServiceInput object, {
     FullType specifiedType = FullType.unspecified,
   }) sync* {
-    yield r'bps';
-    yield serializers.serialize(
-      object.bps,
-      specifiedType: const FullType(int),
-    );
+    if (object.amountMinor != null) {
+      yield r'amountMinor';
+      yield serializers.serialize(
+        object.amountMinor,
+        specifiedType: const FullType(int),
+      );
+    }
+    if (object.bps != null) {
+      yield r'bps';
+      yield serializers.serialize(
+        object.bps,
+        specifiedType: const FullType(int),
+      );
+    }
   }
 
   @override
@@ -69,6 +83,13 @@ class _$ServiceInputSerializer implements PrimitiveSerializer<ServiceInput> {
       final key = serializedList[i] as String;
       final value = serializedList[i + 1];
       switch (key) {
+        case r'amountMinor':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(int),
+          ) as int;
+          result.amountMinor = valueDes;
+          break;
         case r'bps':
           final valueDes = serializers.deserialize(
             value,

@@ -28,5 +28,16 @@ void main() {
       // TODO
     });
 
+    // int quantity
+    test('to test the property `quantity`', () async {
+      // TODO
+    });
+
+    // Integer minor units (piasters: 1 EGP = 100). Never a decimal.
+    // int unitAmountMinor
+    test('to test the property `unitAmountMinor`', () async {
+      // TODO
+    });
+
   });
 }

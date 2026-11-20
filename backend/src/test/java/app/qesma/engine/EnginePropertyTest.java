@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import app.qesma.engine.BalanceCalculator.ExpenseLedgerEntry;
 import app.qesma.engine.BalanceCalculator.SettlementEntry;
+import app.qesma.engine.ItemizedCalculator.ChargeSpec;
 import app.qesma.engine.ItemizedCalculator.Item;
 import app.qesma.engine.ItemizedCalculator.ItemizedInput;
 import app.qesma.engine.ItemizedCalculator.ItemizedResult;
@@ -84,6 +85,168 @@ class EnginePropertyTest {
         assertThat(r.totalMinor()).isEqualTo(r.subtotalMinor() + r.serviceMinor() + r.taxMinor() + adjustment);
         assertThat(r.members()).allSatisfy(m -> assertThat(m.owedMinor()).isPositive());
         assertThat(ItemizedCalculator.calculate(in)).isEqualTo(r);
+    }
+
+    /** BSA2 (STANDALONE_SPEC 18.2): discount, quantity and charges as amounts keep every sum exact. */
+    @Property(tries = 3000)
+    void itemizedV2SumsStayExactWithDiscountQuantityAndAmountCharges(@ForAll long seed) {
+        Random rnd = new Random(seed);
+        List<MemberRef> members = members(2 + rnd.nextInt(7));
+        List<Item> items = new ArrayList<>();
+        for (Item legacy : randomItems(rnd, members)) {
+            items.add(new Item(legacy.name(), 1 + rnd.nextInt(999), 1 + rnd.nextInt(50_000), legacy.assigneeMemberIds()));
+        }
+        long subtotal = items.stream().mapToLong(Item::amountMinor).sum();
+        ChargeSpec discount = switch (rnd.nextInt(3)) {
+            case 0 -> null;
+            case 1 -> ChargeSpec.percent(1 + rnd.nextInt(9_999));
+            default -> ChargeSpec.amount(1 + (long) (rnd.nextDouble() * (subtotal - 1)));
+        };
+        ChargeSpec service = switch (rnd.nextInt(3)) {
+            case 0 -> null;
+            case 1 -> ChargeSpec.percent(rnd.nextInt(3001));
+            default -> ChargeSpec.amount(1 + rnd.nextInt(100_000));
+        };
+        TaxSpec tax = switch (rnd.nextInt(3)) {
+            case 0 -> null;
+            case 1 -> new TaxSpec(ChargeSpec.percent(rnd.nextInt(3001)),
+                    rnd.nextBoolean() ? TaxBase.SUBTOTAL : TaxBase.SUBTOTAL_PLUS_SERVICE);
+            default -> new TaxSpec(ChargeSpec.amount(1 + rnd.nextInt(100_000)),
+                    rnd.nextBoolean() ? TaxBase.SUBTOTAL : TaxBase.SUBTOTAL_PLUS_SERVICE);
+        };
+        int adjustment = rnd.nextInt(20001) - 10000;
+        ItemizedInput in = new ItemizedInput(members, items, discount, service, tax, adjustment);
+        ItemizedResult r;
+        try {
+            r = ItemizedCalculator.calculate(in);
+        } catch (EngineException e) {
+            // A discount that rounds to 0 / reaches a 1-piaster subtotal, or a negative adjustment, are the only
+            // legitimate rejections.
+            assertThat(e.code()).isEqualTo(EngineErrorCode.VALIDATION_ERROR);
+            assertThat(adjustment < 0 || discount != null).isTrue();
+            return;
+        }
+        assertThat(r.subtotalMinor()).isEqualTo(subtotal);
+        assertThat(r.discountMinor()).isBetween(discount == null ? 0L : 1L, subtotal - (discount == null ? 0 : 1));
+        long owedSum = r.members().stream().mapToLong(MemberBreakdown::owedMinor).sum();
+        assertThat(owedSum).isEqualTo(r.totalMinor());
+        assertThat(r.totalMinor())
+                .isEqualTo(subtotal - r.discountMinor() + r.serviceMinor() + r.taxMinor() + adjustment);
+        assertThat(r.members()).allSatisfy(m -> {
+            assertThat(m.discountMinor()).isBetween(0L, m.itemsMinor());
+            assertThat(m.owedMinor()).isEqualTo(m.itemsMinor() - m.discountMinor() + m.serviceMinor() + m.taxMinor()
+                    + m.adjustmentMinor());
+            assertThat(m.owedMinor()).isPositive();
+        });
+        if (adjustment == 0) {
+            // Without an adjustment a member is dropped only when the discount took all their items (net 0, so no
+            // service/tax weight either): the discount parts then sum to the discount total.
+            long keptDiscount = r.members().stream().mapToLong(MemberBreakdown::discountMinor).sum();
+            long droppedItems = subtotal - r.members().stream().mapToLong(MemberBreakdown::itemsMinor).sum();
+            assertThat(keptDiscount + droppedItems).isEqualTo(r.discountMinor());
+        }
+        if (service != null && service.amountMinor() != null) {
+            assertThat(r.serviceMinor()).isEqualTo(service.amountMinor());
+        }
+        if (tax != null && tax.rate().amountMinor() != null) {
+            assertThat(r.taxMinor()).isEqualTo(tax.rate().amountMinor());
+        }
+        assertThat(ItemizedCalculator.calculate(in)).isEqualTo(r);
+    }
+
+    /** Bills without the BSA2 fields compute exactly as the pre-BSA2 algorithm (spec 7.4, reproduced below). */
+    @Property(tries = 3000)
+    void billsWithoutTheNewFieldsMatchTheOriginalAlgorithm(@ForAll long seed) {
+        Random rnd = new Random(seed);
+        List<MemberRef> members = members(2 + rnd.nextInt(7));
+        List<Item> items = randomItems(rnd, members);
+        Integer serviceBps = rnd.nextBoolean() ? null : rnd.nextInt(3001);
+        TaxSpec tax = rnd.nextBoolean() ? null : new TaxSpec(rnd.nextInt(3001),
+                rnd.nextBoolean() ? TaxBase.SUBTOTAL : TaxBase.SUBTOTAL_PLUS_SERVICE);
+        long adjustment = rnd.nextInt(20001) - 10000;
+        long[][] reference;
+        try {
+            reference = originalAlgorithm(members, items, serviceBps, tax, adjustment);
+        } catch (EngineException e) {
+            assertThatCode(e, () -> ItemizedCalculator.calculate(new ItemizedInput(members, items, serviceBps, tax,
+                    adjustment)));
+            return;
+        }
+        ItemizedResult r = ItemizedCalculator.calculate(new ItemizedInput(members, items, serviceBps, tax, adjustment));
+        assertThat(r.discountMinor()).isZero();
+        Map<String, long[]> byId = new LinkedHashMap<>();
+        r.members().forEach(m -> byId.put(m.memberId(), new long[] {m.itemsMinor(), m.serviceMinor(), m.taxMinor(),
+                m.adjustmentMinor(), m.owedMinor(), m.discountMinor()}));
+        for (int i = 0; i < members.size(); i++) {
+            long[] ref = reference[i];
+            if (ref[4] == 0) {
+                assertThat(byId).doesNotContainKey(members.get(i).id());
+            } else {
+                assertThat(byId.get(members.get(i).id())).containsExactly(ref[0], ref[1], ref[2], ref[3], ref[4], 0L);
+            }
+        }
+    }
+
+    private static void assertThatCode(EngineException expected, Runnable call) {
+        org.assertj.core.api.Assertions.assertThatThrownBy(call::run).isInstanceOf(EngineException.class)
+                .extracting("code").isEqualTo(expected.code());
+    }
+
+    /** Spec 7.4 steps 1-5 as they were before BSA2; rows are {items, service, tax, adjustment, owed} per member. */
+    private static long[][] originalAlgorithm(List<MemberRef> members, List<Item> items, Integer serviceBps,
+                                              TaxSpec tax, long adjustment) {
+        int n = members.size();
+        int[] order = new int[n];
+        Map<String, Integer> index = new LinkedHashMap<>();
+        for (int i = 0; i < n; i++) {
+            order[i] = members.get(i).sortOrder();
+            index.put(members.get(i).id(), i);
+        }
+        long[] it = new long[n];
+        long subtotal = 0;
+        for (Item item : items) {
+            List<Integer> idx = item.assigneeMemberIds().stream().map(index::get).sorted().toList();
+            long[] w = new long[idx.size()];
+            int[] o = new int[idx.size()];
+            for (int k = 0; k < idx.size(); k++) {
+                w[k] = 1;
+                o[k] = order[idx.get(k)];
+            }
+            long[] parts = Lrm.allocate(item.amountMinor(), w, o);
+            for (int k = 0; k < idx.size(); k++) {
+                it[idx.get(k)] += parts[k];
+            }
+            subtotal += item.amountMinor();
+        }
+        long serviceTotal = serviceBps == null ? 0 : Bps.percentOf(subtotal, serviceBps);
+        long[] sv = serviceBps == null ? new long[n] : Lrm.allocate(serviceTotal, it, order);
+        long[] tx = new long[n];
+        long taxTotal = 0;
+        if (tax != null) {
+            long[] base = it.clone();
+            long baseTotal = subtotal;
+            if (tax.base() == TaxBase.SUBTOTAL_PLUS_SERVICE) {
+                baseTotal += serviceTotal;
+                for (int i = 0; i < n; i++) {
+                    base[i] += sv[i];
+                }
+            }
+            taxTotal = Bps.percentOf(baseTotal, tax.rate().bps());
+            tx = Lrm.allocate(taxTotal, base, order);
+        }
+        long[] adj = adjustment == 0 ? new long[n] : Lrm.allocate(adjustment, it, order);
+        if (subtotal + serviceTotal + taxTotal + adjustment <= 0) {
+            throw EngineException.invalid("total");
+        }
+        long[][] rows = new long[n][];
+        for (int i = 0; i < n; i++) {
+            long owed = it[i] + sv[i] + tx[i] + adj[i];
+            if (owed < 0) {
+                throw EngineException.invalid("negative");
+            }
+            rows[i] = new long[] {it[i], sv[i], tx[i], adj[i], owed};
+        }
+        return rows;
     }
 
     @Property(tries = 3000)

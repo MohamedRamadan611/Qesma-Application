@@ -64,6 +64,22 @@ public class Expense implements Persistable<UUID> {
     @Column(name = "adjustment_minor")
     private Long adjustmentMinor;
 
+    // BSA2 (V21): which form each charge took, and the computed discount total; NULL for EQUAL/EXACT
+    @Column(name = "discount_bps")
+    private Integer discountBps;
+
+    @Column(name = "discount_amount_minor")
+    private Long discountAmountMinor;
+
+    @Column(name = "discount_minor")
+    private Long discountMinor;
+
+    @Column(name = "service_amount_minor")
+    private Long serviceAmountMinor;
+
+    @Column(name = "tax_amount_minor")
+    private Long taxAmountMinor;
+
     @Column(name = "category", nullable = false)
     private String category = "OTHER";
 
@@ -105,19 +121,31 @@ public class Expense implements Persistable<UUID> {
         this.version = 1;
     }
 
-    /** An ITEMIZED expense with its computed charges ({@code serviceBps}/{@code taxBps} null = that charge is off). */
+    /**
+     * The charges of an ITEMIZED expense. Each charge is off (both form fields null, amount 0), a percentage
+     * ({@code *Bps}) or an amount ({@code *AmountMinor}); {@code *Minor} are the computed totals.
+     */
+    public record ItemizedCharges(long subtotalMinor, Integer discountBps, Long discountAmountMinor, long discountMinor,
+                                  Integer serviceBps, Long serviceAmountMinor, long serviceMinor, Integer taxBps,
+                                  Long taxAmountMinor, String taxBase, long taxMinor, long adjustmentMinor) {
+    }
+
+    /** An ITEMIZED expense with its computed charges. */
     public static Expense itemized(UUID id, UUID groupId, String title, long totalMinor, LocalDate expenseDate,
-                                   UUID createdByUserId, Instant createdAt, long subtotalMinor, Integer serviceBps,
-                                   long serviceMinor, Integer taxBps, long taxMinor, String taxBase,
-                                   long adjustmentMinor) {
+                                   UUID createdByUserId, Instant createdAt, ItemizedCharges c) {
         Expense e = new Expense(id, groupId, title, ITEMIZED, totalMinor, expenseDate, createdByUserId, createdAt);
-        e.subtotalMinor = subtotalMinor;
-        e.serviceBps = serviceBps;
-        e.serviceMinor = serviceMinor;
-        e.taxBps = taxBps;
-        e.taxMinor = taxMinor;
-        e.taxBase = taxBase;
-        e.adjustmentMinor = adjustmentMinor;
+        e.subtotalMinor = c.subtotalMinor();
+        e.discountBps = c.discountBps();
+        e.discountAmountMinor = c.discountAmountMinor();
+        e.discountMinor = c.discountMinor();
+        e.serviceBps = c.serviceBps();
+        e.serviceAmountMinor = c.serviceAmountMinor();
+        e.serviceMinor = c.serviceMinor();
+        e.taxBps = c.taxBps();
+        e.taxAmountMinor = c.taxAmountMinor();
+        e.taxMinor = c.taxMinor();
+        e.taxBase = c.taxBase();
+        e.adjustmentMinor = c.adjustmentMinor();
         return e;
     }
 
@@ -145,6 +173,11 @@ public class Expense implements Persistable<UUID> {
         this.taxMinor = next.taxMinor;
         this.taxBase = next.taxBase;
         this.adjustmentMinor = next.adjustmentMinor;
+        this.discountBps = next.discountBps;
+        this.discountAmountMinor = next.discountAmountMinor;
+        this.discountMinor = next.discountMinor;
+        this.serviceAmountMinor = next.serviceAmountMinor;
+        this.taxAmountMinor = next.taxAmountMinor;
         this.category = next.category;
         this.paidFromPool = next.paidFromPool;
         this.updatedAt = now;
@@ -220,6 +253,26 @@ public class Expense implements Persistable<UUID> {
 
     public Long getAdjustmentMinor() {
         return adjustmentMinor;
+    }
+
+    public Integer getDiscountBps() {
+        return discountBps;
+    }
+
+    public Long getDiscountAmountMinor() {
+        return discountAmountMinor;
+    }
+
+    public Long getDiscountMinor() {
+        return discountMinor;
+    }
+
+    public Long getServiceAmountMinor() {
+        return serviceAmountMinor;
+    }
+
+    public Long getTaxAmountMinor() {
+        return taxAmountMinor;
     }
 
     public String getCategory() {

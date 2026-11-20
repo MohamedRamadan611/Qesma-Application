@@ -93,6 +93,7 @@ ExpenseView expenseView(ExpenseGraph g, Map<String, int> sortOrders) {
             ..memberId = s.memberId
             ..owedMinor = s.owedMinor
             ..itemsMinor = s.itemsMinor
+            ..discountMinor = s.discountMinor
             ..serviceMinor = s.serviceMinor
             ..taxMinor = s.taxMinor
             ..adjustmentMinor = s.adjustmentMinor),
@@ -104,6 +105,8 @@ ExpenseView expenseView(ExpenseGraph g, Map<String, int> sortOrders) {
           ItemView((v) => v
             ..id = i.id
             ..name = i.name
+            ..quantity = i.quantity
+            ..unitAmountMinor = i.unitAmountMinor
             ..amountMinor = i.amountMinor
             ..assigneeMemberIds = ListBuilder(
               (g.assignees.where((a) => a.itemId == i.id).map((a) => a.memberId).toList()
@@ -113,12 +116,19 @@ ExpenseView expenseView(ExpenseGraph g, Map<String, int> sortOrders) {
       b.charges = ChargesBuilder()
         ..subtotalMinor = e.subtotalMinor
         ..adjustmentMinor = e.adjustmentMinor
-        ..service = e.serviceBps == null
+        // A charge is shown when either form is set; bps is null in the amount form and amountMinor is the
+        // computed total (A177).
+        ..discount = e.discountBps == null && e.discountAmountMinor == null
+            ? null
+            : (DiscountChargeBuilder()
+              ..bps = e.discountBps
+              ..amountMinor = e.discountMinor)
+        ..service = e.serviceBps == null && e.serviceAmountMinor == null
             ? null
             : (ServiceChargeBuilder()
               ..bps = e.serviceBps
               ..amountMinor = e.serviceMinor)
-        ..tax = e.taxBps == null
+        ..tax = e.taxBps == null && e.taxAmountMinor == null
             ? null
             : (TaxChargeBuilder()
               ..bps = e.taxBps
@@ -126,4 +136,34 @@ ExpenseView expenseView(ExpenseGraph g, Map<String, int> sortOrders) {
               ..amountMinor = e.taxMinor);
     }
   });
+}
+
+/// Port of Java `ExpenseService.upgradeSnapshot` (A177): an ExpenseView JSON written before SA15 lacks the itemized
+/// v2 fields. A missing item `quantity` reads as 1 with `unitAmountMinor` = `amountMinor`; a missing share
+/// `discountMinor` reads as 0 for an itemized share (it has `itemsMinor`) and stays absent otherwise; a missing
+/// `charges.discount` stays absent (no discount existed). Used on revision snapshots and replayed create responses;
+/// the stored text is never rewritten. Anything that is not an object is returned unchanged.
+String upgradeExpenseJsonText(String text) {
+  final Object? root;
+  try {
+    root = jsonDecode(text);
+  } on FormatException {
+    return text;
+  }
+  if (root is! Map<String, dynamic>) return text;
+  var changed = false;
+  for (final item in (root['items'] as List<dynamic>?) ?? const <dynamic>[]) {
+    if (item is Map<String, dynamic> && !item.containsKey('quantity')) {
+      item['quantity'] = 1;
+      item['unitAmountMinor'] = item['amountMinor'];
+      changed = true;
+    }
+  }
+  for (final share in (root['shares'] as List<dynamic>?) ?? const <dynamic>[]) {
+    if (share is Map<String, dynamic> && !share.containsKey('discountMinor') && share['itemsMinor'] != null) {
+      share['discountMinor'] = 0;
+      changed = true;
+    }
+  }
+  return changed ? jsonEncode(root) : text;
 }

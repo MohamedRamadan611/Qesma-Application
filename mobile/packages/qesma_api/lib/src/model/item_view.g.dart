@@ -15,6 +15,10 @@ class _$ItemView extends ItemView {
   final String id;
   @override
   final String name;
+  @override
+  final int quantity;
+  @override
+  final int unitAmountMinor;
 
   factory _$ItemView([void Function(ItemViewBuilder)? updates]) =>
       (ItemViewBuilder()..update(updates))._build();
@@ -23,7 +27,9 @@ class _$ItemView extends ItemView {
       {required this.amountMinor,
       required this.assigneeMemberIds,
       required this.id,
-      required this.name})
+      required this.name,
+      required this.quantity,
+      required this.unitAmountMinor})
       : super._();
   @override
   ItemView rebuild(void Function(ItemViewBuilder) updates) =>
@@ -39,7 +45,9 @@ class _$ItemView extends ItemView {
         amountMinor == other.amountMinor &&
         assigneeMemberIds == other.assigneeMemberIds &&
         id == other.id &&
-        name == other.name;
+        name == other.name &&
+        quantity == other.quantity &&
+        unitAmountMinor == other.unitAmountMinor;
   }
 
   @override
@@ -49,6 +57,8 @@ class _$ItemView extends ItemView {
     _$hash = $jc(_$hash, assigneeMemberIds.hashCode);
     _$hash = $jc(_$hash, id.hashCode);
     _$hash = $jc(_$hash, name.hashCode);
+    _$hash = $jc(_$hash, quantity.hashCode);
+    _$hash = $jc(_$hash, unitAmountMinor.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -59,7 +69,9 @@ class _$ItemView extends ItemView {
           ..add('amountMinor', amountMinor)
           ..add('assigneeMemberIds', assigneeMemberIds)
           ..add('id', id)
-          ..add('name', name))
+          ..add('name', name)
+          ..add('quantity', quantity)
+          ..add('unitAmountMinor', unitAmountMinor))
         .toString();
   }
 }
@@ -85,6 +97,15 @@ class ItemViewBuilder implements Builder<ItemView, ItemViewBuilder> {
   String? get name => _$this._name;
   set name(String? name) => _$this._name = name;
 
+  int? _quantity;
+  int? get quantity => _$this._quantity;
+  set quantity(int? quantity) => _$this._quantity = quantity;
+
+  int? _unitAmountMinor;
+  int? get unitAmountMinor => _$this._unitAmountMinor;
+  set unitAmountMinor(int? unitAmountMinor) =>
+      _$this._unitAmountMinor = unitAmountMinor;
+
   ItemViewBuilder() {
     ItemView._defaults(this);
   }
@@ -96,6 +117,8 @@ class ItemViewBuilder implements Builder<ItemView, ItemViewBuilder> {
       _assigneeMemberIds = $v.assigneeMemberIds.toBuilder();
       _id = $v.id;
       _name = $v.name;
+      _quantity = $v.quantity;
+      _unitAmountMinor = $v.unitAmountMinor;
       _$v = null;
     }
     return this;
@@ -125,6 +148,10 @@ class ItemViewBuilder implements Builder<ItemView, ItemViewBuilder> {
             id: BuiltValueNullFieldError.checkNotNull(id, r'ItemView', 'id'),
             name: BuiltValueNullFieldError.checkNotNull(
                 name, r'ItemView', 'name'),
+            quantity: BuiltValueNullFieldError.checkNotNull(
+                quantity, r'ItemView', 'quantity'),
+            unitAmountMinor: BuiltValueNullFieldError.checkNotNull(
+                unitAmountMinor, r'ItemView', 'unitAmountMinor'),
           );
     } catch (_) {
       late String _$failedField;

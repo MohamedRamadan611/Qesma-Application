@@ -29,15 +29,35 @@ import org.springframework.http.HttpStatus;
 final class ExpenseCalculator {
 
     /**
-     * Everything the engine decided about a request. Itemized fields are null for EQUAL/EXACT; for ITEMIZED
-     * {@code serviceBps}/{@code taxBps} are null when that charge is off (its amount is then 0).
+     * Everything the engine decided about a request. Itemized fields are null for EQUAL/EXACT; for ITEMIZED a
+     * charge whose two form fields ({@code *Bps}, {@code *AmountMinor}) are both null is off (its amount is then 0).
      */
-    record Computation(String splitType, long totalMinor, Long subtotalMinor, Integer serviceBps, long serviceMinor,
-                       Integer taxBps, String taxBase, long taxMinor, long adjustmentMinor,
-                       List<ExpenseView.ShareView> shares, List<Payer> payers) {
+    record Computation(String splitType, long totalMinor, Long subtotalMinor, Integer discountBps,
+                       Long discountAmountMinor, long discountMinor, Integer serviceBps, Long serviceAmountMinor,
+                       long serviceMinor, Integer taxBps, Long taxAmountMinor, String taxBase, long taxMinor,
+                       long adjustmentMinor, List<ExpenseView.ShareView> shares, List<Payer> payers) {
 
         boolean itemized() {
             return splitType.equals(Expense.ITEMIZED);
+        }
+
+        boolean hasDiscount() {
+            return discountBps != null || discountAmountMinor != null;
+        }
+
+        boolean hasService() {
+            return serviceBps != null || serviceAmountMinor != null;
+        }
+
+        boolean hasTax() {
+            return taxBps != null || taxAmountMinor != null;
+        }
+
+        /** The stored charges of an ITEMIZED computation. */
+        Expense.ItemizedCharges charges() {
+            return new Expense.ItemizedCharges(subtotalMinor, discountBps, discountAmountMinor, discountMinor,
+                    serviceBps, serviceAmountMinor, serviceMinor, taxBps, taxAmountMinor, taxBase, taxMinor,
+                    adjustmentMinor);
         }
     }
 
@@ -145,8 +165,8 @@ final class ExpenseCalculator {
                 .sorted(Comparator.comparingInt(e -> roster.usable().get(e.getKey()).sortOrder()))
                 .map(e -> new ExpenseView.ShareView(UUID.fromString(e.getKey()), e.getValue()))
                 .toList();
-        return new Computation(request.splitType(), request.totalMinor(), null, null, 0, null, null, 0, 0, shares,
-                payers);
+        return new Computation(request.splitType(), request.totalMinor(), null, null, null, 0, null, null, 0, null,
+                null, null, 0, 0, shares, payers);
     }
 
     private static Computation itemized(ExpenseValidator.Valid request, Roster roster, List<Payer> payers) {
@@ -156,12 +176,16 @@ final class ExpenseCalculator {
             for (UUID id : item.assigneeMemberIds()) {
                 assignees.add(requireMember(roster, id));
             }
-            items.add(new ItemizedCalculator.Item(item.name(), item.amountMinor(), assignees));
+            items.add(ItemizedCalculator.Item.of(item.name(), null, item.unitAmountMinor() == null
+                    ? item.amountMinor() : item.unitAmountMinor(), item.quantity(), assignees));
         }
-        ItemizedCalculator.TaxSpec tax = request.taxBps() == null ? null
-                : new ItemizedCalculator.TaxSpec(request.taxBps(), ItemizedCalculator.TaxBase.valueOf(request.taxBase()));
+        ItemizedCalculator.TaxSpec tax = !request.hasTax() ? null
+                : new ItemizedCalculator.TaxSpec(spec(request.taxBps(), request.taxAmountMinor()),
+                        ItemizedCalculator.TaxBase.valueOf(request.taxBase()));
         ItemizedCalculator.ItemizedResult r = ItemizedCalculator.calculate(new ItemizedCalculator.ItemizedInput(
-                new ArrayList<>(roster.usable().values()), items, request.serviceBps(), tax, request.adjustmentMinor()));
+                new ArrayList<>(roster.usable().values()), items,
+                spec(request.discountBps(), request.discountAmountMinor()),
+                spec(request.serviceBps(), request.serviceAmountMinor()), tax, request.adjustmentMinor()));
 
         if (request.totalMinor() != 0 && request.totalMinor() != r.totalMinor()) {
             throw new ApiException(ErrorCode.SPLIT_TOTAL_MISMATCH, HttpStatus.UNPROCESSABLE_ENTITY,
@@ -169,11 +193,17 @@ final class ExpenseCalculator {
         }
         List<ExpenseView.ShareView> shares = r.members().stream()
                 .map(m -> new ExpenseView.ShareView(UUID.fromString(m.memberId()), m.owedMinor(), m.itemsMinor(),
-                        m.serviceMinor(), m.taxMinor(), m.adjustmentMinor()))
+                        m.discountMinor(), m.serviceMinor(), m.taxMinor(), m.adjustmentMinor()))
                 .toList();
-        return new Computation(Expense.ITEMIZED, r.totalMinor(), r.subtotalMinor(), request.serviceBps(),
-                r.serviceMinor(), request.taxBps(), request.taxBase(), r.taxMinor(), r.adjustmentMinor(), shares,
-                payers);
+        return new Computation(Expense.ITEMIZED, r.totalMinor(), r.subtotalMinor(), request.discountBps(),
+                request.discountAmountMinor(), r.discountMinor(), request.serviceBps(), request.serviceAmountMinor(),
+                r.serviceMinor(), request.taxBps(), request.taxAmountMinor(), request.taxBase(), r.taxMinor(),
+                r.adjustmentMinor(), shares, payers);
+    }
+
+    /** The validator already allowed at most one form; both null means the charge is off. */
+    private static ItemizedCalculator.ChargeSpec spec(Integer bps, Long amountMinor) {
+        return bps == null && amountMinor == null ? null : ItemizedCalculator.ChargeSpec.of(bps, amountMinor);
     }
 
     /** Spec 6 notes: every referenced member must belong to the expense's group. */

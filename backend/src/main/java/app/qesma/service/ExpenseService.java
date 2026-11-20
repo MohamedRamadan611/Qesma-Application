@@ -147,9 +147,10 @@ public class ExpenseService {
         ExpenseCalculator.Computation calc = ExpenseCalculator.compute(request, access.listMembers(ctx));
         boolean payersMatch = ExpenseCalculator.payersMatch(calc);
         metrics.counter("qesma.expense_previews", "splitType", request.splitType()).increment();
-        return new ExpensePreview(calc.totalMinor(), calc.subtotalMinor(),
-                calc.itemized() ? calc.serviceMinor() : null, calc.itemized() ? calc.taxMinor() : null,
-                calc.itemized() ? calc.adjustmentMinor() : null, calc.shares(), payersMatch);
+        boolean itemized = calc.itemized();
+        return new ExpensePreview(calc.totalMinor(), calc.subtotalMinor(), itemized ? calc.discountMinor() : null,
+                itemized ? calc.serviceMinor() : null, itemized ? calc.taxMinor() : null,
+                itemized ? calc.adjustmentMinor() : null, calc.shares(), payersMatch);
     }
 
     /**
@@ -232,7 +233,7 @@ public class ExpenseService {
             throw ApiException.notFound();
         }
         return revisions.findByExpense(expenseId).stream().map(r -> new ExpenseRevisionView(r.version(),
-                r.changeType(), r.changedAt(), r.changedByUserId(), readTree(r.snapshot()))).toList();
+                r.changeType(), r.changedAt(), r.changedByUserId(), upgradeSnapshot(readTree(r.snapshot())))).toList();
     }
 
     /** Called under the group lock, so the comparison and the write that follows cannot be interleaved. */
@@ -313,8 +314,7 @@ public class ExpenseService {
                                       ExpenseCalculator.Computation calc, Instant now) {
         if (calc.itemized()) {
             return Expense.itemized(id, groupId, request.title(), calc.totalMinor(), request.expenseDate(), userId,
-                    now, calc.subtotalMinor(), calc.serviceBps(), calc.serviceMinor(), calc.taxBps(), calc.taxMinor(),
-                    calc.taxBase(), calc.adjustmentMinor()).withPool(request.category(), request.paidFromPool());
+                    now, calc.charges()).withPool(request.category(), request.paidFromPool());
         }
         return new Expense(id, groupId, request.title(), request.splitType(), calc.totalMinor(),
                 request.expenseDate(), userId, now).withPool(request.category(), request.paidFromPool());
@@ -324,8 +324,8 @@ public class ExpenseService {
         if (s.itemsMinor() == null) {
             return new ExpenseSplit(expenseId, s.memberId(), s.owedMinor());
         }
-        return new ExpenseSplit(expenseId, s.memberId(), s.owedMinor(), s.itemsMinor(), s.serviceMinor(),
-                s.taxMinor(), s.adjustmentMinor());
+        return new ExpenseSplit(expenseId, s.memberId(), s.owedMinor(), s.itemsMinor(), s.discountMinor(),
+                s.serviceMinor(), s.taxMinor(), s.adjustmentMinor());
     }
 
     /** Writes payers, resolved shares and (ITEMIZED) items, and returns the expense as the API shows it. */
@@ -353,21 +353,56 @@ public class ExpenseService {
         int position = 0;
         for (ExpenseCommand.ItemInput input : inputs) {
             UUID itemId = UUID.randomUUID();
-            items.save(new ExpenseItem(itemId, expenseId, input.name(), input.amountMinor(), position++));
+            // The validator normalized every item: quantity, unit price and the line amount are all set.
+            items.save(new ExpenseItem(itemId, expenseId, input.name(), input.quantity(), input.unitAmountMinor(),
+                    input.amountMinor(), position++));
             for (UUID memberId : input.assigneeMemberIds()) {
                 assignees.save(new ExpenseItemAssignee(itemId, memberId));
             }
-            views.add(new ExpenseView.ItemView(itemId, input.name(), input.amountMinor(),
-                    byMemberOrder(input.assigneeMemberIds(), order)));
+            views.add(new ExpenseView.ItemView(itemId, input.name(), input.quantity(), input.unitAmountMinor(),
+                    input.amountMinor(), byMemberOrder(input.assigneeMemberIds(), order)));
         }
         return views;
     }
 
     private static ExpenseView.Charges charges(ExpenseCalculator.Computation c) {
         return new ExpenseView.Charges(c.subtotalMinor(),
-                c.serviceBps() == null ? null : new ExpenseView.ServiceCharge(c.serviceBps(), c.serviceMinor()),
-                c.taxBps() == null ? null : new ExpenseView.TaxCharge(c.taxBps(), c.taxBase(), c.taxMinor()),
+                c.hasDiscount() ? new ExpenseView.DiscountCharge(c.discountBps(), c.discountMinor()) : null,
+                c.hasService() ? new ExpenseView.ServiceCharge(c.serviceBps(), c.serviceMinor()) : null,
+                c.hasTax() ? new ExpenseView.TaxCharge(c.taxBps(), c.taxBase(), c.taxMinor()) : null,
                 c.adjustmentMinor());
+    }
+
+    /**
+     * BSA2: revisions written before V21 lack the item quantity/unit and the discount fields. They read back as
+     * quantity 1 with unit = amount, and an ITEMIZED share's discount as 0 (no discount existed then). The stored
+     * JSON is never rewritten (history is immutable).
+     */
+    static com.fasterxml.jackson.databind.JsonNode upgradeSnapshot(com.fasterxml.jackson.databind.JsonNode snapshot) {
+        if (!(snapshot instanceof com.fasterxml.jackson.databind.node.ObjectNode root)) {
+            return snapshot;
+        }
+        for (com.fasterxml.jackson.databind.JsonNode item : root.path("items")) {
+            if (item instanceof com.fasterxml.jackson.databind.node.ObjectNode o && !o.has("quantity")) {
+                o.put("quantity", 1);
+                o.set("unitAmountMinor", o.get("amountMinor"));
+            }
+        }
+        for (com.fasterxml.jackson.databind.JsonNode share : root.path("shares")) {
+            if (share instanceof com.fasterxml.jackson.databind.node.ObjectNode o && !o.has("discountMinor")) {
+                com.fasterxml.jackson.databind.JsonNode items = o.get("itemsMinor");
+                if (items == null || items.isNull()) {
+                    o.putNull("discountMinor");
+                } else {
+                    o.put("discountMinor", 0L);
+                }
+            }
+        }
+        if (root.get("charges") instanceof com.fasterxml.jackson.databind.node.ObjectNode charges
+                && !charges.has("discount")) {
+            charges.putNull("discount");
+        }
+        return root;
     }
 
     private String toJson(ExpenseView view) {
@@ -440,7 +475,7 @@ public class ExpenseService {
                     .toList();
             List<ExpenseView.ShareView> shareViews = splitsByExpense.getOrDefault(e.getId(), List.of()).stream()
                     .map(s -> new ExpenseView.ShareView(s.getMemberId(), s.getOwedMinor(), s.getItemsMinor(),
-                            s.getServiceMinor(), s.getTaxMinor(), s.getAdjustmentMinor()))
+                            s.getDiscountMinor(), s.getServiceMinor(), s.getTaxMinor(), s.getAdjustmentMinor()))
                     .sorted(Comparator.comparingInt(s -> order.getOrDefault(s.memberId(), Integer.MAX_VALUE)))
                     .toList();
             boolean itemized = Expense.ITEMIZED.equals(e.getSplitType());
@@ -453,17 +488,21 @@ public class ExpenseService {
         private List<ExpenseView.ItemView> itemViews(Expense e) {
             return itemsByExpense.getOrDefault(e.getId(), List.of()).stream()
                     .sorted(Comparator.comparingInt(ExpenseItem::getSortOrder))
-                    .map(i -> new ExpenseView.ItemView(i.getId(), i.getName(), i.getAmountMinor(),
+                    .map(i -> new ExpenseView.ItemView(i.getId(), i.getName(), i.getQuantity(), i.getUnitAmountMinor(),
+                            i.getAmountMinor(),
                             byMemberOrder(assigneesByItem.getOrDefault(i.getId(), List.of()).stream()
                                     .map(ExpenseItemAssignee::getMemberId).toList(), order)))
                     .toList();
         }
 
         private ExpenseView.Charges charges(Expense e) {
+            boolean discount = e.getDiscountBps() != null || e.getDiscountAmountMinor() != null;
+            boolean service = e.getServiceBps() != null || e.getServiceAmountMinor() != null;
+            boolean tax = e.getTaxBps() != null || e.getTaxAmountMinor() != null;
             return new ExpenseView.Charges(e.getSubtotalMinor(),
-                    e.getServiceBps() == null ? null : new ExpenseView.ServiceCharge(e.getServiceBps(), e.getServiceMinor()),
-                    e.getTaxBps() == null ? null
-                            : new ExpenseView.TaxCharge(e.getTaxBps(), e.getTaxBase(), e.getTaxMinor()),
+                    discount ? new ExpenseView.DiscountCharge(e.getDiscountBps(), e.getDiscountMinor()) : null,
+                    service ? new ExpenseView.ServiceCharge(e.getServiceBps(), e.getServiceMinor()) : null,
+                    tax ? new ExpenseView.TaxCharge(e.getTaxBps(), e.getTaxBase(), e.getTaxMinor()) : null,
                     e.getAdjustmentMinor());
         }
     }

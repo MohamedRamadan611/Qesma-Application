@@ -10,6 +10,8 @@ class _$Charges extends Charges {
   @override
   final int adjustmentMinor;
   @override
+  final DiscountCharge? discount;
+  @override
   final ServiceCharge? service;
   @override
   final int subtotalMinor;
@@ -21,6 +23,7 @@ class _$Charges extends Charges {
 
   _$Charges._(
       {required this.adjustmentMinor,
+      this.discount,
       this.service,
       required this.subtotalMinor,
       this.tax})
@@ -37,6 +40,7 @@ class _$Charges extends Charges {
     if (identical(other, this)) return true;
     return other is Charges &&
         adjustmentMinor == other.adjustmentMinor &&
+        discount == other.discount &&
         service == other.service &&
         subtotalMinor == other.subtotalMinor &&
         tax == other.tax;
@@ -46,6 +50,7 @@ class _$Charges extends Charges {
   int get hashCode {
     var _$hash = 0;
     _$hash = $jc(_$hash, adjustmentMinor.hashCode);
+    _$hash = $jc(_$hash, discount.hashCode);
     _$hash = $jc(_$hash, service.hashCode);
     _$hash = $jc(_$hash, subtotalMinor.hashCode);
     _$hash = $jc(_$hash, tax.hashCode);
@@ -57,6 +62,7 @@ class _$Charges extends Charges {
   String toString() {
     return (newBuiltValueToStringHelper(r'Charges')
           ..add('adjustmentMinor', adjustmentMinor)
+          ..add('discount', discount)
           ..add('service', service)
           ..add('subtotalMinor', subtotalMinor)
           ..add('tax', tax))
@@ -71,6 +77,11 @@ class ChargesBuilder implements Builder<Charges, ChargesBuilder> {
   int? get adjustmentMinor => _$this._adjustmentMinor;
   set adjustmentMinor(int? adjustmentMinor) =>
       _$this._adjustmentMinor = adjustmentMinor;
+
+  DiscountChargeBuilder? _discount;
+  DiscountChargeBuilder get discount =>
+      _$this._discount ??= DiscountChargeBuilder();
+  set discount(DiscountChargeBuilder? discount) => _$this._discount = discount;
 
   ServiceChargeBuilder? _service;
   ServiceChargeBuilder get service =>
@@ -94,6 +105,7 @@ class ChargesBuilder implements Builder<Charges, ChargesBuilder> {
     final $v = _$v;
     if ($v != null) {
       _adjustmentMinor = $v.adjustmentMinor;
+      _discount = $v.discount?.toBuilder();
       _service = $v.service?.toBuilder();
       _subtotalMinor = $v.subtotalMinor;
       _tax = $v.tax?.toBuilder();
@@ -122,6 +134,7 @@ class ChargesBuilder implements Builder<Charges, ChargesBuilder> {
           _$Charges._(
             adjustmentMinor: BuiltValueNullFieldError.checkNotNull(
                 adjustmentMinor, r'Charges', 'adjustmentMinor'),
+            discount: _discount?.build(),
             service: _service?.build(),
             subtotalMinor: BuiltValueNullFieldError.checkNotNull(
                 subtotalMinor, r'Charges', 'subtotalMinor'),
@@ -130,6 +143,8 @@ class ChargesBuilder implements Builder<Charges, ChargesBuilder> {
     } catch (_) {
       late String _$failedField;
       try {
+        _$failedField = 'discount';
+        _discount?.build();
         _$failedField = 'service';
         _service?.build();
 

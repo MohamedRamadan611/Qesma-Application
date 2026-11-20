@@ -4,19 +4,22 @@ import '../db/local_database.dart';
 import '../errors.dart';
 import 'expense_validator.dart';
 
-/// One member's share as the API shows it; the four breakdown fields are set for ITEMIZED only.
+/// One member's share as the API shows it; the five breakdown fields are set for ITEMIZED only.
 final class ShareComp {
-  const ShareComp(this.memberId, this.owedMinor, {this.itemsMinor, this.serviceMinor, this.taxMinor, this.adjustmentMinor});
+  const ShareComp(this.memberId, this.owedMinor,
+      {this.itemsMinor, this.discountMinor, this.serviceMinor, this.taxMinor, this.adjustmentMinor});
   final String memberId;
   final int owedMinor;
   final int? itemsMinor;
+  final int? discountMinor;
   final int? serviceMinor;
   final int? taxMinor;
   final int? adjustmentMinor;
 }
 
 /// Everything the engine decided about a request (Java `ExpenseCalculator.Computation`). Itemized fields are null
-/// for EQUAL/EXACT; for ITEMIZED [serviceBps]/[taxBps] are null when that charge is off (its amount is then 0).
+/// for EQUAL/EXACT; for ITEMIZED a charge whose two form fields (`*Bps`, `*AmountMinor`) are both null is off (its
+/// amount is then 0).
 final class Computation {
   const Computation({
     required this.splitType,
@@ -24,9 +27,14 @@ final class Computation {
     required this.shares,
     required this.payers,
     this.subtotalMinor,
+    this.discountBps,
+    this.discountAmountMinor,
+    this.discountMinor = 0,
     this.serviceBps,
+    this.serviceAmountMinor,
     this.serviceMinor = 0,
     this.taxBps,
+    this.taxAmountMinor,
     this.taxBase,
     this.taxMinor = 0,
     this.adjustmentMinor = 0,
@@ -35,7 +43,12 @@ final class Computation {
   final String splitType;
   final int totalMinor;
   final int? subtotalMinor;
+  final int? discountBps;
+  final int? discountAmountMinor;
+  final int discountMinor;
   final int? serviceBps;
+  final int? serviceAmountMinor;
+  final int? taxAmountMinor;
   final int serviceMinor;
   final int? taxBps;
   final String? taxBase;
@@ -45,6 +58,12 @@ final class Computation {
   final List<Payer> payers;
 
   bool get itemized => splitType == 'ITEMIZED';
+
+  bool get hasDiscount => discountBps != null || discountAmountMinor != null;
+
+  bool get hasService => serviceBps != null || serviceAmountMinor != null;
+
+  bool get hasTax => taxBps != null || taxAmountMinor != null;
 }
 
 /// The single mapping from a validated request to engine results (port of Java `ExpenseCalculator`). Create,
@@ -128,14 +147,23 @@ abstract final class ExpenseCalculator {
   }
 
   static Computation _itemized(ValidExpense request, _Roster roster, List<Payer> payers) {
+    // The validator normalized every item (quantity, unit price and line are set) and allowed one form per charge.
     final items = [
       for (final item in request.items!)
-        Item(item.name, item.amountMinor, [for (final id in item.assigneeMemberIds) roster.require(id)]),
+        Item.unit(item.name, item.quantity, item.unitAmountMinor,
+            [for (final id in item.assigneeMemberIds) roster.require(id)]),
     ];
-    final tax = request.taxBps == null ? null : TaxSpec(request.taxBps!, TaxBase.fromWire(request.taxBase!));
-    final r = ItemizedCalculator.calculate(
-      ItemizedInput(roster.usable.values.toList(), items, request.serviceBps, tax, request.adjustmentMinor),
-    );
+    final tax = !request.hasTax
+        ? null
+        : TaxSpec.of(ChargeSpec.of(request.taxBps, request.taxAmountMinor), TaxBase.fromWire(request.taxBase!));
+    final r = ItemizedCalculator.calculate(ItemizedInput.charges(
+      roster.usable.values.toList(),
+      items,
+      discount: _spec(request.discountBps, request.discountAmountMinor),
+      service: _spec(request.serviceBps, request.serviceAmountMinor),
+      tax: tax,
+      adjustmentMinor: request.adjustmentMinor,
+    ));
     if (request.totalMinor != 0 && request.totalMinor != r.totalMinor) {
       throw const LocalApiException(422, 'SPLIT_TOTAL_MISMATCH', 'totalMinor does not match the computed bill total');
     }
@@ -143,9 +171,14 @@ abstract final class ExpenseCalculator {
       splitType: 'ITEMIZED',
       totalMinor: r.totalMinor,
       subtotalMinor: r.subtotalMinor,
+      discountBps: request.discountBps,
+      discountAmountMinor: request.discountAmountMinor,
+      discountMinor: r.discountMinor,
       serviceBps: request.serviceBps,
+      serviceAmountMinor: request.serviceAmountMinor,
       serviceMinor: r.serviceMinor,
       taxBps: request.taxBps,
+      taxAmountMinor: request.taxAmountMinor,
       taxBase: request.taxBase,
       taxMinor: r.taxMinor,
       adjustmentMinor: r.adjustmentMinor,
@@ -155,6 +188,7 @@ abstract final class ExpenseCalculator {
             m.memberId,
             m.owedMinor,
             itemsMinor: m.itemsMinor,
+            discountMinor: m.discountMinor,
             serviceMinor: m.serviceMinor,
             taxMinor: m.taxMinor,
             adjustmentMinor: m.adjustmentMinor,
@@ -164,6 +198,10 @@ abstract final class ExpenseCalculator {
     );
   }
 }
+
+/// Both null = the charge is off; the validator already refused both forms at once.
+ChargeSpec? _spec(int? bps, int? amountMinor) =>
+    bps == null && amountMinor == null ? null : ChargeSpec.of(bps, amountMinor);
 
 final class _Roster {
   _Roster(this.usable, this.inactive);

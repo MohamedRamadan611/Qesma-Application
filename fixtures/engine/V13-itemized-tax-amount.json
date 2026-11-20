@@ -1,0 +1,24 @@
+{
+  "name": "V13 itemized, service 12%, tax 60.00 as an amount weighted by subtotal plus service",
+  "input": {
+    "members": [ { "id": "A", "sortOrder": 1 }, { "id": "B", "sortOrder": 2 }, { "id": "C", "sortOrder": 3 } ],
+    "expenses": [
+      { "type": "ITEMIZED",
+        "payers": [ { "memberId": "A", "amountMinor": 55280 } ],
+        "items": [
+          { "name": "Pizza",  "amountMinor": 20000, "assigneeMemberIds": [ "A", "B" ] },
+          { "name": "Pasta",  "amountMinor": 15000, "assigneeMemberIds": [ "C" ] },
+          { "name": "Drinks", "amountMinor": 9000,  "assigneeMemberIds": [ "A", "B", "C" ] }
+        ],
+        "service": { "bps": 1200 },
+        "tax": { "amountMinor": 6000, "base": "SUBTOTAL_PLUS_SERVICE" },
+        "adjustmentMinor": 0 }
+    ],
+    "settlements": []
+  },
+  "expected": {
+    "expenses": [ { "owed": { "A": 16333, "B": 16333, "C": 22614 },
+                    "subtotalMinor": 44000, "discountMinor": 0, "serviceMinor": 5280, "taxMinor": 6000,
+                    "totalMinor": 55280 } ]
+  }
+}

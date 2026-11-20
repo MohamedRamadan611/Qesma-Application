@@ -12,13 +12,12 @@ class _$TaxCharge extends TaxCharge {
   @override
   final String base_;
   @override
-  final int bps;
+  final int? bps;
 
   factory _$TaxCharge([void Function(TaxChargeBuilder)? updates]) =>
       (TaxChargeBuilder()..update(updates))._build();
 
-  _$TaxCharge._(
-      {required this.amountMinor, required this.base_, required this.bps})
+  _$TaxCharge._({required this.amountMinor, required this.base_, this.bps})
       : super._();
   @override
   TaxCharge rebuild(void Function(TaxChargeBuilder) updates) =>
@@ -106,7 +105,7 @@ class TaxChargeBuilder implements Builder<TaxCharge, TaxChargeBuilder> {
               amountMinor, r'TaxCharge', 'amountMinor'),
           base_: BuiltValueNullFieldError.checkNotNull(
               base_, r'TaxCharge', 'base_'),
-          bps: BuiltValueNullFieldError.checkNotNull(bps, r'TaxCharge', 'bps'),
+          bps: bps,
         );
     replace(_$result);
     return _$result;

@@ -52,10 +52,16 @@ public class RequestHasher {
                 .map(s -> new Entry(s.memberId(), s.amountMinor())).toList()));
         if (v.items() != null) {
             // Item order is user-visible (it is stored), so it is part of the meaning; assignee order is not.
+            // BSA2 (A175): amountMinor is the line amount, so {amountMinor: 500} and {unitAmountMinor: 500} are the
+            // same request; quantity and the new charge forms are hashed only when not default, so a replay of a
+            // pre-BSA2 key keeps its hash.
             canonical.put("items", v.items().stream().map(i -> {
                 Map<String, Object> m = new LinkedHashMap<>();
                 m.put("name", i.name());
                 m.put("amountMinor", i.amountMinor());
+                if (i.quantity() != null && i.quantity() != 1) {
+                    m.put("quantity", i.quantity());
+                }
                 m.put("assigneeMemberIds", i.assigneeMemberIds().stream().map(UUID::toString).sorted().toList());
                 return m;
             }).toList());
@@ -63,6 +69,10 @@ public class RequestHasher {
             canonical.put("taxBps", v.taxBps());
             canonical.put("taxBase", v.taxBase());
             canonical.put("adjustmentMinor", v.adjustmentMinor());
+            putIfSet(canonical, "serviceAmountMinor", v.serviceAmountMinor());
+            putIfSet(canonical, "taxAmountMinor", v.taxAmountMinor());
+            putIfSet(canonical, "discountBps", v.discountBps());
+            putIfSet(canonical, "discountAmountMinor", v.discountAmountMinor());
         }
         try {
             byte[] json = mapper.writeValueAsString(canonical).getBytes(StandardCharsets.UTF_8);
@@ -91,6 +101,12 @@ public class RequestHasher {
     }
 
     private record Entry(UUID memberId, long amountMinor) {
+    }
+
+    private static void putIfSet(Map<String, Object> canonical, String key, Object value) {
+        if (value != null) {
+            canonical.put(key, value);
+        }
     }
 
     private static List<Map<String, Object>> amounts(List<Entry> entries) {

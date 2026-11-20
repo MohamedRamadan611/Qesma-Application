@@ -12,6 +12,7 @@ part 'share_view.g.dart';
 ///
 /// Properties:
 /// * [adjustmentMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
+/// * [discountMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
 /// * [itemsMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
 /// * [memberId] 
 /// * [owedMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
@@ -22,6 +23,10 @@ abstract class ShareView implements Built<ShareView, ShareViewBuilder> {
   /// Integer minor units (piasters: 1 EGP = 100). Never a decimal.
   @BuiltValueField(wireName: r'adjustmentMinor')
   int? get adjustmentMinor;
+
+  /// Integer minor units (piasters: 1 EGP = 100). Never a decimal.
+  @BuiltValueField(wireName: r'discountMinor')
+  int? get discountMinor;
 
   /// Integer minor units (piasters: 1 EGP = 100). Never a decimal.
   @BuiltValueField(wireName: r'itemsMinor')
@@ -69,6 +74,13 @@ class _$ShareViewSerializer implements PrimitiveSerializer<ShareView> {
       yield r'adjustmentMinor';
       yield serializers.serialize(
         object.adjustmentMinor,
+        specifiedType: const FullType.nullable(int),
+      );
+    }
+    if (object.discountMinor != null) {
+      yield r'discountMinor';
+      yield serializers.serialize(
+        object.discountMinor,
         specifiedType: const FullType.nullable(int),
       );
     }
@@ -133,6 +145,14 @@ class _$ShareViewSerializer implements PrimitiveSerializer<ShareView> {
           ) as int?;
           if (valueDes == null) continue;
           result.adjustmentMinor = valueDes;
+          break;
+        case r'discountMinor':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
+          if (valueDes == null) continue;
+          result.discountMinor = valueDes;
           break;
         case r'itemsMinor':
           final valueDes = serializers.deserialize(

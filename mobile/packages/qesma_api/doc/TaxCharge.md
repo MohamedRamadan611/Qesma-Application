@@ -10,7 +10,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **amountMinor** | **int** | Integer minor units (piasters: 1 EGP = 100). Never a decimal. | 
 **base_** | **String** |  | 
-**bps** | **int** | Integer basis points: 1200 = 12.00%. | 
+**bps** | **int** | Integer basis points: 1200 = 12.00%. | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

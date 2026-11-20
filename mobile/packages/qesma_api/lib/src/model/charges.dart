@@ -5,6 +5,7 @@
 // ignore_for_file: unused_element
 import 'package:qesma_api/src/model/service_charge.dart';
 import 'package:qesma_api/src/model/tax_charge.dart';
+import 'package:qesma_api/src/model/discount_charge.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
@@ -14,6 +15,7 @@ part 'charges.g.dart';
 ///
 /// Properties:
 /// * [adjustmentMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
+/// * [discount] 
 /// * [service] 
 /// * [subtotalMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
 /// * [tax] 
@@ -22,6 +24,9 @@ abstract class Charges implements Built<Charges, ChargesBuilder> {
   /// Integer minor units (piasters: 1 EGP = 100). Never a decimal.
   @BuiltValueField(wireName: r'adjustmentMinor')
   int get adjustmentMinor;
+
+  @BuiltValueField(wireName: r'discount')
+  DiscountCharge? get discount;
 
   @BuiltValueField(wireName: r'service')
   ServiceCharge? get service;
@@ -61,6 +66,13 @@ class _$ChargesSerializer implements PrimitiveSerializer<Charges> {
       object.adjustmentMinor,
       specifiedType: const FullType(int),
     );
+    if (object.discount != null) {
+      yield r'discount';
+      yield serializers.serialize(
+        object.discount,
+        specifiedType: const FullType(DiscountCharge),
+      );
+    }
     if (object.service != null) {
       yield r'service';
       yield serializers.serialize(
@@ -109,6 +121,13 @@ class _$ChargesSerializer implements PrimitiveSerializer<Charges> {
             specifiedType: const FullType(int),
           ) as int;
           result.adjustmentMinor = valueDes;
+          break;
+        case r'discount':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(DiscountCharge),
+          ) as DiscountCharge;
+          result.discount.replace(valueDes);
           break;
         case r'service':
           final valueDes = serializers.deserialize(

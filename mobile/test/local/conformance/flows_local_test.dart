@@ -5,6 +5,7 @@ import '../../integration/flows/expense_form_flow.dart';
 import '../../integration/flows/expense_itemized_flow.dart';
 import '../../integration/flows/expenses_flow.dart';
 import '../../integration/flows/groups_flow.dart';
+import '../../integration/flows/itemized_v2_flow.dart';
 import '../../integration/flows/pool_flow.dart';
 import '../../integration/flows/profile_flow.dart';
 import 'support/local_container.dart';
@@ -21,6 +22,9 @@ void main() {
 
   test('the restaurant-bill requests (FL6 flow) in local mode',
       () async => runExpenseItemizedFlow(await localContainer()));
+
+  test('itemized v2: the validation matrix and a v2 bill (SA15 flow) in local mode',
+      () async => runItemizedV2Flow(await localContainer()));
 
   test('balances, transfers and payments (FL7 flow) in local mode', () async => runBalancesFlow(await localContainer()));
 

@@ -14,6 +14,14 @@ final class Exact {
         }
     }
 
+    static long multiply(long a, long b) {
+        try {
+            return Math.multiplyExact(a, b);
+        } catch (ArithmeticException e) {
+            throw new EngineException(EngineErrorCode.VALIDATION_ERROR, "Amount too large", e);
+        }
+    }
+
     static long negate(long a) {
         try {
             return Math.negateExact(a);

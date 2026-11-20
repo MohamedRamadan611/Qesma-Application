@@ -39,7 +39,7 @@ class DevSeedIT extends AbstractApiIT {
         JsonNode summary = groups.get(0);
         assertThat(summary.get("name").asText()).isEqualTo("رحلة دهب");
         assertThat(summary.get("memberCount").asInt()).isEqualTo(4);   // كريم left (B12): not counted, still listed
-        assertThat(summary.get("totalSpentMinor").asLong()).isEqualTo(60000 + 300000 + 56179);
+        assertThat(summary.get("totalSpentMinor").asLong()).isEqualTo(60000 + 300000 + 56179 + 5500);
         String gid = summary.get("id").asText();
 
         JsonNode group = body(call(GET, "/api/v1/groups/" + gid, owner, null));
@@ -71,12 +71,22 @@ class DevSeedIT extends AbstractApiIT {
                 Long.class, gid)).isZero();
 
         JsonNode dinner = null;
+        JsonNode snacks = null;
         for (JsonNode e : body(call(GET, "/api/v1/groups/" + gid + "/expenses", owner, null)).get("items")) {
-            if (e.get("splitType").asText().equals("ITEMIZED")) {
+            if (e.get("totalMinor").asLong() == 56179) {
                 dinner = e;
+            } else if (e.get("totalMinor").asLong() == 5500) {
+                snacks = e;
             }
         }
         assertThat(dinner).isNotNull();
+        // BSA2 example: quantity and a discount
+        assertThat(snacks).isNotNull();
+        assertThat(snacks.get("items").get(0).get("quantity").asInt()).isEqualTo(4);
+        assertThat(snacks.get("items").get(0).get("unitAmountMinor").asLong()).isEqualTo(1500);
+        assertThat(snacks.get("charges").get("discount").get("amountMinor").asLong()).isEqualTo(500);
+        assertThat(snacks.get("shares").findValues("owedMinor").stream().map(JsonNode::asLong).toList())
+                .containsExactly(2750L, 2750L);
         assertThat(dinner.get("totalMinor").asLong()).isEqualTo(56179);
         assertThat(dinner.get("shares").findValues("owedMinor").stream().map(JsonNode::asLong).toList())
                 .containsExactly(16599L, 16598L, 22982L);
@@ -87,7 +97,7 @@ class DevSeedIT extends AbstractApiIT {
         feed.forEach(i -> types.add(i.get("type").asText()));
         assertThat(types).contains("EXPENSE_ADDED", "SETTLEMENT_PENDING", "SETTLEMENT_DISPUTED", "ROLE_CHANGED",
                 "MEMBER_LEFT");
-        assertThat(types.stream().filter("EXPENSE_ADDED"::equals).count()).isEqualTo(3L);
+        assertThat(types.stream().filter("EXPENSE_ADDED"::equals).count()).isEqualTo(4L);
         long eventsBefore = jdbc.queryForObject("select count(*) from group_events where group_id = ?::uuid", Long.class, gid);
 
         // running the seeder again changes nothing
@@ -95,6 +105,6 @@ class DevSeedIT extends AbstractApiIT {
         assertThat(jdbc.queryForObject("select count(*) from group_events where group_id = ?::uuid", Long.class, gid))
                 .as("a second run writes no events").isEqualTo(eventsBefore);
         assertThat(body(call(GET, "/api/v1/groups", owner, null)).get("items")).hasSize(1);
-        assertThat(jdbc.queryForObject("select count(*) from expenses where group_id = ?::uuid", Long.class, gid)).isEqualTo(3L);
+        assertThat(jdbc.queryForObject("select count(*) from expenses where group_id = ?::uuid", Long.class, gid)).isEqualTo(4L);
     }
 }

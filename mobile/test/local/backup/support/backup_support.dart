@@ -56,6 +56,26 @@ Future<void> seedRichLedger(LocalHttp http) async {
       {'memberId': you, 'amountMinor': 12768}
     ],
   }));
+  // SA15 (schema 8): an itemized v2 bill with a quantity, an amount discount and an amount-form service.
+  final v2 = <String, Object?>{
+    'title': 'Koshary',
+    'expenseDate': '2026-11-12',
+    'splitType': 'ITEMIZED',
+    'items': [
+      {'name': 'Koshary', 'quantity': 3, 'unitAmountMinor': 4500, 'assigneeMemberIds': [you, ali, sara]},
+      {'name': 'Pepsi', 'amountMinor': 1500, 'assigneeMemberIds': [ali]},
+    ],
+    'discount': {'amountMinor': 1500},
+    'service': {'amountMinor': 1000},
+    'tax': {'bps': 1400, 'base': 'SUBTOTAL'},
+  };
+  final v2Total = (await http.post('/groups/$gid/expenses/preview', v2)).data['totalMinor'] as int;
+  await ok(http.expense(gid, {
+    ...v2,
+    'payers': [
+      {'memberId': sara, 'amountMinor': v2Total}
+    ],
+  }));
   final edited = await http.expense(gid, equal(5000, [
     {'memberId': you, 'amountMinor': 5000}
   ], 'Taxi'));

@@ -30,16 +30,27 @@ public class ExpenseItem implements Persistable<UUID> {
     @Column(name = "sort_order", nullable = false, updatable = false)
     private int sortOrder;
 
+    // BSA2 (V21): amount_minor = quantity x unit_amount_minor (a CHECK in the database)
+    @Column(name = "quantity", nullable = false, updatable = false)
+    private int quantity;
+
+    @Column(name = "unit_amount_minor", nullable = false, updatable = false)
+    private long unitAmountMinor;
+
     @Transient
     private boolean isNew = true;
 
     protected ExpenseItem() {
     }
 
-    public ExpenseItem(UUID id, UUID expenseId, String name, long amountMinor, int sortOrder) {
+    /** {@code amountMinor} is the engine-computed line amount, quantity x unit. */
+    public ExpenseItem(UUID id, UUID expenseId, String name, int quantity, long unitAmountMinor, long amountMinor,
+                       int sortOrder) {
         this.id = id;
         this.expenseId = expenseId;
         this.name = name;
+        this.quantity = quantity;
+        this.unitAmountMinor = unitAmountMinor;
         this.amountMinor = amountMinor;
         this.sortOrder = sortOrder;
     }
@@ -70,6 +81,14 @@ public class ExpenseItem implements Persistable<UUID> {
 
     public long getAmountMinor() {
         return amountMinor;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public long getUnitAmountMinor() {
+        return unitAmountMinor;
     }
 
     public int getSortOrder() {

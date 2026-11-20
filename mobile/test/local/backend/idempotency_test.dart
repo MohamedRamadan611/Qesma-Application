@@ -1,5 +1,12 @@
+import 'dart:convert';
+
+import 'package:drift/drift.dart' show Variable;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:qesma/core/api/uuid_v4.dart';
+import 'package:qesma/local/service/commands.dart';
+import 'package:qesma/local/service/expense_service.dart';
+import 'package:qesma/local/service/expense_validator.dart';
+import 'package:qesma/local/service/idempotency_service.dart';
 
 import 'support/local_http.dart';
 
@@ -96,5 +103,75 @@ void main() {
     expect(mismatch.data['code'], 'PAYERS_TOTAL_MISMATCH');
     final fixed = await http.expense(gid, equalBody(9000, [(id: you, amount: 9000)]), key: failing);
     expect(fixed.statusCode, 201, reason: 'a failure stored nothing, so the same key may carry the corrected body');
+  });
+
+  // ---- SA15 (A175): the hash adds the itemized v2 fields only when not default ----------------------------------
+
+  test('a legacy itemized request keeps its pre-SA15 hash (golden, from the SA14 canonical form)', () {
+    const a = '00000000-0000-4000-8000-0000000000b1';
+    const b = '00000000-0000-4000-8000-0000000000b2';
+    const g = '00000000-0000-4000-8000-0000000000a1';
+    ValidExpense valid(List<ItemIn> items) => ExpenseValidator.validate(ExpenseIn(
+          title: 'Dinner',
+          expenseDate: '2026-11-10',
+          splitType: 'ITEMIZED',
+          payers: const [PayerIn(a, 56179)],
+          items: items,
+          service: const ChargeIn(1200, null),
+          tax: const TaxIn(1400, null),
+          adjustmentMinor: 0,
+        ));
+    String hash(ValidExpense v) => IdempotencyService.fingerprint(ExpenseService.canonical(ExpenseService.createEndpoint, g, v));
+    const golden = '{"endpoint":"POST /api/v1/groups/{gid}/expenses","groupId":"$g","title":"Dinner",'
+        '"expenseDate":"2026-11-10","splitType":"ITEMIZED","totalMinor":0,"payers":[{"memberId":"$a","amountMinor":56179}],'
+        '"participantMemberIds":null,"shares":null,"items":[{"name":"Pizza","amountMinor":20000,"assigneeMemberIds":["$a","$b"]},'
+        '{"name":"Pasta","amountMinor":15000,"assigneeMemberIds":["$b"]}],"serviceBps":1200,"taxBps":1400,'
+        '"taxBase":"SUBTOTAL_PLUS_SERVICE","adjustmentMinor":0}';
+    expect(hash(valid(const [ItemIn('Pizza', 20000, [b, a]), ItemIn('Pasta', 15000, [b])])), golden);
+    // The unit form with quantity 1 is the same request (amountMinor is the line).
+    expect(hash(valid(const [ItemIn('Pizza', null, [a, b], unitAmountMinor: 20000), ItemIn('Pasta', null, [b], unitAmountMinor: 15000, quantity: 1)])), golden);
+  });
+
+  Map<String, Object?> bill(Map<String, Object?> item, {Map<String, Object?>? discount}) => {
+        'title': 'Koshary',
+        'expenseDate': '2026-11-10',
+        'splitType': 'ITEMIZED',
+        'payers': [{'memberId': you, 'amountMinor': discount == null ? 3000 : 2700}],
+        'items': [item],
+        'discount': ?discount,
+      };
+
+  test('itemized v2: {amountMinor} and {unitAmountMinor} replay each other; quantity or a discount is a new request', () async {
+    final key = newUuidV4();
+    final legacy = await http.expense(gid, bill({'name': 'Plate', 'amountMinor': 3000, 'assigneeMemberIds': [you, ali]}), key: key);
+    expect(legacy.statusCode, 201, reason: '${legacy.data}');
+    final unit = await http.expense(gid, bill({'name': 'Plate', 'unitAmountMinor': 3000, 'assigneeMemberIds': [ali, you]}), key: key);
+    expect(unit.statusCode, 201);
+    expect(unit.headers.value('idempotency-replayed'), 'true');
+    final quantity = await http.expense(gid, bill({'name': 'Plate', 'quantity': 2, 'unitAmountMinor': 1500, 'assigneeMemberIds': [you, ali]}), key: key);
+    expect((quantity.statusCode, quantity.data['code']), (422, 'IDEMPOTENCY_KEY_REUSED'));
+    final discounted = await http.expense(gid,
+        bill({'name': 'Plate', 'amountMinor': 3000, 'assigneeMemberIds': [you, ali]}, discount: {'amountMinor': 300}), key: key);
+    expect((discounted.statusCode, discounted.data['code']), (422, 'IDEMPOTENCY_KEY_REUSED'));
+    expect(await http.count('expenses'), 1);
+  });
+
+  test('a create response stored before SA15 replays with quantity 1 and discount 0 (upgraded, never rewritten)', () async {
+    final key = newUuidV4();
+    final body = bill({'name': 'Plate', 'amountMinor': 3000, 'assigneeMemberIds': [you, ali]});
+    final first = await http.expense(gid, body, key: key);
+    expect(first.statusCode, 201);
+    // Rewrite the stored body into the pre-SA15 shape (no quantity / unitAmountMinor / discountMinor).
+    final old = (first.data as Map<String, dynamic>)
+      ..['items'] = [for (final i in (first.data['items'] as List).cast<Map<String, dynamic>>()) Map.of(i)..remove('quantity')..remove('unitAmountMinor')]
+      ..['shares'] = [for (final x in (first.data['shares'] as List).cast<Map<String, dynamic>>()) Map.of(x)..remove('discountMinor')];
+    await http.db.customStatement('UPDATE idempotency_keys SET response_body = ? WHERE "key" = ?', [jsonEncode(old), key]);
+
+    final again = await http.expense(gid, body, key: key);
+    expect(again.headers.value('idempotency-replayed'), 'true');
+    expect([for (final i in again.data['items'] as List) (i['quantity'], i['unitAmountMinor'], i['amountMinor'])], [(1, 3000, 3000)]);
+    expect([for (final x in again.data['shares'] as List) x['discountMinor']], [0, 0]);
+    final stored = await http.db.customSelect('SELECT response_body AS b FROM idempotency_keys WHERE "key" = ?', variables: [Variable.withString(key)]).getSingle();
+    expect(stored.read<String>('b'), isNot(contains('quantity')), reason: 'the stored text is not rewritten');
   });
 }

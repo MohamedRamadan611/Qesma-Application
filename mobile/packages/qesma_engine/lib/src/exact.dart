@@ -20,6 +20,19 @@ abstract final class Exact {
     return r;
   }
 
+  /// Java `Math.multiplyExact`: overflow is a typed VALIDATION_ERROR (A13), never a silent wrap-around.
+  static int multiply(int a, int b) {
+    if (a == 0 || b == 0) return 0;
+    if ((a == -1 && b == minInt64) || (b == -1 && a == minInt64)) {
+      throw EngineException.invalid('Amount too large');
+    }
+    final r = a * b;
+    if (r ~/ b != a) {
+      throw EngineException.invalid('Amount too large');
+    }
+    return r;
+  }
+
   static int negate(int a) {
     if (a == minInt64) {
       throw EngineException.invalid('Amount too large');

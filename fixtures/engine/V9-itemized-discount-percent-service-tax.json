@@ -1,0 +1,26 @@
+{
+  "name": "V9 itemized, discount 10% then service 12% and tax 14% on subtotal plus service",
+  "input": {
+    "members": [ { "id": "A", "sortOrder": 1 }, { "id": "B", "sortOrder": 2 }, { "id": "C", "sortOrder": 3 } ],
+    "expenses": [
+      { "type": "ITEMIZED",
+        "payers": [ { "memberId": "A", "amountMinor": 50561 } ],
+        "items": [
+          { "name": "Pizza",  "amountMinor": 20000, "assigneeMemberIds": [ "A", "B" ] },
+          { "name": "Pasta",  "amountMinor": 15000, "assigneeMemberIds": [ "C" ] },
+          { "name": "Drinks", "amountMinor": 9000,  "assigneeMemberIds": [ "A", "B", "C" ] }
+        ],
+        "discount": { "bps": 1000 },
+        "service": { "bps": 1200 },
+        "tax": { "bps": 1400, "base": "SUBTOTAL_PLUS_SERVICE" },
+        "adjustmentMinor": 0 }
+    ],
+    "settlements": []
+  },
+  "expected": {
+    "expenses": [ { "owed": { "A": 14939, "B": 14938, "C": 20684 },
+                    "discounts": { "A": 1300, "B": 1300, "C": 1800 },
+                    "subtotalMinor": 44000, "discountMinor": 4400, "serviceMinor": 4752, "taxMinor": 6209,
+                    "totalMinor": 50561 } ]
+  }
+}

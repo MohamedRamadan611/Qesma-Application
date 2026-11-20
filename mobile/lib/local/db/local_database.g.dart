@@ -2687,6 +2687,60 @@ class Expenses extends Table with TableInfo<Expenses, ExpenseRow> {
     $customConstraints: 'NOT NULL DEFAULT 0 CHECK (paid_from_pool IN (0, 1))',
     defaultValue: const CustomExpression('0'),
   );
+  static const VerificationMeta _discountBpsMeta = const VerificationMeta(
+    'discountBps',
+  );
+  late final GeneratedColumn<int> discountBps = GeneratedColumn<int>(
+    'discount_bps',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'CHECK (discount_bps IS NULL OR discount_bps BETWEEN 1 AND 9999)',
+  );
+  static const VerificationMeta _discountAmountMinorMeta =
+      const VerificationMeta('discountAmountMinor');
+  late final GeneratedColumn<int> discountAmountMinor = GeneratedColumn<int>(
+    'discount_amount_minor',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'CHECK (discount_amount_minor IS NULL OR discount_amount_minor BETWEEN 1 AND 1000000000000)',
+  );
+  static const VerificationMeta _discountMinorMeta = const VerificationMeta(
+    'discountMinor',
+  );
+  late final GeneratedColumn<int> discountMinor = GeneratedColumn<int>(
+    'discount_minor',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _serviceAmountMinorMeta =
+      const VerificationMeta('serviceAmountMinor');
+  late final GeneratedColumn<int> serviceAmountMinor = GeneratedColumn<int>(
+    'service_amount_minor',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'CHECK (service_amount_minor IS NULL OR service_amount_minor BETWEEN 1 AND 1000000000000)',
+  );
+  static const VerificationMeta _taxAmountMinorMeta = const VerificationMeta(
+    'taxAmountMinor',
+  );
+  late final GeneratedColumn<int> taxAmountMinor = GeneratedColumn<int>(
+    'tax_amount_minor',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'CHECK (tax_amount_minor IS NULL OR tax_amount_minor BETWEEN 1 AND 1000000000000)',
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2709,6 +2763,11 @@ class Expenses extends Table with TableInfo<Expenses, ExpenseRow> {
     version,
     category,
     paidFromPool,
+    discountBps,
+    discountAmountMinor,
+    discountMinor,
+    serviceAmountMinor,
+    taxAmountMinor,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2875,6 +2934,51 @@ class Expenses extends Table with TableInfo<Expenses, ExpenseRow> {
         ),
       );
     }
+    if (data.containsKey('discount_bps')) {
+      context.handle(
+        _discountBpsMeta,
+        discountBps.isAcceptableOrUnknown(
+          data['discount_bps']!,
+          _discountBpsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('discount_amount_minor')) {
+      context.handle(
+        _discountAmountMinorMeta,
+        discountAmountMinor.isAcceptableOrUnknown(
+          data['discount_amount_minor']!,
+          _discountAmountMinorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('discount_minor')) {
+      context.handle(
+        _discountMinorMeta,
+        discountMinor.isAcceptableOrUnknown(
+          data['discount_minor']!,
+          _discountMinorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('service_amount_minor')) {
+      context.handle(
+        _serviceAmountMinorMeta,
+        serviceAmountMinor.isAcceptableOrUnknown(
+          data['service_amount_minor']!,
+          _serviceAmountMinorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('tax_amount_minor')) {
+      context.handle(
+        _taxAmountMinorMeta,
+        taxAmountMinor.isAcceptableOrUnknown(
+          data['tax_amount_minor']!,
+          _taxAmountMinorMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -2964,6 +3068,26 @@ class Expenses extends Table with TableInfo<Expenses, ExpenseRow> {
         DriftSqlType.int,
         data['${effectivePrefix}paid_from_pool'],
       )!,
+      discountBps: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}discount_bps'],
+      ),
+      discountAmountMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}discount_amount_minor'],
+      ),
+      discountMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}discount_minor'],
+      ),
+      serviceAmountMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}service_amount_minor'],
+      ),
+      taxAmountMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}tax_amount_minor'],
+      ),
     );
   }
 
@@ -2976,8 +3100,9 @@ class Expenses extends Table with TableInfo<Expenses, ExpenseRow> {
   bool get isStrict => true;
   @override
   List<String> get customConstraints => const [
-    'CONSTRAINT ck_expenses_itemized_columns CHECK(split_type = \'ITEMIZED\' OR(subtotal_minor IS NULL AND service_bps IS NULL AND service_minor IS NULL AND tax_bps IS NULL AND tax_minor IS NULL AND tax_base IS NULL AND adjustment_minor IS NULL))',
-    'CONSTRAINT ck_expenses_itemized_charges CHECK(split_type <> \'ITEMIZED\' OR(subtotal_minor IS NOT NULL AND subtotal_minor > 0 AND service_minor IS NOT NULL AND service_minor >= 0 AND tax_minor IS NOT NULL AND tax_minor >= 0 AND adjustment_minor IS NOT NULL AND total_minor = subtotal_minor + service_minor + tax_minor + adjustment_minor AND(service_bps IS NOT NULL OR service_minor = 0)AND(tax_bps IS NOT NULL OR tax_minor = 0)AND((tax_bps IS NULL)=(tax_base IS NULL))))',
+    'CONSTRAINT ck_expenses_charge_one_form CHECK(NOT(discount_bps IS NOT NULL AND discount_amount_minor IS NOT NULL)AND NOT(service_bps IS NOT NULL AND service_amount_minor IS NOT NULL)AND NOT(tax_bps IS NOT NULL AND tax_amount_minor IS NOT NULL))',
+    'CONSTRAINT ck_expenses_itemized_columns CHECK(split_type = \'ITEMIZED\' OR(subtotal_minor IS NULL AND service_bps IS NULL AND service_minor IS NULL AND tax_bps IS NULL AND tax_minor IS NULL AND tax_base IS NULL AND adjustment_minor IS NULL AND discount_bps IS NULL AND discount_amount_minor IS NULL AND discount_minor IS NULL AND service_amount_minor IS NULL AND tax_amount_minor IS NULL))',
+    'CONSTRAINT ck_expenses_itemized_charges CHECK(split_type <> \'ITEMIZED\' OR(subtotal_minor IS NOT NULL AND subtotal_minor > 0 AND discount_minor IS NOT NULL AND discount_minor >= 0 AND discount_minor < subtotal_minor AND service_minor IS NOT NULL AND service_minor >= 0 AND tax_minor IS NOT NULL AND tax_minor >= 0 AND adjustment_minor IS NOT NULL AND total_minor = subtotal_minor - discount_minor + service_minor + tax_minor + adjustment_minor AND((discount_bps IS NOT NULL OR discount_amount_minor IS NOT NULL)=(discount_minor > 0))AND(discount_amount_minor IS NULL OR discount_minor = discount_amount_minor)AND(service_bps IS NOT NULL OR service_amount_minor IS NOT NULL OR service_minor = 0)AND(service_amount_minor IS NULL OR service_minor = service_amount_minor)AND(tax_bps IS NOT NULL OR tax_amount_minor IS NOT NULL OR tax_minor = 0)AND(tax_amount_minor IS NULL OR tax_minor = tax_amount_minor)AND((tax_bps IS NULL AND tax_amount_minor IS NULL)=(tax_base IS NULL))))',
   ];
   @override
   bool get dontWriteConstraints => true;
@@ -3006,6 +3131,14 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
 
   /// Schema 5 (SA10, Java V20): a pool expense (its single payer is the treasurer: checked by the service).
   final int paidFromPool;
+
+  /// Schema 8 (SA15, Java V21, A171-A177): one bill discount (percent or amount) and service/tax as amounts.
+  /// *_bps / *_amount_minor are the request (which form); discount_minor is the computed total like service_minor.
+  final int? discountBps;
+  final int? discountAmountMinor;
+  final int? discountMinor;
+  final int? serviceAmountMinor;
+  final int? taxAmountMinor;
   const ExpenseRow({
     required this.id,
     required this.groupId,
@@ -3027,6 +3160,11 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
     required this.version,
     required this.category,
     required this.paidFromPool,
+    this.discountBps,
+    this.discountAmountMinor,
+    this.discountMinor,
+    this.serviceAmountMinor,
+    this.taxAmountMinor,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3067,6 +3205,21 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
     map['version'] = Variable<int>(version);
     map['category'] = Variable<String>(category);
     map['paid_from_pool'] = Variable<int>(paidFromPool);
+    if (!nullToAbsent || discountBps != null) {
+      map['discount_bps'] = Variable<int>(discountBps);
+    }
+    if (!nullToAbsent || discountAmountMinor != null) {
+      map['discount_amount_minor'] = Variable<int>(discountAmountMinor);
+    }
+    if (!nullToAbsent || discountMinor != null) {
+      map['discount_minor'] = Variable<int>(discountMinor);
+    }
+    if (!nullToAbsent || serviceAmountMinor != null) {
+      map['service_amount_minor'] = Variable<int>(serviceAmountMinor);
+    }
+    if (!nullToAbsent || taxAmountMinor != null) {
+      map['tax_amount_minor'] = Variable<int>(taxAmountMinor);
+    }
     return map;
   }
 
@@ -3108,6 +3261,21 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
       version: Value(version),
       category: Value(category),
       paidFromPool: Value(paidFromPool),
+      discountBps: discountBps == null && nullToAbsent
+          ? const Value.absent()
+          : Value(discountBps),
+      discountAmountMinor: discountAmountMinor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(discountAmountMinor),
+      discountMinor: discountMinor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(discountMinor),
+      serviceAmountMinor: serviceAmountMinor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serviceAmountMinor),
+      taxAmountMinor: taxAmountMinor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(taxAmountMinor),
     );
   }
 
@@ -3137,6 +3305,15 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
       version: serializer.fromJson<int>(json['version']),
       category: serializer.fromJson<String>(json['category']),
       paidFromPool: serializer.fromJson<int>(json['paid_from_pool']),
+      discountBps: serializer.fromJson<int?>(json['discount_bps']),
+      discountAmountMinor: serializer.fromJson<int?>(
+        json['discount_amount_minor'],
+      ),
+      discountMinor: serializer.fromJson<int?>(json['discount_minor']),
+      serviceAmountMinor: serializer.fromJson<int?>(
+        json['service_amount_minor'],
+      ),
+      taxAmountMinor: serializer.fromJson<int?>(json['tax_amount_minor']),
     );
   }
   @override
@@ -3163,6 +3340,11 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
       'version': serializer.toJson<int>(version),
       'category': serializer.toJson<String>(category),
       'paid_from_pool': serializer.toJson<int>(paidFromPool),
+      'discount_bps': serializer.toJson<int?>(discountBps),
+      'discount_amount_minor': serializer.toJson<int?>(discountAmountMinor),
+      'discount_minor': serializer.toJson<int?>(discountMinor),
+      'service_amount_minor': serializer.toJson<int?>(serviceAmountMinor),
+      'tax_amount_minor': serializer.toJson<int?>(taxAmountMinor),
     };
   }
 
@@ -3187,6 +3369,11 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
     int? version,
     String? category,
     int? paidFromPool,
+    Value<int?> discountBps = const Value.absent(),
+    Value<int?> discountAmountMinor = const Value.absent(),
+    Value<int?> discountMinor = const Value.absent(),
+    Value<int?> serviceAmountMinor = const Value.absent(),
+    Value<int?> taxAmountMinor = const Value.absent(),
   }) => ExpenseRow(
     id: id ?? this.id,
     groupId: groupId ?? this.groupId,
@@ -3212,6 +3399,19 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
     version: version ?? this.version,
     category: category ?? this.category,
     paidFromPool: paidFromPool ?? this.paidFromPool,
+    discountBps: discountBps.present ? discountBps.value : this.discountBps,
+    discountAmountMinor: discountAmountMinor.present
+        ? discountAmountMinor.value
+        : this.discountAmountMinor,
+    discountMinor: discountMinor.present
+        ? discountMinor.value
+        : this.discountMinor,
+    serviceAmountMinor: serviceAmountMinor.present
+        ? serviceAmountMinor.value
+        : this.serviceAmountMinor,
+    taxAmountMinor: taxAmountMinor.present
+        ? taxAmountMinor.value
+        : this.taxAmountMinor,
   );
   ExpenseRow copyWithCompanion(ExpensesCompanion data) {
     return ExpenseRow(
@@ -3251,6 +3451,21 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
       paidFromPool: data.paidFromPool.present
           ? data.paidFromPool.value
           : this.paidFromPool,
+      discountBps: data.discountBps.present
+          ? data.discountBps.value
+          : this.discountBps,
+      discountAmountMinor: data.discountAmountMinor.present
+          ? data.discountAmountMinor.value
+          : this.discountAmountMinor,
+      discountMinor: data.discountMinor.present
+          ? data.discountMinor.value
+          : this.discountMinor,
+      serviceAmountMinor: data.serviceAmountMinor.present
+          ? data.serviceAmountMinor.value
+          : this.serviceAmountMinor,
+      taxAmountMinor: data.taxAmountMinor.present
+          ? data.taxAmountMinor.value
+          : this.taxAmountMinor,
     );
   }
 
@@ -3276,13 +3491,18 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
           ..write('deletedAt: $deletedAt, ')
           ..write('version: $version, ')
           ..write('category: $category, ')
-          ..write('paidFromPool: $paidFromPool')
+          ..write('paidFromPool: $paidFromPool, ')
+          ..write('discountBps: $discountBps, ')
+          ..write('discountAmountMinor: $discountAmountMinor, ')
+          ..write('discountMinor: $discountMinor, ')
+          ..write('serviceAmountMinor: $serviceAmountMinor, ')
+          ..write('taxAmountMinor: $taxAmountMinor')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     groupId,
     title,
@@ -3303,7 +3523,12 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
     version,
     category,
     paidFromPool,
-  );
+    discountBps,
+    discountAmountMinor,
+    discountMinor,
+    serviceAmountMinor,
+    taxAmountMinor,
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3327,7 +3552,12 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
           other.deletedAt == this.deletedAt &&
           other.version == this.version &&
           other.category == this.category &&
-          other.paidFromPool == this.paidFromPool);
+          other.paidFromPool == this.paidFromPool &&
+          other.discountBps == this.discountBps &&
+          other.discountAmountMinor == this.discountAmountMinor &&
+          other.discountMinor == this.discountMinor &&
+          other.serviceAmountMinor == this.serviceAmountMinor &&
+          other.taxAmountMinor == this.taxAmountMinor);
 }
 
 class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
@@ -3351,6 +3581,11 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
   final Value<int> version;
   final Value<String> category;
   final Value<int> paidFromPool;
+  final Value<int?> discountBps;
+  final Value<int?> discountAmountMinor;
+  final Value<int?> discountMinor;
+  final Value<int?> serviceAmountMinor;
+  final Value<int?> taxAmountMinor;
   final Value<int> rowid;
   const ExpensesCompanion({
     this.id = const Value.absent(),
@@ -3373,6 +3608,11 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     this.version = const Value.absent(),
     this.category = const Value.absent(),
     this.paidFromPool = const Value.absent(),
+    this.discountBps = const Value.absent(),
+    this.discountAmountMinor = const Value.absent(),
+    this.discountMinor = const Value.absent(),
+    this.serviceAmountMinor = const Value.absent(),
+    this.taxAmountMinor = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ExpensesCompanion.insert({
@@ -3396,6 +3636,11 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     this.version = const Value.absent(),
     this.category = const Value.absent(),
     this.paidFromPool = const Value.absent(),
+    this.discountBps = const Value.absent(),
+    this.discountAmountMinor = const Value.absent(),
+    this.discountMinor = const Value.absent(),
+    this.serviceAmountMinor = const Value.absent(),
+    this.taxAmountMinor = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        groupId = Value(groupId),
@@ -3427,6 +3672,11 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     Expression<int>? version,
     Expression<String>? category,
     Expression<int>? paidFromPool,
+    Expression<int>? discountBps,
+    Expression<int>? discountAmountMinor,
+    Expression<int>? discountMinor,
+    Expression<int>? serviceAmountMinor,
+    Expression<int>? taxAmountMinor,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -3450,6 +3700,13 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
       if (version != null) 'version': version,
       if (category != null) 'category': category,
       if (paidFromPool != null) 'paid_from_pool': paidFromPool,
+      if (discountBps != null) 'discount_bps': discountBps,
+      if (discountAmountMinor != null)
+        'discount_amount_minor': discountAmountMinor,
+      if (discountMinor != null) 'discount_minor': discountMinor,
+      if (serviceAmountMinor != null)
+        'service_amount_minor': serviceAmountMinor,
+      if (taxAmountMinor != null) 'tax_amount_minor': taxAmountMinor,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3475,6 +3732,11 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     Value<int>? version,
     Value<String>? category,
     Value<int>? paidFromPool,
+    Value<int?>? discountBps,
+    Value<int?>? discountAmountMinor,
+    Value<int?>? discountMinor,
+    Value<int?>? serviceAmountMinor,
+    Value<int?>? taxAmountMinor,
     Value<int>? rowid,
   }) {
     return ExpensesCompanion(
@@ -3498,6 +3760,11 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
       version: version ?? this.version,
       category: category ?? this.category,
       paidFromPool: paidFromPool ?? this.paidFromPool,
+      discountBps: discountBps ?? this.discountBps,
+      discountAmountMinor: discountAmountMinor ?? this.discountAmountMinor,
+      discountMinor: discountMinor ?? this.discountMinor,
+      serviceAmountMinor: serviceAmountMinor ?? this.serviceAmountMinor,
+      taxAmountMinor: taxAmountMinor ?? this.taxAmountMinor,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3565,6 +3832,21 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     if (paidFromPool.present) {
       map['paid_from_pool'] = Variable<int>(paidFromPool.value);
     }
+    if (discountBps.present) {
+      map['discount_bps'] = Variable<int>(discountBps.value);
+    }
+    if (discountAmountMinor.present) {
+      map['discount_amount_minor'] = Variable<int>(discountAmountMinor.value);
+    }
+    if (discountMinor.present) {
+      map['discount_minor'] = Variable<int>(discountMinor.value);
+    }
+    if (serviceAmountMinor.present) {
+      map['service_amount_minor'] = Variable<int>(serviceAmountMinor.value);
+    }
+    if (taxAmountMinor.present) {
+      map['tax_amount_minor'] = Variable<int>(taxAmountMinor.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3594,6 +3876,11 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
           ..write('version: $version, ')
           ..write('category: $category, ')
           ..write('paidFromPool: $paidFromPool, ')
+          ..write('discountBps: $discountBps, ')
+          ..write('discountAmountMinor: $discountAmountMinor, ')
+          ..write('discountMinor: $discountMinor, ')
+          ..write('serviceAmountMinor: $serviceAmountMinor, ')
+          ..write('taxAmountMinor: $taxAmountMinor, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3963,6 +4250,17 @@ class ExpenseSplits extends Table with TableInfo<ExpenseSplits, SplitRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
+  static const VerificationMeta _discountMinorMeta = const VerificationMeta(
+    'discountMinor',
+  );
+  late final GeneratedColumn<int> discountMinor = GeneratedColumn<int>(
+    'discount_minor',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
   @override
   List<GeneratedColumn> get $columns => [
     expenseId,
@@ -3972,6 +4270,7 @@ class ExpenseSplits extends Table with TableInfo<ExpenseSplits, SplitRow> {
     serviceMinor,
     taxMinor,
     adjustmentMinor,
+    discountMinor,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4039,6 +4338,15 @@ class ExpenseSplits extends Table with TableInfo<ExpenseSplits, SplitRow> {
         ),
       );
     }
+    if (data.containsKey('discount_minor')) {
+      context.handle(
+        _discountMinorMeta,
+        discountMinor.isAcceptableOrUnknown(
+          data['discount_minor']!,
+          _discountMinorMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -4076,6 +4384,10 @@ class ExpenseSplits extends Table with TableInfo<ExpenseSplits, SplitRow> {
         DriftSqlType.int,
         data['${effectivePrefix}adjustment_minor'],
       ),
+      discountMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}discount_minor'],
+      ),
     );
   }
 
@@ -4089,7 +4401,7 @@ class ExpenseSplits extends Table with TableInfo<ExpenseSplits, SplitRow> {
   @override
   List<String> get customConstraints => const [
     'PRIMARY KEY(expense_id, member_id)',
-    'CONSTRAINT ck_expense_splits_breakdown CHECK((items_minor IS NULL AND service_minor IS NULL AND tax_minor IS NULL AND adjustment_minor IS NULL)OR(items_minor IS NOT NULL AND items_minor >= 0 AND service_minor IS NOT NULL AND service_minor >= 0 AND tax_minor IS NOT NULL AND tax_minor >= 0 AND adjustment_minor IS NOT NULL AND owed_minor = items_minor + service_minor + tax_minor + adjustment_minor))',
+    'CONSTRAINT ck_expense_splits_breakdown CHECK((items_minor IS NULL AND discount_minor IS NULL AND service_minor IS NULL AND tax_minor IS NULL AND adjustment_minor IS NULL)OR(items_minor IS NOT NULL AND items_minor >= 0 AND discount_minor IS NOT NULL AND discount_minor >= 0 AND discount_minor <= items_minor AND service_minor IS NOT NULL AND service_minor >= 0 AND tax_minor IS NOT NULL AND tax_minor >= 0 AND adjustment_minor IS NOT NULL AND owed_minor = items_minor - discount_minor + service_minor + tax_minor + adjustment_minor))',
   ];
   @override
   bool get dontWriteConstraints => true;
@@ -4103,6 +4415,9 @@ class SplitRow extends DataClass implements Insertable<SplitRow> {
   final int? serviceMinor;
   final int? taxMinor;
   final int? adjustmentMinor;
+
+  /// Schema 8 (SA15, Java V21): this member's part of the bill discount (ITEMIZED breakdown only).
+  final int? discountMinor;
   const SplitRow({
     required this.expenseId,
     required this.memberId,
@@ -4111,6 +4426,7 @@ class SplitRow extends DataClass implements Insertable<SplitRow> {
     this.serviceMinor,
     this.taxMinor,
     this.adjustmentMinor,
+    this.discountMinor,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -4129,6 +4445,9 @@ class SplitRow extends DataClass implements Insertable<SplitRow> {
     }
     if (!nullToAbsent || adjustmentMinor != null) {
       map['adjustment_minor'] = Variable<int>(adjustmentMinor);
+    }
+    if (!nullToAbsent || discountMinor != null) {
+      map['discount_minor'] = Variable<int>(discountMinor);
     }
     return map;
   }
@@ -4150,6 +4469,9 @@ class SplitRow extends DataClass implements Insertable<SplitRow> {
       adjustmentMinor: adjustmentMinor == null && nullToAbsent
           ? const Value.absent()
           : Value(adjustmentMinor),
+      discountMinor: discountMinor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(discountMinor),
     );
   }
 
@@ -4166,6 +4488,7 @@ class SplitRow extends DataClass implements Insertable<SplitRow> {
       serviceMinor: serializer.fromJson<int?>(json['service_minor']),
       taxMinor: serializer.fromJson<int?>(json['tax_minor']),
       adjustmentMinor: serializer.fromJson<int?>(json['adjustment_minor']),
+      discountMinor: serializer.fromJson<int?>(json['discount_minor']),
     );
   }
   @override
@@ -4179,6 +4502,7 @@ class SplitRow extends DataClass implements Insertable<SplitRow> {
       'service_minor': serializer.toJson<int?>(serviceMinor),
       'tax_minor': serializer.toJson<int?>(taxMinor),
       'adjustment_minor': serializer.toJson<int?>(adjustmentMinor),
+      'discount_minor': serializer.toJson<int?>(discountMinor),
     };
   }
 
@@ -4190,6 +4514,7 @@ class SplitRow extends DataClass implements Insertable<SplitRow> {
     Value<int?> serviceMinor = const Value.absent(),
     Value<int?> taxMinor = const Value.absent(),
     Value<int?> adjustmentMinor = const Value.absent(),
+    Value<int?> discountMinor = const Value.absent(),
   }) => SplitRow(
     expenseId: expenseId ?? this.expenseId,
     memberId: memberId ?? this.memberId,
@@ -4200,6 +4525,9 @@ class SplitRow extends DataClass implements Insertable<SplitRow> {
     adjustmentMinor: adjustmentMinor.present
         ? adjustmentMinor.value
         : this.adjustmentMinor,
+    discountMinor: discountMinor.present
+        ? discountMinor.value
+        : this.discountMinor,
   );
   SplitRow copyWithCompanion(ExpenseSplitsCompanion data) {
     return SplitRow(
@@ -4216,6 +4544,9 @@ class SplitRow extends DataClass implements Insertable<SplitRow> {
       adjustmentMinor: data.adjustmentMinor.present
           ? data.adjustmentMinor.value
           : this.adjustmentMinor,
+      discountMinor: data.discountMinor.present
+          ? data.discountMinor.value
+          : this.discountMinor,
     );
   }
 
@@ -4228,7 +4559,8 @@ class SplitRow extends DataClass implements Insertable<SplitRow> {
           ..write('itemsMinor: $itemsMinor, ')
           ..write('serviceMinor: $serviceMinor, ')
           ..write('taxMinor: $taxMinor, ')
-          ..write('adjustmentMinor: $adjustmentMinor')
+          ..write('adjustmentMinor: $adjustmentMinor, ')
+          ..write('discountMinor: $discountMinor')
           ..write(')'))
         .toString();
   }
@@ -4242,6 +4574,7 @@ class SplitRow extends DataClass implements Insertable<SplitRow> {
     serviceMinor,
     taxMinor,
     adjustmentMinor,
+    discountMinor,
   );
   @override
   bool operator ==(Object other) =>
@@ -4253,7 +4586,8 @@ class SplitRow extends DataClass implements Insertable<SplitRow> {
           other.itemsMinor == this.itemsMinor &&
           other.serviceMinor == this.serviceMinor &&
           other.taxMinor == this.taxMinor &&
-          other.adjustmentMinor == this.adjustmentMinor);
+          other.adjustmentMinor == this.adjustmentMinor &&
+          other.discountMinor == this.discountMinor);
 }
 
 class ExpenseSplitsCompanion extends UpdateCompanion<SplitRow> {
@@ -4264,6 +4598,7 @@ class ExpenseSplitsCompanion extends UpdateCompanion<SplitRow> {
   final Value<int?> serviceMinor;
   final Value<int?> taxMinor;
   final Value<int?> adjustmentMinor;
+  final Value<int?> discountMinor;
   final Value<int> rowid;
   const ExpenseSplitsCompanion({
     this.expenseId = const Value.absent(),
@@ -4273,6 +4608,7 @@ class ExpenseSplitsCompanion extends UpdateCompanion<SplitRow> {
     this.serviceMinor = const Value.absent(),
     this.taxMinor = const Value.absent(),
     this.adjustmentMinor = const Value.absent(),
+    this.discountMinor = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ExpenseSplitsCompanion.insert({
@@ -4283,6 +4619,7 @@ class ExpenseSplitsCompanion extends UpdateCompanion<SplitRow> {
     this.serviceMinor = const Value.absent(),
     this.taxMinor = const Value.absent(),
     this.adjustmentMinor = const Value.absent(),
+    this.discountMinor = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : expenseId = Value(expenseId),
        memberId = Value(memberId),
@@ -4295,6 +4632,7 @@ class ExpenseSplitsCompanion extends UpdateCompanion<SplitRow> {
     Expression<int>? serviceMinor,
     Expression<int>? taxMinor,
     Expression<int>? adjustmentMinor,
+    Expression<int>? discountMinor,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -4305,6 +4643,7 @@ class ExpenseSplitsCompanion extends UpdateCompanion<SplitRow> {
       if (serviceMinor != null) 'service_minor': serviceMinor,
       if (taxMinor != null) 'tax_minor': taxMinor,
       if (adjustmentMinor != null) 'adjustment_minor': adjustmentMinor,
+      if (discountMinor != null) 'discount_minor': discountMinor,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4317,6 +4656,7 @@ class ExpenseSplitsCompanion extends UpdateCompanion<SplitRow> {
     Value<int?>? serviceMinor,
     Value<int?>? taxMinor,
     Value<int?>? adjustmentMinor,
+    Value<int?>? discountMinor,
     Value<int>? rowid,
   }) {
     return ExpenseSplitsCompanion(
@@ -4327,6 +4667,7 @@ class ExpenseSplitsCompanion extends UpdateCompanion<SplitRow> {
       serviceMinor: serviceMinor ?? this.serviceMinor,
       taxMinor: taxMinor ?? this.taxMinor,
       adjustmentMinor: adjustmentMinor ?? this.adjustmentMinor,
+      discountMinor: discountMinor ?? this.discountMinor,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4355,6 +4696,9 @@ class ExpenseSplitsCompanion extends UpdateCompanion<SplitRow> {
     if (adjustmentMinor.present) {
       map['adjustment_minor'] = Variable<int>(adjustmentMinor.value);
     }
+    if (discountMinor.present) {
+      map['discount_minor'] = Variable<int>(discountMinor.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -4371,6 +4715,7 @@ class ExpenseSplitsCompanion extends UpdateCompanion<SplitRow> {
           ..write('serviceMinor: $serviceMinor, ')
           ..write('taxMinor: $taxMinor, ')
           ..write('adjustmentMinor: $adjustmentMinor, ')
+          ..write('discountMinor: $discountMinor, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4434,6 +4779,30 @@ class ExpenseItems extends Table with TableInfo<ExpenseItems, ItemRow> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL CHECK (sort_order >= 0)',
   );
+  static const VerificationMeta _quantityMeta = const VerificationMeta(
+    'quantity',
+  );
+  late final GeneratedColumn<int> quantity = GeneratedColumn<int>(
+    'quantity',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 1 CHECK (quantity BETWEEN 1 AND 999)',
+    defaultValue: const CustomExpression('1'),
+  );
+  static const VerificationMeta _unitAmountMinorMeta = const VerificationMeta(
+    'unitAmountMinor',
+  );
+  late final GeneratedColumn<int> unitAmountMinor = GeneratedColumn<int>(
+    'unit_amount_minor',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints:
+        'NOT NULL CHECK (unit_amount_minor BETWEEN 1 AND 1000000000000)',
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -4441,6 +4810,8 @@ class ExpenseItems extends Table with TableInfo<ExpenseItems, ItemRow> {
     name,
     amountMinor,
     sortOrder,
+    quantity,
+    unitAmountMinor,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4494,6 +4865,23 @@ class ExpenseItems extends Table with TableInfo<ExpenseItems, ItemRow> {
     } else if (isInserting) {
       context.missing(_sortOrderMeta);
     }
+    if (data.containsKey('quantity')) {
+      context.handle(
+        _quantityMeta,
+        quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta),
+      );
+    }
+    if (data.containsKey('unit_amount_minor')) {
+      context.handle(
+        _unitAmountMinorMeta,
+        unitAmountMinor.isAcceptableOrUnknown(
+          data['unit_amount_minor']!,
+          _unitAmountMinorMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_unitAmountMinorMeta);
+    }
     return context;
   }
 
@@ -4527,6 +4915,14 @@ class ExpenseItems extends Table with TableInfo<ExpenseItems, ItemRow> {
         DriftSqlType.int,
         data['${effectivePrefix}sort_order'],
       )!,
+      quantity: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}quantity'],
+      )!,
+      unitAmountMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}unit_amount_minor'],
+      )!,
     );
   }
 
@@ -4540,6 +4936,7 @@ class ExpenseItems extends Table with TableInfo<ExpenseItems, ItemRow> {
   @override
   List<String> get customConstraints => const [
     'CONSTRAINT ux_expense_items_order UNIQUE(expense_id, sort_order)',
+    'CONSTRAINT ck_expense_items_line CHECK(amount_minor = quantity * unit_amount_minor)',
   ];
   @override
   bool get dontWriteConstraints => true;
@@ -4551,12 +4948,18 @@ class ItemRow extends DataClass implements Insertable<ItemRow> {
   final String name;
   final int amountMinor;
   final int sortOrder;
+
+  /// Schema 8 (SA15, Java V21, A172): quantity x unit price = the line amount (999 x 10^12 fits in 64 bits).
+  final int quantity;
+  final int unitAmountMinor;
   const ItemRow({
     required this.id,
     required this.expenseId,
     required this.name,
     required this.amountMinor,
     required this.sortOrder,
+    required this.quantity,
+    required this.unitAmountMinor,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -4566,6 +4969,8 @@ class ItemRow extends DataClass implements Insertable<ItemRow> {
     map['name'] = Variable<String>(name);
     map['amount_minor'] = Variable<int>(amountMinor);
     map['sort_order'] = Variable<int>(sortOrder);
+    map['quantity'] = Variable<int>(quantity);
+    map['unit_amount_minor'] = Variable<int>(unitAmountMinor);
     return map;
   }
 
@@ -4576,6 +4981,8 @@ class ItemRow extends DataClass implements Insertable<ItemRow> {
       name: Value(name),
       amountMinor: Value(amountMinor),
       sortOrder: Value(sortOrder),
+      quantity: Value(quantity),
+      unitAmountMinor: Value(unitAmountMinor),
     );
   }
 
@@ -4590,6 +4997,8 @@ class ItemRow extends DataClass implements Insertable<ItemRow> {
       name: serializer.fromJson<String>(json['name']),
       amountMinor: serializer.fromJson<int>(json['amount_minor']),
       sortOrder: serializer.fromJson<int>(json['sort_order']),
+      quantity: serializer.fromJson<int>(json['quantity']),
+      unitAmountMinor: serializer.fromJson<int>(json['unit_amount_minor']),
     );
   }
   @override
@@ -4601,6 +5010,8 @@ class ItemRow extends DataClass implements Insertable<ItemRow> {
       'name': serializer.toJson<String>(name),
       'amount_minor': serializer.toJson<int>(amountMinor),
       'sort_order': serializer.toJson<int>(sortOrder),
+      'quantity': serializer.toJson<int>(quantity),
+      'unit_amount_minor': serializer.toJson<int>(unitAmountMinor),
     };
   }
 
@@ -4610,12 +5021,16 @@ class ItemRow extends DataClass implements Insertable<ItemRow> {
     String? name,
     int? amountMinor,
     int? sortOrder,
+    int? quantity,
+    int? unitAmountMinor,
   }) => ItemRow(
     id: id ?? this.id,
     expenseId: expenseId ?? this.expenseId,
     name: name ?? this.name,
     amountMinor: amountMinor ?? this.amountMinor,
     sortOrder: sortOrder ?? this.sortOrder,
+    quantity: quantity ?? this.quantity,
+    unitAmountMinor: unitAmountMinor ?? this.unitAmountMinor,
   );
   ItemRow copyWithCompanion(ExpenseItemsCompanion data) {
     return ItemRow(
@@ -4626,6 +5041,10 @@ class ItemRow extends DataClass implements Insertable<ItemRow> {
           ? data.amountMinor.value
           : this.amountMinor,
       sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      unitAmountMinor: data.unitAmountMinor.present
+          ? data.unitAmountMinor.value
+          : this.unitAmountMinor,
     );
   }
 
@@ -4636,13 +5055,23 @@ class ItemRow extends DataClass implements Insertable<ItemRow> {
           ..write('expenseId: $expenseId, ')
           ..write('name: $name, ')
           ..write('amountMinor: $amountMinor, ')
-          ..write('sortOrder: $sortOrder')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('quantity: $quantity, ')
+          ..write('unitAmountMinor: $unitAmountMinor')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, expenseId, name, amountMinor, sortOrder);
+  int get hashCode => Object.hash(
+    id,
+    expenseId,
+    name,
+    amountMinor,
+    sortOrder,
+    quantity,
+    unitAmountMinor,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4651,7 +5080,9 @@ class ItemRow extends DataClass implements Insertable<ItemRow> {
           other.expenseId == this.expenseId &&
           other.name == this.name &&
           other.amountMinor == this.amountMinor &&
-          other.sortOrder == this.sortOrder);
+          other.sortOrder == this.sortOrder &&
+          other.quantity == this.quantity &&
+          other.unitAmountMinor == this.unitAmountMinor);
 }
 
 class ExpenseItemsCompanion extends UpdateCompanion<ItemRow> {
@@ -4660,6 +5091,8 @@ class ExpenseItemsCompanion extends UpdateCompanion<ItemRow> {
   final Value<String> name;
   final Value<int> amountMinor;
   final Value<int> sortOrder;
+  final Value<int> quantity;
+  final Value<int> unitAmountMinor;
   final Value<int> rowid;
   const ExpenseItemsCompanion({
     this.id = const Value.absent(),
@@ -4667,6 +5100,8 @@ class ExpenseItemsCompanion extends UpdateCompanion<ItemRow> {
     this.name = const Value.absent(),
     this.amountMinor = const Value.absent(),
     this.sortOrder = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.unitAmountMinor = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ExpenseItemsCompanion.insert({
@@ -4675,18 +5110,23 @@ class ExpenseItemsCompanion extends UpdateCompanion<ItemRow> {
     required String name,
     required int amountMinor,
     required int sortOrder,
+    this.quantity = const Value.absent(),
+    required int unitAmountMinor,
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        expenseId = Value(expenseId),
        name = Value(name),
        amountMinor = Value(amountMinor),
-       sortOrder = Value(sortOrder);
+       sortOrder = Value(sortOrder),
+       unitAmountMinor = Value(unitAmountMinor);
   static Insertable<ItemRow> custom({
     Expression<String>? id,
     Expression<String>? expenseId,
     Expression<String>? name,
     Expression<int>? amountMinor,
     Expression<int>? sortOrder,
+    Expression<int>? quantity,
+    Expression<int>? unitAmountMinor,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -4695,6 +5135,8 @@ class ExpenseItemsCompanion extends UpdateCompanion<ItemRow> {
       if (name != null) 'name': name,
       if (amountMinor != null) 'amount_minor': amountMinor,
       if (sortOrder != null) 'sort_order': sortOrder,
+      if (quantity != null) 'quantity': quantity,
+      if (unitAmountMinor != null) 'unit_amount_minor': unitAmountMinor,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4705,6 +5147,8 @@ class ExpenseItemsCompanion extends UpdateCompanion<ItemRow> {
     Value<String>? name,
     Value<int>? amountMinor,
     Value<int>? sortOrder,
+    Value<int>? quantity,
+    Value<int>? unitAmountMinor,
     Value<int>? rowid,
   }) {
     return ExpenseItemsCompanion(
@@ -4713,6 +5157,8 @@ class ExpenseItemsCompanion extends UpdateCompanion<ItemRow> {
       name: name ?? this.name,
       amountMinor: amountMinor ?? this.amountMinor,
       sortOrder: sortOrder ?? this.sortOrder,
+      quantity: quantity ?? this.quantity,
+      unitAmountMinor: unitAmountMinor ?? this.unitAmountMinor,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4735,6 +5181,12 @@ class ExpenseItemsCompanion extends UpdateCompanion<ItemRow> {
     if (sortOrder.present) {
       map['sort_order'] = Variable<int>(sortOrder.value);
     }
+    if (quantity.present) {
+      map['quantity'] = Variable<int>(quantity.value);
+    }
+    if (unitAmountMinor.present) {
+      map['unit_amount_minor'] = Variable<int>(unitAmountMinor.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -4749,6 +5201,8 @@ class ExpenseItemsCompanion extends UpdateCompanion<ItemRow> {
           ..write('name: $name, ')
           ..write('amountMinor: $amountMinor, ')
           ..write('sortOrder: $sortOrder, ')
+          ..write('quantity: $quantity, ')
+          ..write('unitAmountMinor: $unitAmountMinor, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -10605,6 +11059,11 @@ typedef $ExpensesCreateCompanionBuilder = ExpensesCompanion Function({
   Value<int> version,
   Value<String> category,
   Value<int> paidFromPool,
+  Value<int?> discountBps,
+  Value<int?> discountAmountMinor,
+  Value<int?> discountMinor,
+  Value<int?> serviceAmountMinor,
+  Value<int?> taxAmountMinor,
   Value<int> rowid,
 });
 typedef $ExpensesUpdateCompanionBuilder = ExpensesCompanion Function({
@@ -10628,6 +11087,11 @@ typedef $ExpensesUpdateCompanionBuilder = ExpensesCompanion Function({
   Value<int> version,
   Value<String> category,
   Value<int> paidFromPool,
+  Value<int?> discountBps,
+  Value<int?> discountAmountMinor,
+  Value<int?> discountMinor,
+  Value<int?> serviceAmountMinor,
+  Value<int?> taxAmountMinor,
   Value<int> rowid,
 });
 
@@ -10841,6 +11305,31 @@ class $ExpensesFilterComposer extends Composer<_$LocalDatabase, Expenses> {
 
   ColumnFilters<int> get paidFromPool => $composableBuilder(
     column: $table.paidFromPool,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get discountBps => $composableBuilder(
+    column: $table.discountBps,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get discountAmountMinor => $composableBuilder(
+    column: $table.discountAmountMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get discountMinor => $composableBuilder(
+    column: $table.discountMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get serviceAmountMinor => $composableBuilder(
+    column: $table.serviceAmountMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get taxAmountMinor => $composableBuilder(
+    column: $table.taxAmountMinor,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -11089,6 +11578,31 @@ class $ExpensesOrderingComposer extends Composer<_$LocalDatabase, Expenses> {
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get discountBps => $composableBuilder(
+    column: $table.discountBps,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get discountAmountMinor => $composableBuilder(
+    column: $table.discountAmountMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get discountMinor => $composableBuilder(
+    column: $table.discountMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get serviceAmountMinor => $composableBuilder(
+    column: $table.serviceAmountMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get taxAmountMinor => $composableBuilder(
+    column: $table.taxAmountMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $ExpenseGroupsOrderingComposer get groupId {
     final $ExpenseGroupsOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -11209,6 +11723,31 @@ class $ExpensesAnnotationComposer extends Composer<_$LocalDatabase, Expenses> {
 
   GeneratedColumn<int> get paidFromPool => $composableBuilder(
     column: $table.paidFromPool,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get discountBps => $composableBuilder(
+    column: $table.discountBps,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get discountAmountMinor => $composableBuilder(
+    column: $table.discountAmountMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get discountMinor => $composableBuilder(
+    column: $table.discountMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get serviceAmountMinor => $composableBuilder(
+    column: $table.serviceAmountMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get taxAmountMinor => $composableBuilder(
+    column: $table.taxAmountMinor,
     builder: (column) => column,
   );
 
@@ -11414,6 +11953,11 @@ class $ExpensesTableManager
                 Value<int> version = const Value.absent(),
                 Value<String> category = const Value.absent(),
                 Value<int> paidFromPool = const Value.absent(),
+                Value<int?> discountBps = const Value.absent(),
+                Value<int?> discountAmountMinor = const Value.absent(),
+                Value<int?> discountMinor = const Value.absent(),
+                Value<int?> serviceAmountMinor = const Value.absent(),
+                Value<int?> taxAmountMinor = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExpensesCompanion(
                 id: id,
@@ -11436,6 +11980,11 @@ class $ExpensesTableManager
                 version: version,
                 category: category,
                 paidFromPool: paidFromPool,
+                discountBps: discountBps,
+                discountAmountMinor: discountAmountMinor,
+                discountMinor: discountMinor,
+                serviceAmountMinor: serviceAmountMinor,
+                taxAmountMinor: taxAmountMinor,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -11460,6 +12009,11 @@ class $ExpensesTableManager
                 Value<int> version = const Value.absent(),
                 Value<String> category = const Value.absent(),
                 Value<int> paidFromPool = const Value.absent(),
+                Value<int?> discountBps = const Value.absent(),
+                Value<int?> discountAmountMinor = const Value.absent(),
+                Value<int?> discountMinor = const Value.absent(),
+                Value<int?> serviceAmountMinor = const Value.absent(),
+                Value<int?> taxAmountMinor = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExpensesCompanion.insert(
                 id: id,
@@ -11482,6 +12036,11 @@ class $ExpensesTableManager
                 version: version,
                 category: category,
                 paidFromPool: paidFromPool,
+                discountBps: discountBps,
+                discountAmountMinor: discountAmountMinor,
+                discountMinor: discountMinor,
+                serviceAmountMinor: serviceAmountMinor,
+                taxAmountMinor: taxAmountMinor,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -12027,6 +12586,7 @@ typedef $ExpenseSplitsCreateCompanionBuilder = ExpenseSplitsCompanion Function({
   Value<int?> serviceMinor,
   Value<int?> taxMinor,
   Value<int?> adjustmentMinor,
+  Value<int?> discountMinor,
   Value<int> rowid,
 });
 typedef $ExpenseSplitsUpdateCompanionBuilder = ExpenseSplitsCompanion Function({
@@ -12037,6 +12597,7 @@ typedef $ExpenseSplitsUpdateCompanionBuilder = ExpenseSplitsCompanion Function({
   Value<int?> serviceMinor,
   Value<int?> taxMinor,
   Value<int?> adjustmentMinor,
+  Value<int?> discountMinor,
   Value<int> rowid,
 });
 
@@ -12110,6 +12671,11 @@ class $ExpenseSplitsFilterComposer
 
   ColumnFilters<int> get adjustmentMinor => $composableBuilder(
     column: $table.adjustmentMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get discountMinor => $composableBuilder(
+    column: $table.discountMinor,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -12194,6 +12760,11 @@ class $ExpenseSplitsOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get discountMinor => $composableBuilder(
+    column: $table.discountMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $ExpensesOrderingComposer get expenseId {
     final $ExpensesOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -12268,6 +12839,11 @@ class $ExpenseSplitsAnnotationComposer
 
   GeneratedColumn<int> get adjustmentMinor => $composableBuilder(
     column: $table.adjustmentMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get discountMinor => $composableBuilder(
+    column: $table.discountMinor,
     builder: (column) => column,
   );
 
@@ -12353,6 +12929,7 @@ class $ExpenseSplitsTableManager
                 Value<int?> serviceMinor = const Value.absent(),
                 Value<int?> taxMinor = const Value.absent(),
                 Value<int?> adjustmentMinor = const Value.absent(),
+                Value<int?> discountMinor = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExpenseSplitsCompanion(
                 expenseId: expenseId,
@@ -12362,6 +12939,7 @@ class $ExpenseSplitsTableManager
                 serviceMinor: serviceMinor,
                 taxMinor: taxMinor,
                 adjustmentMinor: adjustmentMinor,
+                discountMinor: discountMinor,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -12373,6 +12951,7 @@ class $ExpenseSplitsTableManager
                 Value<int?> serviceMinor = const Value.absent(),
                 Value<int?> taxMinor = const Value.absent(),
                 Value<int?> adjustmentMinor = const Value.absent(),
+                Value<int?> discountMinor = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExpenseSplitsCompanion.insert(
                 expenseId: expenseId,
@@ -12382,6 +12961,7 @@ class $ExpenseSplitsTableManager
                 serviceMinor: serviceMinor,
                 taxMinor: taxMinor,
                 adjustmentMinor: adjustmentMinor,
+                discountMinor: discountMinor,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -12466,6 +13046,8 @@ typedef $ExpenseItemsCreateCompanionBuilder = ExpenseItemsCompanion Function({
   required String name,
   required int amountMinor,
   required int sortOrder,
+  Value<int> quantity,
+  required int unitAmountMinor,
   Value<int> rowid,
 });
 typedef $ExpenseItemsUpdateCompanionBuilder = ExpenseItemsCompanion Function({
@@ -12474,6 +13056,8 @@ typedef $ExpenseItemsUpdateCompanionBuilder = ExpenseItemsCompanion Function({
   Value<String> name,
   Value<int> amountMinor,
   Value<int> sortOrder,
+  Value<int> quantity,
+  Value<int> unitAmountMinor,
   Value<int> rowid,
 });
 
@@ -12546,6 +13130,16 @@ class $ExpenseItemsFilterComposer
 
   ColumnFilters<int> get sortOrder => $composableBuilder(
     column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get unitAmountMinor => $composableBuilder(
+    column: $table.unitAmountMinor,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -12627,6 +13221,16 @@ class $ExpenseItemsOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get unitAmountMinor => $composableBuilder(
+    column: $table.unitAmountMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $ExpensesOrderingComposer get expenseId {
     final $ExpensesOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -12673,6 +13277,14 @@ class $ExpenseItemsAnnotationComposer
 
   GeneratedColumn<int> get sortOrder =>
       $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<int> get quantity =>
+      $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<int> get unitAmountMinor => $composableBuilder(
+    column: $table.unitAmountMinor,
+    builder: (column) => column,
+  );
 
   $ExpensesAnnotationComposer get expenseId {
     final $ExpensesAnnotationComposer composer = $composerBuilder(
@@ -12759,6 +13371,8 @@ class $ExpenseItemsTableManager
                 Value<String> name = const Value.absent(),
                 Value<int> amountMinor = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
+                Value<int> quantity = const Value.absent(),
+                Value<int> unitAmountMinor = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExpenseItemsCompanion(
                 id: id,
@@ -12766,6 +13380,8 @@ class $ExpenseItemsTableManager
                 name: name,
                 amountMinor: amountMinor,
                 sortOrder: sortOrder,
+                quantity: quantity,
+                unitAmountMinor: unitAmountMinor,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -12775,6 +13391,8 @@ class $ExpenseItemsTableManager
                 required String name,
                 required int amountMinor,
                 required int sortOrder,
+                Value<int> quantity = const Value.absent(),
+                required int unitAmountMinor,
                 Value<int> rowid = const Value.absent(),
               }) => ExpenseItemsCompanion.insert(
                 id: id,
@@ -12782,6 +13400,8 @@ class $ExpenseItemsTableManager
                 name: name,
                 amountMinor: amountMinor,
                 sortOrder: sortOrder,
+                quantity: quantity,
+                unitAmountMinor: unitAmountMinor,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

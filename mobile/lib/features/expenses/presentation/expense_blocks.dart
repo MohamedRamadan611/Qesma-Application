@@ -245,12 +245,13 @@ class _ChargesBox extends StatelessWidget {
           ),
         );
 
-    Widget labelWithRate(String text, int bps, {String? caption}) => Wrap(
+    // BSA2: bps is null when the charge was given as an amount; then there is no rate to show.
+    Widget labelWithRate(String text, int? bps, {String? caption}) => Wrap(
           spacing: QesmaSpacing.sm,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             Text(text, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
-            AppTag(label: l10n.expensePercent(ltrIsolate(Bps.format(bps)))),
+            if (bps != null) AppTag(label: l10n.expensePercent(ltrIsolate(Bps.format(bps)))),
             if (caption != null) Text(caption, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper)),
           ],
         );

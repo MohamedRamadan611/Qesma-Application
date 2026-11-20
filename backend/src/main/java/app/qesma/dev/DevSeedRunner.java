@@ -115,9 +115,15 @@ public class DevSeedRunner implements ApplicationRunner {
                         new ItemInput("باستا", 15000L, List.of(mohsen)),
                         new ItemInput("مشروبات", 9000L, List.of(mohamed, asem, mohsen))),
                 new ExpenseCommand.ServiceInput(1200), new ExpenseCommand.TaxInput(1400, "SUBTOTAL_PLUS_SERVICE"), null));
+        // BSA2: بيبسي 4 x 15.00 shared by محمد and عاصم with a 5.00 discount (55.00); each paid their own 27.50,
+        // so the balances of the examples above do not move.
+        create(owner, group, 4, new ExpenseCommand("سناكس", LocalDate.of(2026, 10, 18), "ITEMIZED", null,
+                List.of(new PayerInput(mohamed, 2750L), new PayerInput(asem, 2750L)), null, null,
+                List.of(new ItemInput("بيبسي", null, 1500L, 4, List.of(mohamed, asem))), null, null, null,
+                "FOOD", null, new ExpenseCommand.DiscountInput(null, 500L)));
         User asemUser = seedLifecycle(owner, group, asem, ids.get(4));
         seedSettlements(owner, asemUser, group, mohamed, asem);
-        log.info("dev.seed created group {} with {} members and 3 expenses. Sign in with idToken {} "
+        log.info("dev.seed created group {} with {} members and 4 expenses. Sign in with idToken {} "
                 + "(admin: {}, member who left: {}); 1 PENDING and 1 DISPUTED settlement", group.getId(), ids.size(), FAKE_ID_TOKEN, ASEM_ID_TOKEN,
                 KARIM_ID_TOKEN);
     }

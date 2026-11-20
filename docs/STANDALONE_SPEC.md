@@ -143,7 +143,7 @@ A 20-item restaurant bill is unusable by hand. The AI only **proposes**; the use
 - **Backend:** Firebase AI Logic with the Gemini Developer API on the **free tier** (Spark plan, **no billing account**) and **App Check** with Play Integrity (debug provider for dev builds). No API key in the app or the repo.
 - **Consent:** a one-time screen before the first scan stating that the **image is sent to Google** and, on the free tier, **may be used to improve Google products** (to verify against the current terms in SA12, A146), how to avoid it (type manually), stored locally and revocable in the profile.
 - **Capture:** camera or gallery, downscaled and compressed before upload, EXIF/location stripped. **The image is never stored, logged or uploaded anywhere else**; nothing is written outside the temp directory.
-- **Output:** structured JSON schema (`items[{name, amount}]`, `subtotal`, `servicePercent`, `serviceAmount`, `taxPercent`, `taxAmount`, `total`, `currency`) with **every amount as a string**, parsed by `Money.parse` / `Bps.parse`. Items that fail to parse are kept with an empty amount and flagged. The model's arithmetic is never trusted.
+- **Output:** (extended by 18.4) structured JSON schema (`items[{name, amount}]`, `subtotal`, `servicePercent`, `serviceAmount`, `taxPercent`, `taxAmount`, `total`, `currency`) with **every amount as a string**, parsed by `Money.parse` / `Bps.parse`. Items that fail to parse are kept with an empty amount and flagged. The model's arithmetic is never trusted.
 - **Result:** opens the itemized editor as an **unsaved draft** (never auto-saved); a banner when items + charges differ from the printed total (taken from the editor's existing preview, not client math).
 - **Limits:** a per-device cap of **20 scans per calendar day** (Africa/Cairo), counted locally (A145; the number is checked against the free-tier quota in SA12).
 - **Failure modes** — offline, timeout, quota exhausted, App Check / permission denied, unreadable photo, invalid JSON — each shows its own Arabic message and a "type manually" action; repeated permission errors hide the feature.
@@ -208,4 +208,71 @@ SA4 adds a **per-mode allow-list**: in local mode the server-only features (`inv
 | Khorouga calculator | 11 | A139–A142 | SA11 |
 | Receipt OCR | 13 | A144–A146 | SA12 |
 | Voice entry | 14 | A147 | SA14 |
+| Itemized v2 (discount, quantity, charges as amounts, editor UX, OCR v2) | 18 | A171–A176 | BSA2, SA15, SA16, SA17 |
 | Release, privacy | all | — | SA13 |
+
+## 18. Itemized bill v2: discount, quantity, charges as amounts (BSA2, SA15–SA17)
+
+Owner decisions of 2026-11-20 (A171–A176). Section 7.4 of `PROJECT_SPEC.md` is extended as follows. Bills without the new fields compute exactly as before: V5–V8 do not change.
+
+### 18.1 Input (additions)
+- **Item:** `quantity` is an integer 1..999 (default 1). `unitAmountMinor` is greater than 0. The line amount `amountMinor = quantity × unitAmountMinor` is computed in the engine with exact multiplication and is subject to the A43 cap. A request sends **either** `amountMinor` (legacy; it means quantity 1) **or** `unitAmountMinor` with an optional `quantity`, never both. Responses always carry `quantity`, `unitAmountMinor` and `amountMinor`.
+- **Discount** (optional) is one discount on the whole bill. It is `{ bps }` (1..9,999) **or** `{ amountMinor }` (≥ 1), never both.
+- **Service** is `{ bps }` (as before) **or** `{ amountMinor }` (≥ 1).
+- **Tax** is `{ bps, base }` (as before) **or** `{ amountMinor, base }`. In the amount form, `base` sets only the allocation weights.
+
+### 18.2 Algorithm (replaces 7.4 steps 2–5)
+1. **Item shares:** unchanged. Each line is split equally among its assignees with LRM. This gives `itemsMinor[m]` and `subtotal`.
+2. **Discount:**
+   - `discountTotal = round_half_up(subtotal × bps / 10000)` or the given amount.
+   - It must satisfy `0 < discountTotal < subtotal`, otherwise `VALIDATION_ERROR`.
+   - Allocate it by LRM with weights `itemsMinor[m]`, which gives `discountMinor[m]`.
+   - `netMinor[m] = itemsMinor[m] − discountMinor[m]` and `netSubtotal = subtotal − discountTotal`.
+   - With no discount, net equals items.
+3. **Service:** `serviceTotal = round_half_up(netSubtotal × bps / 10000)` or the amount, allocated by LRM with weights `netMinor[m]`.
+4. **Tax:**
+   - The base is `netSubtotal`, or `netSubtotal + serviceTotal`.
+   - `taxTotal = round_half_up(base × bps / 10000)` or the amount.
+   - It is allocated by LRM with weights `netMinor[m]`, or `netMinor[m] + serviceMinor[m]`.
+5. **Adjustment:** allocated by LRM with weights `netMinor[m]`. A12 (no negative share) is unchanged.
+6. `owed[m] = netMinor[m] + serviceMinor[m] + taxMinor[m] + adjustmentMinor[m]`, and `total = netSubtotal + serviceTotal + taxTotal + adjustment`, which must be > 0. Members who owe 0 are dropped (step 6). The breakdown adds `discountMinor` per member, and the result adds `discountMinor` (the total).
+
+### 18.3 Printed-total tolerance (client only, A174)
+This applies when a scanned receipt gave a printed total, the user has not edited the adjustment, and `|printed − previewTotal| ≤ 100` piasters (1 EGP). The editor then sets `adjustmentMinor = printed − previewTotal`, previews again, and shows the match with a note.
+- The engine and the payers rule do not change (Σ payers == total exactly, 7.5).
+- If the engine rejects the adjustment (A12), the mismatch banner stays.
+
+### 18.4 Receipt OCR additions (SA17; extends section 13)
+- **Schema additions:**
+  - per item, `quantity` and `unitPrice`;
+  - `discountAmount`, `discountPercent`, `merchantName`;
+  - `category`, one of the section 7 values or null.
+  - All amounts stay strings, and the model is told never to calculate.
+- **Mapping:**
+  - `merchantName` fills the **title** only while it is empty.
+  - `category` fills the category only while the user has not chosen one.
+  - A printed line total with a quantity but no unit price is flagged for the user to confirm. The client never divides.
+  - An unparseable quantity is flagged, and the item opens as quantity 1.
+
+### 18.5 Editor UX (SA16; design P8-01 revised)
+- **Assignment modes:** "حسب الصنف" (one card per item) and "حسب الشخص" (choose a person, then tick that person's items).
+- **Compact item card:** name, quantity stepper, unit price and a ⋮ menu (Duplicate, Delete with undo); then a summary chip for the assignees.
+- **Member chips:** groups of ≤ 5 members get inline chips. Bigger groups get a summary chip that opens a member picker sheet (search above 8 members, all/none toggle).
+- **Charge rows:** the discount, service and tax rows each have a `% | ج.م` toggle.
+- **Breakdown:** each person shows one row (name and total), which expands to show the details.
+- **Validation:** required fields are marked. Save stays enabled; tapping it with an error scrolls to the first error and shows how many fields are missing.
+- **Money math:** every computed number still comes from the preview endpoint. The client does no money math (`SCREEN_MAP.md` rule).
+
+### 18.6 Test vectors
+Vectors V9, V10, V12 and V13 use the V5 items: members A, B, C in `sort_order`; Pizza 200.00 (A, B), Pasta 150.00 (C), Drinks 90.00 (A, B, C); so items are A 130.00, B 130.00, C 180.00 and the subtotal is 440.00.
+
+| # | Input | Expected |
+|---|---|---|
+| V9 | Discount 10%, service 12%, tax 14% on `SUBTOTAL_PLUS_SERVICE` | Discount 44.00 → A 13.00, B 13.00, C 18.00; net 396.00. Service 47.52 → 14.04 / 14.04 / 19.44. Tax round_half_up(443.52 × 14%) = 62.09; floors 18.34 / 18.34 / 25.40; the extra piaster goes to A on a tie → 18.35 / 18.34 / 25.40. Owed **A 149.39, B 149.38, C 206.84**, total **505.61** |
+| V10 | Discount 50.00 (amount); no service, no tax | Discount 14.77 / 14.77 / 20.46 (the remainder goes to C, .45 > .27). Owed **A 115.23, B 115.23, C 159.54**, total **390.00** |
+| V11 | Members A, B. Pepsi quantity 3 × 15.25 (A, B); Shawarma quantity 1 × 85.00 (A) | Pepsi line 45.75 → A 22.88, B 22.87. Owed **A 107.88, B 22.87**, total **130.75** |
+| V12 | Service 50.00 (amount); no tax | Service 14.77 / 14.77 / 20.46. Owed **A 144.77, B 144.77, C 200.46**, total **490.00** |
+| V13 | Service 12%, tax 60.00 (amount) on `SUBTOTAL_PLUS_SERVICE` | Service 15.60 / 15.60 / 21.60. Tax weights 145.60 / 145.60 / 201.60; floors 17.72 / 17.72 / 24.54; the 2 piasters left go to A and B → 17.73 / 17.73 / 24.54. Owed **A 163.33, B 163.33, C 226.14**, total **552.80** |
+| V14 | Members A, B. One item 100.00 (A, B); discount 99.99 (amount) | Discount 50.00 / 49.99 (A wins the tie). Net A 0.00, B 0.01. **A is dropped** (owes 0). Owed **B 0.01**, total **0.01** |
+| V15 | As V14 but discount 100.00, or 100% | `VALIDATION_ERROR` (discount must be less than the subtotal) |
+| V16 | An item with both `amountMinor` and `unitAmountMinor`, or quantity 0 or 1000 | `VALIDATION_ERROR` |

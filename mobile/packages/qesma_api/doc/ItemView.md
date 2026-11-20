@@ -12,6 +12,8 @@ Name | Type | Description | Notes
 **assigneeMemberIds** | **BuiltList&lt;String&gt;** |  | 
 **id** | **String** |  | 
 **name** | **String** |  | 
+**quantity** | **int** |  | 
+**unitAmountMinor** | **int** | Integer minor units (piasters: 1 EGP = 100). Never a decimal. | 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

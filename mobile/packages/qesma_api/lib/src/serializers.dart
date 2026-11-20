@@ -23,6 +23,8 @@ import 'package:qesma_api/src/model/charges.dart';
 import 'package:qesma_api/src/model/create_group_request.dart';
 import 'package:qesma_api/src/model/create_member_request.dart';
 import 'package:qesma_api/src/model/delete_account_request.dart';
+import 'package:qesma_api/src/model/discount_charge.dart';
+import 'package:qesma_api/src/model/discount_input.dart';
 import 'package:qesma_api/src/model/event_payload.dart';
 import 'package:qesma_api/src/model/expense_command.dart';
 import 'package:qesma_api/src/model/expense_preview.dart';
@@ -100,6 +102,8 @@ part 'serializers.g.dart';
   CreateGroupRequest,
   CreateMemberRequest,
   DeleteAccountRequest,
+  DiscountCharge,
+  DiscountInput,
   EventPayload,
   ExpenseCommand,
   ExpensePreview,

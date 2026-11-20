@@ -18,6 +18,11 @@ void main() {
       // TODO
     });
 
+    // DiscountInput discount
+    test('to test the property `discount`', () async {
+      // TODO
+    });
+
     // Date expenseDate
     test('to test the property `expenseDate`', () async {
       // TODO

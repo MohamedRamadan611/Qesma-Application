@@ -15,17 +15,26 @@ part 'item_input.g.dart';
 /// * [amountMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
 /// * [assigneeMemberIds] 
 /// * [name] 
+/// * [quantity] 
+/// * [unitAmountMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
 @BuiltValue()
 abstract class ItemInput implements Built<ItemInput, ItemInputBuilder> {
   /// Integer minor units (piasters: 1 EGP = 100). Never a decimal.
   @BuiltValueField(wireName: r'amountMinor')
-  int get amountMinor;
+  int? get amountMinor;
 
   @BuiltValueField(wireName: r'assigneeMemberIds')
   BuiltList<String> get assigneeMemberIds;
 
   @BuiltValueField(wireName: r'name')
   String get name;
+
+  @BuiltValueField(wireName: r'quantity')
+  int? get quantity;
+
+  /// Integer minor units (piasters: 1 EGP = 100). Never a decimal.
+  @BuiltValueField(wireName: r'unitAmountMinor')
+  int? get unitAmountMinor;
 
   ItemInput._();
 
@@ -50,11 +59,13 @@ class _$ItemInputSerializer implements PrimitiveSerializer<ItemInput> {
     ItemInput object, {
     FullType specifiedType = FullType.unspecified,
   }) sync* {
-    yield r'amountMinor';
-    yield serializers.serialize(
-      object.amountMinor,
-      specifiedType: const FullType(int),
-    );
+    if (object.amountMinor != null) {
+      yield r'amountMinor';
+      yield serializers.serialize(
+        object.amountMinor,
+        specifiedType: const FullType(int),
+      );
+    }
     yield r'assigneeMemberIds';
     yield serializers.serialize(
       object.assigneeMemberIds,
@@ -65,6 +76,20 @@ class _$ItemInputSerializer implements PrimitiveSerializer<ItemInput> {
       object.name,
       specifiedType: const FullType(String),
     );
+    if (object.quantity != null) {
+      yield r'quantity';
+      yield serializers.serialize(
+        object.quantity,
+        specifiedType: const FullType(int),
+      );
+    }
+    if (object.unitAmountMinor != null) {
+      yield r'unitAmountMinor';
+      yield serializers.serialize(
+        object.unitAmountMinor,
+        specifiedType: const FullType(int),
+      );
+    }
   }
 
   @override
@@ -108,6 +133,20 @@ class _$ItemInputSerializer implements PrimitiveSerializer<ItemInput> {
             specifiedType: const FullType(String),
           ) as String;
           result.name = valueDes;
+          break;
+        case r'quantity':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(int),
+          ) as int;
+          result.quantity = valueDes;
+          break;
+        case r'unitAmountMinor':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(int),
+          ) as int;
+          result.unitAmountMinor = valueDes;
           break;
         default:
           unhandled.add(key);

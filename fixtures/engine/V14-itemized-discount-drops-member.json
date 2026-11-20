@@ -1,0 +1,19 @@
+{
+  "name": "V14 itemized, discount 99.99 on a 100.00 item: A nets 0 and is dropped",
+  "input": {
+    "members": [ { "id": "A", "sortOrder": 1 }, { "id": "B", "sortOrder": 2 } ],
+    "expenses": [
+      { "type": "ITEMIZED",
+        "payers": [ { "memberId": "B", "amountMinor": 1 } ],
+        "items": [ { "name": "Meal", "amountMinor": 10000, "assigneeMemberIds": [ "A", "B" ] } ],
+        "discount": { "amountMinor": 9999 },
+        "adjustmentMinor": 0 }
+    ],
+    "settlements": []
+  },
+  "expected": {
+    "expenses": [ { "owed": { "B": 1 }, "discounts": { "B": 4999 },
+                    "subtotalMinor": 10000, "discountMinor": 9999, "serviceMinor": 0, "taxMinor": 0,
+                    "totalMinor": 1 } ]
+  }
+}

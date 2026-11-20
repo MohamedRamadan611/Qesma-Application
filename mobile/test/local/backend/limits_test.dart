@@ -130,4 +130,35 @@ void main() {
     expect(await status(http.get('/groups/$gid/expenses', query: {'fromDate': '2026-11-02', 'toDate': '2026-11-01'})), 422);
     expect(await status(http.get('/groups/$gid/settlements', query: {'status': 'LOST'})), 422);
   });
+
+  test('itemized v2 boundaries (A177): quantity 1..999, line <= 10^12, discount bps 1..9999, amounts 1..10^12', () async {
+    Future<int?> preview(Map<String, Object?> item, {Map<String, Object?>? discount, Map<String, Object?>? service}) async =>
+        (await http.post('/groups/$gid/expenses/preview', {
+          'title': 'Edge',
+          'expenseDate': '2026-11-01',
+          'splitType': 'ITEMIZED',
+          'items': [
+            {...item, 'assigneeMemberIds': [you]},
+          ],
+          'discount': ?discount,
+          'service': ?service,
+        }))
+            .statusCode;
+    expect(await preview({'name': 'Q', 'quantity': 999, 'unitAmountMinor': 1}), 200);
+    expect(await preview({'name': 'Q', 'quantity': 1000, 'unitAmountMinor': 1}), 422);
+    expect(await preview({'name': 'Q', 'quantity': 0, 'unitAmountMinor': 1}), 422);
+    expect(await preview({'name': 'L', 'quantity': 512, 'unitAmountMinor': 1953125000}), 200); // exactly 10^12
+    expect(await preview({'name': 'L', 'quantity': 512, 'unitAmountMinor': 1953125001}), 422);
+    expect(await preview({'name': 'U', 'unitAmountMinor': max + 1}), 422);
+    final meal = {'name': 'M', 'amountMinor': 1000000};
+    expect(await preview(meal, discount: {'bps': 1}), 200);
+    expect(await preview(meal, discount: {'bps': 9999}), 200);
+    expect(await preview(meal, discount: {'bps': 10000}), 422);
+    expect(await preview(meal, discount: {'amountMinor': 999999}), 200);
+    expect(await preview(meal, discount: {'amountMinor': 1000000}), 422);
+    expect(await preview(meal, service: {'amountMinor': 1}), 200);
+    expect(await preview(meal, service: {'amountMinor': 0}), 422);
+    expect(await preview(meal, service: {'amountMinor': max + 1}), 422);
+    expect(await preview(meal, service: {'bps': 0}), 200);
+  });
 }

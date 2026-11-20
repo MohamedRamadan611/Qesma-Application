@@ -26,7 +26,7 @@ void main() {
     expect(json.keys, containsAll(['profile', 'groups', 'members', 'expenses', 'expense_payers', 'expense_splits', 'expense_items', 'expense_item_assignees', 'expense_revisions', 'settlements', 'payment_handles']));
     expect(json.containsKey('idempotency_keys'), isFalse);
     expect(json.containsKey('local_meta'), isFalse);
-    expect((json['expenses'] as List).length, 6, reason: 'the soft-deleted expense is part of the ledger');
+    expect((json['expenses'] as List).length, 7, reason: 'the soft-deleted expense is part of the ledger');
     expect((json['settlements'] as List).length, 2, reason: 'the cancelled settlement is kept');
   });
 

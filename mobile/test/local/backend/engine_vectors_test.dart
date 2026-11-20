@@ -5,15 +5,20 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'support/local_http.dart';
 
-/// The shared engine vectors V1-V8 (`/fixtures/engine`, the Java reference) reproduced end-to-end through the HTTP
+/// The shared engine vectors V1-V16 (`/fixtures/engine`, the Java reference) reproduced end-to-end through the HTTP
 /// contract: members are created (fixture sortOrder 1 = "you", the group creator), expenses and settlements are
 /// POSTed, then each expense's shares and charges and `GET balances` must equal the fixture.
 void main() {
   final files = Directory('../fixtures/engine').listSync().whereType<File>().where((f) => f.path.endsWith('.json')).toList()
     ..sort((a, b) => a.path.compareTo(b.path));
 
-  test('all eight vectors are present', () {
-    expect(files.map((f) => f.uri.pathSegments.last.split('-').first).toList(), ['V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8']);
+  String id(File f) => f.uri.pathSegments.last.split('-').first;
+
+  test('all spec vectors are present', () {
+    final ids = files.map(id).toSet();
+    for (var v = 1; v <= 16; v++) {
+      expect(ids, contains('V$v'));
+    }
   });
 
   for (final file in files) {
@@ -55,16 +60,30 @@ void main() {
           if (x['items'] != null)
             'items': [
               for (final it in (x['items'] as List).cast<Map<String, dynamic>>())
-                {'name': it['name'], 'amountMinor': it['amountMinor'], 'assigneeMemberIds': mapIds(it['assigneeMemberIds'])},
+                {
+                  'name': it['name'],
+                  'amountMinor': ?it['amountMinor'],
+                  'unitAmountMinor': ?it['unitAmountMinor'],
+                  'quantity': ?it['quantity'],
+                  'assigneeMemberIds': mapIds(it['assigneeMemberIds']),
+                },
             ],
           if (x['serviceBps'] != null) 'service': {'bps': x['serviceBps']},
+          'service': ?x['service'],
+          'discount': ?x['discount'],
           'tax': ?x['tax'],
           'adjustmentMinor': ?x['adjustmentMinor'],
         };
         final r = await http.expense(gid, body);
+        final want = expectedExpenses?[i];
+        if (want?['error'] != null) {
+          // A rejected bill (V15, V16): the contract refuses it with the vector's code and nothing is stored.
+          expect(r.statusCode, 422, reason: '${r.data}');
+          expect(r.data['code'], want!['error']);
+          continue;
+        }
         expect(r.statusCode, 201, reason: '${r.data}');
         final view = r.data as Map<String, dynamic>;
-        final want = expectedExpenses?[i];
         if (want == null) continue;
         final owed = {for (final s in (view['shares'] as List)) back[s['memberId']]!: s['owedMinor'] as int};
         final wantOwed = (want['owed'] as Map).cast<String, int>();
@@ -79,6 +98,15 @@ void main() {
         if (want['subtotalMinor'] != null) expect(charges!['subtotalMinor'], want['subtotalMinor']);
         if (want['serviceMinor'] != null) expect((charges!['service'] as Map?)?['amountMinor'] ?? 0, want['serviceMinor']);
         if (want['taxMinor'] != null) expect((charges!['tax'] as Map?)?['amountMinor'] ?? 0, want['taxMinor']);
+        if (want['discountMinor'] != null) {
+          expect((charges!['discount'] as Map?)?['amountMinor'] ?? 0, want['discountMinor']);
+        }
+        if (want['discounts'] != null) {
+          final discounts = {
+            for (final s in (view['shares'] as List)) back[s['memberId']]!: s['discountMinor'] as int,
+          };
+          expect(discounts, (want['discounts'] as Map).cast<String, int>());
+        }
       }
 
       for (final s in (input['settlements'] as List).cast<Map<String, dynamic>>()) {

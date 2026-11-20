@@ -398,7 +398,7 @@ public class OpenApiConfig {
     /** Response objects always carry every field (null where noted), so a generated client gets non-null types. */
     private static final java.util.Set<String> RESPONSE_SCHEMAS = java.util.Set.of("AuthResponse", "TokenResponse",
             "UserDto", "GroupDto", "GroupSummaryDto", "MemberDto", "ExpenseView", "ExpensePreview", "BalanceView", "Net",
-            "TransferView", "SettlementView", "ExpenseRevisionView", "Charges", "ServiceCharge", "TaxCharge", "ItemView",
+            "TransferView", "SettlementView", "ExpenseRevisionView", "Charges", "DiscountCharge", "ServiceCharge", "TaxCharge", "ItemView",
             "PayerView", "ShareView", "PaymentHandlesView", "ActivityPage", "ActivityItem", "NotificationPage",
             "NotificationItem", "UnreadCount", "MarkReadResult", "EventPayload", "ReminderView", "NotificationPrefsView",
             "GroupNotificationPrefsView");
@@ -406,9 +406,14 @@ public class OpenApiConfig {
     /** Response fields that can be null (all other response fields are always present and non-null). */
     static final Map<String, java.util.Set<String>> NULLABLE = Map.ofEntries(
             Map.entry("ExpenseView", java.util.Set.of("items", "charges")),
-            Map.entry("ShareView", java.util.Set.of("itemsMinor", "serviceMinor", "taxMinor", "adjustmentMinor")),
-            Map.entry("Charges", java.util.Set.of("service", "tax")),
-            Map.entry("ExpensePreview", java.util.Set.of("subtotalMinor", "serviceMinor", "taxMinor", "adjustmentMinor")),
+            Map.entry("ShareView", java.util.Set.of("itemsMinor", "discountMinor", "serviceMinor", "taxMinor", "adjustmentMinor")),
+            Map.entry("Charges", java.util.Set.of("discount", "service", "tax")),
+            // BSA2: bps is null when the charge was given as an amount.
+            Map.entry("DiscountCharge", java.util.Set.of("bps")),
+            Map.entry("ServiceCharge", java.util.Set.of("bps")),
+            Map.entry("TaxCharge", java.util.Set.of("bps")),
+            Map.entry("ExpensePreview", java.util.Set.of("subtotalMinor", "discountMinor", "serviceMinor", "taxMinor",
+                    "adjustmentMinor")),
             Map.entry("SettlementView", java.util.Set.of("note", "createdByMemberId", "confirmedAt", "disputedAt", "cancelledAt")),
             Map.entry("GroupDto", java.util.Set.of("lastExpenseAt", "treasurerMemberId", "poolBalanceMinor")),
             Map.entry("GroupSummaryDto", java.util.Set.of("lastExpenseAt")),
@@ -441,9 +446,12 @@ public class OpenApiConfig {
             Map.entry("ExpenseCommand", List.of("title", "expenseDate", "splitType")),
             Map.entry("PayerInput", List.of("memberId", "amountMinor")),
             Map.entry("ShareInput", List.of("memberId", "amountMinor")),
-            Map.entry("ItemInput", List.of("name", "amountMinor", "assigneeMemberIds")),
-            Map.entry("ServiceInput", List.of("bps")),
-            Map.entry("TaxInput", List.of("bps")));
+            // BSA2: an item sends amountMinor or unitAmountMinor (+ quantity); a charge sends bps or amountMinor. Exactly
+            // one of each pair is enforced by the validator (422), so neither is "required" in the schema.
+            Map.entry("ItemInput", List.of("name", "assigneeMemberIds")),
+            Map.entry("ServiceInput", List.of()),
+            Map.entry("TaxInput", List.of()),
+            Map.entry("DiscountInput", List.of()));
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     private static void markRequiredAndNullable(Components components) {

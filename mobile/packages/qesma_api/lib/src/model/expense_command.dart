@@ -10,6 +10,7 @@ import 'package:qesma_api/src/model/service_input.dart';
 import 'package:qesma_api/src/model/share_input.dart';
 import 'package:qesma_api/src/model/tax_input.dart';
 import 'package:qesma_api/src/model/date.dart';
+import 'package:qesma_api/src/model/discount_input.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
@@ -20,6 +21,7 @@ part 'expense_command.g.dart';
 /// Properties:
 /// * [adjustmentMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
 /// * [category] 
+/// * [discount] 
 /// * [expenseDate] 
 /// * [items] 
 /// * [paidFromPool] 
@@ -39,6 +41,9 @@ abstract class ExpenseCommand implements Built<ExpenseCommand, ExpenseCommandBui
 
   @BuiltValueField(wireName: r'category')
   String? get category;
+
+  @BuiltValueField(wireName: r'discount')
+  DiscountInput? get discount;
 
   @BuiltValueField(wireName: r'expenseDate')
   Date get expenseDate;
@@ -109,6 +114,13 @@ class _$ExpenseCommandSerializer implements PrimitiveSerializer<ExpenseCommand> 
       yield serializers.serialize(
         object.category,
         specifiedType: const FullType(String),
+      );
+    }
+    if (object.discount != null) {
+      yield r'discount';
+      yield serializers.serialize(
+        object.discount,
+        specifiedType: const FullType(DiscountInput),
       );
     }
     yield r'expenseDate';
@@ -218,6 +230,13 @@ class _$ExpenseCommandSerializer implements PrimitiveSerializer<ExpenseCommand> 
             specifiedType: const FullType(String),
           ) as String;
           result.category = valueDes;
+          break;
+        case r'discount':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(DiscountInput),
+          ) as DiscountInput;
+          result.discount.replace(valueDes);
           break;
         case r'expenseDate':
           final valueDes = serializers.deserialize(

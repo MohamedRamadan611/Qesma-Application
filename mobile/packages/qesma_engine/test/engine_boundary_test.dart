@@ -63,6 +63,21 @@ void main() {
     PayerValidator.validate(100 * max, payers);
   });
 
+  test('a quantity line is exactly at the cap or refused, and quantity x unit never wraps around (A13, A43)', () {
+    // 10^12 = 2^12 x 5^12 has the divisor 512: 512 x 1953125000 = 10^12 exactly.
+    final atCap = ItemizedCalculator.calculate(
+        ItemizedInput.charges(hundred, const [Item.unit('Cap', 512, 1953125000, ['m0'])]));
+    expect(atCap.subtotalMinor, max);
+    expect(() => ItemizedCalculator.calculate(
+            ItemizedInput.charges(hundred, const [Item.unit('Over', 512, 1953125001, ['m0'])])),
+        throwsEngine(EngineErrorCode.validationError));
+    expect(() => const Item.unit('Wrap', 999, longMax, ['m0']).amountMinor,
+        throwsEngine(EngineErrorCode.validationError));
+    expect(() => const Item.unit('Wrap', 2, longMin, ['m0']).amountMinor,
+        throwsEngine(EngineErrorCode.validationError));
+    expect(const Item.unit('Fits', 999, max, ['m0']).amountMinor, 999 * max);
+  });
+
   test('the amount limit is inclusive', () {
     expect(Limits.withinAmountLimit(max), isTrue);
     expect(Limits.withinAmountLimit(max + 1), isFalse);

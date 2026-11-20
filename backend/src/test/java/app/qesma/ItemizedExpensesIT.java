@@ -493,11 +493,14 @@ class ItemizedExpensesIT extends AbstractApiIT {
 
     private void insertExpense(String id, String groupId, String userId, String type, long total, Long subtotal,
                                Long service, Long tax, Long adjustment, Integer serviceBps, Integer taxBps, String base) {
+        // BSA2 (V21): an ITEMIZED row also carries its discount total (0 here: no discount).
+        Long discount = "ITEMIZED".equals(type) && subtotal != null ? 0L : null;
         jdbc.update("""
                 insert into expenses (id, group_id, title, split_type, total_minor, expense_date, subtotal_minor,
-                    service_bps, service_minor, tax_bps, tax_minor, tax_base, adjustment_minor, created_by_user_id)
-                values (?::uuid, ?::uuid, 't', ?, ?, date '2026-10-18', ?, ?, ?, ?, ?, ?, ?, ?::uuid)""",
-                id, groupId, type, total, subtotal, serviceBps, service, taxBps, tax, base, adjustment, userId);
+                    service_bps, service_minor, tax_bps, tax_minor, tax_base, adjustment_minor, discount_minor,
+                    created_by_user_id)
+                values (?::uuid, ?::uuid, 't', ?, ?, date '2026-10-18', ?, ?, ?, ?, ?, ?, ?, ?, ?::uuid)""",
+                id, groupId, type, total, subtotal, serviceBps, service, taxBps, tax, base, adjustment, discount, userId);
     }
 
     @Test
@@ -541,16 +544,279 @@ class ItemizedExpensesIT extends AbstractApiIT {
                 eid, g.get(1))).isInstanceOf(DataIntegrityViolationException.class);
 
         assertThatThrownBy(() -> jdbc.update("""
-                insert into expense_items (id, expense_id, name, amount_minor, sort_order)
-                values (?::uuid, ?::uuid, 'zero', 0, 9)""", UUID.randomUUID().toString(), eid))
+                insert into expense_items (id, expense_id, name, amount_minor, unit_amount_minor, sort_order)
+                values (?::uuid, ?::uuid, 'zero', 0, 0, 9)""", UUID.randomUUID().toString(), eid))
                 .isInstanceOf(DataIntegrityViolationException.class);
         assertThatThrownBy(() -> jdbc.update("""
-                insert into expense_items (id, expense_id, name, amount_minor, sort_order)
-                values (?::uuid, ?::uuid, '  ', 5, 9)""", UUID.randomUUID().toString(), eid))
+                insert into expense_items (id, expense_id, name, amount_minor, unit_amount_minor, sort_order)
+                values (?::uuid, ?::uuid, '  ', 5, 5, 9)""", UUID.randomUUID().toString(), eid))
                 .isInstanceOf(DataIntegrityViolationException.class);
         assertThatThrownBy(() -> jdbc.update("""
-                insert into expense_items (id, expense_id, name, amount_minor, sort_order)
-                values (?::uuid, ?::uuid, 'dup order', 5, 0)""", UUID.randomUUID().toString(), eid))
+                insert into expense_items (id, expense_id, name, amount_minor, unit_amount_minor, sort_order)
+                values (?::uuid, ?::uuid, 'dup order', 5, 5, 0)""", UUID.randomUUID().toString(), eid))
                 .isInstanceOf(DataIntegrityViolationException.class);
+        // BSA2: quantity 1..999 and amount = quantity x unit
+        assertThatThrownBy(() -> jdbc.update("""
+                insert into expense_items (id, expense_id, name, quantity, amount_minor, unit_amount_minor, sort_order)
+                values (?::uuid, ?::uuid, 'many', 1000, 1000, 1, 9)""", UUID.randomUUID().toString(), eid))
+                .isInstanceOf(DataIntegrityViolationException.class);
+        assertThatThrownBy(() -> jdbc.update("""
+                insert into expense_items (id, expense_id, name, quantity, amount_minor, unit_amount_minor, sort_order)
+                values (?::uuid, ?::uuid, 'wrong line', 3, 100, 30, 9)""", UUID.randomUUID().toString(), eid))
+                .isInstanceOf(DataIntegrityViolationException.class);
+        // the discount part is all-or-nothing with the breakdown and never more than the items
+        assertThatThrownBy(() -> jdbc.update("""
+                update expense_splits set discount_minor = null where expense_id = ?::uuid and member_id = ?::uuid""",
+                eid, g.get(1))).isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void theDatabaseRejectsBadDiscountsAndChargesInBothForms() throws Exception {
+        Session ali = newUser();
+        List<String> g = abc(ali);
+        JsonNode e = createExpense(ali, g.get(0), v2Bill(restaurant(g), Map.of("amountMinor", 5000), null, null, null,
+                g.get(1), 39000L));
+        String eid = e.get("id").asText();
+        // control: the stored row matches V10
+        assertThat(jdbc.queryForMap("select discount_amount_minor, discount_minor, total_minor from expenses where id = ?::uuid",
+                eid)).containsEntry("discount_amount_minor", 5000L).containsEntry("discount_minor", 5000L)
+                .containsEntry("total_minor", 39000L);
+
+        assertThatThrownBy(() -> jdbc.update("update expenses set discount_bps = 1000 where id = ?::uuid", eid))
+                .as("discount in both forms").isInstanceOf(DataIntegrityViolationException.class);
+        assertThatThrownBy(() -> jdbc.update(
+                "update expenses set discount_amount_minor = 44000, discount_minor = 44000, total_minor = 0 where id = ?::uuid",
+                eid)).as("discount equal to the subtotal").isInstanceOf(DataIntegrityViolationException.class);
+        assertThatThrownBy(() -> jdbc.update(
+                "update expenses set discount_amount_minor = 4000 where id = ?::uuid", eid))
+                .as("an amount-form discount is exactly its amount").isInstanceOf(DataIntegrityViolationException.class);
+        assertThatThrownBy(() -> jdbc.update("update expenses set tax_amount_minor = 1 where id = ?::uuid", eid))
+                .as("a tax amount needs a base and must equal tax_minor").isInstanceOf(DataIntegrityViolationException.class);
+        assertThatThrownBy(() -> jdbc.update("update expenses set discount_bps = 0 where id = ?::uuid", eid))
+                .as("discount bps 1..9999").isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    // ---- BSA2: discount, quantity, service/tax as amounts (STANDALONE_SPEC 18, A171-A177) ----------------------
+
+    private static Map<String, Object> unitItem(String name, long unit, Integer quantity, String... assignees) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("name", name);
+        m.put("unitAmountMinor", unit);
+        if (quantity != null) {
+            m.put("quantity", quantity);
+        }
+        m.put("assigneeMemberIds", List.of(assignees));
+        return m;
+    }
+
+    /** A bill whose charges are given as raw JSON objects (discount, service, tax), any of them null = absent. */
+    private Map<String, Object> v2Bill(List<Map<String, Object>> items, Map<String, Object> discount,
+                                       Map<String, Object> service, Map<String, Object> tax, Long adjustment,
+                                       Object... payers) {
+        Map<String, Object> body = bill(items, null, null, null, adjustment, payers);
+        if (discount != null) {
+            body.put("discount", discount);
+        }
+        if (service != null) {
+            body.put("service", service);
+        }
+        if (tax != null) {
+            body.put("tax", tax);
+        }
+        return body;
+    }
+
+    private static List<Long> longs(JsonNode shares, String field) {
+        List<Long> out = new ArrayList<>();
+        shares.forEach(s -> out.add(s.get(field).asLong()));
+        return out;
+    }
+
+    @Test
+    void v9DiscountPercentThenServiceAndTaxThroughTheApi() throws Exception {
+        Session ali = newUser();
+        List<String> g = abc(ali);
+        Map<String, Object> body = v2Bill(restaurant(g), Map.of("bps", 1000), Map.of("bps", 1200),
+                Map.of("bps", 1400, "base", "SUBTOTAL_PLUS_SERVICE"), 0L, g.get(1), 50561L);
+
+        JsonNode e = createExpense(ali, g.get(0), body);
+
+        assertThat(owed(e.get("shares"))).containsExactly(14939L, 14938L, 20684L);
+        assertThat(longs(e.get("shares"), "discountMinor")).containsExactly(1300L, 1300L, 1800L);
+        assertThat(e.get("totalMinor").asLong()).isEqualTo(50561);
+        JsonNode charges = e.get("charges");
+        assertThat(charges.get("subtotalMinor").asLong()).isEqualTo(44000);
+        assertThat(charges.get("discount").get("bps").asInt()).isEqualTo(1000);
+        assertThat(charges.get("discount").get("amountMinor").asLong()).isEqualTo(4400);
+        assertThat(charges.get("service").get("amountMinor").asLong()).isEqualTo(4752);
+        assertThat(charges.get("tax").get("amountMinor").asLong()).isEqualTo(6209);
+        assertThat(e.get("items").get(0).get("quantity").asInt()).isEqualTo(1);
+        assertThat(e.get("items").get(0).get("unitAmountMinor").asLong()).isEqualTo(20000);
+
+        // preview == create, and GET reads back the same numbers from the database
+        JsonNode p = preview(ali, g.get(0), body);
+        assertThat(p.get("discountMinor").asLong()).isEqualTo(4400);
+        assertThat(p.get("members")).isEqualTo(e.get("shares"));
+        JsonNode got = body(call(GET, "/api/v1/groups/" + g.get(0) + "/expenses/" + e.get("id").asText(), ali, null));
+        assertThat(got.get("shares")).isEqualTo(e.get("shares"));
+        assertThat(got.get("charges")).isEqualTo(charges);
+        assertThat(got.get("items")).isEqualTo(e.get("items"));
+    }
+
+    @Test
+    void v11QuantityTimesUnitPriceIsStoredAndShown() throws Exception {
+        Session ali = newUser();
+        List<String> g = abc(ali);
+        JsonNode e = createExpense(ali, g.get(0), v2Bill(List.of(unitItem("Pepsi", 1525, 3, g.get(1), g.get(2)),
+                unitItem("Shawarma", 8500, null, g.get(1))), null, null, null, null, g.get(1), 13075L));
+
+        assertThat(owed(e.get("shares"))).containsExactly(10788L, 2287L);
+        JsonNode pepsi = e.get("items").get(0);
+        assertThat(pepsi.get("quantity").asInt()).isEqualTo(3);
+        assertThat(pepsi.get("unitAmountMinor").asLong()).isEqualTo(1525);
+        assertThat(pepsi.get("amountMinor").asLong()).isEqualTo(4575);
+        assertThat(e.get("items").get(1).get("quantity").asInt()).isEqualTo(1);
+        assertThat(e.get("charges").get("discount").isNull()).isTrue();
+        assertThat(jdbc.queryForMap("select quantity, unit_amount_minor, amount_minor from expense_items "
+                + "where expense_id = ?::uuid and sort_order = 0", e.get("id").asText()))
+                .containsEntry("quantity", 3).containsEntry("unit_amount_minor", 1525L).containsEntry("amount_minor", 4575L);
+    }
+
+    @Test
+    void v10V12V13AmountFormsAndV14DroppedMember() throws Exception {
+        Session ali = newUser();
+        List<String> g = abc(ali);
+        JsonNode v10 = createExpense(ali, g.get(0), v2Bill(restaurant(g), Map.of("amountMinor", 5000), null, null, null,
+                g.get(1), 39000L));
+        assertThat(owed(v10.get("shares"))).containsExactly(11523L, 11523L, 15954L);
+        assertThat(v10.get("charges").get("discount").get("bps").isNull()).isTrue();
+
+        JsonNode v12 = createExpense(ali, g.get(0), v2Bill(restaurant(g), null, Map.of("amountMinor", 5000), null, null,
+                g.get(1), 49000L));
+        assertThat(owed(v12.get("shares"))).containsExactly(14477L, 14477L, 20046L);
+        assertThat(v12.get("charges").get("service").get("bps").isNull()).isTrue();
+        assertThat(v12.get("charges").get("service").get("amountMinor").asLong()).isEqualTo(5000);
+
+        JsonNode v13 = createExpense(ali, g.get(0), v2Bill(restaurant(g), null, Map.of("bps", 1200),
+                Map.of("amountMinor", 6000, "base", "SUBTOTAL_PLUS_SERVICE"), null, g.get(1), 55280L));
+        assertThat(owed(v13.get("shares"))).containsExactly(16333L, 16333L, 22614L);
+        assertThat(v13.get("charges").get("tax").get("bps").isNull()).isTrue();
+        assertThat(v13.get("charges").get("tax").get("base").asText()).isEqualTo("SUBTOTAL_PLUS_SERVICE");
+
+        JsonNode v14 = createExpense(ali, g.get(0), v2Bill(List.of(item("Meal", 10000, g.get(1), g.get(2))),
+                Map.of("amountMinor", 9999), null, null, null, g.get(2), 1L));
+        assertThat(v14.get("shares")).hasSize(1);
+        assertThat(v14.get("shares").get(0).get("memberId").asText()).isEqualTo(g.get(2));
+        assertThat(v14.get("totalMinor").asLong()).isEqualTo(1);
+    }
+
+    @Test
+    void editingToADiscountedBillCreatesARevisionAndOldRevisionsReadBackAsQuantityOne() throws Exception {
+        Session ali = newUser();
+        List<String> g = abc(ali);
+        JsonNode created = createExpense(ali, g.get(0), bill(restaurant(g), null, null, null, null, g.get(1), 44000L));
+        String eid = created.get("id").asText();
+        String url = "/api/v1/groups/" + g.get(0) + "/expenses/" + eid;
+
+        // A revision written before V21 had no quantity/unit/discount fields: simulate it on the stored JSON.
+        jdbc.update("""
+                update expense_revisions set snapshot = jsonb_set(jsonb_set(snapshot,
+                    '{items}', (select jsonb_agg(i - 'quantity' - 'unitAmountMinor') from jsonb_array_elements(snapshot->'items') i)),
+                    '{shares}', (select jsonb_agg(s - 'discountMinor') from jsonb_array_elements(snapshot->'shares') s)) #- '{charges,discount}'
+                where expense_id = ?::uuid and version = 1""", eid);
+
+        Map<String, Object> edited = v2Bill(List.of(unitItem("Pizza", 10000, 2, g.get(1), g.get(2)),
+                item("Pasta", 15000, g.get(3)), item("Drinks", 9000, g.get(1), g.get(2), g.get(3))),
+                Map.of("bps", 1000), Map.of("bps", 1200), Map.of("bps", 1400, "base", "SUBTOTAL_PLUS_SERVICE"), 0L,
+                g.get(1), 50561L);
+        MvcResult r = call(org.springframework.http.HttpMethod.PUT, url, ali, edited, "If-Match", "\"1\"");
+        assertThat(status(r)).as(r.getResponse().getContentAsString()).isEqualTo(200);
+        assertThat(owed(body(r).get("shares"))).containsExactly(14939L, 14938L, 20684L);  // same as V9: 2 x 100.00
+
+        JsonNode history = body(call(GET, url + "/revisions", ali, null));
+        JsonNode v1 = history.get(0).get("snapshot");
+        assertThat(v1.get("items").get(0).get("quantity").asInt()).isEqualTo(1);
+        assertThat(v1.get("items").get(0).get("unitAmountMinor").asLong()).isEqualTo(20000);
+        assertThat(v1.get("shares").get(0).get("discountMinor").asLong()).isZero();
+        assertThat(v1.get("charges").get("discount").isNull()).isTrue();
+        JsonNode v2 = history.get(1).get("snapshot");
+        assertThat(v2.get("items").get(0).get("quantity").asInt()).isEqualTo(2);
+        assertThat(v2.get("charges").get("discount").get("amountMinor").asLong()).isEqualTo(4400);
+    }
+
+    @Test
+    void invalidV2RequestsAreRejectedAsValidationErrorsByBothEndpoints() throws Exception {
+        Session ali = newUser();
+        List<String> g = abc(ali);
+        String gid = g.get(0);
+        Object a = g.get(1);
+        List<Map<String, Object>> ok = restaurant(g);
+        Map<String, Object> both = item("Both", 1000, g.get(1));
+        both.put("unitAmountMinor", 1000);
+        Map<String, Object> amountWithQuantity = item("Qty", 1000, g.get(1));
+        amountWithQuantity.put("quantity", 2);
+        Map<String, Object> neither = new LinkedHashMap<>(Map.of("name", "None", "assigneeMemberIds", List.of(g.get(1))));
+
+        List<Map<String, Object>> rejected = List.of(
+                v2Bill(List.of(both), null, null, null, null, a, 1000L),                             // V16 both forms
+                v2Bill(List.of(unitItem("Zero", 1000, 0, g.get(1))), null, null, null, null, a, 1000L),     // V16
+                v2Bill(List.of(unitItem("Many", 1, 1000, g.get(1))), null, null, null, null, a, 1000L),     // V16
+                v2Bill(List.of(unitItem("Free", 0, 2, g.get(1))), null, null, null, null, a, 1000L),
+                v2Bill(List.of(unitItem("Yacht", 1_000_000_000_000L, 999, g.get(1))), null, null, null, null, a, 1L),
+                v2Bill(List.of(amountWithQuantity), null, null, null, null, a, 2000L),
+                v2Bill(List.of(neither), null, null, null, null, a, 1000L),
+                v2Bill(ok, Map.of("amountMinor", 44000), null, null, null, a, 1L),                   // V15
+                v2Bill(ok, Map.of("bps", 10000), null, null, null, a, 1L),                           // V15
+                v2Bill(ok, Map.of("bps", 0), null, null, null, a, 44000L),
+                v2Bill(ok, Map.of("amountMinor", 0), null, null, null, a, 44000L),
+                v2Bill(ok, Map.of("bps", 1000, "amountMinor", 100), null, null, null, a, 1L),
+                v2Bill(ok, Map.of(), null, null, null, a, 44000L),                                   // discount: neither
+                v2Bill(ok, null, Map.of("bps", 1200, "amountMinor", 100), null, null, a, 1L),
+                v2Bill(ok, null, Map.of(), null, null, a, 44000L),
+                v2Bill(ok, null, Map.of("amountMinor", 0), null, null, a, 44000L),
+                v2Bill(ok, null, null, Map.of("bps", 1400, "amountMinor", 100), null, a, 1L),
+                v2Bill(ok, null, null, Map.of("base", "SUBTOTAL"), null, a, 44000L));
+        for (Map<String, Object> body : rejected) {
+            assertCreateAndPreviewReject(ali, gid, body, 422, "VALIDATION_ERROR");
+        }
+        Map<String, Object> discountOnEqual = equalBody("E", 100, null, a, 100L);
+        discountOnEqual.put("discount", Map.of("bps", 1000));
+        assertCreateAndPreviewReject(ali, gid, discountOnEqual, 422, "VALIDATION_ERROR");
+    }
+
+    @Test
+    void replaysKeepTheirHashAcrossTheEquivalentItemShapesAndNewFieldsChangeIt() throws Exception {
+        Session ali = newUser();
+        List<String> g = abc(ali);
+        String key = UUID.randomUUID().toString();
+        // A pre-BSA2-shaped request, then the same bill with unitAmountMinor (quantity 1): the same request.
+        Map<String, Object> legacy = bill(List.of(item("Meal", 10000, g.get(1))), 1200, null, null, null, g.get(1), 11200L);
+        Map<String, Object> unitShaped = bill(List.of(unitItem("Meal", 10000, 1, g.get(1))), 1200, null, null, null,
+                g.get(1), 11200L);
+        MvcResult first = postExpense(ali, g.get(0), key, legacy);
+        MvcResult second = postExpense(ali, g.get(0), key, unitShaped);
+        assertThat(status(first)).isEqualTo(201);
+        assertThat(second.getResponse().getHeader("Idempotency-Replayed")).isEqualTo("true");
+        assertThat(body(second)).isEqualTo(body(first));
+
+        // Any non-default new field is a different request.
+        Map<String, Object> discounted = v2Bill(List.of(item("Meal", 10000, g.get(1))), Map.of("amountMinor", 100),
+                Map.of("bps", 1200), null, null, g.get(1), 11088L);
+        assertThat(code(postExpense(ali, g.get(0), key, discounted))).isEqualTo("IDEMPOTENCY_KEY_REUSED");
+        Map<String, Object> serviceAmount = v2Bill(List.of(item("Meal", 10000, g.get(1))), null,
+                Map.of("amountMinor", 1200), null, null, g.get(1), 11200L);
+        assertThat(code(postExpense(ali, g.get(0), key, serviceAmount))).isEqualTo("IDEMPOTENCY_KEY_REUSED");
+        Map<String, Object> twoHalves = bill(List.of(unitItem("Meal", 5000, 2, g.get(1))), 1200, null, null, null,
+                g.get(1), 11200L);
+        assertThat(code(postExpense(ali, g.get(0), key, twoHalves))).isEqualTo("IDEMPOTENCY_KEY_REUSED");
+
+        // A v2 bill replays to the same body and stores one set of rows.
+        String key2 = UUID.randomUUID().toString();
+        MvcResult v2a = postExpense(ali, g.get(0), key2, discounted);
+        MvcResult v2b = postExpense(ali, g.get(0), key2, discounted);
+        assertThat(status(v2a)).isEqualTo(201);
+        assertThat(v2b.getResponse().getHeader("Idempotency-Replayed")).isEqualTo("true");
+        assertThat(body(v2b)).isEqualTo(body(v2a));
+        assertThat(countExpenses(g.get(0))).isEqualTo(2);
     }
 }

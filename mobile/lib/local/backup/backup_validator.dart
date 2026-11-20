@@ -16,8 +16,10 @@ abstract final class BackupValidator {
   /// expense category (optional on import, defaults to OTHER), 4 added the reminder tone, a preference the backup does not carry,
   /// and 5 the pool (treasurer_member_id, paid_from_pool, kind: optional on import, default none / 0 / PAYMENT); 6 added
   /// saved fuel prices, a device setting the backup does not carry (A168), and 7 the receipt-scan consent and counters,
-  /// device state the backup does not carry either (SA12).
-  static const int currentSchemaVersion = 7;
+  /// device state the backup does not carry either (SA12). 8 (SA15) added itemized v2: item quantity / unit price,
+  /// the bill discount and amount-form service/tax; all optional on import (quantity 1, unit = amount, discount 0 on
+  /// itemized rows, no amount forms), and checked against the V21 rules before anything is written.
+  static const int currentSchemaVersion = 8;
 
   static BackupData parse(Uint8List bytes, {int maxBytes = maxBackupBytes}) {
     if (bytes.isEmpty) throw const BackupException(BackupError.unreadable);
@@ -150,11 +152,20 @@ abstract final class BackupValidator {
         createdAt: r.timestamp('created_at'),
       );
 
-  static ExpenseRow _expense(_Reader r) => ExpenseRow(
+  static ExpenseRow _expense(_Reader r) {
+    final splitType = r.oneOf('split_type', const {'EQUAL', 'EXACT', 'ITEMIZED'});
+    return ExpenseRow(
         id: r.id('id'),
         groupId: r.id('group_id'),
         title: r.string('title', min: 1, max: 100, trimmed: true),
-        splitType: r.oneOf('split_type', const {'EQUAL', 'EXACT', 'ITEMIZED'}),
+        splitType: splitType,
+        // Schema 8 (SA15): before it no discount existed, so an ITEMIZED row's discount total is 0.
+        discountBps: r.optInteger('discount_bps', min: 1, max: ItemizedCalculator.maxDiscountBps),
+        discountAmountMinor: r.optInteger('discount_amount_minor', min: 1, max: Limits.maxAmountMinor),
+        discountMinor: r.optInteger('discount_minor', min: 0, max: Limits.maxAmountMinor) ??
+            (splitType == 'ITEMIZED' ? 0 : null),
+        serviceAmountMinor: r.optInteger('service_amount_minor', min: 1, max: Limits.maxAmountMinor),
+        taxAmountMinor: r.optInteger('tax_amount_minor', min: 1, max: Limits.maxAmountMinor),
         totalMinor: r.amount('total_minor'),
         expenseDate: r.date('expense_date'),
         subtotalMinor: r.optInteger('subtotal_minor', min: 0, max: Limits.maxAmountMinor),
@@ -175,27 +186,40 @@ abstract final class BackupValidator {
             'OTHER',
         paidFromPool: r.optInteger('paid_from_pool', min: 0, max: 1) ?? 0, // schema 5 (SA10)
       );
+  }
 
   static PayerRow _payer(_Reader r) =>
       PayerRow(expenseId: r.id('expense_id'), memberId: r.id('member_id'), amountMinor: r.amount('amount_minor'));
 
-  static SplitRow _split(_Reader r) => SplitRow(
-        expenseId: r.id('expense_id'),
-        memberId: r.id('member_id'),
-        owedMinor: r.integer('owed_minor', min: 0, max: Limits.maxAmountMinor),
-        itemsMinor: r.optInteger('items_minor', min: 0, max: Limits.maxAmountMinor),
-        serviceMinor: r.optInteger('service_minor', min: 0, max: Limits.maxAmountMinor),
-        taxMinor: r.optInteger('tax_minor', min: 0, max: Limits.maxAmountMinor),
-        adjustmentMinor: r.optInteger('adjustment_minor', min: -Limits.maxAmountMinor, max: Limits.maxAmountMinor),
-      );
+  static SplitRow _split(_Reader r) {
+    final itemsMinor = r.optInteger('items_minor', min: 0, max: Limits.maxAmountMinor);
+    return SplitRow(
+      expenseId: r.id('expense_id'),
+      memberId: r.id('member_id'),
+      owedMinor: r.integer('owed_minor', min: 0, max: Limits.maxAmountMinor),
+      itemsMinor: itemsMinor,
+      serviceMinor: r.optInteger('service_minor', min: 0, max: Limits.maxAmountMinor),
+      taxMinor: r.optInteger('tax_minor', min: 0, max: Limits.maxAmountMinor),
+      adjustmentMinor: r.optInteger('adjustment_minor', min: -Limits.maxAmountMinor, max: Limits.maxAmountMinor),
+      // Schema 8 (SA15): an itemized breakdown row without it had no discount.
+      discountMinor:
+          r.optInteger('discount_minor', min: 0, max: Limits.maxAmountMinor) ?? (itemsMinor == null ? null : 0),
+    );
+  }
 
-  static ItemRow _item(_Reader r) => ItemRow(
-        id: r.id('id'),
-        expenseId: r.id('expense_id'),
-        name: r.string('name', min: 1, max: 100, trimmed: true),
-        amountMinor: r.amount('amount_minor'),
-        sortOrder: r.integer('sort_order', min: 0, max: _maxCount),
-      );
+  static ItemRow _item(_Reader r) {
+    final amountMinor = r.amount('amount_minor');
+    return ItemRow(
+      id: r.id('id'),
+      expenseId: r.id('expense_id'),
+      name: r.string('name', min: 1, max: 100, trimmed: true),
+      amountMinor: amountMinor,
+      sortOrder: r.integer('sort_order', min: 0, max: _maxCount),
+      // Schema 8 (SA15): a line before it is 1 x its amount.
+      quantity: r.optInteger('quantity', min: Item.minQuantity, max: Item.maxQuantity) ?? 1,
+      unitAmountMinor: r.optInteger('unit_amount_minor', min: 1, max: Limits.maxAmountMinor) ?? amountMinor,
+    );
+  }
 
   static AssigneeRow _assignee(_Reader r) => AssigneeRow(itemId: r.id('item_id'), memberId: r.id('member_id'));
 
@@ -322,10 +346,12 @@ abstract final class BackupValidator {
       _requireMember(memberGroup, expenseGroup, s.expenseId, s.memberId, at);
       if (!splitKeys.add('${s.expenseId}/${s.memberId}')) throw BackupException(BackupError.invalid, at);
       splitSum[s.expenseId] = (splitSum[s.expenseId] ?? 0) + s.owedMinor;
-      final parts = [s.itemsMinor, s.serviceMinor, s.taxMinor, s.adjustmentMinor];
+      // The breakdown is all-or-nothing and explains owed exactly; the discount part never exceeds the items (V21).
+      final parts = [s.itemsMinor, s.discountMinor, s.serviceMinor, s.taxMinor, s.adjustmentMinor];
       if (parts.any((p) => p != null)) {
         if (parts.any((p) => p == null) ||
-            s.owedMinor != s.itemsMinor! + s.serviceMinor! + s.taxMinor! + s.adjustmentMinor!) {
+            s.discountMinor! > s.itemsMinor! ||
+            s.owedMinor != s.itemsMinor! - s.discountMinor! + s.serviceMinor! + s.taxMinor! + s.adjustmentMinor!) {
           throw BackupException(BackupError.inconsistent, '$at.owed_minor');
         }
       }
@@ -338,6 +364,10 @@ abstract final class BackupValidator {
       if (itemExpense.containsKey(it.id)) throw BackupException(BackupError.invalid, 'expense_items[$i].id');
       if (!expenseGroup.containsKey(it.expenseId)) throw BackupException(BackupError.invalid, 'expense_items[$i]');
       if (!itemOrders.add('${it.expenseId}/${it.sortOrder}')) throw BackupException(BackupError.invalid, 'expense_items[$i]');
+      // A172: the line is quantity x unit price (both already range-checked, so the product fits in 64 bits).
+      if (it.amountMinor != it.quantity * it.unitAmountMinor) {
+        throw BackupException(BackupError.invalid, 'expense_items[$i].amount_minor');
+      }
       itemExpense[it.id] = it.expenseId;
     }
     final assigneeKeys = <String>{};
@@ -359,12 +389,19 @@ abstract final class BackupValidator {
         throw BackupException(BackupError.inconsistent, '$at.total_minor');
       }
       if (e.splitType == 'ITEMIZED') {
-        final subtotal = e.subtotalMinor, service = e.serviceMinor, tax = e.taxMinor, adjustment = e.adjustmentMinor;
-        if (subtotal == null || service == null || tax == null || adjustment == null ||
-            e.totalMinor != subtotal + service + tax + adjustment) {
+        final subtotal = e.subtotalMinor, discount = e.discountMinor, service = e.serviceMinor, tax = e.taxMinor;
+        final adjustment = e.adjustmentMinor;
+        if (subtotal == null || discount == null || service == null || tax == null || adjustment == null ||
+            e.totalMinor != subtotal - discount + service + tax + adjustment) {
           throw BackupException(BackupError.inconsistent, '$at.total_minor');
         }
+        _requireCharges(e, subtotal, discount, service, tax, at);
       } else if (e.subtotalMinor != null ||
+          e.discountBps != null ||
+          e.discountAmountMinor != null ||
+          e.discountMinor != null ||
+          e.serviceAmountMinor != null ||
+          e.taxAmountMinor != null ||
           e.serviceBps != null ||
           e.serviceMinor != null ||
           e.taxBps != null ||
@@ -414,6 +451,28 @@ abstract final class BackupValidator {
     }
 
     _recomputeBalances(data);
+  }
+
+  /// The V21 charge rules of an ITEMIZED row (A171, A173, A177): each charge in one form at most; 0 <= discount <
+  /// subtotal and a discount form exactly when the discount is > 0; an amount form equals its total; a service or tax
+  /// above 0 has a form; a tax base exactly when a tax.
+  static void _requireCharges(ExpenseRow e, int subtotal, int discount, int service, int tax, String at) {
+    final hasDiscount = e.discountBps != null || e.discountAmountMinor != null;
+    final hasService = e.serviceBps != null || e.serviceAmountMinor != null;
+    final hasTax = e.taxBps != null || e.taxAmountMinor != null;
+    final ok = !(e.discountBps != null && e.discountAmountMinor != null) &&
+        !(e.serviceBps != null && e.serviceAmountMinor != null) &&
+        !(e.taxBps != null && e.taxAmountMinor != null) &&
+        subtotal > 0 &&
+        discount < subtotal &&
+        hasDiscount == (discount > 0) &&
+        (e.discountAmountMinor == null || discount == e.discountAmountMinor) &&
+        (hasService || service == 0) &&
+        (e.serviceAmountMinor == null || service == e.serviceAmountMinor) &&
+        (hasTax || tax == 0) &&
+        (e.taxAmountMinor == null || tax == e.taxAmountMinor) &&
+        hasTax == (e.taxBase != null);
+    if (!ok) throw BackupException(BackupError.invalid, '$at.charges');
   }
 
   /// Balances recomputed by the engine, group by group, from the live expenses and the CONFIRMED settlements: they

@@ -10,12 +10,12 @@ class _$ServiceCharge extends ServiceCharge {
   @override
   final int amountMinor;
   @override
-  final int bps;
+  final int? bps;
 
   factory _$ServiceCharge([void Function(ServiceChargeBuilder)? updates]) =>
       (ServiceChargeBuilder()..update(updates))._build();
 
-  _$ServiceCharge._({required this.amountMinor, required this.bps}) : super._();
+  _$ServiceCharge._({required this.amountMinor, this.bps}) : super._();
   @override
   ServiceCharge rebuild(void Function(ServiceChargeBuilder) updates) =>
       (toBuilder()..update(updates)).build();
@@ -93,8 +93,7 @@ class ServiceChargeBuilder
         _$ServiceCharge._(
           amountMinor: BuiltValueNullFieldError.checkNotNull(
               amountMinor, r'ServiceCharge', 'amountMinor'),
-          bps: BuiltValueNullFieldError.checkNotNull(
-              bps, r'ServiceCharge', 'bps'),
+          bps: bps,
         );
     replace(_$result);
     return _$result;

@@ -66,9 +66,10 @@ ItemizedDraft _itemizedFrom(ExpenseView expense, Charges? charges) {
         ),
     ],
     serviceOn: service != null,
-    servicePercentText: service == null ? '' : Bps.format(service.bps),
+    // BSA2: an amount-form charge has no bps; the current editor is percent-only (SA16 adds the amount form).
+    servicePercentText: service?.bps == null ? '' : Bps.format(service!.bps!),
     taxOn: tax != null,
-    taxPercentText: tax == null ? '' : Bps.format(tax.bps),
+    taxPercentText: tax?.bps == null ? '' : Bps.format(tax!.bps!),
     taxBase: TaxBase.fromWire(tax?.base_),
     adjustmentText: adjustment == 0 ? '' : Money.formatPlain(adjustment),
   );

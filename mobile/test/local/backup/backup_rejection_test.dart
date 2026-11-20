@@ -154,6 +154,115 @@ void main() {
     });
   });
 
+  group('itemized v2 (schema 8)', () {
+    Map<String, dynamic> v2(Map<String, dynamic> j) =>
+        (j['expenses'] as List).cast<Map<String, dynamic>>().firstWhere((e) => e['discount_amount_minor'] != null);
+    Map<String, dynamic> quantityItem(Map<String, dynamic> j) =>
+        (j['expense_items'] as List).cast<Map<String, dynamic>>().firstWhere((i) => i['quantity'] == 3);
+
+    test('the export carries the v2 columns', () {
+      final j = copy();
+      expect((v2(j)['discount_amount_minor'], v2(j)['discount_minor'], v2(j)['service_amount_minor']), (1500, 1500, 1000));
+      expect((quantityItem(j)['unit_amount_minor'], quantityItem(j)['amount_minor']), (4500, 13500));
+    });
+    test('a discount in both forms', () async {
+      final j = copy();
+      v2(j)['discount_bps'] = 1000;
+      await expectRejected(encodeBackup(j), BackupError.invalid);
+    });
+    test('an amount-form discount or service that is not its total', () async {
+      final a = copy();
+      v2(a)['discount_amount_minor'] = 1499;
+      await expectRejected(encodeBackup(a), BackupError.invalid);
+      final b = copy();
+      v2(b)['service_amount_minor'] = 999;
+      await expectRejected(encodeBackup(b), BackupError.invalid);
+    });
+    test('a discount percent out of range', () async {
+      final j = copy();
+      v2(j)
+        ..['discount_amount_minor'] = null
+        ..['discount_bps'] = 10000;
+      await expectRejected(encodeBackup(j), BackupError.invalid);
+    });
+    test('a total that ignores the discount', () async {
+      final j = copy();
+      v2(j)['discount_minor'] = 0;
+      await expectRejected(encodeBackup(j), BackupError.inconsistent);
+    });
+    test('an item line that is not quantity x unit price, or a quantity out of range', () async {
+      final a = copy();
+      quantityItem(a)['quantity'] = 4;
+      await expectRejected(encodeBackup(a), BackupError.invalid);
+      final b = copy();
+      quantityItem(b)['quantity'] = 1000;
+      await expectRejected(encodeBackup(b), BackupError.invalid);
+    });
+    test('a split whose discount part breaks the breakdown', () async {
+      final j = copy();
+      final split = (j['expense_splits'] as List)
+          .cast<Map<String, dynamic>>()
+          .firstWhere((s) => s['expense_id'] == v2(j)['id'] && (s['discount_minor'] as int) > 0);
+      split['discount_minor'] = (split['discount_minor'] as int) + 1;
+      await expectRejected(encodeBackup(j), BackupError.inconsistent);
+    });
+    test('a v2 column on an EQUAL expense', () async {
+      final j = copy();
+      (j['expenses'] as List).cast<Map<String, dynamic>>().firstWhere((e) => e['split_type'] == 'EQUAL')['discount_minor'] = 0;
+      await expectRejected(encodeBackup(j), BackupError.invalid);
+    });
+  });
+
+  test('a schema 7 file (no v2 columns) imports as quantity 1, no discount, percent charges', () async {
+    final source = await LocalHttp.open(profileName: 'Old');
+    final g = await source.group(name: 'Before SA15');
+    final gid = g['id'] as String;
+    final you = g['yourMemberId'] as String;
+    final ali = await source.member(gid, 'Ali');
+    final created = await source.expense(gid, {
+      'title': 'Fish',
+      'expenseDate': '2026-11-10',
+      'splitType': 'ITEMIZED',
+      'items': [
+        {'name': 'Fish', 'amountMinor': 6000, 'assigneeMemberIds': [you, ali]},
+      ],
+      'service': {'bps': 1200},
+      'payers': [
+        {'memberId': you, 'amountMinor': 6720}
+      ],
+    });
+    expect(created.statusCode, 201, reason: '${created.data}');
+    final j = decodeBackup(await exportBytes(source.db));
+    await source.close();
+    // The SA5-SA14 file shape: schema 7 and none of the v2 columns.
+    j['schemaVersion'] = 7;
+    for (final e in (j['expenses'] as List).cast<Map<String, dynamic>>()) {
+      e
+        ..remove('discount_bps')
+        ..remove('discount_amount_minor')
+        ..remove('discount_minor')
+        ..remove('service_amount_minor')
+        ..remove('tax_amount_minor');
+    }
+    for (final s in (j['expense_splits'] as List).cast<Map<String, dynamic>>()) {
+      s.remove('discount_minor');
+    }
+    for (final i in (j['expense_items'] as List).cast<Map<String, dynamic>>()) {
+      i
+        ..remove('quantity')
+        ..remove('unit_amount_minor');
+    }
+
+    final service = BackupService(target.db);
+    await service.restore(await service.prepareRestore(encodeBackup(j)));
+    final restored = await LocalHttp.open(database: target.db, withProfile: false);
+    final view = (await restored.get('/groups/$gid/expenses/${created.data['id']}')).data as Map<String, dynamic>;
+    expect([for (final i in view['items'] as List) (i['quantity'], i['unitAmountMinor'], i['amountMinor'])], [(1, 6000, 6000)]);
+    expect([for (final s in view['shares'] as List) s['discountMinor']], [0, 0]);
+    expect(view['charges']['discount'], isNull);
+    expect(view['charges']['service'], {'bps': 1200, 'amountMinor': 720});
+  });
+
   group('limits', () {
     test('a file over the size cap', () async {
       expect(() => BackupValidator.parse(Uint8List(11), maxBytes: 10), throwsA(isA<BackupException>().having((e) => e.code, 'code', BackupError.tooLarge)));

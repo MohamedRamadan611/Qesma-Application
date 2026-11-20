@@ -79,3 +79,18 @@ The contract now has 42 operations. New operations (regenerate the client with `
 
 ## FL12 (regeneration)
 The client was regenerated in FL12 from the committed contract (44 operations). It already holds the B13 settlement changes (`confirmSettlement`, `disputeSettlement`, `cancelSettlement`; `deleteSettlement` is gone; `SettlementView` and `TransferView` have new required fields). FL12 only keeps the app compiling: the balances repository calls `cancelSettlement` where it called `deleteSettlement`, and the FL7 fixtures carry the new fields. FL13 (done) regenerated it again for B14 (46 operations: `getPaymentHandles`, `updatePaymentHandles`, and `TransferView.receiverHandles`) and built the two-sided settlement UI.
+
+## BSA2 (itemized bill v2) contract changes
+No new operations. `createExpense`, `updateExpense` and `previewExpense` accept, for ITEMIZED bills only (STANDALONE_SPEC 18, A171–A177; regenerated with `mobile/tool/generate_api.sh`):
+- `ItemInput`: `amountMinor` (legacy, quantity 1) **or** `unitAmountMinor` with an optional `quantity` 1..999, never both. `ItemInput.amountMinor` is therefore **no longer required** in the generated model.
+- `discount` (new `DiscountInput`): `{bps}` (1..9,999) **or** `{amountMinor}` (≥ 1, less than the subtotal).
+- `ServiceInput`/`TaxInput`: `{bps}` **or** `{amountMinor}`; `tax.base` still chooses the base (amount form: the allocation weights only). `bps` is no longer required.
+- Breaking a rule (both forms, neither, a quantity out of range, a discount ≥ the subtotal) is 422 `VALIDATION_ERROR`.
+
+Responses:
+- `ItemView` gains `quantity` and `unitAmountMinor` (always present; `amountMinor` = quantity × unit).
+- `Charges.discount` (new `DiscountCharge {bps?, amountMinor}`) is null without a discount. `ServiceCharge.bps`, `TaxCharge.bps` and `DiscountCharge.bps` are **nullable**: null means the charge was given as an amount.
+- `ShareView.discountMinor` and `ExpensePreview.discountMinor` (0 for ITEMIZED without a discount, null for EQUAL/EXACT). `subtotalMinor` is still the item sum before the discount; owed = items − discount + service + tax + adjustment.
+- Revisions written before BSA2 read back with quantity 1, unit = amount and no discount.
+
+The app compiles against the regenerated client with no UI change: the bill card hides the rate tag when `bps` is null, the edit prefill leaves the percent field empty for an amount-form charge, and the local backend fills `quantity = 1`, `unitAmountMinor = amountMinor` and `discountMinor = 0`. The editor (SA16) and the local engine/backend (SA15) add the new inputs.

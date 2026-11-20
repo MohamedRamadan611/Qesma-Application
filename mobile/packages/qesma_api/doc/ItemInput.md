@@ -8,9 +8,11 @@ import 'package:qesma_api/api.dart';
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**amountMinor** | **int** | Integer minor units (piasters: 1 EGP = 100). Never a decimal. | 
+**amountMinor** | **int** | Integer minor units (piasters: 1 EGP = 100). Never a decimal. | [optional] 
 **assigneeMemberIds** | **BuiltList&lt;String&gt;** |  | 
 **name** | **String** |  | 
+**quantity** | **int** |  | [optional] 
+**unitAmountMinor** | **int** | Integer minor units (piasters: 1 EGP = 100). Never a decimal. | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

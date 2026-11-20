@@ -23,6 +23,17 @@ Type-specific expense fields:
 - `EQUAL`: `totalMinor`, `participantMemberIds[]`
 - `EXACT`: `totalMinor`, `shares[] { memberId, amountMinor }`
 - `ITEMIZED`: `items[] { name, amountMinor, assigneeMemberIds[] }`, optional `serviceBps`, optional `tax { bps, base }`, `adjustmentMinor`
+- `ITEMIZED` v2 (BSA2, STANDALONE_SPEC 18, A171–A177), all optional:
+  - an item gives either `amountMinor` (legacy, quantity 1) or `unitAmountMinor` with an optional `quantity` (1..999); the line is `quantity × unitAmountMinor`;
+  - `discount { bps }` or `discount { amountMinor }`: one discount on the whole bill;
+  - `service { bps }` or `service { amountMinor }` (the legacy `serviceBps` is still read);
+  - `tax { amountMinor, base }` next to the legacy `tax { bps, base }`;
+  - map the item and each charge through the engine's shape rules (`Item.of`, `ChargeSpec.of` in Java), so both forms at once, or neither, is a `VALIDATION_ERROR`.
+
+Extra `expected.expenses[i]` keys for ITEMIZED:
+- `discountMinor`: the discount total (0 without a discount);
+- `discounts { memberId: n }`: each listed member's discount part (members dropped for owing 0 are not listed, like `owed`);
+- `error`: the bill must be rejected with this code (for example `"VALIDATION_ERROR"`); nothing else is asserted for that expense and it does not enter the ledger.
 
 Rules:
 - All amounts are integer minor units (piasters). Percentages are integer basis points. No decimals.
@@ -33,6 +44,8 @@ Rules:
 The standalone release (`docs/STANDALONE_SPEC.md`) adds more folders next to `engine/`: `pool/` (SA10), `ride/` (SA11) and `insights/` (SA7, SA8); each is defined by the prompt that adds it. Both engines (Java and the Dart port, ADR-011) must pass every engine vector.
 
 Vectors V1–V8 come from `docs/PROJECT_SPEC.md` section 10. They are run by `FixtureTest` in the backend (Java, the reference) and by `test/fixture_test.dart` in `mobile/packages/qesma_engine` (the Dart port).
+
+Vectors V9–V16 come from `docs/STANDALONE_SPEC.md` 18.6 (BSA2). Both runners run them: `FixtureTest` (Java) and, since SA15, `test/fixture_test.dart` (Dart engine) and `test/local/backend/engine_vectors_test.dart` (the local backend over HTTP). An item and each charge are mapped through the engine shape rules (`Item.of`, `ChargeSpec.of` in both languages).
 
 ## Parity rule (ADR-011)
 - Both engines must pass every vector in `engine/`. A vector that one engine fails is a bug in that engine, never a reason to edit `expected`. Java is the reference.

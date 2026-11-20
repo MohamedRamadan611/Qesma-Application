@@ -1,6 +1,8 @@
 package app.qesma.service;
 
 import app.qesma.api.ApiException;
+import app.qesma.engine.EngineException;
+import app.qesma.engine.ItemizedCalculator;
 import app.qesma.engine.Limits;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -20,6 +22,7 @@ final class ExpenseValidator {
     static final int MAX_ITEM_NAME = 100;
     static final int MAX_LIST = 100;
     static final int MAX_BPS = 10_000;
+    static final int MAX_DISCOUNT_BPS = ItemizedCalculator.MAX_DISCOUNT_BPS;
     static final String DEFAULT_CATEGORY = "OTHER";
     static final java.util.Set<String> CATEGORIES = java.util.Set.of("FOOD", "TRANSPORT", "FUEL", "ACCOMMODATION",
             "GROCERIES", "SHOPPING", "ENTERTAINMENT", "BILLS", DEFAULT_CATEGORY);
@@ -33,16 +36,30 @@ final class ExpenseValidator {
      *
      * @param totalMinor     the client-stated total; 0 means "not stated" (only possible for ITEMIZED)
      * @param items          ITEMIZED only, in the order the client sent them
-     * @param serviceBps     ITEMIZED only; null = no service charge
-     * @param taxBps         ITEMIZED only; null = no tax
-     * @param taxBase        present exactly when {@code taxBps} is; the default is made explicit
+     * @param items          normalized: every item carries quantity, unitAmountMinor and the line amountMinor
+     * @param serviceBps     ITEMIZED only; null = no service charge in the percent form
+     * @param serviceAmountMinor ITEMIZED only; the amount form of the service charge (BSA2); never with serviceBps
+     * @param taxBps         ITEMIZED only; null = no tax in the percent form
+     * @param taxAmountMinor ITEMIZED only; the amount form of the tax (BSA2); never with taxBps
+     * @param taxBase        present exactly when a tax (either form) is; the default is made explicit
+     * @param discountBps    ITEMIZED only; the percent form of the discount (BSA2)
+     * @param discountAmountMinor ITEMIZED only; the amount form of the discount; never with discountBps
      * @param adjustmentMinor ITEMIZED only, 0 when absent
      */
     record Valid(String title, LocalDate expenseDate, String splitType, long totalMinor,
                  List<ExpenseCommand.PayerInput> payers, List<UUID> participantMemberIds,
                  List<ExpenseCommand.ShareInput> shares, List<ExpenseCommand.ItemInput> items, Integer serviceBps,
-                 Integer taxBps, String taxBase, long adjustmentMinor, String category,
-                 boolean paidFromPool) {
+                 Long serviceAmountMinor, Integer taxBps, Long taxAmountMinor, String taxBase, Integer discountBps,
+                 Long discountAmountMinor, long adjustmentMinor, String category, boolean paidFromPool) {
+
+        /** Pre-BSA2 shape: percent charges only, no discount. */
+        Valid(String title, LocalDate expenseDate, String splitType, long totalMinor,
+              List<ExpenseCommand.PayerInput> payers, List<UUID> participantMemberIds,
+              List<ExpenseCommand.ShareInput> shares, List<ExpenseCommand.ItemInput> items, Integer serviceBps,
+              Integer taxBps, String taxBase, long adjustmentMinor, String category, boolean paidFromPool) {
+            this(title, expenseDate, splitType, totalMinor, payers, participantMemberIds, shares, items, serviceBps,
+                    null, taxBps, null, taxBase, null, null, adjustmentMinor, category, paidFromPool);
+        }
 
         /** Itemized shape without category / pool flag. */
         Valid(String title, LocalDate expenseDate, String splitType, long totalMinor,
@@ -55,7 +72,13 @@ final class ExpenseValidator {
 
         Valid withPoolFields(String newCategory, boolean newPaidFromPool) {
             return new Valid(title, expenseDate, splitType, totalMinor, payers, participantMemberIds, shares, items,
-                    serviceBps, taxBps, taxBase, adjustmentMinor, newCategory, newPaidFromPool);
+                    serviceBps, serviceAmountMinor, taxBps, taxAmountMinor, taxBase, discountBps, discountAmountMinor,
+                    adjustmentMinor, newCategory, newPaidFromPool);
+        }
+
+        /** True when the tax is applied, in either form. */
+        boolean hasTax() {
+            return taxBps != null || taxAmountMinor != null;
         }
 
         /** EQUAL/EXACT shape. */
@@ -224,14 +247,11 @@ final class ExpenseValidator {
         }
         List<ExpenseCommand.ItemInput> clean = new ArrayList<>();
         for (ExpenseCommand.ItemInput item : items) {
-            if (item == null || item.amountMinor() == null || item.assigneeMemberIds() == null) {
-                throw ApiException.validation("Every item needs name, amountMinor and assigneeMemberIds");
+            if (item == null || item.assigneeMemberIds() == null) {
+                throw ApiException.validation("Every item needs name, an amount and assigneeMemberIds");
             }
             String name = FieldRules.name(item.name(), MAX_ITEM_NAME, "item name");
-            if (item.amountMinor() <= 0) {
-                throw ApiException.validation("Item amounts must be greater than zero");
-            }
-            capped(item.amountMinor(), "item amountMinor");
+            ItemizedCalculator.Item line = itemLine(name, item);
             List<UUID> assignees = item.assigneeMemberIds();
             if (assignees.isEmpty()) {
                 throw ApiException.validation("Every item needs at least one assignee");
@@ -242,18 +262,23 @@ final class ExpenseValidator {
             if (assignees.stream().anyMatch(Objects::isNull)) {
                 throw ApiException.validation("assigneeMemberIds must not contain null");
             }
-            clean.add(new ExpenseCommand.ItemInput(name, item.amountMinor(), List.copyOf(assignees)));
+            clean.add(new ExpenseCommand.ItemInput(name, line.amountMinor(), line.unitAmountMinor(), line.quantity(),
+                    List.copyOf(assignees)));
         }
 
-        Integer serviceBps = null;
+        ItemizedCalculator.ChargeSpec service = null;
         if (c.service() != null) {
-            serviceBps = bps(c.service().bps(), "service.bps");
+            service = charge(c.service().bps(), c.service().amountMinor(), "service", 0, MAX_BPS);
         }
-        Integer taxBps = null;
+        ItemizedCalculator.ChargeSpec tax = null;
         String taxBase = null;
         if (c.tax() != null) {
-            taxBps = bps(c.tax().bps(), "tax.bps");
+            tax = charge(c.tax().bps(), c.tax().amountMinor(), "tax", 0, MAX_BPS);
             taxBase = taxBase(c.tax().base());
+        }
+        ItemizedCalculator.ChargeSpec discount = null;
+        if (c.discount() != null) {
+            discount = charge(c.discount().bps(), c.discount().amountMinor(), "discount", 1, MAX_DISCOUNT_BPS);
         }
         long adjustment = c.adjustmentMinor() == null ? 0 : c.adjustmentMinor();
         if (adjustment > Limits.MAX_AMOUNT_MINOR || adjustment < -Limits.MAX_AMOUNT_MINOR) {
@@ -261,7 +286,51 @@ final class ExpenseValidator {
                     + Limits.MAX_AMOUNT_MINOR);
         }
         return new Valid(title, date, "ITEMIZED", total, List.copyOf(payers), null, null, List.copyOf(clean),
-                serviceBps, taxBps, taxBase, adjustment);
+                service == null ? null : service.bps(), service == null ? null : service.amountMinor(),
+                tax == null ? null : tax.bps(), tax == null ? null : tax.amountMinor(), taxBase,
+                discount == null ? null : discount.bps(), discount == null ? null : discount.amountMinor(),
+                adjustment, DEFAULT_CATEGORY, false);
+    }
+
+    /**
+     * A172 shape and ranges (BSA2): legacy amountMinor or unitAmountMinor with an optional quantity, never both;
+     * quantity 1..999; unit price > 0 and within the cap; the line (computed exactly by the engine) within the cap.
+     */
+    private static ItemizedCalculator.Item itemLine(String name, ExpenseCommand.ItemInput item) {
+        try {
+            ItemizedCalculator.Item line = ItemizedCalculator.Item.of(name, item.amountMinor(), item.unitAmountMinor(),
+                    item.quantity(), List.of());
+            if (line.quantity() < ItemizedCalculator.MIN_QUANTITY || line.quantity() > ItemizedCalculator.MAX_QUANTITY) {
+                throw ApiException.validation("Item quantity must be between " + ItemizedCalculator.MIN_QUANTITY
+                        + " and " + ItemizedCalculator.MAX_QUANTITY);
+            }
+            if (line.unitAmountMinor() <= 0) {
+                throw ApiException.validation("Item amounts must be greater than zero");
+            }
+            capped(line.unitAmountMinor(), "item amount");
+            capped(line.amountMinor(), "item line amount (quantity x unitAmountMinor)");
+            return line;
+        } catch (EngineException e) {
+            throw EngineErrors.toApi(e);
+        }
+    }
+
+    /** A charge in exactly one form (A171, A173): bps within [minBps, maxBps] or an amount 1..cap. */
+    private static ItemizedCalculator.ChargeSpec charge(Integer bps, Long amountMinor, String field, int minBps,
+                                                        int maxBps) {
+        if ((bps == null) == (amountMinor == null)) {
+            throw ApiException.validation(field + " needs either bps or amountMinor, not both");
+        }
+        if (bps != null) {
+            if (bps < minBps || bps > maxBps) {
+                throw ApiException.validation(field + ".bps must be between " + minBps + " and " + maxBps);
+            }
+            return ItemizedCalculator.ChargeSpec.percent(bps);
+        }
+        if (amountMinor < 1 || amountMinor > Limits.MAX_AMOUNT_MINOR) {
+            throw ApiException.validation(field + ".amountMinor must be between 1 and " + Limits.MAX_AMOUNT_MINOR);
+        }
+        return ItemizedCalculator.ChargeSpec.amount(amountMinor);
     }
 
     /** Review CP2-001: every amount has an upper bound so ledger sums cannot overflow. */
@@ -272,17 +341,11 @@ final class ExpenseValidator {
     }
 
     private static void rejectItemizedFields(ExpenseCommand c, String type) {
-        if (c.items() != null || c.service() != null || c.tax() != null || c.adjustmentMinor() != null) {
-            throw ApiException.validation(
-                    "items, service, tax and adjustmentMinor are only allowed for ITEMIZED expenses (this is " + type + ")");
+        if (c.items() != null || c.service() != null || c.tax() != null || c.adjustmentMinor() != null
+                || c.discount() != null) {
+            throw ApiException.validation("items, discount, service, tax and adjustmentMinor are only allowed for "
+                    + "ITEMIZED expenses (this is " + type + ")");
         }
-    }
-
-    private static int bps(Integer value, String field) {
-        if (value == null || value < 0 || value > MAX_BPS) {
-            throw ApiException.validation(field + " must be between 0 and " + MAX_BPS);
-        }
-        return value;
     }
 
     /** Null defaults to SUBTOTAL_PLUS_SERVICE (Decision A1); the default is made explicit for storage and hashing. */
