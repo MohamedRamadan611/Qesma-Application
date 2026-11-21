@@ -66,8 +66,14 @@ class _ReminderSheetState extends ConsumerState<ReminderSheet> {
   bool _edited = false; // the user typed in the field: async loads must not overwrite it
   bool _sending = false;
 
+  String? _walletHandle;
+  ReminderPayMethod _method = ReminderPayMethod.instapay;
+
   bool get _hasInstapay =>
       _instapayHandle != null && _instapayHandle!.trim().isNotEmpty;
+  bool get _hasWallet => _walletHandle != null && _walletHandle!.trim().isNotEmpty;
+  bool get _hasAny => _hasInstapay || _hasWallet;
+  String? get _activeHandle => _method == ReminderPayMethod.wallet ? _walletHandle : _instapayHandle;
 
   @override
   void initState() {
@@ -86,9 +92,14 @@ class _ReminderSheetState extends ConsumerState<ReminderSheet> {
   Future<void> _loadInstapayHandle() async {
     try {
       final handles = await ref.read(profileRepositoryProvider).paymentHandles();
-      if (mounted && handles.instapay != null && handles.instapay!.trim().isNotEmpty) {
+      final insta = handles.instapay?.trim() ?? '';
+      final wallet = handles.wallet?.trim() ?? '';
+      if (mounted && (insta.isNotEmpty || wallet.isNotEmpty)) {
         setState(() {
-          _instapayHandle = handles.instapay!.trim();
+          _instapayHandle = insta.isNotEmpty ? insta : null;
+          _walletHandle = wallet.isNotEmpty ? wallet : null;
+          // One saved: use it. Both saved: default InstaPay; the user can switch.
+          _method = insta.isNotEmpty ? ReminderPayMethod.instapay : ReminderPayMethod.wallet;
           _includeInstapay = true;
           if (!_edited) _updateText();
         });
@@ -137,8 +148,17 @@ class _ReminderSheetState extends ConsumerState<ReminderSheet> {
       amountMinor: widget.amountMinor,
       groupName: widget.groupName,
       instapayHandle: _instapayHandle,
+      walletHandle: _walletHandle,
+      method: _method,
       includeInstapay: _includeInstapay,
     );
+  }
+
+  void _onMethodSelected(ReminderPayMethod method) {
+    setState(() {
+      _method = method;
+      _updateText();
+    });
   }
 
   void _onToneSelected(ReminderTone tone) {
@@ -155,6 +175,21 @@ class _ReminderSheetState extends ConsumerState<ReminderSheet> {
       _includeInstapay = value;
       _updateText();
     });
+  }
+
+  Future<void> _share() async {
+    final text = _controller.text.trim();
+    if (text.isEmpty || _sending) return;
+    setState(() => _sending = true);
+    final ok = await ref.read(reminderLauncherProvider).shareFallback(text);
+    if (!mounted) return;
+    setState(() => _sending = false);
+    if (ok) {
+      Navigator.of(context).pop();
+    } else {
+      ScaffoldMessenger.maybeOf(context)
+          ?.showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).reminderLaunchFailed)));
+    }
   }
 
   Future<void> _send() async {
@@ -238,17 +273,50 @@ class _ReminderSheetState extends ConsumerState<ReminderSheet> {
         const SizedBox(height: QesmaSpacing.md),
 
         // Optional InstaPay Toggle
-        if (_hasInstapay) ...[
+        if (_hasAny) ...[
           SwitchListTile.adaptive(
             value: _includeInstapay,
             contentPadding: EdgeInsets.zero,
-            title: Text(l10n.reminderIncludeInstapay, style: theme.textTheme.bodyMedium),
+            title: Text(
+              _hasInstapay && _hasWallet
+                  ? l10n.reminderIncludePayment
+                  : _hasWallet
+                      ? l10n.reminderMethodWallet
+                      : l10n.reminderIncludeInstapay,
+              style: theme.textTheme.bodyMedium,
+            ),
             subtitle: Text(
-              _instapayHandle!,
+              _activeHandle ?? '',
               style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary),
             ),
             onChanged: _onToggleInstapay,
           ),
+          if (_hasInstapay && _hasWallet && _includeInstapay) ...[
+            Text(
+              l10n.reminderPayMethodLabel,
+              style: theme.textTheme.titleSmall?.copyWith(color: context.colors.textSecondary),
+            ),
+            const SizedBox(height: QesmaSpacing.xs),
+            Wrap(
+              spacing: QesmaSpacing.sm,
+              children: [
+                ChoiceChip(
+                  label: Text(l10n.reminderMethodInstapay),
+                  selected: _method == ReminderPayMethod.instapay,
+                  onSelected: (s) {
+                    if (s) _onMethodSelected(ReminderPayMethod.instapay);
+                  },
+                ),
+                ChoiceChip(
+                  label: Text(l10n.reminderMethodWallet),
+                  selected: _method == ReminderPayMethod.wallet,
+                  onSelected: (s) {
+                    if (s) _onMethodSelected(ReminderPayMethod.wallet);
+                  },
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: QesmaSpacing.sm),
         ],
 
@@ -287,6 +355,13 @@ class _ReminderSheetState extends ConsumerState<ReminderSheet> {
           label: l10n.reminderOpenWhatsapp,
           icon: Icons.chat_bubble_outline,
           onPressed: _sending ? null : _send,
+        ),
+        const SizedBox(height: QesmaSpacing.sm),
+        AppButton(
+          label: l10n.reminderChooseApp,
+          icon: Icons.share_outlined,
+          variant: AppButtonVariant.secondary,
+          onPressed: _sending ? null : _share,
         ),
       ],
     );

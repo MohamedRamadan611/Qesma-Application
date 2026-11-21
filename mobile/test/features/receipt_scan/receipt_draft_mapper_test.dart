@@ -119,4 +119,30 @@ void main() {
     final without = _map('{"items":[{"name":"Pizza","amount":"200"}],"deliveryAmount":""}');
     expect((without.itemized.deliveryOn, without.itemized.deliveryAmountText), (false, ''));
   });
+
+  group('VAT on/off from items vs the printed total', () {
+    // Second Cup receipt: 160 + 135 + 190 = 485, discount 200 -> 285 = TOTAL DUE; "VAT 14%: 35.00" is already inside.
+    test('items - discount = total: prices include VAT, so VAT is off', () {
+      final i = _map('{"items":[{"name":"A","amount":"160"},{"name":"B","amount":"135"},{"name":"C","amount":"190"}],'
+              '"subtotal":"485","discountAmount":"-200","taxPercent":"14%","taxAmount":"35","total":"285","totalBeforeTax":"250.01"}')
+          .itemized;
+      expect(i.taxOn, isFalse);
+      expect(i.discountAmountText, '200');
+    });
+
+    test('items = total, no extras: VAT off', () {
+      final i = _map('{"items":[{"name":"A","amount":"100"}],"taxPercent":"14","total":"100"}').itemized;
+      expect(i.taxOn, isFalse);
+    });
+
+    test('items < total: VAT is added on top, so VAT is on with the default rate', () {
+      final i = _map('{"items":[{"name":"A","amount":"100"}],"total":"114"}').itemized;
+      expect((i.taxOn, i.taxPercentText), (true, '14'));
+    });
+
+    test('no printed total: the scanned VAT is kept', () {
+      final i = _map('{"items":[{"name":"A","amount":"100"}],"taxPercent":"14"}').itemized;
+      expect(i.taxOn, isTrue);
+    });
+  });
 }

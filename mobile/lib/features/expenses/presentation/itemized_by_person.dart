@@ -9,7 +9,7 @@ import '../../../core/widgets/widgets.dart';
 import '../application/expense_form_controller.dart';
 import '../application/expense_form_state.dart';
 import 'expense_ui.dart';
-import 'itemized_items_card.dart' show QuantityStepper;
+import 'itemized_items_card.dart' show LabeledStepper;
 
 /// "By person" (the redesign): one card per member who has items, with their items, "copy an existing item" chips for
 /// the items they are not on, and an inline "add an item for X" form; members with no items are folded under one
@@ -17,7 +17,15 @@ import 'itemized_items_card.dart' show QuantityStepper;
 ///
 /// One card is open at a time. [personId] is the open person (the editor keeps it so switching modes does not lose it).
 class ByPersonView extends ConsumerWidget {
-  const ByPersonView({super.key, required this.formKey, required this.form, required this.members, required this.current, required this.personId, required this.onPerson});
+  const ByPersonView({
+    super.key,
+    required this.formKey,
+    required this.form,
+    required this.members,
+    required this.current,
+    required this.personId,
+    required this.onPerson,
+  });
 
   final ExpenseFormKey formKey;
   final ExpenseFormState form;
@@ -38,28 +46,37 @@ class ByPersonView extends ConsumerWidget {
     final memberIds = [for (final m in members) m.id];
     if (members.isEmpty) return const SizedBox.shrink();
 
-    final withItems = [for (final m in members) if (items.any((i) => i.assigneeIds.contains(m.id))) m];
-    final without = [for (final m in members) if (!withItems.contains(m)) m];
-    final open = members.any((m) => m.id == personId) ? personId! : (withItems.firstOrNull ?? members.first).id;
-    final nobody = [for (var i = 0; i < items.length; i++) if (items[i].assigneesAmong(memberIds).isEmpty) (i, items[i])];
+    final withItems = [
+      for (final m in members)
+        if (items.any((i) => i.assigneeIds.contains(m.id))) m,
+    ];
+    final without = [
+      for (final m in members)
+        if (!withItems.contains(m)) m,
+    ];
+    // null = nothing chosen yet (the first person with items opens); '' = the user closed the open card.
+    final String? open = personId == null ? (withItems.firstOrNull ?? members.first).id : (members.any((m) => m.id == personId) ? personId : null);
+    final nobody = [
+      for (var i = 0; i < items.length; i++)
+        if (items[i].assigneesAmong(memberIds).isEmpty) (i, items[i]),
+    ];
 
     Widget card(MemberDto m) => _PersonCard(
-          key: ValueKey('person-${m.id}'),
-          member: m,
-          items: items,
-          owedMinor: _owed(m.id),
-          open: m.id == open,
-          onTap: () => onPerson(m.id),
-          controller: controller,
-        );
+      key: ValueKey('person-${m.id}'),
+      member: m,
+      items: items,
+      owedMinor: _owed(m.id),
+      open: m.id == open,
+      onTap: () => onPerson(m.id == open ? '' : m.id),
+      controller: controller,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(l10n.expenseItzPersonByPersonHint, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
         const SizedBox(height: QesmaSpacing.sm),
-        if (items.isEmpty)
-          Text(l10n.expenseItzPersonNoItemsYet, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
+        if (items.isEmpty) Text(l10n.expenseItzPersonNoItemsYet, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
         for (final (index, item) in nobody)
           Padding(
             padding: const EdgeInsets.only(bottom: QesmaSpacing.xs),
@@ -81,7 +98,13 @@ class ByPersonView extends ConsumerWidget {
           ),
         for (final m in withItems) ...[card(m), const SizedBox(height: QesmaSpacing.sm)],
         if (without.isNotEmpty)
-          _WithoutItems(title: l10n.expenseItzMembersWithoutItems('${without.length}'), openInside: without.any((m) => m.id == open), children: [for (final m in without) ...[card(m), const SizedBox(height: QesmaSpacing.sm)]]),
+          _WithoutItems(
+            title: l10n.expenseItzMembersWithoutItems('${without.length}'),
+            openInside: without.any((m) => m.id == open),
+            children: [
+              for (final m in without) ...[card(m), const SizedBox(height: QesmaSpacing.sm)],
+            ],
+          ),
       ],
     );
   }
@@ -122,7 +145,9 @@ class _WithoutItemsState extends State<_WithoutItems> {
                 constraints: const BoxConstraints(minHeight: kMinTouch),
                 child: Row(
                   children: [
-                    Expanded(child: Text(widget.title, style: theme.textTheme.titleSmall?.copyWith(color: context.colors.textSecondary))),
+                    Expanded(
+                      child: Text(widget.title, style: theme.textTheme.titleSmall?.copyWith(color: context.colors.textSecondary)),
+                    ),
                     Icon(open ? Icons.expand_less : Icons.expand_more),
                   ],
                 ),
@@ -137,7 +162,15 @@ class _WithoutItemsState extends State<_WithoutItems> {
 }
 
 class _PersonCard extends StatelessWidget {
-  const _PersonCard({super.key, required this.member, required this.items, required this.owedMinor, required this.open, required this.onTap, required this.controller});
+  const _PersonCard({
+    super.key,
+    required this.member,
+    required this.items,
+    required this.owedMinor,
+    required this.open,
+    required this.onTap,
+    required this.controller,
+  });
 
   final MemberDto member;
   final List<ItemDraft> items;
@@ -150,8 +183,14 @@ class _PersonCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final mine = [for (var i = 0; i < items.length; i++) if (items[i].assigneeIds.contains(member.id)) (i, items[i])];
-    final others = [for (var i = 0; i < items.length; i++) if (!items[i].assigneeIds.contains(member.id)) (i, items[i])];
+    final mine = [
+      for (var i = 0; i < items.length; i++)
+        if (items[i].assigneeIds.contains(member.id)) (i, items[i]),
+    ];
+    final others = [
+      for (var i = 0; i < items.length; i++)
+        if (!items[i].assigneeIds.contains(member.id)) (i, items[i]),
+    ];
     final count = mine.length;
     final countText = count == 0
         ? l10n.expenseItzPersonNoItemsLine
@@ -203,36 +242,35 @@ class _PersonCard extends StatelessWidget {
     );
 
     return DecoratedBox(
-      decoration: BoxDecoration(color: context.colors.card, borderRadius: BorderRadius.circular(QesmaRadii.control), border: Border.all(color: context.colors.hairline)),
+      decoration: BoxDecoration(
+        color: open ? context.colors.tint : context.colors.card,
+        borderRadius: BorderRadius.circular(QesmaRadii.card),
+        border: Border.all(color: open ? context.colors.primaryLight.withValues(alpha: 0.6) : context.colors.hairline, width: open ? 1.5 : 1),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           header,
           if (open)
             Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(QesmaSpacing.sm + 4, 0, QesmaSpacing.sm + 4, QesmaSpacing.sm + 4),
+              padding: const EdgeInsetsDirectional.fromSTEB(QesmaSpacing.sm + 4, QesmaSpacing.xs, QesmaSpacing.sm + 4, QesmaSpacing.sm + 4),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  for (final (index, item) in mine)
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(minHeight: kMinTouch),
-                      child: Row(
-                        children: [
-                          Expanded(child: Text(headingOf(index, item), style: theme.textTheme.titleSmall)),
-                          if (item.quantity > 1) Text('× ${ltrIsolate('${item.quantity}')}  ', style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
-                          if (item.amountMinor != null) MoneyText(item.amountMinor!, size: MoneySize.small),
-                          IconButton(
-                            icon: const Icon(Icons.remove_circle_outline),
-                            tooltip: l10n.expenseItzPersonRemoveItem(headingOf(index, item), member.displayName),
-                            onPressed: () => controller.toggleAssigneeForPerson(member.id, item.id),
-                          ),
-                        ],
-                      ),
+                  for (final (index, item) in mine) ...[
+                    _PersonItemFields(
+                      key: ValueKey('pitem-${member.id}-${item.id}'),
+                      item: item,
+                      heading: headingOf(index, item),
+                      removeTooltip: l10n.expenseItzPersonRemoveItem(headingOf(index, item), member.displayName),
+                      controller: controller,
+                      personId: member.id,
                     ),
+                    const SizedBox(height: QesmaSpacing.sm),
+                  ],
                   if (others.isNotEmpty) ...[
                     const SizedBox(height: QesmaSpacing.sm),
-                    Text(l10n.expenseItzCopyItem, style: theme.textTheme.labelLarge),
+                    Text(l10n.expenseItzCopyItem, style: theme.textTheme.labelMedium?.copyWith(color: context.colors.textSecondary)),
                     const SizedBox(height: QesmaSpacing.xs),
                     Wrap(
                       spacing: QesmaSpacing.sm,
@@ -281,6 +319,7 @@ class _AddItemFormState extends State<_AddItemForm> {
   final TextEditingController _price = TextEditingController();
   int _quantity = 1;
   bool _tried = false;
+  bool _open = false;
 
   @override
   void dispose() {
@@ -306,6 +345,7 @@ class _AddItemFormState extends State<_AddItemForm> {
     setState(() {
       _quantity = 1;
       _tried = false;
+      _open = false;
     });
   }
 
@@ -324,29 +364,179 @@ class _AddItemFormState extends State<_AddItemForm> {
       showClear: false,
       errorText: _tried && !priceOk ? l10n.expenseItemizedAmountInvalid : null,
     );
-    final stepper = QuantityStepper(quantity: _quantity, name: l10n.expenseItzAddItemFor(widget.member.displayName), onStep: (d) => setState(() => _quantity = (_quantity + d).clamp(kMinQuantity, kMaxQuantity)));
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        AppTextField(
-          controller: _name,
-          label: '${l10n.expenseItemizedNameLabel} *',
-          hint: l10n.expenseItemizedNameHint,
-          maxLength: kItemNameMax,
-          showClear: false,
-          errorText: _tried && !nameOk ? l10n.expenseItemizedNameRequired : null,
-          textInputAction: TextInputAction.next,
+    final stepper = LabeledStepper(
+      quantity: _quantity,
+      name: l10n.expenseItzAddItemFor(widget.member.displayName),
+      onStep: (d) => setState(() => _quantity = (_quantity + d).clamp(kMinQuantity, kMaxQuantity)),
+    );
+    final addLabel = l10n.expenseItzAddItemFor(widget.member.displayName);
+    // Closed: one dashed button (no empty form taking half the screen). Open: a white card with the fields.
+    if (!_open) {
+      return OutlinedButton.icon(
+        onPressed: widget.atLimit ? null : () => setState(() => _open = true),
+        icon: const Icon(Icons.add_circle_outline),
+        label: Text(addLabel),
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size.fromHeight(kMinTouch),
+          side: BorderSide(color: context.colors.primary, width: 1.5),
+          foregroundColor: context.colors.primary,
         ),
-        const SizedBox(height: QesmaSpacing.sm),
-        if (stacked) ...[priceField, const SizedBox(height: QesmaSpacing.sm), Align(alignment: AlignmentDirectional.centerStart, child: stepper)] else Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Expanded(child: priceField), const SizedBox(width: QesmaSpacing.sm), stepper]),
-        const SizedBox(height: QesmaSpacing.sm),
-        AppButton(
-          label: l10n.expenseItzAddItemFor(widget.member.displayName),
-          icon: Icons.add_circle_outline,
-          variant: AppButtonVariant.secondary,
-          onPressed: widget.atLimit ? null : _add,
+      );
+    }
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: context.colors.card,
+        borderRadius: BorderRadius.circular(QesmaRadii.control + 2),
+        border: Border.all(color: context.colors.primaryLight.withValues(alpha: 0.5)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(QesmaSpacing.sm + 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppTextField(
+              controller: _name,
+              label: '${l10n.expenseItemizedNameLabel} *',
+              hint: l10n.expenseItemizedNameHint,
+              inputFormatters: const [CodePointLimitFormatter(kItemNameMax)],
+              autofocus: true,
+              showClear: false,
+              errorText: _tried && !nameOk ? l10n.expenseItemizedNameRequired : null,
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: QesmaSpacing.sm + 4),
+            if (stacked) ...[
+              priceField,
+              const SizedBox(height: QesmaSpacing.sm + 4),
+              Align(alignment: AlignmentDirectional.centerStart, child: stepper),
+            ] else
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(child: priceField),
+                  const SizedBox(width: QesmaSpacing.sm + 4),
+                  stepper,
+                ],
+              ),
+            const SizedBox(height: QesmaSpacing.md),
+            AppButton(label: addLabel, icon: Icons.add_circle_outline, onPressed: widget.atLimit ? null : _add),
+            const SizedBox(height: QesmaSpacing.xs),
+            TextButton(onPressed: () => setState(() => _open = false), child: Text(l10n.expenseItzAddItemCancel)),
+          ],
         ),
-      ],
+      ),
+    );
+  }
+}
+
+/// One item of the open person, editable like the by-item card: name, price, quantity and a button that takes the item
+/// off this person (the item itself stays for the others). Editing a shared item changes it for everybody on it.
+class _PersonItemFields extends StatefulWidget {
+  const _PersonItemFields({
+    super.key,
+    required this.item,
+    required this.heading,
+    required this.removeTooltip,
+    required this.controller,
+    required this.personId,
+  });
+
+  final ItemDraft item;
+  final String heading;
+  final String removeTooltip;
+  final ExpenseFormController controller;
+  final String personId;
+
+  @override
+  State<_PersonItemFields> createState() => _PersonItemFieldsState();
+}
+
+class _PersonItemFieldsState extends State<_PersonItemFields> {
+  late final TextEditingController _name = TextEditingController(text: widget.item.name);
+  late final TextEditingController _price = TextEditingController(text: widget.item.amountText);
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _price.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final item = widget.item;
+    final shown = item.touched;
+    final stacked = MediaQuery.textScalerOf(context).scale(1) > 1.3;
+    final priceField = AppTextField(
+      controller: _price,
+      label: '${item.quantity > 1 ? l10n.expenseItzUnitPriceLabel : l10n.expenseItemizedAmountLabel} *',
+      hint: l10n.expenseFormAmountHint,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      inputFormatters: [amountInputFormatter],
+      showClear: false,
+      errorText: shown && item.amountMinor == null ? l10n.expenseItemizedAmountInvalid : null,
+      onChanged: (v) => widget.controller.setItemAmount(item.id, v),
+    );
+    final stepper = LabeledStepper(quantity: item.quantity, name: widget.heading, onStep: (d) => widget.controller.stepItemQuantity(item.id, d));
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: context.colors.card,
+        borderRadius: BorderRadius.circular(QesmaRadii.control + 2),
+        border: Border.all(color: context.colors.primaryLight.withValues(alpha: 0.5)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(QesmaSpacing.sm + 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: AppTextField(
+                    controller: _name,
+                    label: '${l10n.expenseItemizedNameLabel} *',
+                    hint: l10n.expenseItemizedNameHint,
+                    inputFormatters: const [CodePointLimitFormatter(kItemNameMax)],
+                    showClear: false,
+                    errorText: shown && !item.nameValid ? l10n.expenseItemizedNameRequired : null,
+                    textInputAction: TextInputAction.next,
+                    onChanged: (v) => widget.controller.setItemName(item.id, v),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: QesmaSpacing.lg),
+                  child: IconButton(
+                    icon: const Icon(Icons.remove_circle_outline),
+                    tooltip: widget.removeTooltip,
+                    onPressed: () => widget.controller.toggleAssigneeForPerson(widget.personId, item.id),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: QesmaSpacing.sm),
+            if (stacked)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  priceField,
+                  const SizedBox(height: QesmaSpacing.sm),
+                  Align(alignment: AlignmentDirectional.centerStart, child: stepper),
+                ],
+              )
+            else
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(child: priceField),
+                  const SizedBox(width: QesmaSpacing.sm + 4),
+                  stepper,
+                ],
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

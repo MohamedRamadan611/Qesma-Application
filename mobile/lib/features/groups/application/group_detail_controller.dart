@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qesma_api/qesma_api.dart';
 
+import '../../../core/money/active_currency.dart';
+
 import '../../../core/errors/api_failure.dart';
 import '../../../core/errors/api_problem.dart';
 import '../../balances/application/balances_refresh.dart';
@@ -64,6 +66,7 @@ class GroupDetailController extends Notifier<GroupDetailState> {
       final group = await _repo.get(gid);
       if (!ref.mounted) return null; // the user left the screen meanwhile
       state = GroupDetailState(group: group, loading: false);
+      ActiveCurrency.set(group.currencyCode);
       return null;
     } on ApiFailure catch (failure) {
       if (!ref.mounted) return failure;
@@ -85,7 +88,10 @@ class GroupDetailController extends Notifier<GroupDetailState> {
     if (reload) {
       try {
         final group = await _repo.get(gid);
-        if (ref.mounted) state = GroupDetailState(group: group, loading: false);
+        if (ref.mounted) {
+          state = GroupDetailState(group: group, loading: false);
+          ActiveCurrency.set(group.currencyCode);
+        }
       } on ApiFailure {
         // The change itself worked; the next read will catch up.
         if (ref.mounted) state = state.copyWith(busy: false);

@@ -59,6 +59,8 @@ ParsedReceipt parseReceiptJson(String text) {
     merchantName: _merchantName(decoded['merchantName']),
     category: _category(decoded['category']),
     printedTotalMinor: _amount(decoded['total']),
+    totalBeforeTaxMinor: _amount(decoded['totalBeforeTax']),
+    subtotalMinor: _amount(decoded['subtotal']),
     currency: currency.isEmpty ? null : currency,
     truncated: truncated,
   );

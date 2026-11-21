@@ -42,6 +42,7 @@ List<MemberDto> filterMembers(List<MemberDto> members, String query) {
 Future<MemberPick?> showMemberPicker(
   BuildContext context, {
   required String title,
+  String? subtitle,
   required List<MemberDto> members,
   required Set<String> selected,
   int quantity = 1,
@@ -54,7 +55,7 @@ Future<MemberPick?> showMemberPicker(
     constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.9),
     builder: (sheetContext) => Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(sheetContext).bottom),
-      child: _MultiPickerSheet(title: title, members: members, initial: selected, quantity: quantity, unitPriceMinor: unitPriceMinor),
+      child: _MultiPickerSheet(title: title, subtitle: subtitle, members: members, initial: selected, quantity: quantity, unitPriceMinor: unitPriceMinor),
     ),
   );
 }
@@ -76,9 +77,10 @@ Future<String?> showSingleMemberPicker(
 }
 
 class _MultiPickerSheet extends StatefulWidget {
-  const _MultiPickerSheet({required this.title, required this.members, required this.initial, required this.quantity, required this.unitPriceMinor});
+  const _MultiPickerSheet({required this.title, this.subtitle, required this.members, required this.initial, required this.quantity, required this.unitPriceMinor});
 
   final String title;
+  final String? subtitle;
   final List<MemberDto> members;
   final Set<String> initial;
   final int quantity;
@@ -108,12 +110,31 @@ class _MultiPickerSheetState extends State<_MultiPickerSheet> {
     final l10n = AppLocalizations.of(context);
     final quantityMode = _byQuantity && _canSplitUnits;
     final doneEnabled = !quantityMode || (_given == widget.quantity && _units.isNotEmpty);
+    final names = quantityMode
+        ? [for (final m in widget.members) if ((_units[m.id] ?? 0) > 0) '${m.displayName} ×${ltrIsolate('${_units[m.id]}')}']
+        : [for (final m in widget.members) if (_selected.contains(m.id)) m.displayName];
+    final count = quantityMode ? _units.length : _selected.length;
     return AppBottomSheet(
       title: widget.title,
-      action: AppButton(
+      subtitle: widget.subtitle,
+      action: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (names.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: QesmaSpacing.sm),
+              child: Semantics(
+                liveRegion: true,
+                child: Text(l10n.expenseItzPickerCount('$count', '${widget.members.length}') + ' · ' + names.join(l10n.expenseListSeparator), maxLines: 2, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
+              ),
+            ),
+          AppButton(
         label: l10n.expenseItzPickerDone('${quantityMode ? _units.length : _selected.length}'),
         icon: Icons.check,
         onPressed: doneEnabled ? () => Navigator.of(context).pop(quantityMode ? PickedUnits(Map<String, int>.of(_units)) : PickedEqual(_selected)) : null,
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

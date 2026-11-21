@@ -141,11 +141,19 @@ class _ItemsCardState extends ConsumerState<ItemsCard> {
                 children: [
                   ExcludeSemantics(child: Icon(Icons.receipt_long_outlined, color: context.colors.primary)),
                   const SizedBox(width: QesmaSpacing.sm),
-                  Flexible(child: Semantics(header: true, child: Text(l10n.expenseItemizedItemsTitle, style: theme.textTheme.titleMedium))),
+                  Flexible(
+                    child: Semantics(header: true, child: Text(l10n.expenseItemizedItemsTitle, style: theme.textTheme.titleMedium)),
+                  ),
                   const SizedBox(width: QesmaSpacing.sm),
                   Flexible(
                     child: Text(
-                      countPhrase(items.length, one: l10n.expenseItemsCountOne, two: l10n.expenseItemsCountTwo, few: l10n.expenseItemsCount, many: l10n.expenseItemsCountMany),
+                      countPhrase(
+                        items.length,
+                        one: l10n.expenseItemsCountOne,
+                        two: l10n.expenseItemsCountTwo,
+                        few: l10n.expenseItemsCount,
+                        many: l10n.expenseItemsCountMany,
+                      ),
                       style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper),
                     ),
                   ),
@@ -203,7 +211,12 @@ class _ItemsCardState extends ConsumerState<ItemsCard> {
                         onRemove: () {
                           final removed = controller.removeItem(items[i].id);
                           if (removed == null) return;
-                          showAppSnackBar(context, l10n.expenseItzItemDeleted, actionLabel: l10n.expenseItzUndo, onAction: () => controller.restoreItem(removed.item, removed.index));
+                          showAppSnackBar(
+                            context,
+                            l10n.expenseItzItemDeleted,
+                            actionLabel: l10n.expenseItzUndo,
+                            onAction: () => controller.restoreItem(removed.item, removed.index),
+                          );
                         },
                       )
                     : ItemSummaryRow(
@@ -218,7 +231,14 @@ class _ItemsCardState extends ConsumerState<ItemsCard> {
               const SizedBox(height: QesmaSpacing.sm),
             ]
           else
-            ByPersonView(formKey: widget.formKey, form: form, members: widget.members, current: widget.current, personId: widget.personId, onPerson: widget.onPerson),
+            ByPersonView(
+              formKey: widget.formKey,
+              form: form,
+              members: widget.members,
+              current: widget.current,
+              personId: widget.personId,
+              onPerson: widget.onPerson,
+            ),
           const SizedBox(height: QesmaSpacing.xs),
           AppButton(
             label: l10n.expenseItemizedAdd,
@@ -235,7 +255,10 @@ class _ItemsCardState extends ConsumerState<ItemsCard> {
           if (atLimit)
             Padding(
               padding: const EdgeInsets.only(top: QesmaSpacing.sm),
-              child: Semantics(liveRegion: true, child: Text(l10n.expenseItemizedLimit, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary))),
+              child: Semantics(
+                liveRegion: true,
+                child: Text(l10n.expenseItemizedLimit, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
+              ),
             ),
           if (widget.current?.subtotalMinor != null) ...[
             const SizedBox(height: QesmaSpacing.md),
@@ -245,7 +268,9 @@ class _ItemsCardState extends ConsumerState<ItemsCard> {
                 padding: const EdgeInsets.all(QesmaSpacing.sm + 4),
                 child: Row(
                   children: [
-                    Expanded(child: Text(l10n.expenseSubtotal, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary))),
+                    Expanded(
+                      child: Text(l10n.expenseSubtotal, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
+                    ),
                     MoneyText(widget.current!.subtotalMinor!, size: MoneySize.medium),
                   ],
                 ),
@@ -290,12 +315,7 @@ Future<void> _scan(BuildContext context, WidgetRef ref, ExpenseFormKey key, Expe
   final l10n = AppLocalizations.of(context);
   final typed = form.itemized.items.any((i) => i.name.trim().isNotEmpty || i.amountText.trim().isNotEmpty);
   if (typed) {
-    final replace = await showConfirmDialog(
-      context,
-      title: l10n.scanReplaceTitle,
-      message: l10n.scanReplaceBody,
-      confirmLabel: l10n.scanReplaceConfirm,
-    );
+    final replace = await showConfirmDialog(context, title: l10n.scanReplaceTitle, message: l10n.scanReplaceBody, confirmLabel: l10n.scanReplaceConfirm);
     if (!replace || !context.mounted) return;
   }
   final result = await runReceiptScan(context, ref);
@@ -309,7 +329,15 @@ enum _ItemAction { duplicate, delete }
 /// A closed item: the name, "× quantity · who", the typed price and a chevron; an error icon (and a spoken hint) when
 /// something in it is missing. One tap opens it.
 class ItemSummaryRow extends StatelessWidget {
-  const ItemSummaryRow({super.key, required this.index, required this.item, required this.members, required this.memberIds, required this.showAllErrors, required this.onTap});
+  const ItemSummaryRow({
+    super.key,
+    required this.index,
+    required this.item,
+    required this.members,
+    required this.memberIds,
+    required this.showAllErrors,
+    required this.onTap,
+  });
 
   final int index;
   final ItemDraft item;
@@ -324,10 +352,15 @@ class ItemSummaryRow extends StatelessWidget {
     final theme = Theme.of(context);
     final heading = item.trimmedName.isEmpty ? l10n.expenseItemizedItemHeading('$index') : item.trimmedName;
     final assignees = item.assigneesAmong(memberIds);
-    final names = [for (final m in members) if (assignees.contains(m.id)) m.displayName];
+    final names = [
+      for (final m in members)
+        if (assignees.contains(m.id)) m.displayName,
+    ];
     final shown = item.touched || showAllErrors;
     final broken = shown && !item.validFor(memberIds);
-    final who = names.isEmpty ? l10n.expenseItzSummaryNone : (names.length == members.length && members.length > 1 ? l10n.expenseItzSummaryAll : names.join(l10n.expenseListSeparator));
+    final who = names.isEmpty
+        ? l10n.expenseItzSummaryNone
+        : (names.length == members.length && members.length > 1 ? l10n.expenseItzSummaryAll : names.join(l10n.expenseListSeparator));
     final line = _LineText.of(item);
     return Semantics(
       button: true,
@@ -435,7 +468,8 @@ class _ItemCardState extends State<ItemCard> {
     final memberIds = [for (final m in widget.members) m.id];
     final chosen = await showMemberPicker(
       context,
-      title: l10n.expenseItzPickerTitle(_heading),
+      title: l10n.expenseItzPickerTitleShort,
+      subtitle: _heading,
       members: widget.members,
       selected: widget.item.assigneesAmong(memberIds),
       quantity: widget.item.quantity,
@@ -474,11 +508,30 @@ class _ItemCardState extends State<ItemCard> {
         }
       },
       itemBuilder: (context) => [
-        PopupMenuItem(value: _ItemAction.duplicate, enabled: widget.onDuplicate != null, height: kMinTouch, child: Row(children: [const Icon(Icons.copy_outlined, size: 20), const SizedBox(width: QesmaSpacing.sm), Flexible(child: Text(l10n.expenseItzDuplicate))])),
+        PopupMenuItem(
+          value: _ItemAction.duplicate,
+          enabled: widget.onDuplicate != null,
+          height: kMinTouch,
+          child: Row(
+            children: [
+              const Icon(Icons.copy_outlined, size: 20),
+              const SizedBox(width: QesmaSpacing.sm),
+              Flexible(child: Text(l10n.expenseItzDuplicate)),
+            ],
+          ),
+        ),
         PopupMenuItem(
           value: _ItemAction.delete,
           height: kMinTouch,
-          child: Row(children: [Icon(Icons.delete_outline, size: 20, color: context.colors.error), const SizedBox(width: QesmaSpacing.sm), Flexible(child: Text(l10n.expenseItzDeleteItem, style: TextStyle(color: context.colors.error)))]),
+          child: Row(
+            children: [
+              Icon(Icons.delete_outline, size: 20, color: context.colors.error),
+              const SizedBox(width: QesmaSpacing.sm),
+              Flexible(
+                child: Text(l10n.expenseItzDeleteItem, style: TextStyle(color: context.colors.error)),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -490,7 +543,7 @@ class _ItemCardState extends State<ItemCard> {
       controller: _name,
       label: '${l10n.expenseItemizedNameLabel} *',
       hint: l10n.expenseItemizedNameHint,
-      maxLength: kItemNameMax,
+      inputFormatters: const [CodePointLimitFormatter(kItemNameMax)],
       showClear: false,
       errorText: shown && !item.nameValid ? l10n.expenseItemizedNameRequired : null,
       textInputAction: TextInputAction.next,
@@ -506,24 +559,21 @@ class _ItemCardState extends State<ItemCard> {
       errorText: shown && item.amountMinor == null ? l10n.expenseItemizedAmountInvalid : null,
       onChanged: widget.onAmount,
     );
-    final stepper = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(l10n.expenseItzQuantityLabel, style: theme.textTheme.labelLarge),
-        QuantityStepper(quantity: item.quantity, name: _heading, onStep: widget.onQuantity),
-      ],
-    );
+    final stepper = LabeledStepper(quantity: item.quantity, name: _heading, onStep: widget.onQuantity);
     final line = _LineText.of(item);
+    final people = [
+      for (final m in widget.members)
+        if (assignees.contains(m.id)) m,
+    ];
 
     return DecoratedBox(
       decoration: BoxDecoration(
         color: context.colors.tint,
-        borderRadius: BorderRadius.circular(QesmaRadii.control),
-        border: Border.all(color: context.colors.hairline),
+        borderRadius: BorderRadius.circular(QesmaRadii.card),
+        border: Border.all(color: context.colors.primaryLight.withValues(alpha: 0.6), width: 1.5),
       ),
       child: Padding(
-        padding: const EdgeInsetsDirectional.fromSTEB(QesmaSpacing.sm + 4, QesmaSpacing.sm, QesmaSpacing.xs, QesmaSpacing.sm + 4),
+        padding: const EdgeInsetsDirectional.fromSTEB(QesmaSpacing.sm + 4, QesmaSpacing.sm + 4, QesmaSpacing.xs, QesmaSpacing.sm + 4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -533,74 +583,91 @@ class _ItemCardState extends State<ItemCard> {
                 alignment: AlignmentDirectional.centerEnd,
                 child: Row(mainAxisSize: MainAxisSize.min, children: [?collapse, menu]),
               ),
-              Padding(padding: const EdgeInsetsDirectional.only(end: QesmaSpacing.sm + 4), child: nameField),
+              Padding(
+                padding: const EdgeInsetsDirectional.only(end: QesmaSpacing.sm + 4),
+                child: nameField,
+              ),
             ] else
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(child: Padding(padding: const EdgeInsetsDirectional.only(top: QesmaSpacing.xs), child: nameField)),
-                  ?collapse,
-                  menu,
+                  Expanded(child: nameField),
+                  Padding(
+                    padding: const EdgeInsetsDirectional.only(top: QesmaSpacing.lg),
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [?collapse, menu]),
+                  ),
                 ],
               ),
-            const SizedBox(height: QesmaSpacing.sm),
+            const SizedBox(height: QesmaSpacing.sm + 4),
             Padding(
               padding: const EdgeInsetsDirectional.only(end: QesmaSpacing.sm + 4),
-              child: stacked
-                  ? Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [priceField, const SizedBox(height: QesmaSpacing.sm), Align(alignment: AlignmentDirectional.centerStart, child: stepper)])
-                  : Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Expanded(child: priceField), const SizedBox(width: QesmaSpacing.sm), stepper]),
-            ),
-            if (shown && item.quantityValid == false)
-              Padding(
-                padding: const EdgeInsetsDirectional.only(top: QesmaSpacing.xs, end: QesmaSpacing.sm + 4),
-                child: Row(
-                  children: [
-                    ExcludeSemantics(child: Icon(Icons.error_outline, color: context.colors.error, size: 18)),
-                    const SizedBox(width: QesmaSpacing.xs),
-                    Expanded(child: Text(l10n.expenseItzQuantityInvalid, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.error))),
-                  ],
-                ),
-              ),
-            const SizedBox(height: QesmaSpacing.sm),
-            Padding(
-              padding: const EdgeInsetsDirectional.only(end: QesmaSpacing.sm + 4),
-              // The label, the chip and the line are separate wrap children, so at large text each drops to its own line
-              // instead of one unbreakable row overflowing.
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Wrap(
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: QesmaSpacing.sm,
-                    runSpacing: QesmaSpacing.xs,
-                    children: [
-                      Text('${l10n.expenseItzWhoShared} *', style: theme.textTheme.labelLarge),
-                      AssigneeSummaryChip(
-                        people: [for (final m in widget.members) if (assignees.contains(m.id)) m],
-                        totalMembers: widget.members.length,
-                        hasError: assignees.isEmpty,
-                        onTap: _pick,
+                  // Price and quantity share one row: the price takes what the stepper leaves; at large text they stack.
+                  if (stacked) ...[
+                    priceField,
+                    const SizedBox(height: QesmaSpacing.sm + 4),
+                    Align(alignment: AlignmentDirectional.centerStart, child: stepper),
+                  ] else
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(child: priceField),
+                        const SizedBox(width: QesmaSpacing.sm + 4),
+                        stepper,
+                      ],
+                    ),
+                  if (shown && item.quantityValid == false)
+                    Padding(
+                      padding: const EdgeInsets.only(top: QesmaSpacing.xs),
+                      child: Row(
+                        children: [
+                          ExcludeSemantics(child: Icon(Icons.error_outline, color: context.colors.error, size: 18)),
+                          const SizedBox(width: QesmaSpacing.xs),
+                          Expanded(
+                            child: Text(l10n.expenseItzQuantityInvalid, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.error)),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  if (line != null) Align(alignment: AlignmentDirectional.centerEnd, child: line),
+                    ),
+                  const SizedBox(height: QesmaSpacing.sm + 4),
+                  // Who shared it: its own full-width row (label above, the names inside), never squeezed beside the price.
+                  Text('${l10n.expenseItzWhoShared} *', style: theme.textTheme.labelLarge),
+                  const SizedBox(height: QesmaSpacing.xs + 2),
+                  AssigneeSummaryChip(people: people, totalMembers: widget.members.length, hasError: assignees.isEmpty, expand: true, onTap: _pick),
+                  if (assignees.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: QesmaSpacing.xs),
+                      child: Semantics(
+                        liveRegion: true,
+                        child: Row(
+                          children: [
+                            ExcludeSemantics(child: Icon(Icons.error_outline, color: context.colors.error, size: 18)),
+                            const SizedBox(width: QesmaSpacing.xs),
+                            Expanded(
+                              child: Text(l10n.expenseItemizedNoAssignee, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.error)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  if (line != null) ...[
+                    const SizedBox(height: QesmaSpacing.sm + 4),
+                    Divider(height: 1, color: context.colors.hairline),
+                    const SizedBox(height: QesmaSpacing.sm),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(l10n.expenseItzLineLabel, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
+                        ),
+                        line,
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
-            if (assignees.isEmpty)
-              Padding(
-                padding: const EdgeInsetsDirectional.only(top: QesmaSpacing.xs, end: QesmaSpacing.sm + 4),
-                child: Semantics(
-                  liveRegion: true,
-                  child: Row(
-                    children: [
-                      ExcludeSemantics(child: Icon(Icons.error_outline, color: context.colors.error, size: 18)),
-                      const SizedBox(width: QesmaSpacing.xs),
-                      Expanded(child: Text(l10n.expenseItemizedNoAssignee, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.error))),
-                    ],
-                  ),
-                ),
-              ),
           ],
         ),
       ),
@@ -628,7 +695,30 @@ class _LineText extends StatelessWidget {
   }
 }
 
-/// − n +: two 48 dp buttons around the number; a screen reader hears "Quantity n" and can adjust it.
+/// "Quantity" label above the capsule (the open item card and the by-person fields).
+class LabeledStepper extends StatelessWidget {
+  const LabeledStepper({super.key, required this.quantity, required this.name, required this.onStep});
+
+  final int quantity;
+  final String name;
+  final ValueChanged<int> onStep;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(AppLocalizations.of(context).expenseItzQuantityLabel, style: Theme.of(context).textTheme.labelLarge),
+        const SizedBox(height: QesmaSpacing.sm),
+        QuantityStepper(quantity: quantity, name: name, onStep: onStep),
+      ],
+    );
+  }
+}
+
+/// − n + in one bordered capsule (44 dp tall, two 44 dp buttons around the number); a screen reader hears "Quantity n"
+/// and can adjust it.
 class QuantityStepper extends StatelessWidget {
   const QuantityStepper({super.key, required this.quantity, required this.name, required this.onStep});
 
@@ -640,6 +730,14 @@ class QuantityStepper extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    Widget button(IconData icon, String tooltip, VoidCallback? onTap) => IconButton(
+      icon: Icon(icon, size: 22),
+      tooltip: tooltip,
+      onPressed: onTap,
+      visualDensity: VisualDensity.compact,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+    );
     return Semantics(
       container: true,
       label: '$name: ${l10n.expenseItzQuantityLabel}',
@@ -648,13 +746,25 @@ class QuantityStepper extends StatelessWidget {
       decreasedValue: '${quantity - 1}',
       onIncrease: quantity < kMaxQuantity ? () => onStep(1) : null,
       onDecrease: quantity > kMinQuantity ? () => onStep(-1) : null,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(icon: const Icon(Icons.remove_circle_outline), tooltip: l10n.expenseItzQuantityMinus, onPressed: quantity > kMinQuantity ? () => onStep(-1) : null),
-          ExcludeSemantics(child: SizedBox(width: 32, child: Center(child: Text(ltrIsolate('$quantity'), style: theme.textTheme.titleMedium)))),
-          IconButton(icon: const Icon(Icons.add_circle_outline), tooltip: l10n.expenseItzQuantityPlus, onPressed: quantity < kMaxQuantity ? () => onStep(1) : null),
-        ],
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: context.colors.card,
+          borderRadius: BorderRadius.circular(QesmaRadii.control),
+          border: Border.all(color: context.colors.buttonBorder, width: 1.5),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            button(Icons.remove, l10n.expenseItzQuantityMinus, quantity > kMinQuantity ? () => onStep(-1) : null),
+            ExcludeSemantics(
+              child: SizedBox(
+                width: 28,
+                child: Center(child: Text(ltrIsolate('$quantity'), style: theme.textTheme.titleMedium)),
+              ),
+            ),
+            button(Icons.add, l10n.expenseItzQuantityPlus, quantity < kMaxQuantity ? () => onStep(1) : null),
+          ],
+        ),
       ),
     );
   }

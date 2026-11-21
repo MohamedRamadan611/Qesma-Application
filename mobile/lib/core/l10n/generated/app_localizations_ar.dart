@@ -383,6 +383,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupCurrencyValue => 'جنيه مصري (ج.م)';
 
   @override
+  String get groupPoolToggle => 'إضافة أمين صندوق';
+
+  @override
+  String get groupPoolToggleHint =>
+      'واحد من الجروب بيمسك الكاش والكل بيدفع له إيداع. اختياري وتقدر تضيفه بعدين.';
+
+  @override
+  String get groupPoolWho => 'مين اللي هيمسك الفلوس؟';
+
+  @override
+  String get groupPoolMe => 'أنا';
+
+  @override
+  String get groupPoolSetFailed =>
+      'الجروب اتعمل بس أمين الصندوق ماتحددش. حدده من إعدادات الجروب.';
+
+  @override
   String get groupCurrencyNote => 'العملة ثابتة بعد إنشاء الجروب';
 
   @override
@@ -2590,6 +2607,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recapShareImage => 'مشاركة كصورة';
 
   @override
+  String get shareWhoOwes => 'كل واحد عليه كام';
+
+  @override
   String get recapShareText => 'مشاركة كنص';
 
   @override
@@ -2701,9 +2721,29 @@ class AppLocalizationsAr extends AppLocalizations {
   String get reminderOpenWhatsapp => 'فتح واتساب';
 
   @override
+  String get reminderChooseApp => 'اختار التطبيق (واتساب، واتساب بيزنس...)';
+
+  @override
   String reminderInstapayLine(String handle) {
-    return '\n\nبيانات إنستاباي:\n$handle';
+    return '\n\nده الانستا باي بتاعي : $handle';
   }
+
+  @override
+  String reminderWalletLine(String handle) {
+    return '\n\nرقم المحفظة بتاعتي : $handle';
+  }
+
+  @override
+  String get reminderPayMethodLabel => 'تحب نكتب أنهي وسيلة دفع؟';
+
+  @override
+  String get reminderMethodInstapay => 'إنستا باي';
+
+  @override
+  String get reminderMethodWallet => 'محفظة إلكترونية';
+
+  @override
+  String get reminderIncludePayment => 'أضيف بيانات الدفع بتاعتي';
 
   @override
   String reminderToneSoft(
@@ -2798,6 +2838,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get poolDepositSheetTitle => 'إيداع في الصندوق';
+
+  @override
+  String get poolEditDepositTitle => 'تعديل الإيداع';
+
+  @override
+  String get poolEditDeposit => 'تعديل الإيداع ده';
 
   @override
   String get poolDepositFrom => 'مين اللي سلّم الفلوس؟';
@@ -3211,6 +3257,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get expenseItzRequired => 'مطلوب';
 
   @override
+  String get expenseItzLineLabel => 'سعر الصنف';
+
+  @override
+  String get expenseItzAddItemCancel => 'إلغاء';
+
+  @override
   String expenseItzLineTimes(String qty, String price) {
     return '$qty × $price';
   }
@@ -3282,6 +3334,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String expenseItzSummarySpoken(String names) {
     return 'المشاركون: $names. اضغط للتعديل.';
   }
+
+  @override
+  String get expenseItzPickerTitleShort => 'مين شارك في الصنف ده؟';
 
   @override
   String expenseItzPickerTitle(String item) {
@@ -3483,7 +3538,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String expenseItzIssueItemMembers(String item) {
-    return 'أعضاء الصنف: $item';
+    return 'الصنف مش متقسم على حد: $item';
+  }
+
+  @override
+  String expenseItzUnassignedWarning(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'فيه $count أصناف لسه مش متقسمة على حد',
+      one: 'فيه صنف واحد لسه مش متقسم على حد',
+    );
+    return '$_temp0';
   }
 
   @override

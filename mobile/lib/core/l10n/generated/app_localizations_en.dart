@@ -392,6 +392,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupCurrencyValue => 'Egyptian pound (EGP)';
 
   @override
+  String get groupPoolToggle => 'Add a pool treasurer';
+
+  @override
+  String get groupPoolToggleHint =>
+      'One member holds the group\'s cash and everyone hands them a deposit. Optional, you can set it later.';
+
+  @override
+  String get groupPoolWho => 'Who holds the cash?';
+
+  @override
+  String get groupPoolMe => 'Me';
+
+  @override
+  String get groupPoolSetFailed =>
+      'The group was created but the treasurer was not set. Set it from the group settings.';
+
+  @override
   String get groupCurrencyNote =>
       'The currency can\'t be changed after the group is created';
 
@@ -2615,6 +2632,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recapShareImage => 'Share image';
 
   @override
+  String get shareWhoOwes => 'Who owes what';
+
+  @override
   String get recapShareText => 'Share as text';
 
   @override
@@ -2722,9 +2742,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reminderOpenWhatsapp => 'Open WhatsApp';
 
   @override
+  String get reminderChooseApp => 'Choose app (WhatsApp, Business...)';
+
+  @override
   String reminderInstapayLine(String handle) {
-    return '\n\nMy InstaPay:\n$handle';
+    return '\n\nMy InstaPay : $handle';
   }
+
+  @override
+  String reminderWalletLine(String handle) {
+    return '\n\nMy mobile wallet : $handle';
+  }
+
+  @override
+  String get reminderPayMethodLabel => 'Which payment method should we add?';
+
+  @override
+  String get reminderMethodInstapay => 'InstaPay';
+
+  @override
+  String get reminderMethodWallet => 'Mobile wallet';
+
+  @override
+  String get reminderIncludePayment => 'Include my payment details';
 
   @override
   String reminderToneSoft(
@@ -2820,6 +2860,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get poolDepositSheetTitle => 'Deposit to the pool';
+
+  @override
+  String get poolEditDepositTitle => 'Edit deposit';
+
+  @override
+  String get poolEditDeposit => 'Edit this deposit';
 
   @override
   String get poolDepositFrom => 'Who handed over the cash?';
@@ -3239,6 +3285,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get expenseItzRequired => 'required';
 
   @override
+  String get expenseItzLineLabel => 'Item price';
+
+  @override
+  String get expenseItzAddItemCancel => 'Cancel';
+
+  @override
   String expenseItzLineTimes(String qty, String price) {
     return '$qty × $price';
   }
@@ -3310,6 +3362,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String expenseItzSummarySpoken(String names) {
     return 'Shared by: $names. Tap to change.';
   }
+
+  @override
+  String get expenseItzPickerTitleShort => 'Who shared this item?';
 
   @override
   String expenseItzPickerTitle(String item) {
@@ -3507,7 +3562,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String expenseItzIssueItemMembers(String item) {
-    return 'Members of: $item';
+    return 'Not assigned to any member: $item';
+  }
+
+  @override
+  String expenseItzUnassignedWarning(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items are not assigned to any member yet',
+      one: '1 item is not assigned to any member yet',
+    );
+    return '$_temp0';
   }
 
   @override

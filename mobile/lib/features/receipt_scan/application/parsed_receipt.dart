@@ -64,6 +64,8 @@ final class ParsedReceipt {
     this.merchantName,
     this.category,
     this.printedTotalMinor,
+    this.totalBeforeTaxMinor,
+    this.subtotalMinor,
     this.currency,
     this.truncated = false,
   });
@@ -99,6 +101,13 @@ final class ParsedReceipt {
 
   /// The total printed on the receipt, in piasters (from `Money.parse`), only used to compare with the editor's preview.
   final int? printedTotalMinor;
+
+  /// Printed total before VAT and printed subtotal (piasters); only compared, never added up.
+  final int? totalBeforeTaxMinor;
+  final int? subtotalMinor;
+
+  /// VAT is on the subtotal alone only when the printed total before VAT equals the printed subtotal.
+  bool get taxOnSubtotalOnly => totalBeforeTaxMinor != null && totalBeforeTaxMinor == subtotalMinor;
 
   /// Currency code or symbol as printed (informational; the app is EGP only).
   final String? currency;

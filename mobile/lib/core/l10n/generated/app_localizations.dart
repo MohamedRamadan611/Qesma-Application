@@ -740,6 +740,36 @@ abstract class AppLocalizations {
   /// **'جنيه مصري (ج.م)'**
   String get groupCurrencyValue;
 
+  /// Optional switch on the create-group screen.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة أمين صندوق'**
+  String get groupPoolToggle;
+
+  /// Hint under the pool switch.
+  ///
+  /// In ar, this message translates to:
+  /// **'واحد من الجروب بيمسك الكاش والكل بيدفع له إيداع. اختياري وتقدر تضيفه بعدين.'**
+  String get groupPoolToggleHint;
+
+  /// Label above the treasurer choice.
+  ///
+  /// In ar, this message translates to:
+  /// **'مين اللي هيمسك الفلوس؟'**
+  String get groupPoolWho;
+
+  /// The creator as treasurer option.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنا'**
+  String get groupPoolMe;
+
+  /// Snackbar when the treasurer could not be set right after creating the group.
+  ///
+  /// In ar, this message translates to:
+  /// **'الجروب اتعمل بس أمين الصندوق ماتحددش. حدده من إعدادات الجروب.'**
+  String get groupPoolSetFailed;
+
   /// Note under the currency: it cannot change later.
   ///
   /// In ar, this message translates to:
@@ -4458,6 +4488,12 @@ abstract class AppLocalizations {
   /// **'مشاركة كصورة'**
   String get recapShareImage;
 
+  /// عنوان قائمة المبالغ في صورة المصروف المشتركة
+  ///
+  /// In ar, this message translates to:
+  /// **'كل واحد عليه كام'**
+  String get shareWhoOwes;
+
   /// زر مشاركة الملخص كنص
   ///
   /// In ar, this message translates to:
@@ -4638,11 +4674,47 @@ abstract class AppLocalizations {
   /// **'فتح واتساب'**
   String get reminderOpenWhatsapp;
 
+  /// Secondary button that opens the system share sheet so the user picks WhatsApp, WhatsApp Business or another app
+  ///
+  /// In ar, this message translates to:
+  /// **'اختار التطبيق (واتساب، واتساب بيزنس...)'**
+  String get reminderChooseApp;
+
   /// سطر إضافة عنوان إنستاباي
   ///
   /// In ar, this message translates to:
-  /// **'\n\nبيانات إنستاباي:\n{handle}'**
+  /// **'\n\nده الانستا باي بتاعي : {handle}'**
   String reminderInstapayLine(String handle);
+
+  /// سطر إضافة رقم المحفظة
+  ///
+  /// In ar, this message translates to:
+  /// **'\n\nرقم المحفظة بتاعتي : {handle}'**
+  String reminderWalletLine(String handle);
+
+  /// Label above the InstaPay/wallet choice in the reminder sheet
+  ///
+  /// In ar, this message translates to:
+  /// **'تحب نكتب أنهي وسيلة دفع؟'**
+  String get reminderPayMethodLabel;
+
+  /// InstaPay choice chip
+  ///
+  /// In ar, this message translates to:
+  /// **'إنستا باي'**
+  String get reminderMethodInstapay;
+
+  /// Mobile wallet choice chip
+  ///
+  /// In ar, this message translates to:
+  /// **'محفظة إلكترونية'**
+  String get reminderMethodWallet;
+
+  /// Toggle label to include payment details
+  ///
+  /// In ar, this message translates to:
+  /// **'أضيف بيانات الدفع بتاعتي'**
+  String get reminderIncludePayment;
 
   /// قالب التذكير الهادئ
   ///
@@ -4790,6 +4862,18 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'إيداع في الصندوق'**
   String get poolDepositSheetTitle;
+
+  /// Title of the deposit sheet when correcting a recorded deposit.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل الإيداع'**
+  String get poolEditDepositTitle;
+
+  /// Tooltip of the edit button on a deposit row.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل الإيداع ده'**
+  String get poolEditDeposit;
 
   /// SA10: deposit sheet, the depositor field.
   ///
@@ -5511,6 +5595,18 @@ abstract class AppLocalizations {
   /// **'مطلوب'**
   String get expenseItzRequired;
 
+  /// Open item card: label of the typed price line.
+  ///
+  /// In ar, this message translates to:
+  /// **'سعر الصنف'**
+  String get expenseItzLineLabel;
+
+  /// By person: closes the inline add-item form.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلغاء'**
+  String get expenseItzAddItemCancel;
+
   /// SA16: quantity times unit price, shown as typed (never multiplied).
   ///
   /// In ar, this message translates to:
@@ -5624,6 +5720,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'المشاركون: {names}. اضغط للتعديل.'**
   String expenseItzSummarySpoken(String names);
+
+  /// Picker title; the item name is the subtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مين شارك في الصنف ده؟'**
+  String get expenseItzPickerTitleShort;
 
   /// SA16: picker sheet title.
   ///
@@ -5910,8 +6012,14 @@ abstract class AppLocalizations {
   /// Redesign: problem row, an item nobody shares.
   ///
   /// In ar, this message translates to:
-  /// **'أعضاء الصنف: {item}'**
+  /// **'الصنف مش متقسم على حد: {item}'**
   String expenseItzIssueItemMembers(String item);
+
+  /// Warning above the itemized bill while some items have no member.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =1{فيه صنف واحد لسه مش متقسم على حد} other{فيه {count} أصناف لسه مش متقسمة على حد}}'**
+  String expenseItzUnassignedWarning(int count);
 
   /// Redesign: spoken label of a collapsed item row.
   ///

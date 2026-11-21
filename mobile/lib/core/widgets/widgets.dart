@@ -17,3 +17,4 @@ export 'error_banner.dart';
 export 'member_avatar.dart';
 export 'money_text.dart';
 export 'skeletons.dart';
+export 'share_image_dialog.dart';

@@ -57,6 +57,12 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
   final _note = TextEditingController();
   bool _amountTouched = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _note.text = widget.pkey.seed.note ?? '';
+  }
+
   RecordPaymentController get _controller => ref.read(recordPaymentControllerProvider(widget.pkey).notifier);
 
   @override
@@ -134,7 +140,7 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
     final toLocked = !isAdmin && form.toId == you;
     final deposit = form.poolDeposit;
     final title = deposit
-        ? l10n.poolDepositSheetTitle
+        ? (widget.pkey.seed.replacesId != null ? l10n.poolEditDepositTitle : l10n.poolDepositSheetTitle)
         : form.fromId == you
             ? l10n.paymentTitleDeclare
             : (form.toId == you ? l10n.paymentTitleReceived : l10n.paymentTitleOnBehalf);
@@ -255,7 +261,7 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
       ],
     );
 
-    final dirty = _controller.dirty || _note.text.isNotEmpty;
+    final dirty = _controller.dirty || _note.text != (widget.pkey.seed.note ?? '');
     return PopScope(
       canPop: !dirty || view.sending,
       onPopInvokedWithResult: (didPop, _) {

@@ -9,6 +9,7 @@ import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../local/insights/pool_summary_provider.dart';
 import '../../../local/insights/pool_summary_repository.dart';
+import '../../balances/application/record_payment_state.dart';
 import '../../balances/presentation/record_payment_sheet.dart';
 import '../../expenses/presentation/expense_ui.dart';
 import '../../groups/application/group_detail_controller.dart';
@@ -89,7 +90,7 @@ class _PoolBody extends StatelessWidget {
           EmptyState(icon: Icons.savings_outlined, title: l10n.poolDepositsEmpty, message: l10n.poolDepositsEmptyBody)
         else
           for (final d in s.deposits) ...[
-            _DepositRow(deposit: d, name: nameOf(d.fromMemberId)),
+            _DepositRow(deposit: d, name: nameOf(d.fromMemberId), onEdit: d.cancelled ? null : () => showRecordPaymentSheet(context, gid: group.id, seed: PaymentSeed(fromId: d.fromMemberId, toId: treasurerId, amountMinor: d.amountMinor, poolDeposit: true, replacesId: d.id, settledOn: d.settledOn, note: d.note))),
             const SizedBox(height: QesmaSpacing.sm),
           ],
       ],
@@ -98,10 +99,11 @@ class _PoolBody extends StatelessWidget {
 }
 
 class _DepositRow extends StatelessWidget {
-  const _DepositRow({required this.deposit, required this.name});
+  const _DepositRow({required this.deposit, required this.name, this.onEdit});
 
   final PoolDeposit deposit;
   final String name;
+  final VoidCallback? onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -129,6 +131,12 @@ class _DepositRow extends StatelessWidget {
           ),
           const SizedBox(width: QesmaSpacing.sm),
           MoneyText(deposit.amountMinor),
+          if (onEdit != null)
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: AppLocalizations.of(context).poolEditDeposit,
+              onPressed: onEdit,
+            ),
         ],
       ),
     );

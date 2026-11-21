@@ -1,3 +1,4 @@
+import '../../../core/money/active_currency.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -25,6 +26,7 @@ import 'itemized_editor.dart';
 import 'expense_ui.dart';
 import 'payers_sheet.dart';
 import 'split_section.dart';
+import 'status_banner.dart';
 import 'validation_summary_card.dart';
 import '../../../core/theme/palette.dart';
 
@@ -300,6 +302,14 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
               const SizedBox(height: QesmaSpacing.md),
             ],
           ],
+          if (isItemized && !form.showAllErrors && form.itemized.items.any((i) => i.assigneesAmong(memberIds).isEmpty)) ...[
+            StatusBanner(
+              icon: Icons.warning_amber_rounded,
+              text: l10n.expenseItzUnassignedWarning(form.itemized.items.where((i) => i.assigneesAmong(memberIds).isEmpty).length),
+              tone: BannerTone.warning,
+            ),
+            const SizedBox(height: QesmaSpacing.md),
+          ],
           KeyedSubtree(
             key: _sectionKeys[ErrorSection.title],
             child: AppCard(
@@ -333,7 +343,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                     onChanged: _controller.setAmount,
                   ),
                   const SizedBox(height: QesmaSpacing.xs),
-                  Text(l10n.expenseFormCurrencyNote, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
+                  Text(ActiveCurrency.code == kDefaultCurrency ? l10n.expenseFormCurrencyNote : ActiveCurrency.code, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
                 ],
                 const SizedBox(height: QesmaSpacing.md),
                 // Date and category side by side; at large text one under the other.

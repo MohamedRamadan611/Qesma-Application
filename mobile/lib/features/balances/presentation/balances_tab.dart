@@ -32,6 +32,7 @@ import 'member_net_row.dart';
 import 'record_payment_sheet.dart';
 import 'settlement_history.dart';
 import 'transfer_card.dart';
+import 'transfers_share_card.dart';
 import '../../../core/theme/palette.dart';
 
 /// The Balances tab of the group home (P9-01): the group's total, how many transfers settle it up,
@@ -194,6 +195,16 @@ class _BalancesTabState extends ConsumerState<BalancesTab> {
                             : null,
                       ),
                     ],
+                    const SizedBox(height: QesmaSpacing.md),
+                    AppButton(
+                      label: l10n.recapShareImage,
+                      icon: Icons.photo_outlined,
+                      variant: AppButtonVariant.secondary,
+                      onPressed: () => showShareImageDialog(
+                        context,
+                        card: TransfersShareCard(groupName: group.name, transfers: transfers, nameOf: nameOf),
+                      ),
+                    ),
                   ],
                 ),
               ),

@@ -57,6 +57,7 @@ class RecordPaymentController extends Notifier<RecordPaymentView> {
   late final BalancesRepository _repo = ref.read(balancesRepositoryProvider);
   final IdempotentAction _action = IdempotentAction();
   late final PaymentForm _initial;
+  SettlementView? _recordedForEdit;
 
   String get gid => key.gid;
 
@@ -81,8 +82,9 @@ class RecordPaymentController extends Notifier<RecordPaymentView> {
       fromId: fromId,
       toId: toId,
       amountText: seed.amountMinor == null ? '' : Money.formatPlain(seed.amountMinor!),
-      date: ref.read(clockProvider)().toDate(),
-      suggestedMinor: seed.amountMinor,
+      date: seed.settledOn == null ? ref.read(clockProvider)().toDate() : DateTime.parse(seed.settledOn!).toDate(),
+      note: seed.note ?? '',
+      suggestedMinor: seed.replacesId == null ? seed.amountMinor : null,
       poolDeposit: seed.poolDeposit,
     );
     return RecordPaymentView(form: _initial);
@@ -123,14 +125,22 @@ class RecordPaymentController extends Notifier<RecordPaymentView> {
     if (command == null) return PaymentOutcome.invalid;
     state = state.copyWith(sending: true, clearFailure: true);
     try {
-      SettlementView created;
-      try {
-        created = await _action.run(settlementBodyJson(command), (k) => _repo.record(gid, command, k));
-      } on ApiHttpFailure catch (failure) {
-        // A key the server already tied to another body is a client bug: try once more with a fresh key.
-        if (failure.problem?.code != ApiErrorCode.idempotencyKeyReused) rethrow;
-        _action.reset();
-        created = await _action.run(settlementBodyJson(command), (k) => _repo.record(gid, command, k));
+      // An edit that recorded the corrected deposit but failed to cancel the old one retries only the cancel (never a second record).
+      var created = _recordedForEdit;
+      if (created == null) {
+        try {
+          created = await _action.run(settlementBodyJson(command), (k) => _repo.record(gid, command, k));
+        } on ApiHttpFailure catch (failure) {
+          // A key the server already tied to another body is a client bug: try once more with a fresh key.
+          if (failure.problem?.code != ApiErrorCode.idempotencyKeyReused) rethrow;
+          _action.reset();
+          created = await _action.run(settlementBodyJson(command), (k) => _repo.record(gid, command, k));
+        }
+      }
+      final replaces = key.seed.replacesId;
+      if (replaces != null) {
+        _recordedForEdit = created;
+        await _repo.cancel(gid, replaces);
       }
       if (ref.mounted) state = state.copyWith(sending: false, created: created);
       refreshAfterSettlementChange(ref, gid);

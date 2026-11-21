@@ -18,6 +18,7 @@ import '../application/expenses_list_controller.dart';
 import '../data/expense_category.dart';
 import '../data/split_type.dart';
 import 'expense_blocks.dart';
+import 'expense_share_card.dart';
 import 'expense_ui.dart';
 import 'revisions_sheet.dart';
 import '../../../core/theme/palette.dart';
@@ -213,6 +214,13 @@ class _Content extends StatelessWidget {
         ),
         const SizedBox(height: QesmaSpacing.sm),
         AppButton(label: l10n.expenseHistory, icon: Icons.history, variant: AppButtonVariant.secondary, onPressed: onHistory),
+        const SizedBox(height: QesmaSpacing.sm),
+        AppButton(
+          label: l10n.recapShareImage,
+          icon: Icons.photo_outlined,
+          variant: AppButtonVariant.secondary,
+          onPressed: () => showShareImageDialog(context, card: ExpenseShareCard(expense: expense, groupName: group?.name, nameOf: nameOf)),
+        ),
         const SizedBox(height: QesmaSpacing.sm),
         AppButton(
           label: l10n.expenseDelete,

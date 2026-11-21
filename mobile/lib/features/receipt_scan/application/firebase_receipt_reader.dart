@@ -23,6 +23,7 @@ const String _prompt = 'You read a restaurant or shop receipt photo (Arabic, Eng
     '(خصم, تخفيض, Discount, Offer) as printed, the amount without any minus sign or brackets and the percentage number, '
     'each or an empty string if not printed. merchantName: the shop or restaurant name printed at the top, or an empty '
     'string. category: the single best match for what was bought from the allowed values, or null if unsure. '
+    'totalBeforeTax: the line labelled total before VAT or tax (الإجمالي قبل الضريبة, المجموع قبل الضريبة, Total before VAT), or an empty string if no such line is printed. '
     'currency: as printed or an empty string. '
     'Copy numbers exactly as printed (Arabic-Indic digits are fine). Never calculate, correct or guess a number.';
 
@@ -50,9 +51,10 @@ Schema _schema() => Schema.object(
         'merchantName': Schema.string(),
         'category': Schema.enumString(enumValues: [for (final c in ExpenseCategory.values) c.wire], nullable: true),
         'total': Schema.string(),
+        'totalBeforeTax': Schema.string(),
         'currency': Schema.string(),
       },
-      optionalProperties: ['discountAmount', 'discountPercent', 'merchantName', 'category'],
+      optionalProperties: ['discountAmount', 'discountPercent', 'merchantName', 'category', 'totalBeforeTax'],
     );
 
 /// Firebase AI Logic (Gemini Developer API, free tier) behind App Check. No API key in the app: the Firebase project

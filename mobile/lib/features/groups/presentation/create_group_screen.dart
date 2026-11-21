@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import '../../../core/money/active_currency.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/error_copy.dart';
+import '../../../core/features_for_mode.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/tokens.dart';
@@ -25,6 +27,11 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
   final _name = TextEditingController();
   GroupType _type = GroupType.trip;
   List<String> _members = const [];
+  String _currency = kDefaultCurrency;
+  bool _pool = false;
+
+  /// The treasurer among the names added here; null = the creator.
+  String? _treasurer;
 
   @override
   void dispose() {
@@ -37,9 +44,12 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
     final messenger = ScaffoldMessenger.of(context);
     final id = await ref
         .read(createGroupControllerProvider.notifier)
-        .submit(name: _name.text.trim(), type: _type.wire, members: _members);
+        .submit(name: _name.text.trim(), type: _type.wire, currencyCode: _currency, members: _members, poolOn: _pool, treasurerName: _treasurer);
     if (id == null || !mounted) return;
     final failed = ref.read(createGroupControllerProvider).failedMemberNames;
+    if (ref.read(createGroupControllerProvider).treasurerFailed) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.groupPoolSetFailed)));
+    }
     if (failed.isNotEmpty) {
       messenger.showSnackBar(
         SnackBar(content: Text(l10n.groupMembersPartialFail(failed.length))),
@@ -111,43 +121,61 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
             const SizedBox(height: QesmaSpacing.lg),
             Text(l10n.groupCurrencyLabel, style: theme.textTheme.labelLarge),
             const SizedBox(height: QesmaSpacing.sm),
-            AppCard(
-              color: context.colors.tint,
-              child: Row(
-                children: [
-                  ExcludeSemantics(
-                    child: Icon(
-                      Icons.lock_outline,
-                      color: context.colors.textSecondary,
-                    ),
+            DropdownButtonFormField<String>(
+              initialValue: _currency,
+              isExpanded: true,
+              decoration: InputDecoration(helperText: l10n.groupCurrencyNote, helperMaxLines: 2),
+              items: [
+                for (final c in kCurrencyOptions)
+                  DropdownMenuItem(
+                    value: c.code,
+                    child: Text('${c.name(Localizations.localeOf(context).languageCode == 'ar')} (${c.code})', overflow: TextOverflow.ellipsis),
                   ),
-                  const SizedBox(width: QesmaSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.groupCurrencyValue,
-                          style: theme.textTheme.titleMedium,
-                        ),
-                        Text(
-                          l10n.groupCurrencyNote,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: context.colors.textHelper,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+              ],
+              onChanged: state.submitting ? null : (value) => setState(() => _currency = value ?? kDefaultCurrency),
             ),
             const SizedBox(height: QesmaSpacing.lg),
             MemberNamesInput(
               names: _members,
               enabled: !state.submitting,
-              onChanged: (names) => setState(() => _members = names),
+              onChanged: (names) => setState(() {
+                _members = names;
+                if (_treasurer != null && !names.contains(_treasurer)) _treasurer = null;
+              }),
             ),
+            if (ref.watch(modeFeaturesProvider).pool) ...[
+              const SizedBox(height: QesmaSpacing.md),
+              SwitchListTile.adaptive(
+                value: _pool,
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.groupPoolToggle),
+                subtitle: Text(l10n.groupPoolToggleHint),
+                onChanged: state.submitting ? null : (v) => setState(() => _pool = v),
+              ),
+              if (_pool) ...[
+                Text(l10n.groupPoolWho, style: theme.textTheme.labelLarge),
+                const SizedBox(height: QesmaSpacing.sm),
+                Wrap(
+                  spacing: QesmaSpacing.sm,
+                  runSpacing: QesmaSpacing.sm,
+                  children: [
+                    AppChoiceChip(
+                      label: l10n.groupPoolMe,
+                      icon: Icons.person_outline,
+                      selected: _treasurer == null,
+                      onSelected: state.submitting ? null : (_) => setState(() => _treasurer = null),
+                    ),
+                    for (final n in _members)
+                      AppChoiceChip(
+                        label: n,
+                        icon: Icons.person_outline,
+                        selected: _treasurer == n,
+                        onSelected: state.submitting ? null : (_) => setState(() => _treasurer = n),
+                      ),
+                  ],
+                ),
+              ],
+            ],
             if (message != null) ...[
               const SizedBox(height: QesmaSpacing.lg),
               ErrorBanner(message),

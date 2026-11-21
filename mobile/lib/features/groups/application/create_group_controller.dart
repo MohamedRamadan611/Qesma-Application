@@ -20,6 +20,7 @@ class CreateGroupState {
     this.outcomeUnknown = false,
     this.createdGroupId,
     this.failedMemberNames = const [],
+    this.treasurerFailed = false,
   });
 
   final bool submitting;
@@ -31,6 +32,9 @@ class CreateGroupState {
 
   /// Names that could not be added after the group was created (the group is kept).
   final List<String> failedMemberNames;
+
+  /// A treasurer was asked for but could not be set after the group was created (the group is kept).
+  final bool treasurerFailed;
 }
 
 /// Creates a group without ever duplicating it. `POST /groups` has no idempotency key
@@ -49,7 +53,7 @@ class CreateGroupController extends Notifier<CreateGroupState> {
   ///
   /// [members] are name-only members added one by one after the group exists. A failure
   /// there never undoes the group: the names that failed are in [CreateGroupState.failedMemberNames].
-  Future<String?> submit({required String name, required String type, List<String> members = const []}) async {
+  Future<String?> submit({required String name, required String type, String currencyCode = 'EGP', List<String> members = const [], bool poolOn = false, String? treasurerName}) async {
     if (state.submitting) return null;
     state = const CreateGroupState(submitting: true);
     try {
@@ -58,19 +62,19 @@ class CreateGroupController extends Notifier<CreateGroupState> {
 
       if (state.outcomeUnknown || _attempted) {
         final found = await _findCreated(name, type);
-        if (found != null) return await _succeeded(found, members);
+        if (found != null) return await _succeeded(found, members, poolOn, treasurerName);
       }
 
       _attempted = true;
-      final group = await _repo.create(name: name, type: type);
-      return await _succeeded(group.id, members);
+      final group = await _repo.create(name: name, type: type, currencyCode: currencyCode);
+      return await _succeeded(group.id, members, poolOn, treasurerName);
     } on ApiFailure catch (failure) {
       final unknown = _attempted && outcomeUnknown(failure);
       if (unknown) {
         // Look once more right away: the group may already exist.
         try {
           final found = await _findCreated(name, type);
-          if (found != null) return await _succeeded(found, members);
+          if (found != null) return await _succeeded(found, members, poolOn, treasurerName);
           // Reachable server and no such group: safe to retry.
           _attempted = false;
           state = CreateGroupState(failure: failure);
@@ -96,7 +100,8 @@ class CreateGroupController extends Notifier<CreateGroupState> {
     return null;
   }
 
-  Future<String> _succeeded(String id, List<String> members) async {
+  /// [treasurerName] null with [poolOn] = the creator is the treasurer.
+  Future<String> _succeeded(String id, List<String> members, bool poolOn, String? treasurerName) async {
     final failed = <String>[];
     for (final member in members) {
       try {
@@ -105,7 +110,23 @@ class CreateGroupController extends Notifier<CreateGroupState> {
         failed.add(member);
       }
     }
-    state = CreateGroupState(createdGroupId: id, failedMemberNames: failed);
+    var treasurerFailed = false;
+    if (poolOn) {
+      try {
+        final g = await _repo.get(id);
+        final mid = treasurerName == null
+            ? g.yourMemberId
+            : g.members.where((m) => m.id != g.yourMemberId && m.displayName == treasurerName).firstOrNull?.id;
+        if (mid == null) {
+          treasurerFailed = true;
+        } else {
+          await _repo.update(id, name: g.name, type: g.type, treasurerMemberId: mid);
+        }
+      } on ApiFailure {
+        treasurerFailed = true;
+      }
+    }
+    state = CreateGroupState(createdGroupId: id, failedMemberNames: failed, treasurerFailed: treasurerFailed);
     unawaited(ref.read(groupsListControllerProvider.notifier).refresh());
     return id;
   }

@@ -4,12 +4,13 @@ import '../l10n/generated/app_localizations.dart';
 import '../money/money.dart';
 import '../theme/balance_colors.dart';
 import '../theme/qesma_text.dart';
+import '../money/active_currency.dart';
 import 'bidi.dart';
 
 /// Visible text of an amount: "1,061.79 ج.م" (ar) / "1,061.79 EGP" (en), signed on request.
 /// Western digits, non-breaking space before the currency (DESIGN.md numeral rules).
 String moneyDisplay(AppLocalizations l10n, int minor, {bool signed = false}) =>
-    '${ltrIsolate(Money.formatNumber(minor, signed: signed))}$nbsp${l10n.moneyCurrency}';
+    '${ltrIsolate(Money.formatNumber(minor, signed: signed))}$nbsp${ActiveCurrency.label(l10n)}';
 
 /// Spoken form: "80 جنيه", "80 جنيه و50 قرش", "سالب 80 جنيه". Words, not symbols.
 /// [signedSpoken] says "minus" for negatives; balance chips pass false because

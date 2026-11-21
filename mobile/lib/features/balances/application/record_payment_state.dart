@@ -17,7 +17,7 @@ const String kPoolDepositKind = 'POOL_DEPOSIT';
 /// amount, a copy) or nothing for a payment the user describes themselves.
 @immutable
 class PaymentSeed {
-  const PaymentSeed({this.fromId, this.toId, this.amountMinor, this.poolDeposit = false});
+  const PaymentSeed({this.fromId, this.toId, this.amountMinor, this.poolDeposit = false, this.replacesId, this.settledOn, this.note});
 
   final String? fromId;
   final String? toId;
@@ -26,12 +26,18 @@ class PaymentSeed {
   /// SA10: a deposit to the pool: [toId] is the treasurer and the settlement kind is POOL_DEPOSIT.
   final bool poolDeposit;
 
-  @override
-  bool operator ==(Object other) =>
-      other is PaymentSeed && other.fromId == fromId && other.toId == toId && other.amountMinor == amountMinor && other.poolDeposit == poolDeposit;
+  /// Editing a recorded deposit: its id. The corrected one is recorded first, then this one is cancelled (nothing is
+  /// deleted), and [settledOn] (`YYYY-MM-DD`) and [note] prefill the sheet.
+  final String? replacesId;
+  final String? settledOn;
+  final String? note;
 
   @override
-  int get hashCode => Object.hash(fromId, toId, amountMinor, poolDeposit);
+  bool operator ==(Object other) =>
+      other is PaymentSeed && other.fromId == fromId && other.toId == toId && other.amountMinor == amountMinor && other.poolDeposit == poolDeposit && other.replacesId == replacesId && other.settledOn == settledOn && other.note == note;
+
+  @override
+  int get hashCode => Object.hash(fromId, toId, amountMinor, poolDeposit, replacesId, settledOn, note);
 }
 
 /// Why a field is not acceptable yet (the sheet shows the matching message once the field was touched).
