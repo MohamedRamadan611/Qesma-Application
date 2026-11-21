@@ -10,6 +10,8 @@ class _$ExpensePreview extends ExpensePreview {
   @override
   final int? adjustmentMinor;
   @override
+  final int? deliveryMinor;
+  @override
   final int? discountMinor;
   @override
   final BuiltList<ShareView> members;
@@ -29,6 +31,7 @@ class _$ExpensePreview extends ExpensePreview {
 
   _$ExpensePreview._(
       {this.adjustmentMinor,
+      this.deliveryMinor,
       this.discountMinor,
       required this.members,
       required this.payersTotalMatches,
@@ -49,6 +52,7 @@ class _$ExpensePreview extends ExpensePreview {
     if (identical(other, this)) return true;
     return other is ExpensePreview &&
         adjustmentMinor == other.adjustmentMinor &&
+        deliveryMinor == other.deliveryMinor &&
         discountMinor == other.discountMinor &&
         members == other.members &&
         payersTotalMatches == other.payersTotalMatches &&
@@ -62,6 +66,7 @@ class _$ExpensePreview extends ExpensePreview {
   int get hashCode {
     var _$hash = 0;
     _$hash = $jc(_$hash, adjustmentMinor.hashCode);
+    _$hash = $jc(_$hash, deliveryMinor.hashCode);
     _$hash = $jc(_$hash, discountMinor.hashCode);
     _$hash = $jc(_$hash, members.hashCode);
     _$hash = $jc(_$hash, payersTotalMatches.hashCode);
@@ -77,6 +82,7 @@ class _$ExpensePreview extends ExpensePreview {
   String toString() {
     return (newBuiltValueToStringHelper(r'ExpensePreview')
           ..add('adjustmentMinor', adjustmentMinor)
+          ..add('deliveryMinor', deliveryMinor)
           ..add('discountMinor', discountMinor)
           ..add('members', members)
           ..add('payersTotalMatches', payersTotalMatches)
@@ -96,6 +102,11 @@ class ExpensePreviewBuilder
   int? get adjustmentMinor => _$this._adjustmentMinor;
   set adjustmentMinor(int? adjustmentMinor) =>
       _$this._adjustmentMinor = adjustmentMinor;
+
+  int? _deliveryMinor;
+  int? get deliveryMinor => _$this._deliveryMinor;
+  set deliveryMinor(int? deliveryMinor) =>
+      _$this._deliveryMinor = deliveryMinor;
 
   int? _discountMinor;
   int? get discountMinor => _$this._discountMinor;
@@ -137,6 +148,7 @@ class ExpensePreviewBuilder
     final $v = _$v;
     if ($v != null) {
       _adjustmentMinor = $v.adjustmentMinor;
+      _deliveryMinor = $v.deliveryMinor;
       _discountMinor = $v.discountMinor;
       _members = $v.members.toBuilder();
       _payersTotalMatches = $v.payersTotalMatches;
@@ -168,6 +180,7 @@ class ExpensePreviewBuilder
       _$result = _$v ??
           _$ExpensePreview._(
             adjustmentMinor: adjustmentMinor,
+            deliveryMinor: deliveryMinor,
             discountMinor: discountMinor,
             members: members.build(),
             payersTotalMatches: BuiltValueNullFieldError.checkNotNull(

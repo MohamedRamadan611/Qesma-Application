@@ -758,6 +758,48 @@ abstract class AppLocalizations {
   /// **'مش متأكدين إن الجروب اتعمل. هنتأكد الأول قبل ما نحاول تاني، عشان ميتكررش.'**
   String get groupCreateOutcomeUnknown;
 
+  /// Section title on the create-group screen.
+  ///
+  /// In ar, this message translates to:
+  /// **'أعضاء الجروب (اختياري)'**
+  String get groupMembersLabel;
+
+  /// Note under the optional members section.
+  ///
+  /// In ar, this message translates to:
+  /// **'تقدر تتخطى الخطوة دي وتضيف الأعضاء بعدين من تبويب الأعضاء. إنت متضاف تلقائي.'**
+  String get groupMembersNote;
+
+  /// Hint of the member name field in create group.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسم العضو'**
+  String get groupMembersNameHint;
+
+  /// Adds the typed name to the list of members to create.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة'**
+  String get groupMembersAddButton;
+
+  /// Inline error for a repeated member name.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاسم ده مضاف بالفعل'**
+  String get groupMembersDuplicate;
+
+  /// Semantics label of the remove button on a member chip.
+  ///
+  /// In ar, this message translates to:
+  /// **'إزالة {name}'**
+  String groupMembersRemove(String name);
+
+  /// Snackbar after the group was created but some members could not be added.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, one{عضو واحد ما اتضافش} two{عضوين ما اتضافوش} few{{count} أعضاء ما اتضافوش} many{{count} عضو ما اتضافوش} other{{count} عضو ما اتضافوش}}. ضيفهم من تبويب الأعضاء.'**
+  String groupMembersPartialFail(int count);
+
   /// Edit group screen title and the tooltip of the edit button.
   ///
   /// In ar, this message translates to:
@@ -3929,13 +3971,13 @@ abstract class AppLocalizations {
   /// Hint of the InstaPay field.
   ///
   /// In ar, this message translates to:
-  /// **'مثال: username@instapay'**
+  /// **'مثال: instapay URL'**
   String get handlesInstapayHint;
 
   /// Hint of the wallet field.
   ///
   /// In ar, this message translates to:
-  /// **'فودافون كاش، أورنج، وي، اتصالات أو محفظة بنكية'**
+  /// **'انستا باي، فودافون كاش، أورنج، وي، اتصالات أو محفظة بنكية'**
   String get handlesWalletHint;
 
   /// Inline error of the InstaPay field.
@@ -5367,11 +5409,41 @@ abstract class AppLocalizations {
   /// **'في مبالغ مقدرناش نقرأها. راجع الأصناف المعلّمة.'**
   String get scanFlaggedHint;
 
-  /// SA12: only a service or tax amount was printed.
+  /// SA17: a printed quantity could not be read; those items opened as quantity 1.
   ///
   /// In ar, this message translates to:
-  /// **'الإيصال مكتوب عليه مبلغ خدمة أو ضريبة. اكتب نسبته.'**
-  String get scanNeedsPercent;
+  /// **'في كميات مقدرناش نقرأها فكتبناها 1. راجع الكميات.'**
+  String get scanQuantityCheck;
+
+  /// SA17: a quantity above 1 was printed without a unit price; the line total was entered with quantity 1.
+  ///
+  /// In ar, this message translates to:
+  /// **'في أصناف عليها كمية من غير سعر الوحدة. كتبنا إجمالي السطر والكمية 1، راجعها.'**
+  String get scanUnitPriceCheck;
+
+  /// SA17: a discount was read from the receipt and filled in.
+  ///
+  /// In ar, this message translates to:
+  /// **'لقينا خصم على الإيصال وحطيناه. راجعه.'**
+  String get scanDiscountFound;
+
+  /// SA17: the discount was printed as a percentage and an amount; the percentage was kept.
+  ///
+  /// In ar, this message translates to:
+  /// **'الخصم مكتوب نسبة ومبلغ مع بعض. استخدمنا النسبة، راجعها.'**
+  String get scanDiscountPercentKept;
+
+  /// SA17: a discount as large as the items total (or 100%) was left out.
+  ///
+  /// In ar, this message translates to:
+  /// **'في خصم على الإيصال بس مش أصغر من إجمالي الأصناف، فمحطيناهوش. اكتبه بنفسك لو محتاجه.'**
+  String get scanDiscountDropped;
+
+  /// SA17: the title and/or category were filled from the receipt.
+  ///
+  /// In ar, this message translates to:
+  /// **'كتبنا الاسم أو النوع من الإيصال. غيّرهم لو مش مظبوطين.'**
+  String get scanTitleCategorySuggested;
 
   /// SA12: more than 100 items, the rest were dropped.
   ///
@@ -5634,7 +5706,7 @@ abstract class AppLocalizations {
   /// SA16: charges card title.
   ///
   /// In ar, this message translates to:
-  /// **'الخصم والخدمة والضريبة'**
+  /// **'الخصم والتوصيل والخدمة والضريبة'**
   String get expenseItzChargesTitle;
 
   /// SA16: discount row.
@@ -5768,6 +5840,210 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'عرض أقل'**
   String get expenseItzAssigneesCollapseSpoken;
+
+  /// A180: delivery charge row label.
+  ///
+  /// In ar, this message translates to:
+  /// **'التوصيل'**
+  String get expenseItzDeliveryLabel;
+
+  /// A180: delivery hint with the server's per-person amount.
+  ///
+  /// In ar, this message translates to:
+  /// **'بتتقسم بالتساوي على اللي معاهم أصناف: {amount} لكل واحد'**
+  String expenseItzDeliveryHint(String amount);
+
+  /// A180: delivery hint when the parts differ by the leftover piaster.
+  ///
+  /// In ar, this message translates to:
+  /// **'بتتقسم بالتساوي على اللي معاهم أصناف: من {min} لـ {max} لكل واحد'**
+  String expenseItzDeliveryHintRange(String min, String max);
+
+  /// A180: delivery part in a person's breakdown line.
+  ///
+  /// In ar, this message translates to:
+  /// **'توصيل {amount}'**
+  String expensePartDelivery(String amount);
+
+  /// A171: the discount is not below the items total (the server refused the bill).
+  ///
+  /// In ar, this message translates to:
+  /// **'الخصم لازم يكون أقل من إجمالي الأصناف.'**
+  String get expenseItzDiscountTooLarge;
+
+  /// Redesign: title of the list of problems shown after Save.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =1{في حاجة لازم تتصلّح قبل الحفظ} =2{في حاجتين لازم تتصلّحوا قبل الحفظ} few{في {count} حاجات لازم تتصلّح قبل الحفظ} many{في {count} حاجة لازم تتصلّح قبل الحفظ} other{في {count} حاجة لازم تتصلّح قبل الحفظ}}'**
+  String expenseItzSummaryTitle(int count);
+
+  /// Redesign: hint under the list of problems.
+  ///
+  /// In ar, this message translates to:
+  /// **'اضغط على أي حاجة عشان توصلها'**
+  String get expenseItzSummaryHint;
+
+  /// Redesign: problem row, the bill has no items.
+  ///
+  /// In ar, this message translates to:
+  /// **'أضف صنف واحد على الأقل'**
+  String get expenseItzIssueItemsEmpty;
+
+  /// Redesign: problem row, an item without a name.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسم الصنف رقم {n}'**
+  String expenseItzIssueItemName(String n);
+
+  /// Redesign: problem row, an item price.
+  ///
+  /// In ar, this message translates to:
+  /// **'سعر الصنف: {item}'**
+  String expenseItzIssueItemPrice(String item);
+
+  /// Redesign: problem row, an item quantity.
+  ///
+  /// In ar, this message translates to:
+  /// **'كمية الصنف: {item}'**
+  String expenseItzIssueItemQuantity(String item);
+
+  /// Redesign: problem row, an item nobody shares.
+  ///
+  /// In ar, this message translates to:
+  /// **'أعضاء الصنف: {item}'**
+  String expenseItzIssueItemMembers(String item);
+
+  /// Redesign: spoken label of a collapsed item row.
+  ///
+  /// In ar, this message translates to:
+  /// **'افتح {item}'**
+  String expenseItzItemExpandSpoken(String item);
+
+  /// Redesign: spoken label of the collapse button of an open item.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقفل {item}'**
+  String expenseItzItemCollapseSpoken(String item);
+
+  /// Redesign: spoken hint of a collapsed item that has a problem.
+  ///
+  /// In ar, this message translates to:
+  /// **'الصنف ناقص بيانات'**
+  String get expenseItzItemNeedsFixing;
+
+  /// Redesign: label above the members button of an item.
+  ///
+  /// In ar, this message translates to:
+  /// **'مين شارك؟'**
+  String get expenseItzWhoShared;
+
+  /// Redesign: picker mode, everyone selected shares the item equally.
+  ///
+  /// In ar, this message translates to:
+  /// **'بالتساوي'**
+  String get expenseItzPickerModeEqual;
+
+  /// Redesign: picker mode, each person gets a number of units.
+  ///
+  /// In ar, this message translates to:
+  /// **'حسب الكمية'**
+  String get expenseItzPickerModeQuantity;
+
+  /// Redesign: units given so far in the picker.
+  ///
+  /// In ar, this message translates to:
+  /// **'وزّعت {x} من {n}'**
+  String expenseItzPickerDistributed(String x, String n);
+
+  /// Redesign: quantity times the typed unit price, as typed.
+  ///
+  /// In ar, this message translates to:
+  /// **'الكمية {qty} × {price}'**
+  String expenseItzPickerQtyLine(String qty, String price);
+
+  /// Redesign: set every unit count back to zero.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسح الكل'**
+  String get expenseItzPickerClearAll;
+
+  /// Redesign: footer of the picker, who got what.
+  ///
+  /// In ar, this message translates to:
+  /// **'{names}'**
+  String expenseItzPickerSelectedNames(String names);
+
+  /// Redesign: hint at the top of the by-person mode.
+  ///
+  /// In ar, this message translates to:
+  /// **'ضيف لكل شخص الأصناف اللي أكلها. لو صنف مشترك، استخدم «نسخ صنف موجود».'**
+  String get expenseItzPersonByPersonHint;
+
+  /// Redesign: by person, add an item for this person.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة صنف لـ {name}'**
+  String expenseItzAddItemFor(String name);
+
+  /// Redesign: by person, label of the existing-items chips.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسخ صنف موجود'**
+  String get expenseItzCopyItem;
+
+  /// Redesign: by person, spoken chip that puts an existing item on this person.
+  ///
+  /// In ar, this message translates to:
+  /// **'ضيف «{item}» لـ {name}'**
+  String expenseItzCopyItemSpoken(String item, String name);
+
+  /// Redesign: by person, tooltip of the remove button of an item row.
+  ///
+  /// In ar, this message translates to:
+  /// **'شيل «{item}» من {name}'**
+  String expenseItzPersonRemoveItem(String item, String name);
+
+  /// Redesign: by person, folded section of members with no item.
+  ///
+  /// In ar, this message translates to:
+  /// **'أعضاء من غير أصناف ({n})'**
+  String expenseItzMembersWithoutItems(String n);
+
+  /// Redesign: by person, a card of a member who has no item.
+  ///
+  /// In ar, this message translates to:
+  /// **'من غير أصناف'**
+  String get expenseItzPersonNoItemsLine;
+
+  /// Redesign: split method row, everyone.
+  ///
+  /// In ar, this message translates to:
+  /// **'بالتساوي على كل الأعضاء'**
+  String get expenseFormSplitSubtitleAll;
+
+  /// Redesign: split method row, selected members.
+  ///
+  /// In ar, this message translates to:
+  /// **'بالتساوي على ناس محددين'**
+  String get expenseFormSplitSubtitleSelected;
+
+  /// Redesign: split method row, exact amounts.
+  ///
+  /// In ar, this message translates to:
+  /// **'كل واحد بمبلغ محدد'**
+  String get expenseFormSplitSubtitleExact;
+
+  /// Redesign: split method row, restaurant bill.
+  ///
+  /// In ar, this message translates to:
+  /// **'كل صنف وليه ناسه'**
+  String get expenseFormSplitSubtitleItemized;
+
+  /// Redesign: change button of the payer row and the split method row.
+  ///
+  /// In ar, this message translates to:
+  /// **'تغيير'**
+  String get expenseFormChange;
 }
 
 class _AppLocalizationsDelegate

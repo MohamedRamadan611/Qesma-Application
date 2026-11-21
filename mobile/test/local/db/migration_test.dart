@@ -12,6 +12,8 @@ void main() {
 
   setUpAll(() => verifier = SchemaVerifier(GeneratedHelper()));
 
+  _deliveryMigrationTests(() => verifier);
+
   test('the exported v1 snapshot matches the schema in code', () async {
     final connection = await verifier.startAt(1);
     final db = LocalDatabase(connection);
@@ -204,7 +206,7 @@ void main() {
       await db.close();
     });
 
-    test('is atomic: a broken reference rolls the whole upgrade back and the file stays at v7', () async {
+    test('is atomic: a broken reference rolls the whole upgrade back and the file stays at v7 (7 -> 8)', () async {
       final schema = await verifier.schemaAt(7);
       final raw = schema.rawDatabase;
       seedV7(raw);
@@ -217,6 +219,70 @@ void main() {
       expect(raw.select('PRAGMA user_version').single.values.single, 7);
       expect([for (final c in raw.select('PRAGMA table_info(expense_items)')) c['name']], isNot(contains('quantity')));
       expect([for (final c in raw.select('PRAGMA table_info(expense_splits)')) c['name']], isNot(contains('discount_minor')));
+    });
+  });
+}
+
+/// v8 -> v9: itemized delivery (A180, Java V22). The two tables are rebuilt; every old row keeps its meaning.
+void _deliveryMigrationTests(SchemaVerifier Function() verifier) {
+  group('v8 -> v9 itemized delivery (A180, Java V22)', () {
+    const p = '00000000-0000-4000-8000-000000000001';
+    const g = '00000000-0000-4000-8000-0000000000a1';
+    const m1 = '00000000-0000-4000-8000-0000000000b1';
+    const m2 = '00000000-0000-4000-8000-0000000000b2';
+    const eq = '00000000-0000-4000-8000-0000000000c1';
+    const it = '00000000-0000-4000-8000-0000000000c2';
+
+    void seedV8(dynamic raw) {
+      raw.execute('INSERT INTO local_meta (id, created_schema_version, created_at) VALUES (1, 8, 1000)');
+      raw.execute("INSERT INTO local_profile (id, display_name, created_at, updated_at) VALUES ('$p', 'Mona', 1, 1)");
+      raw.execute("INSERT INTO expense_groups (id, owner_user_id, name, type, created_at, updated_at) VALUES ('$g', '$p', 'Trip', 'TRIP', 1, 1)");
+      raw.execute("INSERT INTO members (id, group_id, display_name, name_key, user_id, sort_order, role, created_at) VALUES ('$m1', '$g', 'Mona', 'mona', '$p', 1, 'OWNER', 1)");
+      raw.execute("INSERT INTO members (id, group_id, display_name, name_key, sort_order, created_at) VALUES ('$m2', '$g', 'Ali', 'ali', 2, 1)");
+      raw.execute("INSERT INTO expenses (id, group_id, title, split_type, total_minor, expense_date, created_by_user_id, created_at, updated_at) VALUES ('$eq', '$g', 'Taxi', 'EQUAL', 1000, '2026-11-10', '$p', 1, 1)");
+      raw.execute("INSERT INTO expense_payers (expense_id, member_id, amount_minor) VALUES ('$eq', '$m1', 1000)");
+      raw.execute("INSERT INTO expense_splits (expense_id, member_id, owed_minor) VALUES ('$eq', '$m1', 500), ('$eq', '$m2', 500)");
+      raw.execute("INSERT INTO expenses (id, group_id, title, split_type, total_minor, expense_date, subtotal_minor, service_minor, tax_minor, adjustment_minor, discount_minor, created_by_user_id, created_at, updated_at) VALUES ('$it', '$g', 'Dinner', 'ITEMIZED', 3000, '2026-11-10', 3000, 0, 0, 0, 0, '$p', 1, 1)");
+      raw.execute("INSERT INTO expense_payers (expense_id, member_id, amount_minor) VALUES ('$it', '$m2', 3000)");
+      raw.execute("INSERT INTO expense_splits (expense_id, member_id, owed_minor, items_minor, service_minor, tax_minor, adjustment_minor, discount_minor) VALUES ('$it', '$m1', 1000, 1000, 0, 0, 0, 0), ('$it', '$m2', 2000, 2000, 0, 0, 0, 0)");
+    }
+
+    test('keeps the ledger: delivery 0 on itemized rows, NULL on the others, nets unchanged', () async {
+      final schema = await verifier().schemaAt(8);
+      seedV8(schema.rawDatabase);
+      final db = LocalDatabase(schema.newConnection());
+      await verifier().migrateAndValidate(db, 9);
+
+      final graph = (await db.expensesDao.loadGraph(it))!;
+      expect(graph.expense.deliveryMinor, 0);
+      expect({for (final x in graph.splits) x.memberId: (x.owedMinor, x.deliveryMinor)}, {m1: (1000, 0), m2: (2000, 0)});
+      expect((graph.expense.totalMinor, graph.expense.subtotalMinor), (3000, 3000));
+      final equal = (await db.expensesDao.loadGraph(eq))!;
+      expect(equal.expense.deliveryMinor, isNull);
+      expect(equal.splits.map((x) => x.deliveryMinor), [null, null]);
+      expect(await db.customSelect('PRAGMA foreign_key_check').get(), isEmpty);
+
+      // The V22 rules hold after the rebuild.
+      await expectLater(db.customStatement("UPDATE expenses SET delivery_minor = 100 WHERE id = '$it'"), throwsA(anything));
+      await expectLater(db.customStatement("UPDATE expenses SET delivery_minor = 0 WHERE id = '$eq'"), throwsA(anything));
+      await db.customStatement(
+          "UPDATE expenses SET delivery_minor = 100, total_minor = 3100 WHERE id = '$it'; "
+          "UPDATE expense_splits SET delivery_minor = 50, owed_minor = owed_minor + 50 WHERE expense_id = '$it';");
+      await db.close();
+    });
+
+    test('is atomic: a broken reference rolls the whole upgrade back and the file stays at v8', () async {
+      final schema = await verifier().schemaAt(8);
+      final raw = schema.rawDatabase;
+      seedV8(raw);
+      raw.execute('PRAGMA foreign_keys = OFF');
+      raw.execute("INSERT INTO expense_payers (expense_id, member_id, amount_minor) VALUES ('$eq', '00000000-0000-4000-8000-0000000000ff', 1)");
+      raw.execute('PRAGMA foreign_keys = ON');
+
+      final db = LocalDatabase(schema.newConnection());
+      await expectLater(db.customSelect('SELECT 1').get(), throwsA(anything));
+      expect(raw.select('PRAGMA user_version').single.values.single, 8);
+      expect([for (final c in raw.select('PRAGMA table_info(expense_splits)')) c['name']], isNot(contains('delivery_minor')));
     });
   });
 }

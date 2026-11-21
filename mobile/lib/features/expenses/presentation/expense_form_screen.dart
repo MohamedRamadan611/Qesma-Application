@@ -25,6 +25,7 @@ import 'itemized_editor.dart';
 import 'expense_ui.dart';
 import 'payers_sheet.dart';
 import 'split_section.dart';
+import 'validation_summary_card.dart';
 import '../../../core/theme/palette.dart';
 
 /// Add expense (P5-01) and edit expense. Title, total, date, who paid, and how it is split
@@ -155,15 +156,23 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
     }
   }
 
+  /// A tap on a problem in the summary (or the first problem after Save): scroll to its section and, for an item, open it.
+  Future<void> _goToIssue(FormIssue issue) async {
+    await _scrollToSection(issue.section);
+    if (!mounted) return;
+    final id = issue.itemId;
+    if (id != null) _controller.requestOpenItem(id);
+  }
+
   Future<void> _save() async {
     final form = _controller.form;
     // A restaurant bill keeps Save enabled: with something missing, show every error, say how many and scroll to the first.
     if (form != null && form.splitMode == SplitMode.itemized && !form.canSave(_controller.memberIds)) {
-      final first = form.firstErrorSection(_controller.memberIds);
+      final issues = form.itemizedIssues(_controller.memberIds);
       setState(() => _titleTouched = true);
       _controller.revealErrors();
-      if (first != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToSection(first));
+      if (issues.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _goToIssue(issues.first));
       }
       return;
     }
@@ -184,6 +193,10 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
     });
     ref.listen<ApiFailure?>(expenseFormControllerProvider(_key).select((v) => v.failure), (previous, next) {
       if (next != null) _onFailure(next);
+    });
+    // SA17: a scan applied from the editor can fill the title (only while it was empty); show it in the field.
+    ref.listen<String?>(expenseFormControllerProvider(_key).select((v) => v.form?.title), (previous, next) {
+      if (next != null && next != _title.text) _title.text = next;
     });
 
     final title = _isEdit ? l10n.expenseEdit : l10n.expensesAdd;
@@ -281,6 +294,12 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
             _Note(text: l10n.expenseFormConflictNote),
             const SizedBox(height: QesmaSpacing.md),
           ],
+          if (isItemized && form.showAllErrors) ...[
+            if (form.itemizedIssues(memberIds) case final issues when issues.isNotEmpty) ...[
+              ValidationSummaryCard(issues: issues, onTap: _goToIssue),
+              const SizedBox(height: QesmaSpacing.md),
+            ],
+          ],
           KeyedSubtree(
             key: _sectionKeys[ErrorSection.title],
             child: AppCard(
@@ -317,17 +336,32 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                   Text(l10n.expenseFormCurrencyNote, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
                 ],
                 const SizedBox(height: QesmaSpacing.md),
-                AppButton(
-                  label: '${l10n.expenseFormDateLabel}: ${dateText(form.date)}',
-                  icon: Icons.calendar_today_outlined,
-                  variant: AppButtonVariant.secondary,
-                  onPressed: () => _pickDate(form),
-                ),
-                const SizedBox(height: QesmaSpacing.md),
-                CategoryPicker(
-                  selectedCategory: form.category,
-                  onChanged: _controller.setCategory,
-                ),
+                // Date and category side by side; at large text one under the other.
+                if (MediaQuery.textScalerOf(context).scale(1) > 1.3) ...[
+                  AppButton(
+                    label: '${l10n.expenseFormDateLabel}: ${dateText(form.date)}',
+                    icon: Icons.calendar_today_outlined,
+                    variant: AppButtonVariant.secondary,
+                    onPressed: () => _pickDate(form),
+                  ),
+                  const SizedBox(height: QesmaSpacing.sm),
+                  CategoryButton(selectedCategory: form.category, onChanged: _controller.setCategory),
+                ] else
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: AppButton(
+                          label: '${l10n.expenseFormDateLabel}: ${dateText(form.date)}',
+                          icon: Icons.calendar_today_outlined,
+                          variant: AppButtonVariant.secondary,
+                          onPressed: () => _pickDate(form),
+                        ),
+                      ),
+                      const SizedBox(width: QesmaSpacing.sm),
+                      Expanded(child: CategoryButton(selectedCategory: form.category, onChanged: _controller.setCategory)),
+                    ],
+                  ),
               ],
             ),
           ),
@@ -451,22 +485,42 @@ class _PaidByCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final count = form.payerMode == PayerMode.single ? 1 : form.payerTexts.length;
+    final stacked = MediaQuery.textScalerOf(context).scale(1) > 1.3;
+    // The payer and its "change" button on one row (the redesign); at large text the button goes under.
+    final info = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Flexible(child: Semantics(header: true, child: Text(l10n.expenseFormPaidByTitle, style: theme.textTheme.titleMedium))),
+            if (count > 0) ...[
+              const SizedBox(width: QesmaSpacing.sm),
+              Flexible(
+                child: Text(
+                  countPhrase(count, one: l10n.expensePayersCountOne, two: l10n.expensePayersCountTwo, few: l10n.expensePayersCount, many: l10n.expensePayersCountMany),
+                  style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper),
+                ),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: QesmaSpacing.xs),
+        Semantics(label: stripIsolates(_summary(l10n)), child: ExcludeSemantics(child: Text(_summary(l10n), style: theme.textTheme.bodyMedium))),
+      ],
+    );
+    // While the expense is paid from the pool the treasurer is the only payer (A135): no payer editor.
+    final change = AppButton(
+      label: l10n.expenseFormChange,
+      icon: Icons.edit_outlined,
+      variant: AppButtonVariant.secondary,
+      expand: false,
+      onPressed: form.paidFromPool ? null : onEdit,
+    );
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Expanded(child: Semantics(header: true, child: Text(l10n.expenseFormPaidByTitle, style: theme.textTheme.titleMedium))),
-              if (count > 0)
-                Text(
-                  countPhrase(count, one: l10n.expensePayersCountOne, two: l10n.expensePayersCountTwo, few: l10n.expensePayersCount, many: l10n.expensePayersCountMany),
-                  style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper),
-                ),
-            ],
-          ),
-          const SizedBox(height: QesmaSpacing.sm),
-          Semantics(label: stripIsolates(_summary(l10n)), child: ExcludeSemantics(child: Text(_summary(l10n), style: theme.textTheme.bodyMedium))),
+          if (stacked) ...[info, const SizedBox(height: QesmaSpacing.sm), Align(alignment: AlignmentDirectional.centerStart, child: change)] else Row(crossAxisAlignment: CrossAxisAlignment.center, children: [Expanded(child: info), const SizedBox(width: QesmaSpacing.sm), change]),
           if (treasurerId != null) ...[
             const SizedBox(height: QesmaSpacing.xs),
             SwitchListTile(
@@ -482,14 +536,6 @@ class _PaidByCard extends StatelessWidget {
                 style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary),
               ),
           ],
-          const SizedBox(height: QesmaSpacing.sm),
-          // While the expense is paid from the pool the treasurer is the only payer (A135): no payer editor.
-          AppButton(
-            label: l10n.expenseFormEditPayers,
-            icon: Icons.edit_outlined,
-            variant: AppButtonVariant.secondary,
-            onPressed: form.paidFromPool ? null : onEdit,
-          ),
           if (mismatch) ...[const SizedBox(height: QesmaSpacing.sm), ErrorBanner(l10n.expenseFormPayersMismatch)],
           if (serverBanner != null) ...[const SizedBox(height: QesmaSpacing.sm), ErrorBanner(serverBanner!)],
         ],
@@ -539,8 +585,10 @@ class _BottomBar extends StatelessWidget {
   /// A restaurant bill's total (the server's), shown next to the save button.
   final int? billTotalMinor;
 
-  /// A restaurant bill after Save was tapped with fields missing: how many (icon and words, never colour alone).
+  /// A restaurant bill after Save was tapped with fields missing: how many (icon and words, never colour alone). The list
+  /// of them is the summary card at the top of the page; this line stays next to Save wherever the page is scrolled to.
   final int missingCount;
+
 
   @override
   Widget build(BuildContext context) {

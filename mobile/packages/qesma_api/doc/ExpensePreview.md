@@ -9,6 +9,7 @@ import 'package:qesma_api/api.dart';
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **adjustmentMinor** | **int** | Integer minor units (piasters: 1 EGP = 100). Never a decimal. | [optional] 
+**deliveryMinor** | **int** | Integer minor units (piasters: 1 EGP = 100). Never a decimal. | [optional] 
 **discountMinor** | **int** | Integer minor units (piasters: 1 EGP = 100). Never a decimal. | [optional] 
 **members** | [**BuiltList&lt;ShareView&gt;**](ShareView.md) |  | 
 **payersTotalMatches** | **bool** |  | 

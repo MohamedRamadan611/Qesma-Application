@@ -10,6 +10,7 @@ import '../../../core/widgets/widgets.dart';
 import '../application/create_group_controller.dart';
 import '../data/group_type.dart';
 import 'group_ui.dart';
+import 'member_names_input.dart';
 import '../../../core/theme/palette.dart';
 
 /// Create group (P2-02): name (max 60), type chips, fixed EGP. No photo, no contacts.
@@ -23,6 +24,7 @@ class CreateGroupScreen extends ConsumerStatefulWidget {
 class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
   final _name = TextEditingController();
   GroupType _type = GroupType.trip;
+  List<String> _members = const [];
 
   @override
   void dispose() {
@@ -31,8 +33,19 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
   }
 
   Future<void> _submit() async {
-    final id = await ref.read(createGroupControllerProvider.notifier).submit(name: _name.text.trim(), type: _type.wire);
-    if (id != null && mounted) context.go(Routes.group(id));
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final id = await ref
+        .read(createGroupControllerProvider.notifier)
+        .submit(name: _name.text.trim(), type: _type.wire, members: _members);
+    if (id == null || !mounted) return;
+    final failed = ref.read(createGroupControllerProvider).failedMemberNames;
+    if (failed.isNotEmpty) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.groupMembersPartialFail(failed.length))),
+      );
+    }
+    context.go(Routes.group(id));
   }
 
   @override
@@ -45,85 +58,116 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
     final message = failure == null
         ? null
         : state.outcomeUnknown
-            ? l10n.groupCreateOutcomeUnknown
-            : errorCopyFor(l10n, failure).message;
+        ? l10n.groupCreateOutcomeUnknown
+        : errorCopyFor(l10n, failure).message;
 
     return AppScaffold(
       title: l10n.groupCreateTitle,
       showBack: true,
       onBack: () => goBackOr(context, Routes.home),
-      body: ListView(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(QesmaSpacing.margin),
-        children: [
-          Text(l10n.groupCreateSubtitle, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
-          const SizedBox(height: QesmaSpacing.lg),
-          ListenableBuilder(
-            listenable: _name,
-            builder: (context, _) => AppTextField(
-              controller: _name,
-              label: l10n.groupNameLabel,
-              hint: l10n.groupNameHint,
-              maxLength: 60,
-              enabled: !state.submitting,
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _canSubmit(state) ? _submit() : null,
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              l10n.groupCreateSubtitle,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: context.colors.textSecondary,
+              ),
             ),
-          ),
-          const SizedBox(height: QesmaSpacing.lg),
-          Text(l10n.groupTypeLabel, style: theme.textTheme.labelLarge),
-          const SizedBox(height: QesmaSpacing.sm),
-          Wrap(
-            spacing: QesmaSpacing.sm,
-            runSpacing: QesmaSpacing.sm,
-            children: [
-              for (final type in GroupType.values)
-                AppChoiceChip(
-                  label: type.label(l10n),
-                  icon: type.icon,
-                  selected: _type == type,
-                  onSelected: state.submitting ? null : (_) => setState(() => _type = type),
-                ),
-            ],
-          ),
-          const SizedBox(height: QesmaSpacing.lg),
-          Text(l10n.groupCurrencyLabel, style: theme.textTheme.labelLarge),
-          const SizedBox(height: QesmaSpacing.sm),
-          AppCard(
-            color: context.colors.tint,
-            child: Row(
+            const SizedBox(height: QesmaSpacing.lg),
+            ListenableBuilder(
+              listenable: _name,
+              builder: (context, _) => AppTextField(
+                controller: _name,
+                label: l10n.groupNameLabel,
+                hint: l10n.groupNameHint,
+                maxLength: 60,
+                enabled: !state.submitting,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _canSubmit(state) ? _submit() : null,
+              ),
+            ),
+            const SizedBox(height: QesmaSpacing.lg),
+            Text(l10n.groupTypeLabel, style: theme.textTheme.labelLarge),
+            const SizedBox(height: QesmaSpacing.sm),
+            Wrap(
+              spacing: QesmaSpacing.sm,
+              runSpacing: QesmaSpacing.sm,
               children: [
-                ExcludeSemantics(child: Icon(Icons.lock_outline, color: context.colors.textSecondary)),
-                const SizedBox(width: QesmaSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(l10n.groupCurrencyValue, style: theme.textTheme.titleMedium),
-                      Text(l10n.groupCurrencyNote, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper)),
-                    ],
+                for (final type in GroupType.values)
+                  AppChoiceChip(
+                    label: type.label(l10n),
+                    icon: type.icon,
+                    selected: _type == type,
+                    onSelected: state.submitting
+                        ? null
+                        : (_) => setState(() => _type = type),
                   ),
-                ),
               ],
             ),
-          ),
-          if (message != null) ...[
             const SizedBox(height: QesmaSpacing.lg),
-            ErrorBanner(message),
-          ],
-          const SizedBox(height: QesmaSpacing.lg),
-          ListenableBuilder(
-            listenable: _name,
-            builder: (context, _) => AppButton(
-              label: l10n.groupCreateButton,
-              icon: Icons.add_circle_outline,
-              loading: state.submitting,
-              onPressed: _canSubmit(state) ? _submit : null,
+            Text(l10n.groupCurrencyLabel, style: theme.textTheme.labelLarge),
+            const SizedBox(height: QesmaSpacing.sm),
+            AppCard(
+              color: context.colors.tint,
+              child: Row(
+                children: [
+                  ExcludeSemantics(
+                    child: Icon(
+                      Icons.lock_outline,
+                      color: context.colors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(width: QesmaSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.groupCurrencyValue,
+                          style: theme.textTheme.titleMedium,
+                        ),
+                        Text(
+                          l10n.groupCurrencyNote,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: context.colors.textHelper,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: QesmaSpacing.lg),
+            MemberNamesInput(
+              names: _members,
+              enabled: !state.submitting,
+              onChanged: (names) => setState(() => _members = names),
+            ),
+            if (message != null) ...[
+              const SizedBox(height: QesmaSpacing.lg),
+              ErrorBanner(message),
+            ],
+            const SizedBox(height: QesmaSpacing.lg),
+            ListenableBuilder(
+              listenable: _name,
+              builder: (context, _) => AppButton(
+                label: l10n.groupCreateButton,
+                icon: Icons.add_circle_outline,
+                loading: state.submitting,
+                onPressed: _canSubmit(state) ? _submit : null,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  bool _canSubmit(CreateGroupState state) => !state.submitting && _name.text.trim().isNotEmpty;
+  bool _canSubmit(CreateGroupState state) =>
+      !state.submitting && _name.text.trim().isNotEmpty;
 }

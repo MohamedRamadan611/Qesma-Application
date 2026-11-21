@@ -77,6 +77,7 @@ ExpenseGraph itemizedExpense(String id) {
       taxBase: 'SUBTOTAL_PLUS_SERVICE',
       adjustmentMinor: 0,
       discountMinor: 0,
+      deliveryMinor: 0,
       createdByUserId: profileId,
       createdAt: t0,
       updatedAt: t0,
@@ -85,9 +86,9 @@ ExpenseGraph itemizedExpense(String id) {
     ),
     payers: [PayerRow(expenseId: id, memberId: youId, amountMinor: 12768)],
     splits: [
-      SplitRow(expenseId: id, memberId: youId, owedMinor: 3830, itemsMinor: 3000, serviceMinor: 360, taxMinor: 470, adjustmentMinor: 0, discountMinor: 0),
-      SplitRow(expenseId: id, memberId: aliId, owedMinor: 3830, itemsMinor: 3000, serviceMinor: 360, taxMinor: 470, adjustmentMinor: 0, discountMinor: 0),
-      SplitRow(expenseId: id, memberId: saraId, owedMinor: 5108, itemsMinor: 4000, serviceMinor: 480, taxMinor: 628, adjustmentMinor: 0, discountMinor: 0),
+      SplitRow(expenseId: id, memberId: youId, owedMinor: 3830, itemsMinor: 3000, serviceMinor: 360, taxMinor: 470, adjustmentMinor: 0, discountMinor: 0, deliveryMinor: 0),
+      SplitRow(expenseId: id, memberId: aliId, owedMinor: 3830, itemsMinor: 3000, serviceMinor: 360, taxMinor: 470, adjustmentMinor: 0, discountMinor: 0, deliveryMinor: 0),
+      SplitRow(expenseId: id, memberId: saraId, owedMinor: 5108, itemsMinor: 4000, serviceMinor: 480, taxMinor: 628, adjustmentMinor: 0, discountMinor: 0, deliveryMinor: 0),
     ],
     items: [
       ItemRow(id: item1, expenseId: id, name: 'Pizza', amountMinor: 6000, sortOrder: 0, quantity: 2, unitAmountMinor: 3000),

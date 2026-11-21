@@ -117,7 +117,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.widget<SwitchListTile>(poolSwitch).value, isTrue);
       expect(find.textContaining(l10n.expensePaidFromPool), findsWidgets);
-      final editPayers = find.widgetWithText(AppButton, l10n.expenseFormEditPayers);
+      final editPayers = find.widgetWithText(AppButton, l10n.expenseFormChange);
       expect(tester.widget<AppButton>(editPayers).onPressed, isNull);
 
       // A group without a treasurer has no switch.

@@ -18,8 +18,10 @@ abstract final class BackupValidator {
   /// saved fuel prices, a device setting the backup does not carry (A168), and 7 the receipt-scan consent and counters,
   /// device state the backup does not carry either (SA12). 8 (SA15) added itemized v2: item quantity / unit price,
   /// the bill discount and amount-form service/tax; all optional on import (quantity 1, unit = amount, discount 0 on
-  /// itemized rows, no amount forms), and checked against the V21 rules before anything is written.
-  static const int currentSchemaVersion = 8;
+  /// itemized rows, no amount forms), and checked against the V21 rules before anything is written. 9 (A180) added
+  /// the itemized delivery (expenses.delivery_minor and the per-member part): optional on import, 0 on itemized
+  /// rows, and checked against the V22 rules (it is part of the total and of each member's owed amount).
+  static const int currentSchemaVersion = 9;
 
   static BackupData parse(Uint8List bytes, {int maxBytes = maxBackupBytes}) {
     if (bytes.isEmpty) throw const BackupException(BackupError.unreadable);
@@ -164,6 +166,9 @@ abstract final class BackupValidator {
         discountAmountMinor: r.optInteger('discount_amount_minor', min: 1, max: Limits.maxAmountMinor),
         discountMinor: r.optInteger('discount_minor', min: 0, max: Limits.maxAmountMinor) ??
             (splitType == 'ITEMIZED' ? 0 : null),
+        // Schema 9 (A180): before it no delivery existed, so an ITEMIZED row's delivery is 0.
+        deliveryMinor: r.optInteger('delivery_minor', min: 0, max: Limits.maxAmountMinor) ??
+            (splitType == 'ITEMIZED' ? 0 : null),
         serviceAmountMinor: r.optInteger('service_amount_minor', min: 1, max: Limits.maxAmountMinor),
         taxAmountMinor: r.optInteger('tax_amount_minor', min: 1, max: Limits.maxAmountMinor),
         totalMinor: r.amount('total_minor'),
@@ -204,6 +209,9 @@ abstract final class BackupValidator {
       // Schema 8 (SA15): an itemized breakdown row without it had no discount.
       discountMinor:
           r.optInteger('discount_minor', min: 0, max: Limits.maxAmountMinor) ?? (itemsMinor == null ? null : 0),
+      // Schema 9 (A180): an itemized breakdown row without it had no delivery.
+      deliveryMinor:
+          r.optInteger('delivery_minor', min: 0, max: Limits.maxAmountMinor) ?? (itemsMinor == null ? null : 0),
     );
   }
 
@@ -347,11 +355,12 @@ abstract final class BackupValidator {
       if (!splitKeys.add('${s.expenseId}/${s.memberId}')) throw BackupException(BackupError.invalid, at);
       splitSum[s.expenseId] = (splitSum[s.expenseId] ?? 0) + s.owedMinor;
       // The breakdown is all-or-nothing and explains owed exactly; the discount part never exceeds the items (V21).
-      final parts = [s.itemsMinor, s.discountMinor, s.serviceMinor, s.taxMinor, s.adjustmentMinor];
+      final parts = [s.itemsMinor, s.discountMinor, s.serviceMinor, s.taxMinor, s.adjustmentMinor, s.deliveryMinor];
       if (parts.any((p) => p != null)) {
         if (parts.any((p) => p == null) ||
             s.discountMinor! > s.itemsMinor! ||
-            s.owedMinor != s.itemsMinor! - s.discountMinor! + s.serviceMinor! + s.taxMinor! + s.adjustmentMinor!) {
+            s.owedMinor !=
+                s.itemsMinor! - s.discountMinor! + s.serviceMinor! + s.taxMinor! + s.deliveryMinor! + s.adjustmentMinor!) {
           throw BackupException(BackupError.inconsistent, '$at.owed_minor');
         }
       }
@@ -390,9 +399,10 @@ abstract final class BackupValidator {
       }
       if (e.splitType == 'ITEMIZED') {
         final subtotal = e.subtotalMinor, discount = e.discountMinor, service = e.serviceMinor, tax = e.taxMinor;
-        final adjustment = e.adjustmentMinor;
+        final adjustment = e.adjustmentMinor, delivery = e.deliveryMinor;
         if (subtotal == null || discount == null || service == null || tax == null || adjustment == null ||
-            e.totalMinor != subtotal - discount + service + tax + adjustment) {
+            delivery == null ||
+            e.totalMinor != subtotal - discount + service + tax + delivery + adjustment) {
           throw BackupException(BackupError.inconsistent, '$at.total_minor');
         }
         _requireCharges(e, subtotal, discount, service, tax, at);
@@ -407,6 +417,7 @@ abstract final class BackupValidator {
           e.taxBps != null ||
           e.taxMinor != null ||
           e.taxBase != null ||
+          e.deliveryMinor != null ||
           e.adjustmentMinor != null) {
         throw BackupException(BackupError.invalid, at);
       }

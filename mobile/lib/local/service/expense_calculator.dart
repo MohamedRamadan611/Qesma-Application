@@ -7,7 +7,7 @@ import 'expense_validator.dart';
 /// One member's share as the API shows it; the five breakdown fields are set for ITEMIZED only.
 final class ShareComp {
   const ShareComp(this.memberId, this.owedMinor,
-      {this.itemsMinor, this.discountMinor, this.serviceMinor, this.taxMinor, this.adjustmentMinor});
+      {this.itemsMinor, this.discountMinor, this.serviceMinor, this.taxMinor, this.adjustmentMinor, this.deliveryMinor});
   final String memberId;
   final int owedMinor;
   final int? itemsMinor;
@@ -15,6 +15,7 @@ final class ShareComp {
   final int? serviceMinor;
   final int? taxMinor;
   final int? adjustmentMinor;
+  final int? deliveryMinor;
 }
 
 /// Everything the engine decided about a request (Java `ExpenseCalculator.Computation`). Itemized fields are null
@@ -38,6 +39,7 @@ final class Computation {
     this.taxBase,
     this.taxMinor = 0,
     this.adjustmentMinor = 0,
+    this.deliveryMinor = 0,
   });
 
   final String splitType;
@@ -54,6 +56,7 @@ final class Computation {
   final String? taxBase;
   final int taxMinor;
   final int adjustmentMinor;
+  final int deliveryMinor;
   final List<ShareComp> shares;
   final List<Payer> payers;
 
@@ -163,6 +166,7 @@ abstract final class ExpenseCalculator {
       service: _spec(request.serviceBps, request.serviceAmountMinor),
       tax: tax,
       adjustmentMinor: request.adjustmentMinor,
+      deliveryMinor: request.deliveryMinor,
     ));
     if (request.totalMinor != 0 && request.totalMinor != r.totalMinor) {
       throw const LocalApiException(422, 'SPLIT_TOTAL_MISMATCH', 'totalMinor does not match the computed bill total');
@@ -182,6 +186,7 @@ abstract final class ExpenseCalculator {
       taxBase: request.taxBase,
       taxMinor: r.taxMinor,
       adjustmentMinor: r.adjustmentMinor,
+      deliveryMinor: r.deliveryMinor,
       shares: [
         for (final m in r.members)
           ShareComp(
@@ -192,6 +197,7 @@ abstract final class ExpenseCalculator {
             serviceMinor: m.serviceMinor,
             taxMinor: m.taxMinor,
             adjustmentMinor: m.adjustmentMinor,
+            deliveryMinor: m.deliveryMinor,
           ),
       ],
       payers: payers,

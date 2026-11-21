@@ -45,6 +45,8 @@ The standalone release (`docs/STANDALONE_SPEC.md`) adds more folders next to `en
 
 Vectors V1–V8 come from `docs/PROJECT_SPEC.md` section 10. They are run by `FixtureTest` in the backend (Java, the reference) and by `test/fixture_test.dart` in `mobile/packages/qesma_engine` (the Dart port).
 
+Vectors V17–V20 (A180, delivery; `docs/STANDALONE_SPEC.md` 18.6) add `deliveryMinor` on the itemized expense (an amount, absent = none) and two `expected.expenses[i]` keys: `deliveryMinor` (the total) and `deliveries { memberId: n }` (each listed member's part). Delivery is outside discount, service and tax and goes equally to the members who have an item.
+
 Vectors V9–V16 come from `docs/STANDALONE_SPEC.md` 18.6 (BSA2). Both runners run them: `FixtureTest` (Java) and, since SA15, `test/fixture_test.dart` (Dart engine) and `test/local/backend/engine_vectors_test.dart` (the local backend over HTTP). An item and each charge are mapped through the engine shape rules (`Item.of`, `ChargeSpec.of` in both languages).
 
 ## Parity rule (ADR-011)

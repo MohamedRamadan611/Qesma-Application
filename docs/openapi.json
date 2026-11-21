@@ -103,6 +103,11 @@
             "format" : "int64",
             "type" : "integer"
           },
+          "deliveryMinor" : {
+            "description" : "Integer minor units (piasters: 1 EGP = 100). Never a decimal.",
+            "format" : "int64",
+            "type" : "integer"
+          },
           "discount" : {
             "$ref" : "#/components/schemas/DiscountCharge"
           },
@@ -118,7 +123,7 @@
             "$ref" : "#/components/schemas/TaxCharge"
           }
         },
-        "required" : [ "adjustmentMinor", "subtotalMinor" ],
+        "required" : [ "adjustmentMinor", "deliveryMinor", "subtotalMinor" ],
         "type" : "object"
       },
       "CreateGroupRequest" : {
@@ -269,6 +274,11 @@
           "category" : {
             "type" : "string"
           },
+          "deliveryMinor" : {
+            "description" : "Integer minor units (piasters: 1 EGP = 100). Never a decimal.",
+            "format" : "int64",
+            "type" : "integer"
+          },
           "discount" : {
             "$ref" : "#/components/schemas/DiscountInput"
           },
@@ -328,6 +338,12 @@
       "ExpensePreview" : {
         "properties" : {
           "adjustmentMinor" : {
+            "description" : "Integer minor units (piasters: 1 EGP = 100). Never a decimal.",
+            "format" : "int64",
+            "nullable" : true,
+            "type" : "integer"
+          },
+          "deliveryMinor" : {
             "description" : "Integer minor units (piasters: 1 EGP = 100). Never a decimal.",
             "format" : "int64",
             "nullable" : true,
@@ -1491,6 +1507,12 @@
       "ShareView" : {
         "properties" : {
           "adjustmentMinor" : {
+            "description" : "Integer minor units (piasters: 1 EGP = 100). Never a decimal.",
+            "format" : "int64",
+            "nullable" : true,
+            "type" : "integer"
+          },
+          "deliveryMinor" : {
             "description" : "Integer minor units (piasters: 1 EGP = 100). Never a decimal.",
             "format" : "int64",
             "nullable" : true,

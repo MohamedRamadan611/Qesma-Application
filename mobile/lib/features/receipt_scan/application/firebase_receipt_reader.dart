@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:firebase_ai/firebase_ai.dart';
 
+import '../../expenses/data/expense_category.dart';
 import 'receipt_reader.dart';
 
 /// The Gemini model used for receipts (Flash-Lite, stable id from the Gemini model list read on 2026-11-19).
@@ -14,23 +15,44 @@ const Duration kReceiptTimeout = Duration(seconds: 25);
 
 const String _prompt = 'You read a restaurant or shop receipt photo (Arabic, English or both). Return only the JSON object '
     'of the schema. items: one entry per purchased line, name as printed, amount = that line total as printed. '
-    'subtotal, serviceAmount, taxAmount, total: as printed, or an empty string if not printed. servicePercent and '
-    'taxPercent: the printed percentage number, or an empty string. currency: as printed or an empty string. '
+    'quantity = the count printed for that line (a column such as الكمية, العدد, Qty, or a prefix like "2 x" or "×2"), '
+    'or an empty string if none is printed. unitPrice = the price of ONE unit as printed on that line (a column such as '
+    'سعر الوحدة, السعر, Price, Unit), or an empty string if it is not printed; never work it out from the line total. '
+    'subtotal, serviceAmount, taxAmount, deliveryAmount, total: as printed (deliveryAmount is a delivery fee line such as توصيل, دليفري, Delivery), or an empty string if not printed. servicePercent and '
+    'taxPercent: the printed percentage number, or an empty string. discountAmount and discountPercent: a discount line '
+    '(خصم, تخفيض, Discount, Offer) as printed, the amount without any minus sign or brackets and the percentage number, '
+    'each or an empty string if not printed. merchantName: the shop or restaurant name printed at the top, or an empty '
+    'string. category: the single best match for what was bought from the allowed values, or null if unsure. '
+    'currency: as printed or an empty string. '
     'Copy numbers exactly as printed (Arabic-Indic digits are fine). Never calculate, correct or guess a number.';
 
 Schema _schema() => Schema.object(
       properties: {
         'items': Schema.array(
-          items: Schema.object(properties: {'name': Schema.string(), 'amount': Schema.string()}),
+          items: Schema.object(
+            properties: {
+              'name': Schema.string(),
+              'amount': Schema.string(),
+              'quantity': Schema.string(),
+              'unitPrice': Schema.string(),
+            },
+            optionalProperties: ['quantity', 'unitPrice'],
+          ),
         ),
         'subtotal': Schema.string(),
         'servicePercent': Schema.string(),
         'serviceAmount': Schema.string(),
         'taxPercent': Schema.string(),
         'taxAmount': Schema.string(),
+        'deliveryAmount': Schema.string(),
+        'discountAmount': Schema.string(),
+        'discountPercent': Schema.string(),
+        'merchantName': Schema.string(),
+        'category': Schema.enumString(enumValues: [for (final c in ExpenseCategory.values) c.wire], nullable: true),
         'total': Schema.string(),
         'currency': Schema.string(),
       },
+      optionalProperties: ['discountAmount', 'discountPercent', 'merchantName', 'category'],
     );
 
 /// Firebase AI Logic (Gemini Developer API, free tier) behind App Check. No API key in the app: the Firebase project

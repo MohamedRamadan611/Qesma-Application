@@ -49,6 +49,9 @@ public class ExpenseSplit implements Persistable<ExpenseSplit.Key> {
     @Column(name = "discount_minor", updatable = false)
     private Long discountMinor;
 
+    @Column(name = "delivery_minor", updatable = false)
+    private Long deliveryMinor;
+
     @Transient
     private boolean isNew = true;
 
@@ -61,10 +64,11 @@ public class ExpenseSplit implements Persistable<ExpenseSplit.Key> {
         this.owedMinor = owedMinor;
     }
 
-    /** ITEMIZED: owed = items - discount + service + tax + adjustment (BSA2). */
+    /** ITEMIZED: owed = items - discount + service + tax + delivery + adjustment (BSA2, A180). */
     public ExpenseSplit(UUID expenseId, UUID memberId, long owedMinor, long itemsMinor, long discountMinor,
-                        long serviceMinor, long taxMinor, long adjustmentMinor) {
+                        long serviceMinor, long taxMinor, long adjustmentMinor, long deliveryMinor) {
         this(expenseId, memberId, owedMinor);
+        this.deliveryMinor = deliveryMinor;
         this.itemsMinor = itemsMinor;
         this.discountMinor = discountMinor;
         this.serviceMinor = serviceMinor;
@@ -118,6 +122,10 @@ public class ExpenseSplit implements Persistable<ExpenseSplit.Key> {
 
     public Long getAdjustmentMinor() {
         return adjustmentMinor;
+    }
+
+    public Long getDeliveryMinor() {
+        return deliveryMinor;
     }
 
     /** Composite primary key (expense_id, member_id). */

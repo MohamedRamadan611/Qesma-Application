@@ -43,7 +43,7 @@ void main() {
   testWidgets('add expense: Exact tab with the server\'s equal split (P5-01)', (tester) async {
     final server = FakeExpensesServer();
     await openForm(tester, server);
-    await tapText(tester, 'مبالغ محددة');
+    await chooseSplit(tester, 'مبالغ محددة');
     await settleForm(tester);
     await expectLater(find.byType(MaterialApp), matchesGoldenFile('expense_form_exact_ar.png'));
   });
@@ -51,7 +51,7 @@ void main() {
   testWidgets('paid by: two payers whose amounts match the bill (P6-01)', (tester) async {
     final server = FakeExpensesServer();
     await openForm(tester, server);
-    await tapText(tester, 'تعديل الدافعين');
+    await tapText(tester, 'تغيير');
     await settleForm(tester);
     await tester.tap(find.byType(Checkbox).at(1));
     await settleForm(tester);

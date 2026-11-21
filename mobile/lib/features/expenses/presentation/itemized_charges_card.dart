@@ -11,14 +11,29 @@ import '../application/expense_form_controller.dart';
 import '../application/expense_form_state.dart';
 import 'status_banner.dart';
 
-/// Discount, service and tax rows (each a switch, a `% | EGP` toggle, a value box and the preview's amount), the tax
-/// base when both service and tax are on, and the adjustment with the automatic-adjustment note (SA16, A171-A174).
+/// Discount, delivery, service and tax rows (each a switch, a `% | EGP` toggle (not for delivery, an amount only), a
+/// value box and the preview's amount), the tax base when both service and tax are on, and the adjustment with the
+/// automatic-adjustment note (SA16, A171-A174, A180).
 class ChargesCard extends ConsumerWidget {
-  const ChargesCard({super.key, required this.formKey, required this.form, required this.current});
+  const ChargesCard({super.key, required this.formKey, required this.form, required this.current, this.discountTooLarge = false});
 
   final ExpenseFormKey formKey;
   final ExpenseFormState form;
   final ExpensePreview? current;
+
+  /// The server refused a bill whose inputs are all readable while a discount is on: the discount is the usual cause
+  /// (it must stay below the items total). Said without numbers, because the client never adds up the items.
+  final bool discountTooLarge;
+
+  /// The server's delivery part per person as a hint: one amount, or "from - to" when the parts differ by a piaster.
+  String? _deliveryHint(AppLocalizations l10n) {
+    final parts = [for (final m in current?.members ?? const <ShareView>[]) if ((m.deliveryMinor ?? 0) > 0) m.deliveryMinor!];
+    if (parts.isEmpty) return null;
+    parts.sort();
+    return parts.first == parts.last
+        ? l10n.expenseItzDeliveryHint(moneyDisplay(l10n, parts.first))
+        : l10n.expenseItzDeliveryHintRange(moneyDisplay(l10n, parts.first), moneyDisplay(l10n, parts.last));
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -41,6 +56,7 @@ class ChargesCard extends ConsumerWidget {
             valid: d.discountValid,
             errorText: d.discountMode == ChargeMode.percent ? l10n.expenseItzDiscountPercentInvalid : l10n.expenseItzDiscountNeedsAmount,
             amountMinor: current?.discountMinor,
+            serverError: discountTooLarge && d.discountOn && d.discountValid ? l10n.expenseItzDiscountTooLarge : null,
             negative: true,
             onToggle: controller.setDiscountOn,
             onMode: (mode) => controller.setChargeMode(ChargeKind.discount, mode),
@@ -59,6 +75,22 @@ class ChargesCard extends ConsumerWidget {
             onToggle: controller.setServiceOn,
             onMode: (mode) => controller.setChargeMode(ChargeKind.service, mode),
             onText: (text) => controller.setChargeText(ChargeKind.service, text),
+          ),
+          const Divider(height: QesmaSpacing.lg),
+          ChargeRow(
+            title: l10n.expenseItzDeliveryLabel,
+            icon: Icons.delivery_dining_outlined,
+            on: d.deliveryOn,
+            mode: ChargeMode.amount,
+            amountOnly: true,
+            text: d.deliveryAmountText,
+            valid: d.deliveryValid,
+            errorText: l10n.expenseItzChargeAmountInvalid,
+            amountMinor: current?.deliveryMinor,
+            hint: _deliveryHint(l10n),
+            onToggle: controller.setDeliveryOn,
+            onMode: (_) {},
+            onText: controller.setDeliveryAmount,
           ),
           const Divider(height: QesmaSpacing.lg),
           ChargeRow(
@@ -120,6 +152,9 @@ class ChargeRow extends StatelessWidget {
     required this.onMode,
     required this.onText,
     this.negative = false,
+    this.amountOnly = false,
+    this.hint,
+    this.serverError,
   });
 
   final String title;
@@ -135,6 +170,15 @@ class ChargeRow extends StatelessWidget {
 
   /// A discount is shown with a minus sign in front of the server's (positive) amount.
   final bool negative;
+
+  /// The delivery row: no `% | EGP` toggle, the box is always an amount (A180).
+  final bool amountOnly;
+
+  /// A helper line under the value box (the delivery's per-person part, from the preview).
+  final String? hint;
+
+  /// An error the server's answer implies for this row (shown with an icon and words, like the typed-value error).
+  final String? serverError;
   final ValueChanged<bool> onToggle;
   final ValueChanged<ChargeMode> onMode;
   final ValueChanged<String> onText;
@@ -152,7 +196,7 @@ class ChargeRow extends StatelessWidget {
       hasError: on && !valid,
       width: stacked ? 200 : 120,
     );
-    final toggle = _ModeToggle(title: title, mode: mode, onMode: onMode);
+    final toggle = amountOnly ? null : _ModeToggle(title: title, mode: mode, onMode: onMode);
     final amount = on && valid && amountMinor != null
         ? (negative ? Text('${Money.minus}${moneyDisplay(l10n, amountMinor!)}', style: theme.textTheme.titleSmall) : MoneyText(amountMinor!, size: MoneySize.small, signed: true))
         : null;
@@ -180,8 +224,7 @@ class ChargeRow extends StatelessWidget {
         if (on) ...[
           const SizedBox(height: QesmaSpacing.sm),
           if (stacked) ...[
-            Align(alignment: AlignmentDirectional.centerStart, child: toggle),
-            const SizedBox(height: QesmaSpacing.sm),
+            if (toggle != null) ...[Align(alignment: AlignmentDirectional.centerStart, child: toggle), const SizedBox(height: QesmaSpacing.sm)],
             box,
             if (amount != null) Padding(padding: const EdgeInsets.only(top: QesmaSpacing.sm), child: Align(alignment: AlignmentDirectional.centerEnd, child: amount)),
           ] else
@@ -192,9 +235,28 @@ class ChargeRow extends StatelessWidget {
               spacing: QesmaSpacing.sm,
               runSpacing: QesmaSpacing.sm,
               children: [
-                Row(mainAxisSize: MainAxisSize.min, children: [toggle, const SizedBox(width: QesmaSpacing.sm), box]),
+                Row(mainAxisSize: MainAxisSize.min, children: [?toggle, if (toggle != null) const SizedBox(width: QesmaSpacing.sm), box]),
                 ?amount,
               ],
+            ),
+          if (hint != null && valid)
+            Padding(
+              padding: const EdgeInsets.only(top: QesmaSpacing.xs),
+              child: Text(hint!, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
+            ),
+          if (serverError != null && valid)
+            Padding(
+              padding: const EdgeInsets.only(top: QesmaSpacing.xs),
+              child: Semantics(
+                liveRegion: true,
+                child: Row(
+                  children: [
+                    ExcludeSemantics(child: Icon(Icons.error_outline, color: context.colors.error, size: 18)),
+                    const SizedBox(width: QesmaSpacing.xs),
+                    Expanded(child: Text(serverError!, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.error))),
+                  ],
+                ),
+              ),
             ),
           if (!valid)
             Padding(

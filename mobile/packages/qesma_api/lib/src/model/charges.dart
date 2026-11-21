@@ -15,6 +15,7 @@ part 'charges.g.dart';
 ///
 /// Properties:
 /// * [adjustmentMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
+/// * [deliveryMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
 /// * [discount] 
 /// * [service] 
 /// * [subtotalMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
@@ -24,6 +25,10 @@ abstract class Charges implements Built<Charges, ChargesBuilder> {
   /// Integer minor units (piasters: 1 EGP = 100). Never a decimal.
   @BuiltValueField(wireName: r'adjustmentMinor')
   int get adjustmentMinor;
+
+  /// Integer minor units (piasters: 1 EGP = 100). Never a decimal.
+  @BuiltValueField(wireName: r'deliveryMinor')
+  int get deliveryMinor;
 
   @BuiltValueField(wireName: r'discount')
   DiscountCharge? get discount;
@@ -64,6 +69,11 @@ class _$ChargesSerializer implements PrimitiveSerializer<Charges> {
     yield r'adjustmentMinor';
     yield serializers.serialize(
       object.adjustmentMinor,
+      specifiedType: const FullType(int),
+    );
+    yield r'deliveryMinor';
+    yield serializers.serialize(
+      object.deliveryMinor,
       specifiedType: const FullType(int),
     );
     if (object.discount != null) {
@@ -121,6 +131,13 @@ class _$ChargesSerializer implements PrimitiveSerializer<Charges> {
             specifiedType: const FullType(int),
           ) as int;
           result.adjustmentMinor = valueDes;
+          break;
+        case r'deliveryMinor':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(int),
+          ) as int;
+          result.deliveryMinor = valueDes;
           break;
         case r'discount':
           final valueDes = serializers.deserialize(

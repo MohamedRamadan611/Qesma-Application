@@ -47,6 +47,7 @@ final class ValidExpense {
     this.discountBps,
     this.discountAmountMinor,
     this.adjustmentMinor = 0,
+    this.deliveryMinor = 0,
     this.paidFromPool = false,
   });
 
@@ -70,6 +71,9 @@ final class ValidExpense {
   final int? taxBps;
   final String? taxBase;
   final int adjustmentMinor;
+
+  /// A180: the delivery amount, 0 when absent.
+  final int deliveryMinor;
 
   /// BSA1: a pool expense; checked against the group by [ExpenseValidator.requirePoolRules].
   final bool paidFromPool;
@@ -255,6 +259,10 @@ abstract final class ExpenseValidator {
         'adjustmentMinor must be between -${Limits.maxAmountMinor} and ${Limits.maxAmountMinor}',
       );
     }
+    final delivery = c.deliveryMinor ?? 0;
+    if (delivery < 0 || delivery > Limits.maxAmountMinor) {
+      throw LocalApiException.validation('deliveryMinor must be between 0 and ${Limits.maxAmountMinor}');
+    }
     return ValidExpense(
       title: title,
       expenseDate: date,
@@ -272,6 +280,7 @@ abstract final class ExpenseValidator {
       discountBps: discount?.bps,
       discountAmountMinor: discount?.amountMinor,
       adjustmentMinor: adjustment,
+      deliveryMinor: delivery,
     );
   }
 
@@ -319,9 +328,14 @@ abstract final class ExpenseValidator {
   }
 
   static void _rejectItemizedFields(ExpenseIn c, String type) {
-    if (c.items != null || c.service != null || c.tax != null || c.adjustmentMinor != null || c.discount != null) {
+    if (c.items != null ||
+        c.service != null ||
+        c.tax != null ||
+        c.adjustmentMinor != null ||
+        c.discount != null ||
+        c.deliveryMinor != null) {
       throw LocalApiException.validation(
-        'items, discount, service, tax and adjustmentMinor are only allowed for ITEMIZED expenses (this is $type)',
+        'items, discount, service, tax, deliveryMinor and adjustmentMinor are only allowed for ITEMIZED expenses (this is $type)',
       );
     }
   }

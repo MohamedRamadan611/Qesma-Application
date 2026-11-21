@@ -216,6 +216,30 @@ void main() {
       await withSplit((s) => s.copyWith(discountMinor: const Value(100), owedMinor: 3730));
     });
 
+    test('delivery (schema 9, Java V22) is part of the total and of each breakdown, and mandatory on itemized rows', () async {
+      // Baseline total 12768 + delivery 500 = 13268; the one member row carries its own part.
+      await withExpense((e) => e.copyWith(deliveryMinor: const Value(500), totalMinor: 13268));
+      await expectLater(withExpense((e) => e.copyWith(deliveryMinor: const Value(500))), rejected); // total not raised
+      await expectLater(withExpense((e) => e.copyWith(deliveryMinor: const Value(null))), rejected);
+      await expectLater(withExpense((e) => e.copyWith(deliveryMinor: const Value(-1), totalMinor: 12767)), rejected);
+      await expectLater(
+          withExpense((e) => e.copyWith(deliveryMinor: const Value(1000000000001), totalMinor: 1000000012769)), rejected);
+
+      final g = itemizedExpense(tid(102));
+      Future<void> withSplit(SplitRow Function(SplitRow s) change) =>
+          insertExpense(ExpenseGraph(expense: g.expense, payers: g.payers, splits: [change(g.splits.first)]));
+      await expectLater(withSplit((s) => s.copyWith(deliveryMinor: const Value(null))), rejected);
+      await expectLater(withSplit((s) => s.copyWith(deliveryMinor: const Value(100))), rejected); // owed not raised
+      await withSplit((s) => s.copyWith(deliveryMinor: const Value(100), owedMinor: 3930));
+    });
+
+    test('delivery is refused on an EQUAL expense', () async {
+      final g = equalExpense(tid(103));
+      await expectLater(
+          insertExpense(ExpenseGraph(expense: g.expense.copyWith(deliveryMinor: const Value(0)), payers: g.payers, splits: g.splits)),
+          rejected);
+    });
+
     test('the v2 columns are refused on an EQUAL expense', () async {
       final g = equalExpense(tid(100));
       for (final e in [

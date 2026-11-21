@@ -16,10 +16,10 @@ List<File> _fixtureFiles() =>
 String _name(File f) => f.uri.pathSegments.last;
 
 void main() {
-  test('all spec vectors are present (V1-V8 spec 10, V9-V16 STANDALONE_SPEC 18.6)', () {
+  test('all spec vectors are present (V1-V8 spec 10, V9-V16 STANDALONE_SPEC 18.6, V17-V20 delivery A180)', () {
     final names = _fixtureFiles().map(_name).toList();
-    expect(names.length, greaterThanOrEqualTo(16));
-    for (var v = 1; v <= 16; v++) {
+    expect(names.length, greaterThanOrEqualTo(20));
+    for (var v = 1; v <= 20; v++) {
       expect(names.any((n) => n.startsWith('V$v-')), isTrue, reason: 'V$v missing');
     }
   });
@@ -96,6 +96,11 @@ void _run(Map<String, dynamic> fixture) {
         }
         _field(exp, 'serviceMinor', itemized.serviceMinor);
         _field(exp, 'taxMinor', itemized.taxMinor);
+        _field(exp, 'deliveryMinor', itemized.deliveryMinor);
+        if (exp.containsKey('deliveries')) {
+          expect({for (final b in itemized.members) b.memberId: b.deliveryMinor}, _intMap(exp['deliveries']),
+              reason: 'expense $i deliveries');
+        }
       }
     }
   }
@@ -146,7 +151,8 @@ ItemizedInput _itemizedInput(Map<String, dynamic> e, List<MemberRef> members) {
       discount: e['discount'] == null ? null : charge(e['discount']),
       service: service,
       tax: tax,
-      adjustmentMinor: (e['adjustmentMinor'] as int?) ?? 0);
+      adjustmentMinor: (e['adjustmentMinor'] as int?) ?? 0,
+      deliveryMinor: (e['deliveryMinor'] as int?) ?? 0);
 }
 
 List<Map<String, dynamic>> _list(Object? json) => [for (final o in json! as List<dynamic>) o as Map<String, dynamic>];

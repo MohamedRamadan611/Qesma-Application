@@ -149,6 +149,7 @@ ExpenseCommand buildPayersCheck({
 /// - `service {bps}` ONLY when the service switch is on; `tax {bps, base}` ONLY when the tax switch is
 ///   on (base always explicit). Off means the field is absent, never 0 bps; a 0% charge that is
 ///   switched on is sent as `bps: 0`.
+/// - `deliveryMinor` only when the delivery is on and readable (A180).
 /// - `adjustmentMinor` only when it is not zero. `totalMinor` is never sent: the server computes it.
 /// - Payers: single = the payer with the server's total (a copy); several = the typed amounts.
 ///
@@ -232,6 +233,8 @@ ExpenseCommand? buildItemizedCommand(
         t.base_ = draft.taxBase.wire;
       }).toBuilder();
     }
+    final delivery = draft.deliveryMinor;
+    if (delivery != null) b.deliveryMinor = delivery; // A180: amount only, sent only when on and readable
     final adjustment = draft.adjustmentMinor ?? 0;
     if (adjustment != 0) b.adjustmentMinor = adjustment;
     if (payers.isNotEmpty) {

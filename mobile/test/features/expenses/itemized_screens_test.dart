@@ -9,7 +9,8 @@ import 'package:qesma/core/router/app_router.dart';
 import 'package:qesma/core/theme/tokens.dart';
 import 'package:qesma/core/widgets/widgets.dart';
 import 'package:qesma/features/expenses/presentation/expense_blocks.dart' show ShareRows;
-import 'package:qesma/features/expenses/presentation/itemized_items_card.dart' show ItemCard;
+import 'package:qesma/features/expenses/presentation/assignee_summary_chip.dart' show AssigneeSummaryChip;
+import 'package:qesma/features/expenses/presentation/itemized_items_card.dart' show ItemCard, ItemSummaryRow;
 
 import '../../support/expenses_rig.dart';
 import '../../support/expenses_ui.dart';
@@ -76,13 +77,16 @@ void main() {
       await openBill(tester, 'v5');
       expect(find.text('أصناف الفاتورة'), findsOneWidget);
       expect(fieldWithText('Pizza'), findsOneWidget);
-      expect(fieldWithText('200'), findsOneWidget);
-      expect(fieldWithText('150'), findsOneWidget);
-      expect(fieldWithText('90'), findsOneWidget);
+      expect(fieldWithText('200'), findsOneWidget, reason: 'the first item is open');
+      // The others are one-line rows (the redesign opens one item at a time): name and who shares it.
+      expect(find.byType(ItemCard), findsOneWidget);
+      expect(find.byType(ItemSummaryRow), findsNWidgets(2));
+      expect(find.text('Pasta'), findsOneWidget);
+      expect(find.text('Drinks'), findsOneWidget);
 
       // The switches show what was saved, as the percent that was typed.
       expect(tester.widget<Switch>(find.byType(Switch).at(1)).value, isTrue);
-      expect(tester.widget<Switch>(find.byType(Switch).at(2)).value, isTrue);
+      expect(tester.widget<Switch>(find.byType(Switch).at(3)).value, isTrue);
       expect(fieldWithText('12'), findsOneWidget);
       expect(fieldWithText('14'), findsOneWidget);
       final withService = find.widgetWithText(AppChoiceChip, 'المجموع + الخدمة');
@@ -108,7 +112,7 @@ void main() {
     testWidgets('V6: service only (492.80); the tax switch is off and has no rate or base', (tester) async {
       await openBill(tester, 'v6');
       expect(tester.widget<Switch>(find.byType(Switch).at(1)).value, isTrue);
-      expect(tester.widget<Switch>(find.byType(Switch).at(2)).value, isFalse);
+      expect(tester.widget<Switch>(find.byType(Switch).at(3)).value, isFalse);
       expect(find.text('المجموع فقط'), findsNothing, reason: 'the tax base chips appear only with tax on');
       expect(find.text(m(49280)), findsWidgets);
       expect(find.text(m(5280, signed: true)), findsOneWidget);
@@ -121,7 +125,7 @@ void main() {
     testWidgets('V7: tax only on the subtotal (501.60)', (tester) async {
       await openBill(tester, 'v7');
       expect(tester.widget<Switch>(find.byType(Switch).at(1)).value, isFalse);
-      expect(tester.widget<Switch>(find.byType(Switch).at(2)).value, isTrue);
+      expect(tester.widget<Switch>(find.byType(Switch).at(3)).value, isTrue);
       expect(find.widgetWithText(AppChoiceChip, 'المجموع فقط'), findsNothing, reason: 'the tax base chips appear only when both service and tax are on');
       expect(find.text(m(50160)), findsWidgets);
       expect(find.text(m(6160, signed: true)), findsOneWidget);
@@ -131,7 +135,7 @@ void main() {
     testWidgets('V8: neither (440.00): both switches off, items only', (tester) async {
       await openBill(tester, 'v8');
       expect(tester.widget<Switch>(find.byType(Switch).at(1)).value, isFalse);
-      expect(tester.widget<Switch>(find.byType(Switch).at(2)).value, isFalse);
+      expect(tester.widget<Switch>(find.byType(Switch).at(3)).value, isFalse);
       expect(find.text(m(44000)), findsWidgets);
       for (final owed in [13000, 18000]) {
         expect(find.text(m(owed)), findsWidgets);
@@ -168,47 +172,57 @@ void main() {
   group('items', () {
     testWidgets('adding and removing items; each item has its own price and who shared it', (tester) async {
       await openNew(tester);
-      await tapText(tester, 'فاتورة مفصلة');
+      await chooseSplit(tester, 'فاتورة مفصلة');
       await settleForm(tester);
       expect(find.byType(ItemCard), findsOneWidget);
       await tapText(tester, 'إضافة صنف جديد');
       await tapText(tester, 'إضافة صنف جديد');
-      expect(find.byType(ItemCard), findsNWidgets(3));
+      // Three items, one open at a time: the newest opens and the other two are one-line rows.
+      expect(find.byType(ItemCard), findsOneWidget);
+      expect(find.byType(ItemSummaryRow), findsNWidgets(2));
       expect(find.text('دافعين'), findsNothing);
 
-      // Delete lives in the item's menu and can be undone.
-      await tester.tap(find.byTooltip('خيارات الصنف 2'));
+      // Delete lives in the open item's menu and can be undone.
+      await tester.tap(find.byTooltip('خيارات الصنف 3'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('حذف الصنف'));
       await tester.pumpAndSettle();
-      expect(find.byType(ItemCard), findsNWidgets(2));
+      expect(find.byType(ItemCard) .evaluate().length + find.byType(ItemSummaryRow).evaluate().length, 2);
       await tester.tap(find.text('تراجع'));
       await tester.pumpAndSettle();
-      expect(find.byType(ItemCard), findsNWidgets(3));
+      expect(find.byType(ItemCard).evaluate().length + find.byType(ItemSummaryRow).evaluate().length, 3);
     });
 
     testWidgets('a new item starts with everyone selected; unchecking all shows "item without an assignee" once touched', (tester) async {
       await openNew(tester);
-      await tapText(tester, 'فاتورة مفصلة');
+      await chooseSplit(tester, 'فاتورة مفصلة');
       await settleForm(tester);
-      final chips = find.widgetWithText(AppChoiceChip, 'Mohamed');
-      expect(tester.widget<AppChoiceChip>(chips).selected, isTrue);
-      expect(find.text('اختار عضو واحد على الأقل.'), findsNothing, reason: 'not touched yet');
+      // Everyone is chosen: the members button says so ("الكل"), and there is no error.
+      expect(find.byType(AssigneeSummaryChip), findsOneWidget);
+      expect(find.text('الكل'), findsWidgets);
+      expect(find.text('اختار عضو واحد على الأقل.'), findsNothing);
 
-      for (final name in ['Mohamed', 'Asem', 'Mohsen']) {
-        await tester.tap(find.widgetWithText(AppChoiceChip, name));
-        await tester.pump();
-      }
+      // The picker: "none" then "Done (0)" leaves nobody on the item, which is an error with icon and words.
+      await tester.tap(find.byType(AssigneeSummaryChip));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(AppChoiceChip, 'لا أحد'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('تم (0)'));
       await settleForm(tester);
       expect(find.text('اختار عضو واحد على الأقل.'), findsOneWidget);
-      await tester.tap(find.widgetWithText(AppChoiceChip, 'Asem'));
+
+      await tester.tap(find.byType(AssigneeSummaryChip));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Asem'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('تم (1)'));
       await settleForm(tester);
       expect(find.text('اختار عضو واحد على الأقل.'), findsNothing);
     });
 
     testWidgets('a touched item with no name or an unreadable price shows its errors', (tester) async {
       await openNew(tester);
-      await tapText(tester, 'فاتورة مفصلة');
+      await chooseSplit(tester, 'فاتورة مفصلة');
       await settleForm(tester);
       await tester.enterText(find.byType(TextField).at(1), 'x');
       await tester.enterText(find.byType(TextField).at(1), '');
@@ -308,12 +322,12 @@ void main() {
     testWidgets('add a bill from nothing: items, service 12%, one payer; save creates it with the server\'s total', (tester) async {
       await openNew(tester);
       await tester.enterText(find.byType(TextField).at(0), 'Sea Food');
-      await tapText(tester, 'فاتورة مفصلة');
+      await chooseSplit(tester, 'فاتورة مفصلة');
       await settleForm(tester);
       // Save is enabled; with nothing filled in it counts what is missing (the two fields of the first item) and sends nothing.
       await tester.tap(find.widgetWithText(FilledButton, 'حفظ الفاتورة'));
       await tester.pumpAndSettle();
-      expect(find.text('حقلان ناقصان'), findsOneWidget);
+      expect(find.text('حقلان ناقصان'), findsOneWidget, reason: 'the name and the price of the first item');
       expect(server.creates, isEmpty);
 
       await tester.enterText(find.byType(TextField).at(1), 'Pizza');
@@ -343,7 +357,7 @@ void main() {
     testWidgets('while the server is still working the bill out, save waits', (tester) async {
       await openNew(tester);
       await tester.enterText(find.byType(TextField).at(0), 'Sea Food');
-      await tapText(tester, 'فاتورة مفصلة');
+      await chooseSplit(tester, 'فاتورة مفصلة');
       await settleForm(tester);
       final gate = Completer<void>();
       server.previewGates.add(gate);
@@ -365,7 +379,7 @@ void main() {
     testWidgets('a failed calculation keeps save off and offers a retry that works', (tester) async {
       await openNew(tester);
       await tester.enterText(find.byType(TextField).at(0), 'Sea Food');
-      await tapText(tester, 'فاتورة مفصلة');
+      await chooseSplit(tester, 'فاتورة مفصلة');
       await settleForm(tester);
       server.failNextPreview = true;
       await tester.enterText(find.byType(TextField).at(1), 'Pizza');
@@ -399,8 +413,8 @@ void main() {
     testWidgets('assignee chips, switches, steppers and the remove button can be activated and are named', (tester) async {
       final handle = tester.ensureSemantics();
       await openBill(tester, 'v5');
-      final chip = tester.getSemantics(find.bySemanticsLabel('Mohsen').first).getSemanticsData();
-      expect(chip.hasAction(SemanticsAction.tap), isTrue);
+      final chip = tester.getSemantics(find.bySemanticsLabel(RegExp('المشاركون')).first).getSemanticsData();
+      expect(chip.hasAction(SemanticsAction.tap), isTrue, reason: 'the members button of the open item');
       for (final label in ['زوّد قرش', 'نقّص قرش', 'خيارات الصنف 1', 'زوّد الكمية']) {
         final data = tester.getSemantics(find.byTooltip(label).first).getSemanticsData();
         expect(data.hasAction(SemanticsAction.tap), isTrue, reason: label);

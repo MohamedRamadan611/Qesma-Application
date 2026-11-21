@@ -64,6 +64,10 @@ public class Expense implements Persistable<UUID> {
     @Column(name = "adjustment_minor")
     private Long adjustmentMinor;
 
+    // A180 (V22): the delivery charge; NULL for EQUAL/EXACT, 0 or more for ITEMIZED
+    @Column(name = "delivery_minor")
+    private Long deliveryMinor;
+
     // BSA2 (V21): which form each charge took, and the computed discount total; NULL for EQUAL/EXACT
     @Column(name = "discount_bps")
     private Integer discountBps;
@@ -127,7 +131,16 @@ public class Expense implements Persistable<UUID> {
      */
     public record ItemizedCharges(long subtotalMinor, Integer discountBps, Long discountAmountMinor, long discountMinor,
                                   Integer serviceBps, Long serviceAmountMinor, long serviceMinor, Integer taxBps,
-                                  Long taxAmountMinor, String taxBase, long taxMinor, long adjustmentMinor) {
+                                  Long taxAmountMinor, String taxBase, long taxMinor, long adjustmentMinor,
+                                  long deliveryMinor) {
+
+        /** Without delivery (0). */
+        public ItemizedCharges(long subtotalMinor, Integer discountBps, Long discountAmountMinor, long discountMinor,
+                               Integer serviceBps, Long serviceAmountMinor, long serviceMinor, Integer taxBps,
+                               Long taxAmountMinor, String taxBase, long taxMinor, long adjustmentMinor) {
+            this(subtotalMinor, discountBps, discountAmountMinor, discountMinor, serviceBps, serviceAmountMinor,
+                    serviceMinor, taxBps, taxAmountMinor, taxBase, taxMinor, adjustmentMinor, 0);
+        }
     }
 
     /** An ITEMIZED expense with its computed charges. */
@@ -146,6 +159,7 @@ public class Expense implements Persistable<UUID> {
         e.taxMinor = c.taxMinor();
         e.taxBase = c.taxBase();
         e.adjustmentMinor = c.adjustmentMinor();
+        e.deliveryMinor = c.deliveryMinor();
         return e;
     }
 
@@ -173,6 +187,7 @@ public class Expense implements Persistable<UUID> {
         this.taxMinor = next.taxMinor;
         this.taxBase = next.taxBase;
         this.adjustmentMinor = next.adjustmentMinor;
+        this.deliveryMinor = next.deliveryMinor;
         this.discountBps = next.discountBps;
         this.discountAmountMinor = next.discountAmountMinor;
         this.discountMinor = next.discountMinor;
@@ -253,6 +268,10 @@ public class Expense implements Persistable<UUID> {
 
     public Long getAdjustmentMinor() {
         return adjustmentMinor;
+    }
+
+    public Long getDeliveryMinor() {
+        return deliveryMinor;
     }
 
     public Integer getDiscountBps() {

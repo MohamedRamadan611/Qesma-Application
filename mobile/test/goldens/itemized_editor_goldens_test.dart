@@ -14,7 +14,7 @@ import '../support/fake_groups_server.dart';
 import '../support/test_app.dart';
 
 /// Goldens of the restaurant-bill editor (SA16): the spec's V5 bill, and a bill with a quantity and a discount in a
-/// group of 5 members (inline chips) and of 15 (summary chip). The V5 bill (service 12% + tax 14%), Arabic,
+/// group of 5 members and of 15 (summary chip). The V5 bill (service 12% + tax 14%), Arabic,
 /// RTL, 360 wide, with the REAL backend's preview numbers (561.79; 165.99 / 165.98 / 229.82).
 /// Update with `flutter test --update-goldens test/goldens` and review the PNG.
 class _TolerantComparator extends LocalFileComparator {
@@ -85,12 +85,12 @@ void main() {
     await settleForm(tester);
   }
 
-  testWidgets('restaurant bill editor: a quantity and a discount, 5 members (inline chips)', (tester) async {
+  testWidgets('restaurant bill editor: a quantity and a discount, 5 members', (tester) async {
     await pumpV2Bill(tester, 5);
     await expectLater(find.byType(MaterialApp), matchesGoldenFile('itemized_editor_5_members_ar.png'));
   });
 
-  testWidgets('restaurant bill editor: a quantity and a discount, 15 members (summary chip)', (tester) async {
+  testWidgets('restaurant bill editor: a quantity and a discount, 15 members', (tester) async {
     await pumpV2Bill(tester, 15);
     await expectLater(find.byType(MaterialApp), matchesGoldenFile('itemized_editor_15_members_ar.png'));
   });

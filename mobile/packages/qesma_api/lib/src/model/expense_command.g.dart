@@ -12,6 +12,8 @@ class _$ExpenseCommand extends ExpenseCommand {
   @override
   final String? category;
   @override
+  final int? deliveryMinor;
+  @override
   final DiscountInput? discount;
   @override
   final Date expenseDate;
@@ -42,6 +44,7 @@ class _$ExpenseCommand extends ExpenseCommand {
   _$ExpenseCommand._(
       {this.adjustmentMinor,
       this.category,
+      this.deliveryMinor,
       this.discount,
       required this.expenseDate,
       this.items,
@@ -68,6 +71,7 @@ class _$ExpenseCommand extends ExpenseCommand {
     return other is ExpenseCommand &&
         adjustmentMinor == other.adjustmentMinor &&
         category == other.category &&
+        deliveryMinor == other.deliveryMinor &&
         discount == other.discount &&
         expenseDate == other.expenseDate &&
         items == other.items &&
@@ -87,6 +91,7 @@ class _$ExpenseCommand extends ExpenseCommand {
     var _$hash = 0;
     _$hash = $jc(_$hash, adjustmentMinor.hashCode);
     _$hash = $jc(_$hash, category.hashCode);
+    _$hash = $jc(_$hash, deliveryMinor.hashCode);
     _$hash = $jc(_$hash, discount.hashCode);
     _$hash = $jc(_$hash, expenseDate.hashCode);
     _$hash = $jc(_$hash, items.hashCode);
@@ -108,6 +113,7 @@ class _$ExpenseCommand extends ExpenseCommand {
     return (newBuiltValueToStringHelper(r'ExpenseCommand')
           ..add('adjustmentMinor', adjustmentMinor)
           ..add('category', category)
+          ..add('deliveryMinor', deliveryMinor)
           ..add('discount', discount)
           ..add('expenseDate', expenseDate)
           ..add('items', items)
@@ -136,6 +142,11 @@ class ExpenseCommandBuilder
   String? _category;
   String? get category => _$this._category;
   set category(String? category) => _$this._category = category;
+
+  int? _deliveryMinor;
+  int? get deliveryMinor => _$this._deliveryMinor;
+  set deliveryMinor(int? deliveryMinor) =>
+      _$this._deliveryMinor = deliveryMinor;
 
   DiscountInputBuilder? _discount;
   DiscountInputBuilder get discount =>
@@ -200,6 +211,7 @@ class ExpenseCommandBuilder
     if ($v != null) {
       _adjustmentMinor = $v.adjustmentMinor;
       _category = $v.category;
+      _deliveryMinor = $v.deliveryMinor;
       _discount = $v.discount?.toBuilder();
       _expenseDate = $v.expenseDate;
       _items = $v.items?.toBuilder();
@@ -237,6 +249,7 @@ class ExpenseCommandBuilder
           _$ExpenseCommand._(
             adjustmentMinor: adjustmentMinor,
             category: category,
+            deliveryMinor: deliveryMinor,
             discount: _discount?.build(),
             expenseDate: BuiltValueNullFieldError.checkNotNull(
                 expenseDate, r'ExpenseCommand', 'expenseDate'),

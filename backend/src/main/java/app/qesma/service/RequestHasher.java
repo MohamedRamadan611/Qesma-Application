@@ -73,6 +73,10 @@ public class RequestHasher {
             putIfSet(canonical, "taxAmountMinor", v.taxAmountMinor());
             putIfSet(canonical, "discountBps", v.discountBps());
             putIfSet(canonical, "discountAmountMinor", v.discountAmountMinor());
+            // A180: hashed only when set, so a replay of a pre-delivery key keeps its hash.
+            if (v.deliveryMinor() != 0) {
+                canonical.put("deliveryMinor", v.deliveryMinor());
+            }
         }
         try {
             byte[] json = mapper.writeValueAsString(canonical).getBytes(StandardCharsets.UTF_8);

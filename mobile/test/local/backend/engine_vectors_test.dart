@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'support/local_http.dart';
 
-/// The shared engine vectors V1-V16 (`/fixtures/engine`, the Java reference) reproduced end-to-end through the HTTP
+/// The shared engine vectors V1-V20 (`/fixtures/engine`, the Java reference) reproduced end-to-end through the HTTP
 /// contract: members are created (fixture sortOrder 1 = "you", the group creator), expenses and settlements are
 /// POSTed, then each expense's shares and charges and `GET balances` must equal the fixture.
 void main() {
@@ -16,7 +16,7 @@ void main() {
 
   test('all spec vectors are present', () {
     final ids = files.map(id).toSet();
-    for (var v = 1; v <= 16; v++) {
+    for (var v = 1; v <= 20; v++) {
       expect(ids, contains('V$v'));
     }
   });
@@ -73,6 +73,7 @@ void main() {
           'discount': ?x['discount'],
           'tax': ?x['tax'],
           'adjustmentMinor': ?x['adjustmentMinor'],
+          'deliveryMinor': ?x['deliveryMinor'],
         };
         final r = await http.expense(gid, body);
         final want = expectedExpenses?[i];
@@ -106,6 +107,14 @@ void main() {
             for (final s in (view['shares'] as List)) back[s['memberId']]!: s['discountMinor'] as int,
           };
           expect(discounts, (want['discounts'] as Map).cast<String, int>());
+        }
+        // A180: delivery total and each member's part.
+        if (want['deliveryMinor'] != null) expect(charges!['deliveryMinor'], want['deliveryMinor']);
+        if (want['deliveries'] != null) {
+          final deliveries = {
+            for (final s in (view['shares'] as List)) back[s['memberId']]!: s['deliveryMinor'] as int,
+          };
+          expect(deliveries, (want['deliveries'] as Map).cast<String, int>());
         }
       }
 

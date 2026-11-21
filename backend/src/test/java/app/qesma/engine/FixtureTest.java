@@ -134,6 +134,12 @@ class FixtureTest {
                     assertField(exp, "serviceMinor", itemized.serviceMinor());
                     assertField(exp, "taxMinor", itemized.taxMinor());
                     assertField(exp, "discountMinor", itemized.discountMinor());
+                    assertField(exp, "deliveryMinor", itemized.deliveryMinor());
+                    if (exp.has("deliveries")) {
+                        Map<String, Long> deliveries = new LinkedHashMap<>();
+                        itemized.members().forEach(b -> deliveries.put(b.memberId(), b.deliveryMinor()));
+                        assertThat(deliveries).as("expense %d deliveries", i).isEqualTo(longMap(exp.get("deliveries")));
+                    }
                     if (exp.has("discounts")) {
                         Map<String, Long> discounts = new LinkedHashMap<>();
                         itemized.members().forEach(b -> discounts.put(b.memberId(), b.discountMinor()));
@@ -190,7 +196,8 @@ class FixtureTest {
             tax = new TaxSpec(charge(t), t.hasNonNull("base") ? TaxBase.valueOf(t.get("base").asText()) : null);
         }
         ChargeSpec discount = e.hasNonNull("discount") ? charge(e.get("discount")) : null;
-        return new ItemizedInput(members, items, discount, service, tax, e.path("adjustmentMinor").asLong(0));
+        return new ItemizedInput(members, items, discount, service, tax, e.path("adjustmentMinor").asLong(0),
+                e.path("deliveryMinor").asLong(0));
     }
 
     private static ChargeSpec charge(JsonNode node) {

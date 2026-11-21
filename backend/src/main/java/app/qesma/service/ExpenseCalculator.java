@@ -35,7 +35,18 @@ final class ExpenseCalculator {
     record Computation(String splitType, long totalMinor, Long subtotalMinor, Integer discountBps,
                        Long discountAmountMinor, long discountMinor, Integer serviceBps, Long serviceAmountMinor,
                        long serviceMinor, Integer taxBps, Long taxAmountMinor, String taxBase, long taxMinor,
-                       long adjustmentMinor, List<ExpenseView.ShareView> shares, List<Payer> payers) {
+                       long adjustmentMinor, List<ExpenseView.ShareView> shares, List<Payer> payers,
+                       long deliveryMinor) {
+
+        /** Without delivery (0). */
+        Computation(String splitType, long totalMinor, Long subtotalMinor, Integer discountBps,
+                    Long discountAmountMinor, long discountMinor, Integer serviceBps, Long serviceAmountMinor,
+                    long serviceMinor, Integer taxBps, Long taxAmountMinor, String taxBase, long taxMinor,
+                    long adjustmentMinor, List<ExpenseView.ShareView> shares, List<Payer> payers) {
+            this(splitType, totalMinor, subtotalMinor, discountBps, discountAmountMinor, discountMinor, serviceBps,
+                    serviceAmountMinor, serviceMinor, taxBps, taxAmountMinor, taxBase, taxMinor, adjustmentMinor,
+                    shares, payers, 0);
+        }
 
         boolean itemized() {
             return splitType.equals(Expense.ITEMIZED);
@@ -57,7 +68,7 @@ final class ExpenseCalculator {
         Expense.ItemizedCharges charges() {
             return new Expense.ItemizedCharges(subtotalMinor, discountBps, discountAmountMinor, discountMinor,
                     serviceBps, serviceAmountMinor, serviceMinor, taxBps, taxAmountMinor, taxBase, taxMinor,
-                    adjustmentMinor);
+                    adjustmentMinor, deliveryMinor);
         }
     }
 
@@ -185,7 +196,8 @@ final class ExpenseCalculator {
         ItemizedCalculator.ItemizedResult r = ItemizedCalculator.calculate(new ItemizedCalculator.ItemizedInput(
                 new ArrayList<>(roster.usable().values()), items,
                 spec(request.discountBps(), request.discountAmountMinor()),
-                spec(request.serviceBps(), request.serviceAmountMinor()), tax, request.adjustmentMinor()));
+                spec(request.serviceBps(), request.serviceAmountMinor()), tax, request.adjustmentMinor(),
+                request.deliveryMinor()));
 
         if (request.totalMinor() != 0 && request.totalMinor() != r.totalMinor()) {
             throw new ApiException(ErrorCode.SPLIT_TOTAL_MISMATCH, HttpStatus.UNPROCESSABLE_ENTITY,
@@ -193,12 +205,12 @@ final class ExpenseCalculator {
         }
         List<ExpenseView.ShareView> shares = r.members().stream()
                 .map(m -> new ExpenseView.ShareView(UUID.fromString(m.memberId()), m.owedMinor(), m.itemsMinor(),
-                        m.discountMinor(), m.serviceMinor(), m.taxMinor(), m.adjustmentMinor()))
+                        m.discountMinor(), m.serviceMinor(), m.taxMinor(), m.adjustmentMinor(), m.deliveryMinor()))
                 .toList();
         return new Computation(Expense.ITEMIZED, r.totalMinor(), r.subtotalMinor(), request.discountBps(),
                 request.discountAmountMinor(), r.discountMinor(), request.serviceBps(), request.serviceAmountMinor(),
                 r.serviceMinor(), request.taxBps(), request.taxAmountMinor(), request.taxBase(), r.taxMinor(),
-                r.adjustmentMinor(), shares, payers);
+                r.adjustmentMinor(), shares, payers, r.deliveryMinor());
     }
 
     /** The validator already allowed at most one form; both null means the charge is off. */

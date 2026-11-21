@@ -21,11 +21,21 @@ import java.util.UUID;
  * @param category             optional expense category; absent = OTHER
  * @param paidFromPool         optional; true only when the group has a treasurer who is the single payer (BSA1)
  * @param discount             ITEMIZED only; absent = no discount (BSA2, A171)
+ * @param deliveryMinor        ITEMIZED only; absent = no delivery (A180): outside discount, service and tax
  */
 public record ExpenseCommand(String title, LocalDate expenseDate, String splitType, Long totalMinor,
                              List<PayerInput> payers, List<UUID> participantMemberIds, List<ShareInput> shares,
                              List<ItemInput> items, ServiceInput service, TaxInput tax, Long adjustmentMinor,
-                             String category, Boolean paidFromPool, DiscountInput discount) {
+                             String category, Boolean paidFromPool, DiscountInput discount, Long deliveryMinor) {
+
+    /** Without the delivery charge. */
+    public ExpenseCommand(String title, LocalDate expenseDate, String splitType, Long totalMinor,
+                          List<PayerInput> payers, List<UUID> participantMemberIds, List<ShareInput> shares,
+                          List<ItemInput> items, ServiceInput service, TaxInput tax, Long adjustmentMinor,
+                          String category, Boolean paidFromPool, DiscountInput discount) {
+        this(title, expenseDate, splitType, totalMinor, payers, participantMemberIds, shares, items, service, tax,
+                adjustmentMinor, category, paidFromPool, discount, null);
+    }
 
     /** Without the BSA2 discount. */
     public ExpenseCommand(String title, LocalDate expenseDate, String splitType, Long totalMinor,

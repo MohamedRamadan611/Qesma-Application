@@ -31,6 +31,7 @@ ExpenseFormState formFromExpense(
     amountText: Money.formatPlain(expense.totalMinor),
     date: expense.expenseDate,
     category: expense.category,
+    categoryTouched: true,
     paidFromPool: expense.paidFromPool,
     singlePayerId: single ? payers.first.memberId : fallbackPayerId,
     splitMode: itemized
@@ -54,6 +55,7 @@ ItemizedDraft _itemizedFrom(ExpenseView expense, Charges? charges) {
   final service = charges?.service;
   final tax = charges?.tax;
   final adjustment = charges?.adjustmentMinor ?? 0;
+  final delivery = charges?.deliveryMinor ?? 0;
   final items = expense.items?.toList() ?? const <ItemView>[];
   // A charge saved with a rate opens as a percentage; one saved as an amount opens as an amount (A171, A173).
   ChargeMode modeOf(bool on, int? bps) => on && bps == null ? ChargeMode.amount : ChargeMode.percent;
@@ -82,22 +84,29 @@ ItemizedDraft _itemizedFrom(ExpenseView expense, Charges? charges) {
     taxPercentText: tax?.bps == null ? '' : Bps.format(tax!.bps!),
     taxAmountText: tax != null && tax.bps == null ? Money.formatPlain(tax.amountMinor) : '',
     taxBase: TaxBase.fromWire(tax?.base_),
+    deliveryOn: delivery > 0,
+    deliveryAmountText: delivery > 0 ? Money.formatPlain(delivery) : '',
     adjustmentText: adjustment == 0 ? '' : Money.formatPlain(adjustment),
     adjustmentManual: adjustment != 0,
   );
 }
 
 /// Fills the add form from a receipt scan (SA12): itemized mode with the proposed items and charges, nobody assigned,
-/// one payer (you), on [date]. The user assigns members and confirms every number; nothing is saved here.
+/// one payer (you), on [date]. The user assigns members and confirms every number; nothing is saved here. SA17: the
+/// shop name becomes the title and the category guess the category (both are suggestions, and the form was empty).
 ExpenseFormState formFromScan(ScanDraft draft, {required Date date, required String? payerId}) => ExpenseFormState(
-      title: '',
+      title: draft.merchantName ?? '',
       amountText: '',
       date: date,
+      category: draft.category ?? 'OTHER',
       singlePayerId: payerId,
       splitMode: SplitMode.itemized,
       itemized: draft.itemized,
       printedTotalMinor: draft.printedTotalMinor,
-      scanNotes: draft.notes,
+      scanNotes: {
+        ...draft.notes,
+        if (draft.merchantName != null || draft.category != null) ScanNote.titleCategorySuggested,
+      },
     );
 
 /// Fills the add form from a draft (SA11): EXACT among the draft's members with its amounts, one payer, its

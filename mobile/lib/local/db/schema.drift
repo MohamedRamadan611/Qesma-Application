@@ -123,6 +123,9 @@ CREATE TABLE expenses (
     discount_minor        INTEGER,
     service_amount_minor  INTEGER CHECK (service_amount_minor IS NULL OR service_amount_minor BETWEEN 1 AND 1000000000000),
     tax_amount_minor      INTEGER CHECK (tax_amount_minor IS NULL OR tax_amount_minor BETWEEN 1 AND 1000000000000),
+    -- Schema 9 (Java V22, A180): the delivery amount (request and computed total are the same number). NULL on
+    -- EQUAL/EXACT, 0 or more on ITEMIZED.
+    delivery_minor        INTEGER CHECK (delivery_minor IS NULL OR delivery_minor BETWEEN 0 AND 1000000000000),
     -- Each charge is in one form at most: a percentage or an amount (A171, A173).
     CONSTRAINT ck_expenses_charge_one_form CHECK (
         NOT (discount_bps IS NOT NULL AND discount_amount_minor IS NOT NULL)
@@ -133,8 +136,8 @@ CREATE TABLE expenses (
             subtotal_minor IS NULL AND service_bps IS NULL AND service_minor IS NULL AND tax_bps IS NULL
             AND tax_minor IS NULL AND tax_base IS NULL AND adjustment_minor IS NULL
             AND discount_bps IS NULL AND discount_amount_minor IS NULL AND discount_minor IS NULL
-            AND service_amount_minor IS NULL AND tax_amount_minor IS NULL)),
-    -- total = subtotal - discount + service + tax + adjustment; a charge > 0 has a form; an amount-form charge is
+            AND service_amount_minor IS NULL AND tax_amount_minor IS NULL AND delivery_minor IS NULL)),
+    -- total = subtotal - discount + service + tax + delivery + adjustment; a charge > 0 has a form; an amount-form charge is
     -- exactly its amount; 0 <= discount < subtotal; a tax base exists exactly when a tax does (Java V21).
     CONSTRAINT ck_expenses_itemized_charges CHECK (
         split_type <> 'ITEMIZED' OR (
@@ -142,8 +145,9 @@ CREATE TABLE expenses (
             AND discount_minor IS NOT NULL AND discount_minor >= 0 AND discount_minor < subtotal_minor
             AND service_minor IS NOT NULL AND service_minor >= 0
             AND tax_minor IS NOT NULL AND tax_minor >= 0
+            AND delivery_minor IS NOT NULL AND delivery_minor >= 0
             AND adjustment_minor IS NOT NULL
-            AND total_minor = subtotal_minor - discount_minor + service_minor + tax_minor + adjustment_minor
+            AND total_minor = subtotal_minor - discount_minor + service_minor + tax_minor + delivery_minor + adjustment_minor
             AND ((discount_bps IS NOT NULL OR discount_amount_minor IS NOT NULL) = (discount_minor > 0))
             AND (discount_amount_minor IS NULL OR discount_minor = discount_amount_minor)
             AND (service_bps IS NOT NULL OR service_amount_minor IS NOT NULL OR service_minor = 0)
@@ -180,16 +184,20 @@ CREATE TABLE expense_splits (
     adjustment_minor INTEGER,
     -- Schema 8 (SA15, Java V21): this member's part of the bill discount (ITEMIZED breakdown only).
     discount_minor   INTEGER,
+    -- Schema 9 (Java V22, A180): this member's part of the delivery (ITEMIZED breakdown only).
+    delivery_minor   INTEGER,
     PRIMARY KEY (expense_id, member_id),
     -- The breakdown is all-or-nothing and explains owed exactly; a member's discount part never exceeds their items.
     CONSTRAINT ck_expense_splits_breakdown CHECK (
         (items_minor IS NULL AND discount_minor IS NULL AND service_minor IS NULL AND tax_minor IS NULL
-            AND adjustment_minor IS NULL)
+            AND adjustment_minor IS NULL AND delivery_minor IS NULL)
         OR (items_minor IS NOT NULL AND items_minor >= 0
             AND discount_minor IS NOT NULL AND discount_minor >= 0 AND discount_minor <= items_minor
             AND service_minor IS NOT NULL AND service_minor >= 0
-            AND tax_minor IS NOT NULL AND tax_minor >= 0 AND adjustment_minor IS NOT NULL
-            AND owed_minor = items_minor - discount_minor + service_minor + tax_minor + adjustment_minor))
+            AND tax_minor IS NOT NULL AND tax_minor >= 0
+            AND delivery_minor IS NOT NULL AND delivery_minor >= 0
+            AND adjustment_minor IS NOT NULL
+            AND owed_minor = items_minor - discount_minor + service_minor + tax_minor + delivery_minor + adjustment_minor))
 ) STRICT AS SplitRow;
 
 CREATE INDEX ix_expense_splits_member ON expense_splits (member_id);

@@ -180,7 +180,7 @@ class _PersonRowState extends State<_PersonRow> {
   }
 }
 
-/// Items with their assignees, then the charges block: subtotal, service, tax, adjustment and
+/// Items with their assignees, then the charges block: subtotal, service, tax, delivery, adjustment and
 /// total, each exactly as the server sent it. A row whose charge the server left out
 /// (`service` or `tax` null) or zeroed (`adjustmentMinor` 0) is not drawn.
 class ItemsAndChargesBlock extends StatelessWidget {
@@ -344,6 +344,8 @@ class _ChargesBox extends StatelessWidget {
               ),
             if (service != null) row(labelWithRate(l10n.expenseServiceLabel, service.bps), service.amountMinor, signed: true),
             if (tax != null) row(labelWithRate(l10n.expenseTaxLabel, tax.bps, caption: taxBase), tax.amountMinor, signed: true),
+            if (charges.deliveryMinor != 0)
+              row(Text(l10n.expenseItzDeliveryLabel, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)), charges.deliveryMinor, signed: true),
             if (adjustment != 0)
               row(Text(l10n.expenseAdjustmentLabel, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)), adjustment, signed: true),
             const Divider(height: QesmaSpacing.md),
@@ -384,6 +386,7 @@ class ShareRows extends StatelessWidget {
         if (parts.discountMinor != null) l10n.expenseItzPartDiscount('${Money.minus}${m(parts.discountMinor!)}'),
         if (parts.serviceMinor != null) l10n.expensePartService(m(parts.serviceMinor!)),
         if (parts.taxMinor != null) l10n.expensePartTax(m(parts.taxMinor!)),
+        if (parts.deliveryMinor != null) l10n.expensePartDelivery(m(parts.deliveryMinor!)),
         if (parts.adjustmentMinor != null) l10n.expensePartAdjustment(adj(parts.adjustmentMinor!)),
       ];
       return texts.join(' + ');

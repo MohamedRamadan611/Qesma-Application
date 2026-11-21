@@ -1,0 +1,22 @@
+{
+  "name": "V17 itemized, delivery 10.00 splits equally among members with an item; leftover piaster by sortOrder; D has no item and owes nothing",
+  "input": {
+    "members": [ { "id": "A", "sortOrder": 1 }, { "id": "B", "sortOrder": 2 }, { "id": "C", "sortOrder": 3 }, { "id": "D", "sortOrder": 4 } ],
+    "expenses": [
+      { "type": "ITEMIZED",
+        "payers": [ { "memberId": "A", "amountMinor": 30000 } ],
+        "items": [
+          { "name": "Pizza", "amountMinor": 20000, "assigneeMemberIds": [ "A", "B" ] },
+          { "name": "Pasta", "amountMinor": 9000,  "assigneeMemberIds": [ "C" ] }
+        ],
+        "deliveryMinor": 1000,
+        "adjustmentMinor": 0 }
+    ],
+    "settlements": []
+  },
+  "expected": {
+    "expenses": [ { "owed": { "A": 10334, "B": 10333, "C": 9333 },
+                    "deliveries": { "A": 334, "B": 333, "C": 333 },
+                    "subtotalMinor": 29000, "deliveryMinor": 1000, "totalMinor": 30000 } ]
+  }
+}

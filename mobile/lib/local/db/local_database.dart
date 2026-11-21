@@ -60,7 +60,7 @@ class LocalDatabase extends _$LocalDatabase {
   final int Function() _clock;
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -163,6 +163,24 @@ class LocalDatabase extends _$LocalDatabase {
               i.unitAmountMinor,
             ], columnTransformer: {
               i.unitAmountMinor: i.amountMinor,
+            }));
+          },
+          // A180: delivery, mirroring Java V22. Both tables carry CHECKs that change (total formula, breakdown
+          // formula, delivery presence), so they are rebuilt with drift's 12-step copy like in 7 -> 8. Every old row
+          // keeps its meaning: ITEMIZED expenses and their breakdown rows get delivery 0; EQUAL/EXACT stay NULL.
+          // owed_minor and expense_payers are copied unchanged, so balances cannot move.
+          from8To9: (m, schema) async {
+            final e = schema.expenses;
+            await m.alterTable(TableMigration(e, newColumns: [
+              e.deliveryMinor,
+            ], columnTransformer: {
+              e.deliveryMinor: const CustomExpression<int>("CASE WHEN split_type = 'ITEMIZED' THEN 0 END"),
+            }));
+            final s = schema.expenseSplits;
+            await m.alterTable(TableMigration(s, newColumns: [
+              s.deliveryMinor,
+            ], columnTransformer: {
+              s.deliveryMinor: const CustomExpression<int>('CASE WHEN items_minor IS NOT NULL THEN 0 END'),
             }));
           },
         );

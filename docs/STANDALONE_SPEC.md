@@ -220,6 +220,7 @@ Owner decisions of 2026-11-20 (A171–A176). Section 7.4 of `PROJECT_SPEC.md` is
 - **Discount** (optional) is one discount on the whole bill. It is `{ bps }` (1..9,999) **or** `{ amountMinor }` (≥ 1), never both.
 - **Service** is `{ bps }` (as before) **or** `{ amountMinor }` (≥ 1).
 - **Tax** is `{ bps, base }` (as before) **or** `{ amountMinor, base }`. In the amount form, `base` sets only the allocation weights.
+- **Delivery** (A180, V22 / schema 9) is an optional `deliveryMinor`: an integer from 0 to the A43 cap (absent or 0 = none). It is an **amount only**, never a percentage. A negative value or one above the cap is `VALIDATION_ERROR`. It is allowed on ITEMIZED expenses only. Responses carry `deliveryMinor` on the charges, on the preview and on every share of an itemized expense (0 when there is none).
 
 ### 18.2 Algorithm (replaces 7.4 steps 2–5)
 1. **Item shares:** unchanged. Each line is split equally among its assignees with LRM. This gives `itemsMinor[m]` and `subtotal`.
@@ -234,8 +235,9 @@ Owner decisions of 2026-11-20 (A171–A176). Section 7.4 of `PROJECT_SPEC.md` is
    - The base is `netSubtotal`, or `netSubtotal + serviceTotal`.
    - `taxTotal = round_half_up(base × bps / 10000)` or the amount.
    - It is allocated by LRM with weights `netMinor[m]`, or `netMinor[m] + serviceMinor[m]`.
-5. **Adjustment:** allocated by LRM with weights `netMinor[m]`. A12 (no negative share) is unchanged.
-6. `owed[m] = netMinor[m] + serviceMinor[m] + taxMinor[m] + adjustmentMinor[m]`, and `total = netSubtotal + serviceTotal + taxTotal + adjustment`, which must be > 0. Members who owe 0 are dropped (step 6). The breakdown adds `discountMinor` per member, and the result adds `discountMinor` (the total).
+5. **Delivery (A180):** outside the discount, service and tax (it is part of no base and gets none of them). `deliveryMinor` is split **equally** (weight 1 each) among the members who have **at least one item**, meaning they are assigned to any line, even when their share of it is 0. LRM gives any leftover piasters to the lowest `sort_order` first. Members with no item get 0 delivery. With no delivery every part is 0.
+6. **Adjustment:** allocated by LRM with weights `netMinor[m]`. A12 (no negative share) is unchanged.
+7. `owed[m] = netMinor[m] + serviceMinor[m] + taxMinor[m] + deliveryMinor[m] + adjustmentMinor[m]`, and `total = netSubtotal + serviceTotal + taxTotal + delivery + adjustment`, which must be > 0. Members who owe 0 are dropped (step 6). The breakdown adds `discountMinor` per member and `deliveryMinor` per member, and the result adds `discountMinor` and `deliveryMinor` (the totals).
 
 ### 18.3 Printed-total tolerance (client only, A174)
 This applies when a scanned receipt gave a printed total, the user has not edited the adjustment, and `|printed − previewTotal| ≤ 100` piasters (1 EGP). The editor then sets `adjustmentMinor = printed − previewTotal`, previews again, and shows the match with a note.
@@ -253,6 +255,7 @@ This applies when a scanned receipt gave a printed total, the user has not edite
   - `category` fills the category only while the user has not chosen one.
   - A printed line total with a quantity but no unit price is flagged for the user to confirm. The client never divides.
   - An unparseable quantity is flagged, and the item opens as quantity 1.
+  - A quantity above 1 without a unit price opens as quantity 1 with the line total; a printed percentage wins over a printed amount (A179).
 
 ### 18.5 Editor UX (SA16; design P8-01 revised)
 - **Assignment modes:** "حسب الصنف" (one card per item) and "حسب الشخص" (choose a person, then tick that person's items).
@@ -262,6 +265,15 @@ This applies when a scanned receipt gave a printed total, the user has not edite
 - **Breakdown:** each person shows one row (name and total), which expands to show the details.
 - **Validation:** required fields are marked. Save stays enabled; tapping it with an error scrolls to the first error and shows how many fields are missing.
 - **Money math:** every computed number still comes from the preview endpoint. The client does no money math (`SCREEN_MAP.md` rule).
+
+**Redesign (A181, design "Add Expense – Redesigned Screen", UI only except delivery):**
+- **Form shell:** the date and the category share one row (the category is a button that opens its nine chips in a sheet); the payer is one row with a "تغيير" button; the split method is one row (title, chosen method, one-line explanation, chevron) that opens a sheet with the four methods. At text scale above 1.3 the rows stack.
+- **By item (accordion):** one item card is open at a time and the others are one-line rows (name, "× quantity · who", the typed price, a chevron, an error icon when something is missing). A new item opens; the first item is open when the form opens. The open card has the name and ⋮ menu (Duplicate, Delete with undo), the unit price and the quantity stepper side by side, one "مين شارك؟" button (always the summary chip that opens the member picker, whatever the group size) and the typed line (`quantity × price` as typed, never multiplied by the client).
+- **Member picker:** an item with quantity above 1 and more than one member has a "بالتساوي | حسب الكمية" toggle. By quantity each person gets a number of units: "وزّعت x من n" (a count, with icon and words), a stepper per person, "مسح الكل", and Done is enabled only when the units add up to the quantity. Done splits the item into one item per person as in A172 (the separate unit-split sheet is gone). Equal mode is the usual checklist.
+- **By person:** one card per member who has items (avatar, name, item count, the preview's total), one card open at a time. The open card lists their items (each removable from that person), "نسخ صنف موجود" chips for the items they are not on, and an inline "إضافة صنف لـ X" form (name, price, quantity). Members with no items are folded under "أعضاء من غير أصناف (n)". An item nobody has is flagged with icon and words.
+- **Charges card:** discount, delivery (amount only: no `% | ج.م` toggle), service and tax, in that order after the discount; delivery shows the preview's per-person part ("بتتقسم بالتساوي على اللي معاهم أصناف: X لكل واحد", or "من X لـ Y" when parts differ by a piaster). A preview refused with `VALIDATION_ERROR` while every field is readable and a discount is on shows "الخصم لازم يكون أقل من إجمالي الأصناف." on the discount row, **without numbers** (the client does not add up the items).
+- **Validation:** after Save on an incomplete bill a summary card at the top lists every problem in screen order (title, payer, each item's name, price, quantity and members, each charge); a tap goes to it and opens that item. The count line next to Save stays, and the page still scrolls to the first problem. Errors always have an icon and words.
+- **Scan notices** (SA12/SA17) can be closed.
 
 ### 18.6 Test vectors
 Vectors V9, V10, V12 and V13 use the V5 items: members A, B, C in `sort_order`; Pizza 200.00 (A, B), Pasta 150.00 (C), Drinks 90.00 (A, B, C); so items are A 130.00, B 130.00, C 180.00 and the subtotal is 440.00.
@@ -276,3 +288,7 @@ Vectors V9, V10, V12 and V13 use the V5 items: members A, B, C in `sort_order`; 
 | V14 | Members A, B. One item 100.00 (A, B); discount 99.99 (amount) | Discount 50.00 / 49.99 (A wins the tie). Net A 0.00, B 0.01. **A is dropped** (owes 0). Owed **B 0.01**, total **0.01** |
 | V15 | As V14 but discount 100.00, or 100% | `VALIDATION_ERROR` (discount must be less than the subtotal) |
 | V16 | An item with both `amountMinor` and `unitAmountMinor`, or quantity 0 or 1000 | `VALIDATION_ERROR` |
+| V17 | Members A, B, C, D. Pizza 200.00 (A, B), Pasta 90.00 (C); delivery 10.00 | Delivery 3.34 / 3.33 / 3.33 for A, B, C (D has no item, owes nothing). Owed **A 103.34, B 103.33, C 93.33**, total **300.00** |
+| V18 | V9 (discount 10%, service 12%, tax 14%) plus delivery 10.00 | Every V9 part is unchanged; delivery 3.34 / 3.33 / 3.33. Owed **A 152.73, B 152.71, C 210.17**, total **515.61** |
+| V19 | Members A, B, C. Burger 60.00 (A), Salad 30.00 (B); delivery 10.00; adjustment −5.00 | Delivery 5.00 / 5.00 (C has no item). Adjustment −5.00 by net 60:30 → −3.33 / −1.67. Owed **A 61.67, B 33.33**, total **95.00** |
+| V20 | Delivery −0.01, or 10,000,000,000.01 | `VALIDATION_ERROR` |

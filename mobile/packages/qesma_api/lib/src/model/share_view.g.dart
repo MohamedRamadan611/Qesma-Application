@@ -10,6 +10,8 @@ class _$ShareView extends ShareView {
   @override
   final int? adjustmentMinor;
   @override
+  final int? deliveryMinor;
+  @override
   final int? discountMinor;
   @override
   final int? itemsMinor;
@@ -27,6 +29,7 @@ class _$ShareView extends ShareView {
 
   _$ShareView._(
       {this.adjustmentMinor,
+      this.deliveryMinor,
       this.discountMinor,
       this.itemsMinor,
       required this.memberId,
@@ -46,6 +49,7 @@ class _$ShareView extends ShareView {
     if (identical(other, this)) return true;
     return other is ShareView &&
         adjustmentMinor == other.adjustmentMinor &&
+        deliveryMinor == other.deliveryMinor &&
         discountMinor == other.discountMinor &&
         itemsMinor == other.itemsMinor &&
         memberId == other.memberId &&
@@ -58,6 +62,7 @@ class _$ShareView extends ShareView {
   int get hashCode {
     var _$hash = 0;
     _$hash = $jc(_$hash, adjustmentMinor.hashCode);
+    _$hash = $jc(_$hash, deliveryMinor.hashCode);
     _$hash = $jc(_$hash, discountMinor.hashCode);
     _$hash = $jc(_$hash, itemsMinor.hashCode);
     _$hash = $jc(_$hash, memberId.hashCode);
@@ -72,6 +77,7 @@ class _$ShareView extends ShareView {
   String toString() {
     return (newBuiltValueToStringHelper(r'ShareView')
           ..add('adjustmentMinor', adjustmentMinor)
+          ..add('deliveryMinor', deliveryMinor)
           ..add('discountMinor', discountMinor)
           ..add('itemsMinor', itemsMinor)
           ..add('memberId', memberId)
@@ -89,6 +95,11 @@ class ShareViewBuilder implements Builder<ShareView, ShareViewBuilder> {
   int? get adjustmentMinor => _$this._adjustmentMinor;
   set adjustmentMinor(int? adjustmentMinor) =>
       _$this._adjustmentMinor = adjustmentMinor;
+
+  int? _deliveryMinor;
+  int? get deliveryMinor => _$this._deliveryMinor;
+  set deliveryMinor(int? deliveryMinor) =>
+      _$this._deliveryMinor = deliveryMinor;
 
   int? _discountMinor;
   int? get discountMinor => _$this._discountMinor;
@@ -123,6 +134,7 @@ class ShareViewBuilder implements Builder<ShareView, ShareViewBuilder> {
     final $v = _$v;
     if ($v != null) {
       _adjustmentMinor = $v.adjustmentMinor;
+      _deliveryMinor = $v.deliveryMinor;
       _discountMinor = $v.discountMinor;
       _itemsMinor = $v.itemsMinor;
       _memberId = $v.memberId;
@@ -151,6 +163,7 @@ class ShareViewBuilder implements Builder<ShareView, ShareViewBuilder> {
     final _$result = _$v ??
         _$ShareView._(
           adjustmentMinor: adjustmentMinor,
+          deliveryMinor: deliveryMinor,
           discountMinor: discountMinor,
           itemsMinor: itemsMinor,
           memberId: BuiltValueNullFieldError.checkNotNull(

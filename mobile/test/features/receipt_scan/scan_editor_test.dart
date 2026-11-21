@@ -6,7 +6,9 @@ import 'package:qesma/core/l10n/generated/app_localizations.dart';
 import 'package:qesma/core/l10n/locale_controller.dart';
 import 'package:qesma/core/router/app_router.dart';
 import 'package:qesma/core/widgets/widgets.dart';
+import 'package:qesma/features/expenses/presentation/assignee_summary_chip.dart';
 import 'package:qesma/features/expenses/presentation/expense_form_screen.dart';
+import 'package:qesma/features/expenses/presentation/itemized_items_card.dart';
 import 'package:qesma/features/receipt_scan/application/ocr_settings_store.dart';
 import 'package:qesma/features/receipt_scan/application/receipt_scan_providers.dart';
 import 'package:qesma/local/backend/local_backend_overrides.dart';
@@ -37,6 +39,27 @@ Future<void> settle(WidgetTester tester) async {
   for (var i = 0; i < 10; i++) {
     await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 60)));
     await tester.pump(const Duration(milliseconds: 100));
+  }
+}
+
+/// Assigns Asem alone to each named item through the accordion and the member picker.
+Future<void> assignAsem(WidgetTester tester, AppLocalizations l10n, List<String> names) async {
+  for (final name in names) {
+    // One item is open at a time: a collapsed row is tapped open first; the open one has the member button.
+    final row = find.widgetWithText(ItemSummaryRow, name);
+    if (row.evaluate().isNotEmpty) {
+      await tester.ensureVisible(row);
+      await tester.tap(row);
+      await tester.pumpAndSettle();
+    }
+    await tester.ensureVisible(find.byType(AssigneeSummaryChip).first);
+    await tester.pump(const Duration(milliseconds: 200));
+    await tester.tap(find.byType(AssigneeSummaryChip).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.descendant(of: find.byType(AppBottomSheet), matching: find.text('Asem')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.descendant(of: find.byType(AppBottomSheet), matching: find.byType(FilledButton)));
+    await tester.pumpAndSettle();
   }
 }
 
@@ -104,16 +127,12 @@ void main() {
       expect(find.text(l10n.expenseItemizedIncomplete), findsOneWidget);
 
       // The user assigns members: both items to Asem.
-      for (var i = 0; i < 2; i++) {
-        final chip = find.widgetWithText(AppChoiceChip, 'Asem').at(i);
-        await tester.ensureVisible(chip);
-        await tester.pump(const Duration(milliseconds: 200));
-        await tester.tap(chip);
-        await tester.pumpAndSettle();
-      }
+      await assignAsem(tester, l10n, ['Tea', 'Cake']);
       await settle(tester);
       await reveal(tester, find.text(l10n.expenseBreakdownTitle), 300);
       await tester.pumpAndSettle();
+      final matches = find.textContaining(l10n.scanTotalMatches('').split('(').first.trim(), findRichText: true);
+      await reveal(tester, matches, 150);
       expect(find.textContaining(l10n.scanTotalMatches('').split('(').first.trim(), findRichText: true), findsOneWidget);
       expect(find.textContaining(l10n.scanTotalDiffers('').split('(').first.trim(), findRichText: true), findsNothing);
 
@@ -126,17 +145,17 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text(l10n.scanSourceGallery));
       await tester.pumpAndSettle();
+      await settle(tester);
+      await settle(tester);
+      await settle(tester);
+      expect(reader.received, hasLength(2), reason: 'the second scan ran');
       // The replaced items are unassigned again; assign and compare: 42.50 against the printed 50.
-      for (var i = 0; i < 2; i++) {
-        final chip = find.widgetWithText(AppChoiceChip, 'Asem').at(i);
-        await tester.ensureVisible(chip);
-        await tester.pump(const Duration(milliseconds: 200));
-        await tester.tap(chip);
-        await tester.pumpAndSettle();
-      }
+      await assignAsem(tester, l10n, ['Tea', 'Cake']);
       await settle(tester);
       await reveal(tester, find.text(l10n.expenseBreakdownTitle), 300);
       await tester.pumpAndSettle();
+      final differs = find.textContaining(l10n.scanTotalDiffers('').split('(').first.trim(), findRichText: true);
+      await reveal(tester, differs, 150);
       expect(find.textContaining(l10n.scanTotalDiffers('').split('(').first.trim(), findRichText: true), findsOneWidget);
       expect((await tester.runAsync(() => http.get('/groups/$gid/expenses')))!.data['items'] as List, isEmpty);
     });

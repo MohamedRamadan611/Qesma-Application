@@ -123,34 +123,59 @@ public final class ItemizedCalculator {
      * @param service         null = service disabled
      * @param tax             null = tax disabled
      * @param adjustmentMinor signed rounding/tip adjustment, 0 = none
+     * @param deliveryMinor   delivery amount, 0 = none (A180): outside discount, service and tax, split equally among
+     *                        the members who have at least one item
      */
     public record ItemizedInput(List<MemberRef> members, List<Item> items, ChargeSpec discount, ChargeSpec service,
-                                TaxSpec tax, long adjustmentMinor) {
+                                TaxSpec tax, long adjustmentMinor, long deliveryMinor) {
+
+        /** Without delivery. */
+        public ItemizedInput(List<MemberRef> members, List<Item> items, ChargeSpec discount, ChargeSpec service,
+                             TaxSpec tax, long adjustmentMinor) {
+            this(members, items, discount, service, tax, adjustmentMinor, 0);
+        }
 
         /** Spec 7.4 input: service as a rate, no discount. */
         public ItemizedInput(List<MemberRef> members, List<Item> items, Integer serviceBps, TaxSpec tax,
                              long adjustmentMinor) {
-            this(members, items, null, serviceBps == null ? null : ChargeSpec.percent(serviceBps), tax, adjustmentMinor);
+            this(members, items, null, serviceBps == null ? null : ChargeSpec.percent(serviceBps), tax, adjustmentMinor,
+                    0);
         }
     }
 
-    /** owed = items - discount + service + tax + adjustment. */
+    /**
+     * owed = items - discount + service + tax + delivery + adjustment. {@code deliveryMinor} comes last so the
+     * pre-delivery constructors keep their shape (A180).
+     */
     public record MemberBreakdown(String memberId, long itemsMinor, long discountMinor, long serviceMinor,
-                                  long taxMinor, long adjustmentMinor, long owedMinor) {
+                                  long taxMinor, long adjustmentMinor, long owedMinor, long deliveryMinor) {
+
+        /** Without delivery. */
+        public MemberBreakdown(String memberId, long itemsMinor, long discountMinor, long serviceMinor,
+                               long taxMinor, long adjustmentMinor, long owedMinor) {
+            this(memberId, itemsMinor, discountMinor, serviceMinor, taxMinor, adjustmentMinor, owedMinor, 0);
+        }
 
         /** Without a discount. */
         public MemberBreakdown(String memberId, long itemsMinor, long serviceMinor, long taxMinor, long adjustmentMinor,
                                long owedMinor) {
-            this(memberId, itemsMinor, 0, serviceMinor, taxMinor, adjustmentMinor, owedMinor);
+            this(memberId, itemsMinor, 0, serviceMinor, taxMinor, adjustmentMinor, owedMinor, 0);
         }
     }
 
     /**
      * Members are in sortOrder; those who owe 0 are omitted (spec 7.4 step 6). {@code subtotalMinor} is the sum of
-     * the lines before the discount; total = subtotal - discount + service + tax + adjustment.
+     * the lines before the discount; total = subtotal - discount + service + tax + delivery + adjustment.
      */
     public record ItemizedResult(long subtotalMinor, long discountMinor, long serviceMinor, long taxMinor,
-                                 long adjustmentMinor, long totalMinor, List<MemberBreakdown> members) {
+                                 long adjustmentMinor, long totalMinor, List<MemberBreakdown> members,
+                                 long deliveryMinor) {
+
+        /** Without delivery. */
+        public ItemizedResult(long subtotalMinor, long discountMinor, long serviceMinor, long taxMinor,
+                              long adjustmentMinor, long totalMinor, List<MemberBreakdown> members) {
+            this(subtotalMinor, discountMinor, serviceMinor, taxMinor, adjustmentMinor, totalMinor, members, 0);
+        }
     }
 
     /** Runs STANDALONE_SPEC 18.2 (spec 7.4 steps 1-6). Payers are checked separately by {@link PayerValidator}. */
@@ -181,9 +206,13 @@ public final class ItemizedCalculator {
         if (in.tax() != null) {
             checkCharge(in.tax().rate(), 0, Bps.MAX_BPS, "tax");
         }
+        if (in.deliveryMinor() < 0 || !Limits.withinAmountLimit(in.deliveryMinor())) {
+            throw EngineException.invalid("deliveryMinor must be between 0 and " + Limits.MAX_AMOUNT_MINOR);
+        }
 
         // Step 1: item shares, equal LRM among each item's assignees.
         long[] itemsMinor = new long[n];
+        boolean[] hasItem = new boolean[n];
         long subtotal = 0;
         for (Item item : in.items()) {
             long line = lineAmount(item);
@@ -202,6 +231,7 @@ public final class ItemizedCalculator {
                     throw EngineException.invalid("Duplicate assignee on an item");
                 }
                 idx.add(i);
+                hasItem[i] = true;
             }
             idx.sort(Integer::compare);
             long[] weights = new long[idx.size()];
@@ -261,15 +291,28 @@ public final class ItemizedCalculator {
             taxMinor = Lrm.allocate(taxTotal, baseWeights, sortOrders);
         }
 
-        // Step 5: signed adjustment, allocated by net shares (Lrm applies the sign afterwards).
+        // Step 5: delivery (A180): outside discount, service and tax; equal parts among the members with an item,
+        // leftover piasters by the usual largest-remainder order.
+        long deliveryTotal = in.deliveryMinor();
+        long[] deliveryMinor = new long[n];
+        if (deliveryTotal != 0) {
+            long[] ones = new long[n];
+            for (int i = 0; i < n; i++) {
+                ones[i] = hasItem[i] ? 1 : 0;
+            }
+            deliveryMinor = Lrm.allocate(deliveryTotal, ones, sortOrders);
+        }
+
+        // Step 6: signed adjustment, allocated by net shares (Lrm applies the sign afterwards).
         long adjustment = in.adjustmentMinor();
         long[] adjustmentMinor = new long[n];
         if (adjustment != 0) {
             adjustmentMinor = Lrm.allocate(adjustment, netMinor, sortOrders);
         }
 
-        // Step 6: owed per member and total; total must be > 0.
-        long total = Exact.add(Exact.add(netSubtotal, serviceTotal), Exact.add(taxTotal, adjustment));
+        // Step 7: owed per member and total; total must be > 0.
+        long total = Exact.add(Exact.add(Exact.add(netSubtotal, serviceTotal), Exact.add(taxTotal, adjustment)),
+                deliveryTotal);
         if (total <= 0) {
             throw EngineException.invalid("The bill total must be greater than zero");
         }
@@ -277,7 +320,8 @@ public final class ItemizedCalculator {
         long owedSum = 0;
         long discountSum = 0;
         for (int i = 0; i < n; i++) {
-            long owed = Exact.add(Exact.add(netMinor[i], serviceMinor[i]), Exact.add(taxMinor[i], adjustmentMinor[i]));
+            long owed = Exact.add(Exact.add(Exact.add(netMinor[i], serviceMinor[i]), Exact.add(taxMinor[i], adjustmentMinor[i])),
+                    deliveryMinor[i]);
             if (owed < 0) {
                 // Decision A12: an adjustment must never make one member's share negative.
                 throw EngineException.invalid("The adjustment makes a member's share negative");
@@ -286,14 +330,14 @@ public final class ItemizedCalculator {
             discountSum = Exact.add(discountSum, discountMinor[i]);
             if (owed != 0) { // members owing 0 are not participants.
                 breakdown.add(new MemberBreakdown(roster.get(i).id(), itemsMinor[i], discountMinor[i], serviceMinor[i],
-                        taxMinor[i], adjustmentMinor[i], owed));
+                        taxMinor[i], adjustmentMinor[i], owed, deliveryMinor[i]));
             }
         }
         if (owedSum != total || discountSum != discountTotal) {
             throw new IllegalStateException("Engine invariant violated: parts do not sum to their totals");
         }
         return new ItemizedResult(subtotal, discountTotal, serviceTotal, taxTotal, adjustment, total,
-                List.copyOf(breakdown));
+                List.copyOf(breakdown), deliveryTotal);
     }
 
     /** Quantity 1..999, unit price > 0, line within the A43 cap; overflow is a VALIDATION_ERROR (A13). */

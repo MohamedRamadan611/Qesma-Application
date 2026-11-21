@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/errors/api_failure.dart';
@@ -12,7 +14,13 @@ bool outcomeUnknown(ApiFailure failure) => switch (failure) {
     };
 
 class CreateGroupState {
-  const CreateGroupState({this.submitting = false, this.failure, this.outcomeUnknown = false, this.createdGroupId});
+  const CreateGroupState({
+    this.submitting = false,
+    this.failure,
+    this.outcomeUnknown = false,
+    this.createdGroupId,
+    this.failedMemberNames = const [],
+  });
 
   final bool submitting;
   final ApiFailure? failure;
@@ -20,6 +28,9 @@ class CreateGroupState {
   /// The last attempt may have created the group. The next submit checks the list first.
   final bool outcomeUnknown;
   final String? createdGroupId;
+
+  /// Names that could not be added after the group was created (the group is kept).
+  final List<String> failedMemberNames;
 }
 
 /// Creates a group without ever duplicating it. `POST /groups` has no idempotency key
@@ -35,7 +46,10 @@ class CreateGroupController extends Notifier<CreateGroupState> {
   CreateGroupState build() => const CreateGroupState();
 
   /// Returns the id of the new group, or null (see [state] for why).
-  Future<String?> submit({required String name, required String type}) async {
+  ///
+  /// [members] are name-only members added one by one after the group exists. A failure
+  /// there never undoes the group: the names that failed are in [CreateGroupState.failedMemberNames].
+  Future<String?> submit({required String name, required String type, List<String> members = const []}) async {
     if (state.submitting) return null;
     state = const CreateGroupState(submitting: true);
     try {
@@ -44,19 +58,19 @@ class CreateGroupController extends Notifier<CreateGroupState> {
 
       if (state.outcomeUnknown || _attempted) {
         final found = await _findCreated(name, type);
-        if (found != null) return _succeeded(found);
+        if (found != null) return await _succeeded(found, members);
       }
 
       _attempted = true;
       final group = await _repo.create(name: name, type: type);
-      return _succeeded(group.id);
+      return await _succeeded(group.id, members);
     } on ApiFailure catch (failure) {
       final unknown = _attempted && outcomeUnknown(failure);
       if (unknown) {
         // Look once more right away: the group may already exist.
         try {
           final found = await _findCreated(name, type);
-          if (found != null) return _succeeded(found);
+          if (found != null) return await _succeeded(found, members);
           // Reachable server and no such group: safe to retry.
           _attempted = false;
           state = CreateGroupState(failure: failure);
@@ -82,9 +96,17 @@ class CreateGroupController extends Notifier<CreateGroupState> {
     return null;
   }
 
-  String _succeeded(String id) {
-    state = CreateGroupState(createdGroupId: id);
-    ref.read(groupsListControllerProvider.notifier).refresh();
+  Future<String> _succeeded(String id, List<String> members) async {
+    final failed = <String>[];
+    for (final member in members) {
+      try {
+        await _repo.addMember(id, member);
+      } on ApiFailure {
+        failed.add(member);
+      }
+    }
+    state = CreateGroupState(createdGroupId: id, failedMemberNames: failed);
+    unawaited(ref.read(groupsListControllerProvider.notifier).refresh());
     return id;
   }
 }

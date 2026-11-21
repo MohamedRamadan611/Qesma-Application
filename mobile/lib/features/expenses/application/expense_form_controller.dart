@@ -312,25 +312,58 @@ class ExpenseFormController extends Notifier<ExpenseFormView> {
   ItemDraft _newItem() => ItemDraft(id: 'new-${_itemSeq++}', assigneeIds: {...memberIds});
 
   /// SA12: replaces the bill with a scan's proposal (called from the itemized editor, after the user agreed). The
-  /// scan proposes only: nothing is saved and nobody is assigned.
+  /// scan proposes only: nothing is saved and nobody is assigned. SA17 (A176): the shop name fills the title only
+  /// while the title is empty, and the category guess fills the category only while the user has not chosen one.
   void applyScan(ScanDraft scan) {
     final f = form;
     if (f == null) return;
     _autoRejectedKey = null;
+    final merchant = scan.merchantName;
+    final category = scan.category;
+    final fillTitle = merchant != null && f.trimmedTitle.isEmpty;
+    final fillCategory = category != null && !f.categoryTouched;
     _set(f.copyWith(
       splitMode: SplitMode.itemized,
       itemized: scan.itemized,
       printedTotalMinor: scan.printedTotalMinor,
-      scanNotes: scan.notes,
+      scanNotes: {...scan.notes, if (fillTitle || fillCategory) ScanNote.titleCategorySuggested},
+      title: fillTitle ? merchant : null,
+      category: fillCategory ? category : null,
       clearAutoAdjusted: true,
     ));
   }
 
-  /// A new item starts with everyone selected (the user unchecks).
-  void addItem() {
+  /// A new item starts with everyone selected (the user unchecks). Returns its id (the screen opens it), or null at
+  /// the item limit.
+  String? addItem() {
     final f = form;
-    if (f == null || f.itemized.items.length >= kMaxItems) return;
-    _setItemized(f.itemized.copyWith(items: [...f.itemized.items, _newItem()]));
+    if (f == null || f.itemized.items.length >= kMaxItems) return null;
+    final item = _newItem();
+    _setItemized(f.itemized.copyWith(items: [...f.itemized.items, item]));
+    return item.id;
+  }
+
+  /// By-person mode: a new item shared by this person only. Returns its id, or null at the item limit.
+  String? addItemFor(String personId) {
+    final f = form;
+    if (f == null || f.itemized.items.length >= kMaxItems) return null;
+    final item = ItemDraft(id: 'new-${_itemSeq++}', assigneeIds: {personId}, touched: false);
+    _setItemized(f.itemized.copyWith(items: [...f.itemized.items, item]));
+    return item.id;
+  }
+
+  /// Asks the items card to open this item (the validation summary's rows). Screen intent only: it changes nothing in the bill.
+  void requestOpenItem(String id) {
+    final f = form;
+    if (f == null) return;
+    state = state.copyWith(form: f.copyWith(openItemId: id, openItemNonce: f.openItemNonce + 1));
+  }
+
+  /// The user closed a scan notice.
+  void dismissScanNote(ScanNote note) {
+    final f = form;
+    if (f == null || !f.scanNotes.contains(note)) return;
+    _set(f.copyWith(scanNotes: {...f.scanNotes}..remove(note)));
   }
 
   /// Removes an item and returns it with its position, so the screen can offer "undo" ([restoreItem]).
@@ -498,6 +531,17 @@ class ExpenseFormController extends Notifier<ExpenseFormView> {
     if (f != null) _setItemized(f.itemized.copyWith(taxMode: ChargeMode.percent, taxPercentText: text));
   }
 
+  /// A180: the delivery switch (an amount only; the field keeps whatever was typed).
+  void setDeliveryOn(bool on) {
+    final f = form;
+    if (f != null) _setItemized(f.itemized.copyWith(deliveryOn: on));
+  }
+
+  void setDeliveryAmount(String text) {
+    final f = form;
+    if (f != null) _setItemized(f.itemized.copyWith(deliveryAmountText: text));
+  }
+
   void setTaxBase(TaxBase base) {
     final f = form;
     if (f != null) _setItemized(f.itemized.copyWith(taxBase: base));
@@ -542,7 +586,7 @@ class ExpenseFormController extends Notifier<ExpenseFormView> {
 
   void setCategory(String value) {
     final f = form;
-    if (f != null) _set(f.copyWith(category: value));
+    if (f != null) _set(f.copyWith(category: value, categoryTouched: true));
   }
 
   /// SA10 (A135): "Paid from the pool". On makes the treasurer the single payer (the payer editor is off while it

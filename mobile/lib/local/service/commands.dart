@@ -65,6 +65,7 @@ final class ExpenseIn {
     this.service,
     this.tax,
     this.adjustmentMinor,
+    this.deliveryMinor,
     this.category,
     this.paidFromPool,
   });
@@ -87,6 +88,9 @@ final class ExpenseIn {
   final ChargeIn? service;
   final TaxIn? tax;
   final int? adjustmentMinor;
+
+  /// A180: the delivery amount (ITEMIZED only), null = none.
+  final int? deliveryMinor;
   final String? category;
 
   /// BSA1: optional; true only for a pool expense (single payer = the treasurer).
@@ -107,6 +111,7 @@ final class ExpenseIn {
       service: ChargeIn.read(f.obj('service')),
       tax: tax == null ? null : TaxIn(tax.integer('bps'), tax.str('base'), tax.integer('amountMinor')),
       adjustmentMinor: f.integer('adjustmentMinor'),
+      deliveryMinor: f.integer('deliveryMinor'),
       category: f.str('category'),
       paidFromPool: f.boolean('paidFromPool'),
     );

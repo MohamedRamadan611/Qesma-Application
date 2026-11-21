@@ -1,0 +1,22 @@
+{
+  "name": "V19 itemized, delivery 10.00 between the two members with items, then a -5.00 adjustment by net shares; C has no item",
+  "input": {
+    "members": [ { "id": "A", "sortOrder": 1 }, { "id": "B", "sortOrder": 2 }, { "id": "C", "sortOrder": 3 } ],
+    "expenses": [
+      { "type": "ITEMIZED",
+        "payers": [ { "memberId": "A", "amountMinor": 9500 } ],
+        "items": [
+          { "name": "Burger", "amountMinor": 6000, "assigneeMemberIds": [ "A" ] },
+          { "name": "Salad",  "amountMinor": 3000, "assigneeMemberIds": [ "B" ] }
+        ],
+        "deliveryMinor": 1000,
+        "adjustmentMinor": -500 }
+    ],
+    "settlements": []
+  },
+  "expected": {
+    "expenses": [ { "owed": { "A": 6167, "B": 3333 },
+                    "deliveries": { "A": 500, "B": 500 },
+                    "subtotalMinor": 9000, "deliveryMinor": 1000, "totalMinor": 9500 } ]
+  }
+}

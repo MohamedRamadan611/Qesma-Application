@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qesma_api/qesma_api.dart';
 
+import '../../../core/errors/api_failure.dart';
+import '../../../core/errors/api_problem.dart';
 import '../../../core/theme/tokens.dart';
 import '../application/expense_command_builder.dart';
 import '../application/expense_form_controller.dart';
@@ -47,6 +49,19 @@ class _ItemizedEditorState extends ConsumerState<ItemizedEditor> {
   AssignmentMode _mode = AssignmentMode.byItem;
   String? _personId;
 
+  /// The preview for this exact bill came back as a validation error although every field is readable and a discount
+  /// is on: the discount is what the engine refuses (it must stay below the items total, A171).
+  static bool _discountTooLarge(PreviewState preview, String? splitKey, ExpenseFormState form, List<String> memberIds) {
+    final failure = preview.failure;
+    return splitKey != null &&
+        preview.key == splitKey &&
+        preview.status == PreviewStatus.failed &&
+        failure is ApiHttpFailure &&
+        failure.problem?.code == ApiErrorCode.validationError &&
+        form.itemized.discountOn &&
+        form.itemized.valid(memberIds);
+  }
+
   @override
   Widget build(BuildContext context) {
     final form = widget.form;
@@ -78,7 +93,10 @@ class _ItemizedEditorState extends ConsumerState<ItemizedEditor> {
           ),
         ),
         const SizedBox(height: QesmaSpacing.md),
-        KeyedSubtree(key: widget.chargesSectionKey, child: ChargesCard(formKey: widget.formKey, form: form, current: current)),
+        KeyedSubtree(
+          key: widget.chargesSectionKey,
+          child: ChargesCard(formKey: widget.formKey, form: form, current: current, discountTooLarge: _discountTooLarge(preview, splitKey, form, memberIds)),
+        ),
         const SizedBox(height: QesmaSpacing.md),
         BreakdownCard(
           formKey: widget.formKey,

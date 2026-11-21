@@ -83,6 +83,13 @@ class ItemizedV2MigrationIT extends AbstractIntegrationTest {
                 .containsEntry("tax_amount_minor", null);
         assertThat(jdbc.queryForList("select discount_minor from expense_splits where expense_id = ?", Long.class, itemized))
                 .containsExactly(0L, 0L);
+        // V22 (A180): ITEMIZED rows get delivery 0, EQUAL/EXACT rows stay NULL, balances do not move
+        assertThat(jdbc.queryForObject("select delivery_minor from expenses where id = ?", Long.class, itemized)).isZero();
+        assertThat(jdbc.queryForList("select delivery_minor from expense_splits where expense_id = ?", Long.class, itemized))
+                .containsExactly(0L, 0L);
+        assertThat(jdbc.queryForObject("select delivery_minor from expenses where id = ?", Long.class, exact)).isNull();
+        assertThat(jdbc.queryForList("select delivery_minor from expense_splits where expense_id = ?", Long.class, exact))
+                .containsOnlyNulls();
         assertThat(jdbc.queryForObject("select discount_minor from expenses where id = ?", Long.class, exact)).isNull();
         assertThat(jdbc.queryForList("select discount_minor from expense_splits where expense_id = ?", Long.class, exact))
                 .containsOnlyNulls();

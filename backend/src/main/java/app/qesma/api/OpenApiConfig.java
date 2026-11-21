@@ -406,14 +406,15 @@ public class OpenApiConfig {
     /** Response fields that can be null (all other response fields are always present and non-null). */
     static final Map<String, java.util.Set<String>> NULLABLE = Map.ofEntries(
             Map.entry("ExpenseView", java.util.Set.of("items", "charges")),
-            Map.entry("ShareView", java.util.Set.of("itemsMinor", "discountMinor", "serviceMinor", "taxMinor", "adjustmentMinor")),
+            Map.entry("ShareView", java.util.Set.of("itemsMinor", "discountMinor", "serviceMinor", "taxMinor", "adjustmentMinor",
+                    "deliveryMinor")),
             Map.entry("Charges", java.util.Set.of("discount", "service", "tax")),
             // BSA2: bps is null when the charge was given as an amount.
             Map.entry("DiscountCharge", java.util.Set.of("bps")),
             Map.entry("ServiceCharge", java.util.Set.of("bps")),
             Map.entry("TaxCharge", java.util.Set.of("bps")),
             Map.entry("ExpensePreview", java.util.Set.of("subtotalMinor", "discountMinor", "serviceMinor", "taxMinor",
-                    "adjustmentMinor")),
+                    "adjustmentMinor", "deliveryMinor")),
             Map.entry("SettlementView", java.util.Set.of("note", "createdByMemberId", "confirmedAt", "disputedAt", "cancelledAt")),
             Map.entry("GroupDto", java.util.Set.of("lastExpenseAt", "treasurerMemberId", "poolBalanceMinor")),
             Map.entry("GroupSummaryDto", java.util.Set.of("lastExpenseAt")),

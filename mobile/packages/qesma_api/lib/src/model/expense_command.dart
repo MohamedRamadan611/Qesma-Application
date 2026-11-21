@@ -21,6 +21,7 @@ part 'expense_command.g.dart';
 /// Properties:
 /// * [adjustmentMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
 /// * [category] 
+/// * [deliveryMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
 /// * [discount] 
 /// * [expenseDate] 
 /// * [items] 
@@ -41,6 +42,10 @@ abstract class ExpenseCommand implements Built<ExpenseCommand, ExpenseCommandBui
 
   @BuiltValueField(wireName: r'category')
   String? get category;
+
+  /// Integer minor units (piasters: 1 EGP = 100). Never a decimal.
+  @BuiltValueField(wireName: r'deliveryMinor')
+  int? get deliveryMinor;
 
   @BuiltValueField(wireName: r'discount')
   DiscountInput? get discount;
@@ -114,6 +119,13 @@ class _$ExpenseCommandSerializer implements PrimitiveSerializer<ExpenseCommand> 
       yield serializers.serialize(
         object.category,
         specifiedType: const FullType(String),
+      );
+    }
+    if (object.deliveryMinor != null) {
+      yield r'deliveryMinor';
+      yield serializers.serialize(
+        object.deliveryMinor,
+        specifiedType: const FullType(int),
       );
     }
     if (object.discount != null) {
@@ -230,6 +242,13 @@ class _$ExpenseCommandSerializer implements PrimitiveSerializer<ExpenseCommand> 
             specifiedType: const FullType(String),
           ) as String;
           result.category = valueDes;
+          break;
+        case r'deliveryMinor':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(int),
+          ) as int;
+          result.deliveryMinor = valueDes;
           break;
         case r'discount':
           final valueDes = serializers.deserialize(

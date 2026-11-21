@@ -124,4 +124,14 @@ void main() {
       }
     });
   });
+
+  group('Count.parse (SA17: a printed quantity, whole numbers only)', () {
+    const valid = <String, int>{'1': 1, '3': 3, ' 12 ': 12, '٣': 3, '۱۲': 12, '999': 999, '007': 7};
+    valid.forEach((input, expected) {
+      test('"$input" -> $expected', () => expect(Count.parse(input, min: 1, max: 999), expected));
+    });
+    for (final input in ['', '0', '1000', '1.5', '1,5', '-2', 'two', '2x', '99999', '١٠٠٠']) {
+      test('"$input" -> null', () => expect(Count.parse(input, min: 1, max: 999), isNull));
+    }
+  });
 }

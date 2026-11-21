@@ -118,6 +118,7 @@ void main() {
         ..charges.replace(Charges((c) => c
           ..subtotalMinor = 4575
           ..adjustmentMinor = 0
+          ..deliveryMinor = 0
           ..discount.replace(DiscountCharge((d) => d..amountMinor = 500))
           ..service.replace(ServiceCharge((s) => s
             ..bps = 1200

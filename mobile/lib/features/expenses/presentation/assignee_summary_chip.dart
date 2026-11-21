@@ -71,7 +71,7 @@ class AssigneeSummaryChip extends StatelessWidget {
                           ],
                         ),
                       ),
-                    if (label != null) ...[const SizedBox(width: QesmaSpacing.sm), Text(label, style: theme.textTheme.labelLarge)],
+                    if (label != null) ...[const SizedBox(width: QesmaSpacing.sm), Flexible(child: Text(label, style: theme.textTheme.labelLarge))],
                     const SizedBox(width: QesmaSpacing.xs),
                     const Icon(Icons.arrow_drop_down, size: 22),
                   ],

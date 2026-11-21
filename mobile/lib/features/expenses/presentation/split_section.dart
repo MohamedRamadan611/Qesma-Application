@@ -36,13 +36,6 @@ class SplitSection extends ConsumerWidget {
     final preview = ref.watch(expensePreviewControllerProvider((gid: formKey.gid, slot: PreviewSlot.split)));
     final mode = form.splitMode;
 
-    Widget chip(String label, SplitMode value, {IconData? icon, VoidCallback? onTap}) => AppChoiceChip(
-          label: label,
-          selected: mode == value,
-          icon: icon,
-          onSelected: (_) => onTap != null ? onTap() : controller.setSplitMode(value),
-        );
-
     final current = preview.isCurrentFor(previewKey) ? preview.preview : null;
     final owedByMember = {for (final s in current?.members ?? const <ShareView>[]) s.memberId: s.owedMinor};
 
@@ -50,17 +43,9 @@ class SplitSection extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Semantics(header: true, child: Text(l10n.expenseFormSplitTitle, style: theme.textTheme.titleMedium)),
-          const SizedBox(height: QesmaSpacing.sm),
-          Wrap(
-            spacing: QesmaSpacing.sm,
-            runSpacing: QesmaSpacing.xs,
-            children: [
-              chip(l10n.expenseFormSplitAll, SplitMode.all),
-              chip(l10n.expenseFormSplitSelected, SplitMode.selected),
-              chip(l10n.expenseSplitExact, SplitMode.exact),
-              chip(l10n.expenseSplitItemized, SplitMode.itemized, icon: Icons.receipt_long),
-            ],
+          SplitMethodRow(
+            mode: mode,
+            onChosen: controller.setSplitMode,
           ),
           const SizedBox(height: QesmaSpacing.md),
           if (mode == SplitMode.all || mode == SplitMode.selected) _PreviewStatus(form: form, state: preview, current: current != null, previewKey: previewKey, formKey: formKey),
@@ -107,6 +92,131 @@ class SplitSection extends ConsumerWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// The split method as one row (the redesign): the title, the chosen method with its one-line explanation, and a
+/// chevron; a tap opens a sheet with the four methods. Choosing one closes the sheet.
+class SplitMethodRow extends StatelessWidget {
+  const SplitMethodRow({super.key, required this.mode, required this.onChosen});
+
+  final SplitMode mode;
+  final ValueChanged<SplitMode> onChosen;
+
+  static String labelOf(AppLocalizations l10n, SplitMode mode) => switch (mode) {
+        SplitMode.all => l10n.expenseFormSplitAll,
+        SplitMode.selected => l10n.expenseFormSplitSelected,
+        SplitMode.exact => l10n.expenseSplitExact,
+        SplitMode.itemized => l10n.expenseSplitItemized,
+      };
+
+  static String subtitleOf(AppLocalizations l10n, SplitMode mode) => switch (mode) {
+        SplitMode.all => l10n.expenseFormSplitSubtitleAll,
+        SplitMode.selected => l10n.expenseFormSplitSubtitleSelected,
+        SplitMode.exact => l10n.expenseFormSplitSubtitleExact,
+        SplitMode.itemized => l10n.expenseFormSplitSubtitleItemized,
+      };
+
+  static IconData iconOf(SplitMode mode) => switch (mode) {
+        SplitMode.all => Icons.groups_outlined,
+        SplitMode.selected => Icons.group_outlined,
+        SplitMode.exact => Icons.pin_outlined,
+        SplitMode.itemized => Icons.receipt_long,
+      };
+
+  Future<void> _choose(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final picked = await showAppBottomSheet<SplitMode>(
+      context,
+      title: l10n.expenseFormSplitTitle,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [for (final m in SplitMode.values) _MethodTile(mode: m, selected: m == mode)],
+      ),
+    );
+    if (picked != null && picked != mode) onChosen(picked);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    return Semantics(
+      button: true,
+      label: '${l10n.expenseFormSplitTitle}: ${labelOf(l10n, mode)}, ${subtitleOf(l10n, mode)}',
+      onTap: () => _choose(context),
+      child: ExcludeSemantics(
+        child: InkWell(
+          borderRadius: BorderRadius.circular(QesmaRadii.control),
+          onTap: () => _choose(context),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: kMinTouch + 8),
+            child: Row(
+              children: [
+                Icon(iconOf(mode), color: context.colors.primary),
+                const SizedBox(width: QesmaSpacing.sm + 4),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(l10n.expenseFormSplitTitle, style: theme.textTheme.labelLarge?.copyWith(color: context.colors.textSecondary)),
+                      Text(labelOf(l10n, mode), style: theme.textTheme.titleMedium),
+                      Text(subtitleOf(l10n, mode), style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: QesmaSpacing.sm),
+                const Icon(Icons.chevron_right),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MethodTile extends StatelessWidget {
+  const _MethodTile({required this.mode, required this.selected});
+
+  final SplitMode mode;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: '${SplitMethodRow.labelOf(l10n, mode)}, ${SplitMethodRow.subtitleOf(l10n, mode)}',
+      onTap: () => Navigator.of(context).pop(mode),
+      child: ExcludeSemantics(
+        child: InkWell(
+          borderRadius: BorderRadius.circular(QesmaRadii.control),
+          onTap: () => Navigator.of(context).pop(mode),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: kMinTouch + 8),
+            child: Row(
+              children: [
+                Icon(SplitMethodRow.iconOf(mode), color: selected ? context.colors.primary : context.colors.textSecondary),
+                const SizedBox(width: QesmaSpacing.sm + 4),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(SplitMethodRow.labelOf(l10n, mode), style: theme.textTheme.titleMedium),
+                      Text(SplitMethodRow.subtitleOf(l10n, mode), style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
+                    ],
+                  ),
+                ),
+                if (selected) Icon(Icons.check, color: context.colors.primary),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

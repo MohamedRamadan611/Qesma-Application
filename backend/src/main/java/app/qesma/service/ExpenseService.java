@@ -150,7 +150,8 @@ public class ExpenseService {
         boolean itemized = calc.itemized();
         return new ExpensePreview(calc.totalMinor(), calc.subtotalMinor(), itemized ? calc.discountMinor() : null,
                 itemized ? calc.serviceMinor() : null, itemized ? calc.taxMinor() : null,
-                itemized ? calc.adjustmentMinor() : null, calc.shares(), payersMatch);
+                itemized ? calc.adjustmentMinor() : null, calc.shares(), payersMatch,
+                itemized ? calc.deliveryMinor() : null);
     }
 
     /**
@@ -325,7 +326,7 @@ public class ExpenseService {
             return new ExpenseSplit(expenseId, s.memberId(), s.owedMinor());
         }
         return new ExpenseSplit(expenseId, s.memberId(), s.owedMinor(), s.itemsMinor(), s.discountMinor(),
-                s.serviceMinor(), s.taxMinor(), s.adjustmentMinor());
+                s.serviceMinor(), s.taxMinor(), s.adjustmentMinor(), s.deliveryMinor() == null ? 0 : s.deliveryMinor());
     }
 
     /** Writes payers, resolved shares and (ITEMIZED) items, and returns the expense as the API shows it. */
@@ -370,7 +371,7 @@ public class ExpenseService {
                 c.hasDiscount() ? new ExpenseView.DiscountCharge(c.discountBps(), c.discountMinor()) : null,
                 c.hasService() ? new ExpenseView.ServiceCharge(c.serviceBps(), c.serviceMinor()) : null,
                 c.hasTax() ? new ExpenseView.TaxCharge(c.taxBps(), c.taxBase(), c.taxMinor()) : null,
-                c.adjustmentMinor());
+                c.adjustmentMinor(), c.deliveryMinor());
     }
 
     /**
@@ -398,9 +399,23 @@ public class ExpenseService {
                 }
             }
         }
-        if (root.get("charges") instanceof com.fasterxml.jackson.databind.node.ObjectNode charges
-                && !charges.has("discount")) {
-            charges.putNull("discount");
+        for (com.fasterxml.jackson.databind.JsonNode share : root.path("shares")) {
+            if (share instanceof com.fasterxml.jackson.databind.node.ObjectNode o && !o.has("deliveryMinor")) {
+                com.fasterxml.jackson.databind.JsonNode items = o.get("itemsMinor");
+                if (items == null || items.isNull()) {
+                    o.putNull("deliveryMinor");
+                } else {
+                    o.put("deliveryMinor", 0L);
+                }
+            }
+        }
+        if (root.get("charges") instanceof com.fasterxml.jackson.databind.node.ObjectNode charges) {
+            if (!charges.has("discount")) {
+                charges.putNull("discount");
+            }
+            if (!charges.has("deliveryMinor")) {
+                charges.put("deliveryMinor", 0L); // A180: no delivery existed before V22
+            }
         }
         return root;
     }
@@ -475,7 +490,8 @@ public class ExpenseService {
                     .toList();
             List<ExpenseView.ShareView> shareViews = splitsByExpense.getOrDefault(e.getId(), List.of()).stream()
                     .map(s -> new ExpenseView.ShareView(s.getMemberId(), s.getOwedMinor(), s.getItemsMinor(),
-                            s.getDiscountMinor(), s.getServiceMinor(), s.getTaxMinor(), s.getAdjustmentMinor()))
+                            s.getDiscountMinor(), s.getServiceMinor(), s.getTaxMinor(), s.getAdjustmentMinor(),
+                            s.getDeliveryMinor()))
                     .sorted(Comparator.comparingInt(s -> order.getOrDefault(s.memberId(), Integer.MAX_VALUE)))
                     .toList();
             boolean itemized = Expense.ITEMIZED.equals(e.getSplitType());
@@ -503,7 +519,7 @@ public class ExpenseService {
                     discount ? new ExpenseView.DiscountCharge(e.getDiscountBps(), e.getDiscountMinor()) : null,
                     service ? new ExpenseView.ServiceCharge(e.getServiceBps(), e.getServiceMinor()) : null,
                     tax ? new ExpenseView.TaxCharge(e.getTaxBps(), e.getTaxBase(), e.getTaxMinor()) : null,
-                    e.getAdjustmentMinor());
+                    e.getAdjustmentMinor(), e.getDeliveryMinor() == null ? 0 : e.getDeliveryMinor());
         }
     }
 }

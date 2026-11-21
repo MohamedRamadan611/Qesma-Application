@@ -14,6 +14,23 @@ enum ErrorSection { title, payers, items, charges }
 /// One payer who covers the whole total, or several who each type what they paid.
 enum PayerMode { single, multiple }
 
+/// What a validation-summary row points at (the redesigned form lists every problem, each one tappable).
+enum IssueKind { title, payers, itemsEmpty, itemName, itemPrice, itemQuantity, itemMembers, discount, service, tax, delivery, adjustment }
+
+/// One thing still missing or unreadable on a restaurant bill, in screen order. [itemId] and [itemIndex] (1-based) are
+/// set for the item kinds.
+class FormIssue {
+  const FormIssue(this.kind, this.section, {this.itemId, this.itemIndex, this.itemName});
+
+  final IssueKind kind;
+  final ErrorSection section;
+  final String? itemId;
+  final int? itemIndex;
+
+  /// The item's typed name (empty when it has none yet).
+  final String? itemName;
+}
+
 /// The title limit of the backend (code points).
 const int kExpenseTitleMax = 100;
 
@@ -140,6 +157,8 @@ class ItemizedDraft {
     this.taxPercentText = '',
     this.taxAmountText = '',
     this.taxBase = TaxBase.subtotalPlusService,
+    this.deliveryOn = false,
+    this.deliveryAmountText = '',
     this.adjustmentText = '',
     this.adjustmentAuto = false,
     this.adjustmentManual = false,
@@ -159,6 +178,10 @@ class ItemizedDraft {
   final String taxPercentText;
   final String taxAmountText;
   final TaxBase taxBase;
+
+  /// A180: the delivery charge, an amount only (no percentage), outside discount, service and tax.
+  final bool deliveryOn;
+  final String deliveryAmountText;
 
   /// Signed, as typed; empty means no adjustment.
   final String adjustmentText;
@@ -184,6 +207,8 @@ class ItemizedDraft {
     String? taxPercentText,
     String? taxAmountText,
     TaxBase? taxBase,
+    bool? deliveryOn,
+    String? deliveryAmountText,
     String? adjustmentText,
     bool? adjustmentAuto,
     bool? adjustmentManual,
@@ -203,6 +228,8 @@ class ItemizedDraft {
         taxPercentText: taxPercentText ?? this.taxPercentText,
         taxAmountText: taxAmountText ?? this.taxAmountText,
         taxBase: taxBase ?? this.taxBase,
+        deliveryOn: deliveryOn ?? this.deliveryOn,
+        deliveryAmountText: deliveryAmountText ?? this.deliveryAmountText,
         adjustmentText: adjustmentText ?? this.adjustmentText,
         adjustmentAuto: adjustmentAuto ?? this.adjustmentAuto,
         adjustmentManual: adjustmentManual ?? this.adjustmentManual,
@@ -227,6 +254,11 @@ class ItemizedDraft {
   bool get serviceValid => !serviceOn || serviceBps != null || serviceAmountMinor != null;
   bool get taxValid => !taxOn || taxBps != null || taxAmountMinor != null;
 
+  /// The delivery amount in piasters (> 0), or null while off, empty or unreadable.
+  int? get deliveryMinor => deliveryOn ? Money.parse(deliveryAmountText) : null;
+
+  bool get deliveryValid => !deliveryOn || deliveryMinor != null;
+
   /// The adjustment in piasters: 0 when empty, null when unreadable.
   int? get adjustmentMinor => adjustmentText.trim().isEmpty ? 0 : Money.parse(adjustmentText, allowNegative: true, allowZero: true);
 
@@ -235,14 +267,16 @@ class ItemizedDraft {
   bool itemsValid(List<String> memberIds) =>
       items.isNotEmpty && items.length <= kMaxItems && items.every((item) => item.validFor(memberIds));
 
-  bool valid(List<String> memberIds) => itemsValid(memberIds) && discountValid && serviceValid && taxValid && adjustmentValid;
+  bool valid(List<String> memberIds) =>
+      itemsValid(memberIds) && discountValid && serviceValid && taxValid && deliveryValid && adjustmentValid;
 
   /// Fields still missing in the items (an empty list counts as one).
   int itemsMissing(List<String> memberIds) =>
       items.isEmpty ? 1 : items.fold<int>(0, (sum, item) => sum + item.missingCount(memberIds));
 
   /// Fields missing in the charges and the adjustment.
-  int get chargesMissing => (discountValid ? 0 : 1) + (serviceValid ? 0 : 1) + (taxValid ? 0 : 1) + (adjustmentValid ? 0 : 1);
+  int get chargesMissing =>
+      (discountValid ? 0 : 1) + (serviceValid ? 0 : 1) + (taxValid ? 0 : 1) + (deliveryValid ? 0 : 1) + (adjustmentValid ? 0 : 1);
 
   bool sameAs(ItemizedDraft other) {
     if (discountOn != other.discountOn ||
@@ -258,6 +292,8 @@ class ItemizedDraft {
         taxPercentText != other.taxPercentText ||
         taxAmountText != other.taxAmountText ||
         taxBase != other.taxBase ||
+        deliveryOn != other.deliveryOn ||
+        deliveryAmountText != other.deliveryAmountText ||
         adjustmentText != other.adjustmentText ||
         items.length != other.items.length) {
       return false;
@@ -280,6 +316,7 @@ class ExpenseFormState {
     required this.date,
     required this.singlePayerId,
     this.category = 'OTHER',
+    this.categoryTouched = false,
     this.paidFromPool = false,
     this.splitMode = SplitMode.all,
     this.selectedIds = const {},
@@ -292,6 +329,8 @@ class ExpenseFormState {
     this.scanNotes = const {},
     this.autoAdjustedPiasters,
     this.showAllErrors = false,
+    this.openItemId,
+    this.openItemNonce = 0,
   });
 
   final String title;
@@ -300,6 +339,10 @@ class ExpenseFormState {
   final String amountText;
   final Date date;
   final String category;
+
+  /// The user chose the category (or it was saved with the expense). A scan fills the category only while this is
+  /// false (SA17, A176).
+  final bool categoryTouched;
 
   /// SA10: paid from the pool. While on, the treasurer is the single payer and the payer editor is off.
   final bool paidFromPool;
@@ -337,11 +380,17 @@ class ExpenseFormState {
   /// The user tapped Save on an incomplete restaurant bill: every missing field is shown as an error.
   final bool showAllErrors;
 
+  /// A request to open one item card (a tap on a problem in the validation summary). The nonce changes on every
+  /// request so asking for the same item twice still opens it; this is screen intent, never part of the bill.
+  final String? openItemId;
+  final int openItemNonce;
+
   ExpenseFormState copyWith({
     String? title,
     String? amountText,
     Date? date,
     String? category,
+    bool? categoryTouched,
     bool? paidFromPool,
     SplitMode? splitMode,
     Set<String>? selectedIds,
@@ -355,6 +404,8 @@ class ExpenseFormState {
     Set<ScanNote>? scanNotes,
     int? autoAdjustedPiasters,
     bool? showAllErrors,
+    String? openItemId,
+    int? openItemNonce,
     bool clearAutoAdjusted = false,
     bool clearServerTotal = false,
   }) =>
@@ -363,6 +414,7 @@ class ExpenseFormState {
         amountText: amountText ?? this.amountText,
         date: date ?? this.date,
         category: category ?? this.category,
+        categoryTouched: categoryTouched ?? this.categoryTouched,
         paidFromPool: paidFromPool ?? this.paidFromPool,
         splitMode: splitMode ?? this.splitMode,
         selectedIds: selectedIds ?? this.selectedIds,
@@ -376,6 +428,8 @@ class ExpenseFormState {
         scanNotes: scanNotes ?? this.scanNotes,
         autoAdjustedPiasters: clearAutoAdjusted ? null : (autoAdjustedPiasters ?? this.autoAdjustedPiasters),
         showAllErrors: showAllErrors ?? this.showAllErrors,
+        openItemId: openItemId ?? this.openItemId,
+        openItemNonce: openItemNonce ?? this.openItemNonce,
       );
 
   // ---- title, total, date ----
@@ -479,6 +533,31 @@ class ExpenseFormState {
   /// assignees, and unreadable charges or adjustment. The total being unknown is not counted (it is only pending).
   int itemizedErrorCount(List<String> memberIds) =>
       (titleValid ? 0 : 1) + (_payersMissing ? 1 : 0) + itemized.itemsMissing(memberIds) + itemized.chargesMissing;
+
+  /// Every problem of a restaurant bill, one entry each and in screen order. [itemizedErrorCount] is its length.
+  List<FormIssue> itemizedIssues(List<String> memberIds) {
+    final issues = <FormIssue>[
+      if (!titleValid) const FormIssue(IssueKind.title, ErrorSection.title),
+      if (_payersMissing) const FormIssue(IssueKind.payers, ErrorSection.payers),
+    ];
+    if (itemized.items.isEmpty) issues.add(const FormIssue(IssueKind.itemsEmpty, ErrorSection.items));
+    for (var i = 0; i < itemized.items.length; i++) {
+      final item = itemized.items[i];
+      FormIssue issue(IssueKind kind) =>
+          FormIssue(kind, ErrorSection.items, itemId: item.id, itemIndex: i + 1, itemName: item.trimmedName);
+      if (!item.nameValid) issues.add(issue(IssueKind.itemName));
+      if (item.amountMinor == null) issues.add(issue(IssueKind.itemPrice));
+      if (!item.quantityValid) issues.add(issue(IssueKind.itemQuantity));
+      if (item.assigneesAmong(memberIds).isEmpty) issues.add(issue(IssueKind.itemMembers));
+    }
+    final d = itemized;
+    if (!d.discountValid) issues.add(const FormIssue(IssueKind.discount, ErrorSection.charges));
+    if (!d.serviceValid) issues.add(const FormIssue(IssueKind.service, ErrorSection.charges));
+    if (!d.taxValid) issues.add(const FormIssue(IssueKind.tax, ErrorSection.charges));
+    if (!d.deliveryValid) issues.add(const FormIssue(IssueKind.delivery, ErrorSection.charges));
+    if (!d.adjustmentValid) issues.add(const FormIssue(IssueKind.adjustment, ErrorSection.charges));
+    return issues;
+  }
 
   /// The first section with something missing, in screen order (null when complete).
   ErrorSection? firstErrorSection(List<String> memberIds) {

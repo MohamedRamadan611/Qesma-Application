@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:qesma/core/router/app_router.dart';
 import 'package:qesma/core/theme/tokens.dart';
 import 'package:qesma/core/widgets/widgets.dart';
+import 'package:qesma/features/expenses/presentation/split_section.dart' show SplitMethodRow;
 
 import '../../support/expense_form_rig.dart';
 import '../../support/expenses_rig.dart';
@@ -42,17 +43,25 @@ void main() {
     for (final locale in [_ar, _en]) {
       final l10n = l10nFor(locale);
 
-      testWidgets('${locale.languageCode}: shows the fields, the paid-by summary, the four split tabs and a disabled save', (tester) async {
+      testWidgets('${locale.languageCode}: shows the fields, the paid-by summary, the split method row and a disabled save', (tester) async {
         await openAdd(tester, locale: locale);
         expect(find.text(l10n.expenseFormTitleLabel), findsOneWidget);
         expect(find.text(l10n.expenseFormAmountLabel), findsOneWidget);
         expect(find.text(l10n.expenseFormCurrencyNote), findsOneWidget);
         expect(find.text('${l10n.expenseFormDateLabel}: ${isolated('2026-10-18')}'), findsOneWidget, reason: 'today, as a Western-digit date');
         expect(find.text(l10n.expensePaidBy('Mohamed')), findsOneWidget, reason: 'you pay by default');
-        expect(find.text(l10n.expenseFormEditPayers), findsOneWidget);
+        expect(find.text(l10n.expenseFormChange), findsOneWidget);
+        // The split method is one row showing the chosen method; the four methods are in the sheet it opens.
+        expect(find.byType(SplitMethodRow), findsOneWidget);
+        expect(find.text(l10n.expenseFormSplitAll), findsOneWidget);
+        expect(find.text(l10n.expenseFormSplitSubtitleAll), findsOneWidget);
+        await tester.tap(find.byType(SplitMethodRow));
+        await tester.pumpAndSettle();
         for (final tab in [l10n.expenseFormSplitAll, l10n.expenseFormSplitSelected, l10n.expenseSplitExact, l10n.expenseSplitItemized]) {
-          expect(find.text(tab), findsOneWidget, reason: tab);
+          expect(find.descendant(of: find.byType(AppBottomSheet), matching: find.text(tab)), findsOneWidget, reason: tab);
         }
+        await tester.tap(find.byTooltip(l10n.commonClose));
+        await tester.pumpAndSettle();
         expect(tester.widget<FilledButton>(saveButton(locale)).onPressed, isNull);
         expect(find.text(l10n.expenseFormShareNeedAmount), findsOneWidget);
       });
@@ -66,7 +75,7 @@ void main() {
       expect(find.text('طريقة التقسيم'), findsOneWidget);
       expect(find.text('حفظ المصروف'), findsOneWidget);
       expect(find.text('الكل'), findsOneWidget);
-      expect(find.text('محددين'), findsOneWidget);
+      expect(find.text('بالتساوي على كل الأعضاء'), findsOneWidget);
     });
 
     testWidgets('typing a name and an amount shows the SERVER\'s shares for everyone and enables save', (tester) async {
@@ -98,7 +107,7 @@ void main() {
     testWidgets('Selected: unchecking a member changes the split and the server amounts follow', (tester) async {
       await openAdd(tester);
       await typeTitleAndAmount(tester);
-      await tapText(tester, 'محددين');
+      await chooseSplit(tester, 'محددين');
       await settleForm(tester);
       expect(find.byType(Checkbox), findsNWidgets(3));
       await tester.tap(find.byType(Checkbox).last);
@@ -134,7 +143,7 @@ void main() {
     testWidgets('Exact: prefilled from the server, "matches the total", editing shows what is left and blocks save, spread equally restores', (tester) async {
       await openAdd(tester);
       await typeTitleAndAmount(tester);
-      await tapText(tester, 'مبالغ محددة');
+      await chooseSplit(tester, 'مبالغ محددة');
       await settleForm(tester);
 
       String boxText(int i) => tester.widget<TextField>(find.byType(TextField).at(2 + i)).controller!.text;
@@ -158,7 +167,7 @@ void main() {
     testWidgets('Exact: something left to split is said in words', (tester) async {
       await openAdd(tester);
       await typeTitleAndAmount(tester);
-      await tapText(tester, 'مبالغ محددة');
+      await chooseSplit(tester, 'مبالغ محددة');
       await settleForm(tester);
       await tester.enterText(find.byType(TextField).at(2), '100');
       await settleForm(tester);
@@ -168,7 +177,7 @@ void main() {
     testWidgets('the Restaurant bill tab opens the bill editor in the same form (no stub) and keeps the title', (tester) async {
       await openAdd(tester);
       await typeTitleAndAmount(tester);
-      await tapText(tester, 'فاتورة مفصلة');
+      await chooseSplit(tester, 'فاتورة مفصلة');
       await settleForm(tester);
       expect(find.text('الشاشة دي لسه تحت الإنشاء.'), findsNothing);
       expect(find.text('أصناف الفاتورة'), findsOneWidget);
@@ -190,7 +199,7 @@ void main() {
     Future<void> openSheet(WidgetTester tester) async {
       await openAdd(tester);
       await typeTitleAndAmount(tester, title: 'Dinner', amount: '500');
-      await tapText(tester, 'تعديل الدافعين');
+      await tapText(tester, 'تغيير');
       await settleForm(tester);
     }
 
@@ -350,7 +359,7 @@ void main() {
     testWidgets('MEMBER_NOT_IN_GROUP reloads the members and the form shows the new list', (tester) async {
       await openAdd(tester);
       await typeTitleAndAmount(tester);
-      await tapText(tester, 'محددين');
+      await chooseSplit(tester, 'محددين');
       await settleForm(tester);
       server.group.members.removeWhere((m) => m.id == kMohsen);
       await tester.tap(saveButton(_ar));
@@ -485,7 +494,7 @@ void main() {
       final handle = tester.ensureSemantics();
       await openAdd(tester);
       await typeTitleAndAmount(tester);
-      await tapText(tester, 'محددين');
+      await chooseSplit(tester, 'محددين');
       await settleForm(tester);
       final row = find.bySemanticsLabel(RegExp('Mohamed، نصيبه 173 جنيه و34 قرش'));
       expect(row, findsOneWidget);
@@ -499,14 +508,12 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('split chips and the save button can be activated by a screen reader', (tester) async {
+    testWidgets('the split method row and the save button can be activated by a screen reader', (tester) async {
       final handle = tester.ensureSemantics();
       await openAdd(tester);
       await typeTitleAndAmount(tester);
-      for (final label in ['الكل', 'محددين', 'مبالغ محددة']) {
-        final data = tester.getSemantics(find.bySemanticsLabel(label).first).getSemanticsData();
-        expect(data.hasAction(SemanticsAction.tap), isTrue, reason: label);
-      }
+      final row = tester.getSemantics(find.bySemanticsLabel(RegExp('طريقة التقسيم: الكل')).first).getSemanticsData();
+      expect(row.hasAction(SemanticsAction.tap), isTrue);
       final save = tester.getSemantics(find.bySemanticsLabel('حفظ المصروف')).getSemanticsData();
       expect(save.hasAction(SemanticsAction.tap), isTrue);
       handle.dispose();
@@ -516,7 +523,7 @@ void main() {
       final handle = tester.ensureSemantics();
       await openAdd(tester);
       await typeTitleAndAmount(tester);
-      await tapText(tester, 'مبالغ محددة');
+      await chooseSplit(tester, 'مبالغ محددة');
       await settleForm(tester);
       expect(find.bySemanticsLabel(RegExp('نصيب Mohamed')), findsOneWidget);
       await tester.enterText(find.byType(TextField).at(2), '100');
@@ -531,7 +538,7 @@ void main() {
       final handle = tester.ensureSemantics();
       await openAdd(tester);
       await typeTitleAndAmount(tester, amount: '500');
-      await tapText(tester, 'تعديل الدافعين');
+      await tapText(tester, 'تغيير');
       await settleForm(tester);
       await tapText(tester, 'امسح المبالغ');
       await settleForm(tester);
@@ -546,7 +553,7 @@ void main() {
     testWidgets('no receipt photo, no emoji in the title, no per-member captions, no payer roles', (tester) async {
       await openAdd(tester);
       await typeTitleAndAmount(tester);
-      await tapText(tester, 'تعديل الدافعين');
+      await tapText(tester, 'تغيير');
       await settleForm(tester);
       for (final text in ['صورة', 'دافع أساسي', 'مشارك بالدفع', 'مشارك في الرحلة', 'قعدة الساحل', 'الإيصال']) {
         expect(find.textContaining(text), findsNothing, reason: text);
@@ -561,8 +568,8 @@ void main() {
       await tester.enterText(field(1), '1234567.89');
       await settleForm(tester);
       expect(tester.takeException(), isNull);
-      await reveal(tester, find.text(l10nFor(c.locale).expenseSplitExact));
-      await tester.tap(find.text(l10nFor(c.locale).expenseSplitExact));
+      await reveal(tester, find.byType(SplitMethodRow));
+      await chooseSplit(tester, l10nFor(c.locale).expenseSplitExact);
       await settleForm(tester);
       expect(tester.takeException(), isNull);
       await tester.drag(find.byType(ListView).first, const Offset(0, -2500));
@@ -580,9 +587,9 @@ void main() {
       await tester.enterText(field(0), 'Dinner');
       await tester.enterText(field(1), '500');
       await settleForm(tester);
-      await tester.scrollUntilVisible(find.text(l10nFor(c.locale).expenseFormEditPayers), 200, scrollable: find.byType(Scrollable).first); // the category row (SA6) pushes it below the built area at 2x
+      await tester.scrollUntilVisible(find.text(l10nFor(c.locale).expenseFormChange), 200, scrollable: find.byType(Scrollable).first); // the category row (SA6) pushes it below the built area at 2x
       await tester.pumpAndSettle();
-      await tester.tap(find.text(l10nFor(c.locale).expenseFormEditPayers));
+      await tester.tap(find.text(l10nFor(c.locale).expenseFormChange));
       await settleForm(tester);
       expect(tester.takeException(), isNull);
       for (final i in [1, 2]) {

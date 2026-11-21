@@ -33,14 +33,21 @@ public record ExpenseView(UUID id, UUID groupId, String title, String splitType,
     }
 
     /**
-     * What one member owes. The five breakdown fields are set for ITEMIZED expenses only
-     * (owed = items - discount + service + tax + adjustment) and are null for EQUAL/EXACT.
+     * What one member owes. The six breakdown fields are set for ITEMIZED expenses only
+     * (owed = items - discount + service + tax + delivery + adjustment) and are null for EQUAL/EXACT.
      */
     public record ShareView(UUID memberId, long owedMinor, Long itemsMinor, Long discountMinor, Long serviceMinor,
-                            Long taxMinor, Long adjustmentMinor) {
+                            Long taxMinor, Long adjustmentMinor, Long deliveryMinor) {
 
         public ShareView(UUID memberId, long owedMinor) {
-            this(memberId, owedMinor, null, null, null, null, null);
+            this(memberId, owedMinor, null, null, null, null, null, null);
+        }
+
+        /** ITEMIZED without delivery (A180): the delivery part is 0. */
+        public ShareView(UUID memberId, long owedMinor, Long itemsMinor, Long discountMinor, Long serviceMinor,
+                         Long taxMinor, Long adjustmentMinor) {
+            this(memberId, owedMinor, itemsMinor, discountMinor, serviceMinor, taxMinor, adjustmentMinor,
+                    itemsMinor == null ? null : 0L);
         }
 
         /** ITEMIZED without a discount. */
@@ -61,7 +68,13 @@ public record ExpenseView(UUID id, UUID groupId, String title, String splitType,
      * {@code subtotalMinor} is the item sum before the discount.
      */
     public record Charges(long subtotalMinor, DiscountCharge discount, ServiceCharge service, TaxCharge tax,
-                          long adjustmentMinor) {
+                          long adjustmentMinor, long deliveryMinor) {
+
+        /** Without delivery (0). */
+        public Charges(long subtotalMinor, DiscountCharge discount, ServiceCharge service, TaxCharge tax,
+                       long adjustmentMinor) {
+            this(subtotalMinor, discount, service, tax, adjustmentMinor, 0);
+        }
     }
 
     /** {@code bps} is null when the discount was given as an amount. */

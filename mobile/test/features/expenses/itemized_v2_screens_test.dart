@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:qesma/core/router/app_router.dart';
-import 'package:qesma/core/theme/tokens.dart';
 import 'package:qesma/core/widgets/widgets.dart';
 import 'package:qesma/features/expenses/application/expense_draft.dart';
 import 'package:qesma/features/expenses/application/expense_form_controller.dart';
@@ -10,7 +9,8 @@ import 'package:qesma/features/expenses/application/expense_form_state.dart';
 import 'package:qesma/features/expenses/presentation/assignee_summary_chip.dart';
 import 'package:qesma/features/expenses/presentation/expense_blocks.dart' show ShareRows;
 import 'package:qesma/features/expenses/presentation/itemized_by_person.dart' show ByPersonView;
-import 'package:qesma/features/expenses/presentation/itemized_items_card.dart' show ItemCard;
+import 'package:qesma/features/expenses/presentation/itemized_items_card.dart' show ItemCard, ItemSummaryRow;
+import 'package:qesma/features/expenses/presentation/validation_summary_card.dart';
 
 import '../../support/expense_form_rig.dart';
 import '../../support/expenses_rig.dart';
@@ -62,12 +62,12 @@ void main() {
 
   group('the compact item card', () {
     for (final c in allConfigs) {
-      testWidgets('5 members keep inline chips; the stepper changes the quantity and the request carries it (${c.name})', (tester) async {
+      testWidgets('the members button is always one summary chip; the stepper changes the quantity and the request carries it (${c.name})', (tester) async {
         _addMembers(server, 5);
         final l10n = l10nFor(c.locale);
         final container = await openNewBill(tester, locale: c.locale, scale: c.textScale);
-        expect(find.byType(AssigneeSummaryChip), findsNothing);
-        expect(find.widgetWithText(AppChoiceChip, 'Member 5'), findsOneWidget);
+        expect(find.byType(AssigneeSummaryChip), findsOneWidget, reason: 'no inline chips any more, whatever the group size');
+        expect(find.widgetWithText(AppChoiceChip, 'Member 5'), findsNothing);
 
         final name = formOf(container).itemized.items.single.id;
         controllerOf(container)
@@ -90,7 +90,7 @@ void main() {
       });
     }
 
-    // The two measurements are separate tests (one app per test); the second compares with the first.
+    // The open card is the same size for any group (the members button is one chip).
     double? fiveMemberCard;
 
     Future<double> cardHeight(WidgetTester tester, int members) async {
@@ -104,18 +104,18 @@ void main() {
       return tester.getSize(find.byType(ItemCard).first).height;
     }
 
-    testWidgets('measure: a card with 5 members (inline chips)', (tester) async {
+    testWidgets('measure: the open card with 5 members', (tester) async {
       fiveMemberCard = await cardHeight(tester, 5);
-      expect(find.byType(AssigneeSummaryChip), findsNothing);
+      expect(find.byType(AssigneeSummaryChip), findsOneWidget);
     });
 
-    testWidgets('the 15-member card is not taller than the 5-member card by more than the summary chip', (tester) async {
+    testWidgets('the open card with 15 members is the same height', (tester) async {
       final five = fiveMemberCard ?? await cardHeight(tester, 5);
       server = FakeExpensesServer();
       seedAllFixtures(server);
       final fifteen = await cardHeight(tester, 15);
       expect(find.byType(AssigneeSummaryChip), findsOneWidget);
-      expect(fifteen, lessThanOrEqualTo(five + kMinTouch), reason: 'five: $five, fifteen: $fifteen');
+      expect(fifteen, closeTo(five, 1), reason: 'five: $five, fifteen: $fifteen');
     });
   });
 
@@ -181,7 +181,7 @@ void main() {
     testWidgets('the paid-by sheet also gets the search with many members', (tester) async {
       _addMembers(server, 12);
       await openNewBill(tester);
-      await tapText(tester, l10nFor(_ar).expenseFormEditPayers);
+      await tapText(tester, l10nFor(_ar).expenseFormChange);
       await settleForm(tester);
       expect(find.byType(AppBottomSheet), findsOneWidget);
       expect(find.descendant(of: find.byType(AppBottomSheet), matching: find.byType(TextField)), findsWidgets);
@@ -190,9 +190,9 @@ void main() {
 
   group('by person', () {
     for (final c in allConfigs) {
-      testWidgets('choose a person, tick their items; an item nobody has is flagged (${c.name})', (tester) async {
+      testWidgets('person cards: copy an item, remove one, add one for them; an item nobody has is flagged (${c.name})', (tester) async {
         final l10n = l10nFor(c.locale);
-        final container = await openNewBill(tester, locale: c.locale, scale: c.textScale, height: 2000);
+        final container = await openNewBill(tester, locale: c.locale, scale: c.textScale, height: 2400);
         final ctl = controllerOf(container);
         final first = formOf(container).itemized.items.single.id;
         ctl
@@ -206,34 +206,51 @@ void main() {
           ..setAllAssignees(second, all: false);
         await settleForm(tester);
 
-        // By item the empty item is flagged too.
-        expect(find.text(l10n.expenseItemizedNoAssignee), findsOneWidget);
+        // By item the empty item is a closed row that says nobody was chosen.
+        expect(find.textContaining(l10n.expenseItzSummaryNone), findsWidgets);
 
         await tapVisible(tester, find.text(l10n.expenseItzModeByPerson));
         await settleForm(tester);
         expect(find.text(l10n.expenseItzPersonUnassigned('Pasta')), findsOneWidget);
-        expect(find.byType(Checkbox), findsNWidgets(2), reason: 'one row per item');
+        expect(find.byType(Checkbox), findsNothing, reason: 'person cards, not a checklist');
 
-        // The first person (you) has Pizza; tick Pasta for them.
-        await tapVisible(tester, find.text('Pasta'));
+        // The first person (you) has Pizza; "copy an existing item" puts Pasta on them.
+        await tapVisible(tester, find.bySemanticsLabel(l10n.expenseItzCopyItemSpoken('Pasta', 'Mohamed')));
         await settleForm(tester);
         expect(formOf(container).itemized.items.last.assigneeIds, {kYou});
         expect(find.text(l10n.expenseItzPersonUnassigned('Pasta')), findsNothing);
 
-        // Another person through the picker (rows are single choice, no Done button).
-        await tapVisible(tester, find.descendant(of: find.byType(ByPersonView), matching: find.byIcon(Icons.arrow_drop_down)));
-        await tester.tap(find.descendant(of: find.byType(AppBottomSheet), matching: find.text('Asem')));
-        await tester.pumpAndSettle();
-        expect(find.byType(AppBottomSheet), findsNothing);
-        await tapVisible(tester, find.text(l10n.expenseItzPersonAllItems));
+        // Another person: open their card, take Pizza off them, then add an item for them with the inline form.
+        await tapVisible(tester, find.descendant(of: find.byType(ByPersonView), matching: find.text('Asem')).first);
         await settleForm(tester);
-        expect(formOf(container).itemized.items.every((i) => i.assigneeIds.contains(kAsem)), isTrue);
-        await tapVisible(tester, find.text(l10n.expenseItzPersonNoItems));
+        await tapVisible(tester, find.byTooltip(l10n.expenseItzPersonRemoveItem('Pizza', 'Asem')));
         await settleForm(tester);
-        expect(formOf(container).itemized.items.any((i) => i.assigneeIds.contains(kAsem)), isFalse);
+        expect(formOf(container).itemized.items.first.assigneeIds.contains(kAsem), isFalse, reason: 'removed from this person');
+        final fields = find.descendant(of: find.byType(ByPersonView), matching: find.byType(TextField));
+        await tester.ensureVisible(fields.first);
+        await tester.enterText(fields.first, 'Fries');
+        await tester.enterText(fields.at(1), '40');
+        await tapVisible(tester, find.text(l10n.expenseItzAddItemFor('Asem')));
+        await settleForm(tester);
+        final added = formOf(container).itemized.items.last;
+        expect((added.name, added.amountText), ('Fries', '40'));
+        expect(added.assigneeIds, {kAsem});
         expect(tester.takeException(), isNull);
       });
     }
+
+    testWidgets('the add-an-item form shows its errors and adds nothing while a field is missing', (tester) async {
+      final container = await openNewBill(tester, height: 2400);
+      final l10n = l10nFor(_ar);
+      final before = formOf(container).itemized.items.length;
+      await tapVisible(tester, find.text(l10n.expenseItzModeByPerson));
+      await settleForm(tester);
+      await tapVisible(tester, find.text(l10n.expenseItzAddItemFor('Mohamed')));
+      await settleForm(tester);
+      expect(find.text(l10n.expenseItemizedNameRequired), findsWidgets);
+      expect(find.text(l10n.expenseItemizedAmountInvalid), findsWidgets);
+      expect(formOf(container).itemized.items.length, before);
+    });
   });
 
   group('charges: discount, service and tax', () {
@@ -263,11 +280,52 @@ void main() {
       expect(server.previewBodies.last['discount'], {'amountMinor': 5000});
 
       // Tax on with the service already on: the base chips appear.
-      await tester.ensureVisible(find.byType(Switch).at(2));
-      await tester.tap(find.byType(Switch).at(2));
+      await tester.ensureVisible(find.byType(Switch).at(3));
+      await tester.tap(find.byType(Switch).at(3));
       await settleForm(tester);
       expect(find.widgetWithText(AppChoiceChip, 'المجموع فقط'), findsOneWidget);
       expect(container, isNotNull);
+    });
+  });
+
+  group('delivery (A180): an amount only, outside discount, service and tax', () {
+    testWidgets('switch on, amount only (no % toggle), the request carries it and the server\'s per-person part is the hint', (tester) async {
+      await pumpExpensesApp(tester, server, height: 3000, route: Routes.editExpense(server.gid, fixtureMap('expense_itemized_v8_neither')['id'] as String));
+      await settleForm(tester);
+      final l10n = l10nFor(_ar);
+      expect(tester.widget<Switch>(find.byType(Switch).at(2)).value, isFalse, reason: 'saved without delivery');
+      expect(server.previewBodies.every((b) => !b.containsKey('deliveryMinor')), isTrue);
+
+      await tester.ensureVisible(find.byType(Switch).at(2));
+      await tester.tap(find.byType(Switch).at(2));
+      await settleForm(tester);
+      expect(find.text(l10n.expenseItzChargeAmountInvalid), findsOneWidget, reason: 'on and empty: an error with icon and words');
+      // Delivery has no % | EGP toggle (the other charges are off here, so there is none on screen at all).
+      expect(find.byType(SegmentedButton<ChargeMode>), findsNothing);
+
+      await tester.enterText(find.byWidgetPredicate((w) => w is TextField && w.decoration?.hintText == l10n.expenseItzAmountHint).last, '10');
+      await settleForm(tester);
+      expect(server.previewBodies.last['deliveryMinor'], 1000);
+      expect(find.textContaining(l10n.expenseItzDeliveryLabel), findsWidgets);
+    });
+
+    testWidgets('the breakdown folds the delivery part the server sent', (tester) async {
+      final container = await openNewBill(tester);
+      final c = controllerOf(container);
+      final id = formOf(container).itemized.items.first.id;
+      c.setItemName(id, 'Pizza');
+      c.setItemAmount(id, '300');
+      c.setDeliveryOn(true);
+      c.setDeliveryAmount('30');
+      await settleForm(tester);
+      expect(server.previewBodies.last['deliveryMinor'], 3000);
+      final l10n = l10nFor(_ar);
+      final more = find.descendant(of: find.byType(ShareRows), matching: find.byIcon(Icons.expand_more));
+      await tester.ensureVisible(more.first);
+      await tester.pumpAndSettle();
+      await tester.tap(more.first);
+      await tester.pumpAndSettle();
+      expect(find.textContaining(l10n.expensePartDelivery('').trim()), findsWidgets);
     });
   });
 
@@ -293,7 +351,7 @@ void main() {
       await tester.tap(more.first);
       await tester.pumpAndSettle();
       expect(find.textContaining('خصم −'), findsOneWidget);
-      expect(find.byIcon(Icons.expand_less), findsOneWidget);
+      expect(find.descendant(of: rows, matching: find.byIcon(Icons.expand_less)), findsOneWidget);
     });
   });
 
@@ -308,7 +366,7 @@ void main() {
           ctl.addItem();
         }
         await settleForm(tester);
-        await reveal(tester, find.byKey(ValueKey(formOf(container).itemized.items.last.id)));
+        await reveal(tester, find.text(l10n.expenseItemizedAdd));
         final firstItem = find.byKey(ValueKey(formOf(container).itemized.items.first.id));
         if (firstItem.evaluate().isNotEmpty) expect(tester.getRect(firstItem).top, lessThan(0), reason: 'the first item is scrolled away');
 
@@ -337,7 +395,7 @@ void main() {
         controllerOf(container).addItem();
       }
       await settleForm(tester);
-      await reveal(tester, find.byKey(ValueKey(formOf(container).itemized.items.last.id)));
+      await reveal(tester, find.text(l10nFor(_ar).expenseItemizedAdd));
       await tester.tap(find.widgetWithText(FilledButton, 'حفظ الفاتورة'));
       await tester.pumpAndSettle();
       expect(find.text(l10nFor(_ar).expenseFormTitleRequired), findsOneWidget);
@@ -348,6 +406,72 @@ void main() {
       await pumpExpensesApp(tester, server, route: Routes.addExpense(server.gid));
       await settleForm(tester);
       expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'حفظ المصروف')).onPressed, isNull);
+    });
+  });
+
+  group('the item accordion and the validation summary (redesign)', () {
+    testWidgets('one item is open at a time: tapping a closed row opens it and closes the other', (tester) async {
+      final container = await openNewBill(tester, height: 2400);
+      final ctl = controllerOf(container);
+      final first = formOf(container).itemized.items.single.id;
+      ctl
+        ..setItemName(first, 'Pizza')
+        ..setItemAmount(first, '200')
+        ..addItem();
+      final second = formOf(container).itemized.items.last.id;
+      ctl
+        ..setItemName(second, 'Pasta')
+        ..setItemAmount(second, '150');
+      await settleForm(tester);
+
+      expect(find.byType(ItemCard), findsOneWidget);
+      expect(find.widgetWithText(ItemSummaryRow, 'Pasta'), findsOneWidget, reason: 'the second item is a one-line row');
+      await tapVisible(tester, find.widgetWithText(ItemSummaryRow, 'Pasta'));
+      await settleForm(tester);
+      expect(find.byType(ItemCard), findsOneWidget);
+      expect(find.widgetWithText(ItemSummaryRow, 'Pizza'), findsOneWidget, reason: 'the first one closed');
+      expect(find.byWidgetPredicate((w) => w is TextField && w.controller?.text == 'Pasta'), findsOneWidget);
+    });
+
+    testWidgets('Save lists every problem; a tap on one opens that item', (tester) async {
+      final container = await openNewBill(tester, height: 2400);
+      final l10n = l10nFor(_ar);
+      final ctl = controllerOf(container)..setTitle('Sea Food');
+      final first = formOf(container).itemized.items.single.id;
+      ctl
+        ..setItemName(first, 'Pizza')
+        ..setItemAmount(first, '200')
+        ..addItem();
+      final second = formOf(container).itemized.items.last.id;
+      ctl.setItemName(second, 'Pasta'); // no price
+      await settleForm(tester);
+
+      await tapVisible(tester, find.widgetWithText(FilledButton, l10n.expenseItzSave));
+      await tester.drag(find.byType(ListView).first, const Offset(0, 4000)); // back to the top, where the summary is
+      await tester.pumpAndSettle();
+      expect(find.byType(ValidationSummaryCard), findsOneWidget);
+      expect(find.text(l10n.expenseItzSummaryTitle(1)), findsOneWidget);
+      expect(find.text(l10n.expenseItzIssueItemPrice('Pasta')), findsOneWidget);
+      expect(find.descendant(of: find.byType(ValidationSummaryCard), matching: find.byIcon(Icons.error_outline)), findsWidgets, reason: 'an icon, never colour alone');
+
+      await tester.tap(find.text(l10n.expenseItzIssueItemPrice('Pasta')));
+      await settleForm(tester);
+      expect(find.byWidgetPredicate((w) => w is TextField && w.controller?.text == 'Pasta'), findsOneWidget, reason: 'the item with the problem is open');
+      expect(find.text(l10n.expenseItemizedAmountInvalid), findsWidgets);
+    });
+
+    testWidgets('a scan notice can be closed', (tester) async {
+      final container = await openNewBill(tester, height: 2400);
+      final l10n = l10nFor(_ar);
+      controllerOf(container).applyScan(ScanDraft(
+        itemized: const ItemizedDraft(items: [ItemDraft(id: 'a', name: 'Pizza', amountText: '200', touched: true)]),
+        notes: {ScanNote.discountFound},
+      ));
+      await settleForm(tester);
+      expect(find.text(l10n.scanDiscountFound), findsOneWidget);
+      await tapVisible(tester, find.byTooltip(l10n.commonClose));
+      expect(find.text(l10n.scanDiscountFound), findsNothing);
+      expect(formOf(container).scanNotes.contains(ScanNote.discountFound), isFalse);
     });
   });
 
@@ -394,7 +518,7 @@ void main() {
     });
   });
 
-  group('split the units between people', () {
+  group('split the units between people (the picker\'s "by quantity" mode)', () {
     testWidgets('"Mohamed got 2, Asem got 1" becomes two items', (tester) async {
       final container = await openNewBill(tester, height: 2400);
       final l10n = l10nFor(_ar);
@@ -404,29 +528,52 @@ void main() {
         ..setItemAmount(id, '15.25')
         ..setItemQuantity(id, 3);
       await settleForm(tester);
-      await tester.ensureVisible(find.byTooltip(l10n.expenseItzItemMenuSpoken('1')));
-      await tester.tap(find.byTooltip(l10n.expenseItzItemMenuSpoken('1')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text(l10n.expenseItzSplitUnits));
-      await tester.pumpAndSettle();
+      await tapVisible(tester, find.byType(AssigneeSummaryChip));
       final sheet = find.byType(AppBottomSheet);
       expect(sheet, findsOneWidget);
-      expect(find.text(l10n.expenseItzSplitRemaining('3')), findsOneWidget);
+      // Equal is the default; "by quantity" shows how many units are given out.
+      await tester.tap(find.text(l10n.expenseItzPickerModeQuantity));
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.expenseItzPickerDistributed('0', '3')), findsOneWidget);
+      expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, l10n.expenseItzPickerDone('0'))).onPressed, isNull, reason: 'the units must add up to the quantity');
       final plus = find.descendant(of: sheet, matching: find.byTooltip(l10n.expenseItzQuantityPlus));
       await tester.tap(plus.at(0));
       await tester.tap(plus.at(0));
       await tester.tap(plus.at(1));
       await tester.pumpAndSettle();
       expect(find.text(l10n.expenseItzSplitMatches), findsOneWidget);
-      await tester.tap(find.widgetWithText(FilledButton, l10n.expenseItzSplitConfirm));
+      await tester.tap(find.widgetWithText(FilledButton, l10n.expenseItzPickerDone('2')));
       await tester.pumpAndSettle();
       final items = formOf(container).itemized.items;
       expect(items.map((i) => (i.quantity, i.assigneeIds.single)), [(2, kYou), (1, kAsem)]);
-      expect(find.byType(ItemCard), findsNWidgets(2));
+      expect(find.byType(ItemCard).evaluate().length + find.byType(ItemSummaryRow).evaluate().length, 2);
+    });
+
+    testWidgets('an item with quantity 1 has no mode toggle', (tester) async {
+      await openNewBill(tester, height: 2400);
+      final l10n = l10nFor(_ar);
+      await tapVisible(tester, find.byType(AssigneeSummaryChip));
+      expect(find.text(l10n.expenseItzPickerModeQuantity), findsNothing);
     });
   });
 
   group('the read-only details (P7-01)', () {
+    testWidgets('delivery is a line of the charges box only when the server sent one (A180)', (tester) async {
+      final json = copyJson(fixtureMap('expense_itemized_v8_neither'));
+      json['id'] = 'with-delivery';
+      (json['charges'] as Map<String, dynamic>)['deliveryMinor'] = 3000;
+      server.expenses.add(json);
+      await pumpExpensesApp(tester, server, height: 3000, route: Routes.expense(server.gid, 'with-delivery'));
+      await settleForm(tester);
+      expect(find.text(l10nFor(_ar).expenseItzDeliveryLabel), findsOneWidget);
+    });
+
+    testWidgets('a bill without delivery (the captured V8) has no delivery line', (tester) async {
+      await pumpExpensesApp(tester, server, height: 3000, route: Routes.expense(server.gid, fixtureMap('expense_itemized_v8_neither')['id'] as String));
+      await settleForm(tester);
+      expect(find.text(l10nFor(_ar).expenseItzDeliveryLabel), findsNothing);
+    });
+
     testWidgets('quantity, the discount line and "names +N" that expands', (tester) async {
       _addMembers(server, 6);
       final json = copyJson(fixtureMap('expense_itemized_v5'));

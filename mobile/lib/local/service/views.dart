@@ -96,7 +96,8 @@ ExpenseView expenseView(ExpenseGraph g, Map<String, int> sortOrders) {
             ..discountMinor = s.discountMinor
             ..serviceMinor = s.serviceMinor
             ..taxMinor = s.taxMinor
-            ..adjustmentMinor = s.adjustmentMinor),
+            ..adjustmentMinor = s.adjustmentMinor
+            ..deliveryMinor = s.deliveryMinor),
       ]);
     if (itemized) {
       final items = [...g.items]..sort((a, c) => a.sortOrder.compareTo(c.sortOrder));
@@ -116,6 +117,7 @@ ExpenseView expenseView(ExpenseGraph g, Map<String, int> sortOrders) {
       b.charges = ChargesBuilder()
         ..subtotalMinor = e.subtotalMinor
         ..adjustmentMinor = e.adjustmentMinor
+        ..deliveryMinor = e.deliveryMinor ?? 0
         // A charge is shown when either form is set; bps is null in the amount form and amountMinor is the
         // computed total (A177).
         ..discount = e.discountBps == null && e.discountAmountMinor == null
@@ -164,6 +166,16 @@ String upgradeExpenseJsonText(String text) {
       share['discountMinor'] = 0;
       changed = true;
     }
+    // A180: a snapshot written before delivery existed had none.
+    if (share is Map<String, dynamic> && !share.containsKey('deliveryMinor') && share['itemsMinor'] != null) {
+      share['deliveryMinor'] = 0;
+      changed = true;
+    }
+  }
+  final charges = root['charges'];
+  if (charges is Map<String, dynamic> && !charges.containsKey('deliveryMinor')) {
+    charges['deliveryMinor'] = 0;
+    changed = true;
   }
   return changed ? jsonEncode(root) : text;
 }

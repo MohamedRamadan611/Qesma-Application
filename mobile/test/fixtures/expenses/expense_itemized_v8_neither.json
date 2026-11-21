@@ -78,7 +78,8 @@
     "subtotalMinor": 44000,
     "service": null,
     "tax": null,
-    "adjustmentMinor": 0
+    "adjustmentMinor": 0,
+    "deliveryMinor": 0
   },
   "category": "OTHER",
   "paidFromPool": false

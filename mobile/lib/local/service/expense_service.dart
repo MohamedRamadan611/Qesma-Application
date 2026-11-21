@@ -72,6 +72,7 @@ final class ExpenseService {
           ..serviceMinor = calc.itemized ? calc.serviceMinor : null
           ..taxMinor = calc.itemized ? calc.taxMinor : null
           ..adjustmentMinor = calc.itemized ? calc.adjustmentMinor : null
+          ..deliveryMinor = calc.itemized ? calc.deliveryMinor : null
           ..members = ListBuilder([for (final s in calc.shares) _shareView(s)])
           ..payersTotalMatches = payersMatch);
       });
@@ -254,6 +255,8 @@ final class ExpenseService {
         'taxBps': v.taxBps,
         'taxBase': v.taxBase,
         'adjustmentMinor': v.adjustmentMinor,
+        // A180: hashed only when set, so a replay of a pre-delivery key keeps its hash.
+        if (v.deliveryMinor != 0) 'deliveryMinor': v.deliveryMinor,
         'serviceAmountMinor': ?v.serviceAmountMinor,
         'taxAmountMinor': ?v.taxAmountMinor,
         'discountBps': ?v.discountBps,
@@ -340,6 +343,7 @@ final class ExpenseService {
         taxMinor: itemized ? calc.taxMinor : null,
         taxBase: itemized ? calc.taxBase : null,
         adjustmentMinor: itemized ? calc.adjustmentMinor : null,
+        deliveryMinor: itemized ? calc.deliveryMinor : null,
         discountBps: itemized ? calc.discountBps : null,
         discountAmountMinor: itemized ? calc.discountAmountMinor : null,
         discountMinor: itemized ? calc.discountMinor : null,
@@ -364,6 +368,7 @@ final class ExpenseService {
             serviceMinor: s.serviceMinor,
             taxMinor: s.taxMinor,
             adjustmentMinor: s.adjustmentMinor,
+            deliveryMinor: s.deliveryMinor,
           ),
       ],
       items: items,
@@ -378,5 +383,6 @@ final class ExpenseService {
     ..discountMinor = s.discountMinor
     ..serviceMinor = s.serviceMinor
     ..taxMinor = s.taxMinor
-    ..adjustmentMinor = s.adjustmentMinor);
+    ..adjustmentMinor = s.adjustmentMinor
+    ..deliveryMinor = s.deliveryMinor);
 }

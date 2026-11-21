@@ -130,6 +130,7 @@ class FakeExpensesServer extends FakeGroupsServer {
         'service': body['service'],
         'tax': body['tax'],
         'adjustmentMinor': body['adjustmentMinor'] ?? 0,
+        if ((body['deliveryMinor'] as int? ?? 0) != 0) 'deliveryMinor': body['deliveryMinor'],
       });
 
   _ItemizedCalc? _itemized;
@@ -336,10 +337,11 @@ class FakeExpensesServer extends FakeGroupsServer {
       'service': !calc.hasService ? null : {'bps': calc.serviceBps, 'amountMinor': calc.service},
       'tax': !calc.hasTax ? null : {'bps': calc.taxBps, 'base': calc.taxBase, 'amountMinor': calc.tax},
       'adjustmentMinor': calc.adjustment,
+      'deliveryMinor': calc.delivery,
     };
     json['shares'] = [
       for (final m in calc.members)
-        {'memberId': m['memberId'], 'owedMinor': m['owedMinor'], 'itemsMinor': m['itemsMinor'], 'discountMinor': m['discountMinor'], 'serviceMinor': m['serviceMinor'], 'taxMinor': m['taxMinor'], 'adjustmentMinor': m['adjustmentMinor']},
+        {'memberId': m['memberId'], 'owedMinor': m['owedMinor'], 'itemsMinor': m['itemsMinor'], 'discountMinor': m['discountMinor'], 'serviceMinor': m['serviceMinor'], 'taxMinor': m['taxMinor'], 'adjustmentMinor': m['adjustmentMinor'], 'deliveryMinor': m['deliveryMinor']},
     ];
     return json;
   }
@@ -419,6 +421,7 @@ class FakeExpensesServer extends FakeGroupsServer {
         'serviceMinor': calc.service,
         'taxMinor': calc.tax,
         'adjustmentMinor': calc.adjustment,
+        'deliveryMinor': calc.delivery,
         'members': calc.members,
         'payersTotalMatches': matches,
       });
@@ -594,6 +597,12 @@ class FakeExpensesServer extends FakeGroupsServer {
       return null;
     }
     final adjustment = (body['adjustmentMinor'] as int?) ?? 0;
+    // A180: delivery, an amount outside discount, service and tax, split equally among members with an item.
+    final delivery = (body['deliveryMinor'] as int?) ?? 0;
+    if (delivery < 0 || delivery > 1000000000000) {
+      fail('VALIDATION_ERROR');
+      return null;
+    }
 
     final hasService = serviceBps != null || serviceAmountForm != null;
     final hasTax = taxBps != null || taxAmountForm != null;
@@ -604,13 +613,14 @@ class FakeExpensesServer extends FakeGroupsServer {
     final tax = taxBps != null ? (taxBaseTotal * taxBps + 5000) ~/ 10000 : (taxAmountForm ?? 0);
     final taxShares = hasTax ? _lrm(tax, taxBase == 'SUBTOTAL' ? netByMember : withService) : <String, int>{};
     final adjustmentShares = adjustment == 0 ? <String, int>{} : _lrm(adjustment, netByMember);
+    final deliveryShares = delivery == 0 ? <String, int>{} : _lrm(delivery, {for (final id in itemsByMember.keys) id: 1});
 
-    final total = netSubtotal + service + tax + adjustment;
+    final total = netSubtotal + service + tax + delivery + adjustment;
     final members = <Map<String, dynamic>>[];
     final owedByMember = <String, int>{};
     for (final id in memberOrder) {
       if (!itemsByMember.containsKey(id)) continue;
-      final owed = netByMember[id]! + (serviceShares[id] ?? 0) + (taxShares[id] ?? 0) + (adjustmentShares[id] ?? 0);
+      final owed = netByMember[id]! + (serviceShares[id] ?? 0) + (taxShares[id] ?? 0) + (deliveryShares[id] ?? 0) + (adjustmentShares[id] ?? 0);
       if (owed < 0) {
         fail('VALIDATION_ERROR');
         return null;
@@ -625,6 +635,7 @@ class FakeExpensesServer extends FakeGroupsServer {
         'serviceMinor': serviceShares[id] ?? 0,
         'taxMinor': taxShares[id] ?? 0,
         'adjustmentMinor': adjustmentShares[id] ?? 0,
+        'deliveryMinor': deliveryShares[id] ?? 0,
       });
     }
     if (total <= 0) {
@@ -658,6 +669,7 @@ class FakeExpensesServer extends FakeGroupsServer {
       service: service,
       tax: tax,
       adjustment: adjustment,
+      delivery: delivery,
       serviceBps: serviceBps,
       hasService: hasService,
       taxBps: taxBps,
@@ -679,6 +691,7 @@ class _ItemizedCalc {
     required this.service,
     required this.tax,
     required this.adjustment,
+    required this.delivery,
     required this.serviceBps,
     required this.hasService,
     required this.taxBps,
@@ -694,6 +707,7 @@ class _ItemizedCalc {
   final int service;
   final int tax;
   final int adjustment;
+  final int delivery;
   final int? serviceBps;
   final bool hasService;
   final int? taxBps;

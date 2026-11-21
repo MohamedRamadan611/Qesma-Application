@@ -393,6 +393,41 @@ class AppLocalizationsAr extends AppLocalizations {
       'مش متأكدين إن الجروب اتعمل. هنتأكد الأول قبل ما نحاول تاني، عشان ميتكررش.';
 
   @override
+  String get groupMembersLabel => 'أعضاء الجروب (اختياري)';
+
+  @override
+  String get groupMembersNote =>
+      'تقدر تتخطى الخطوة دي وتضيف الأعضاء بعدين من تبويب الأعضاء. إنت متضاف تلقائي.';
+
+  @override
+  String get groupMembersNameHint => 'اسم العضو';
+
+  @override
+  String get groupMembersAddButton => 'إضافة';
+
+  @override
+  String get groupMembersDuplicate => 'الاسم ده مضاف بالفعل';
+
+  @override
+  String groupMembersRemove(String name) {
+    return 'إزالة $name';
+  }
+
+  @override
+  String groupMembersPartialFail(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count عضو ما اتضافوش',
+      many: '$count عضو ما اتضافوش',
+      few: '$count أعضاء ما اتضافوش',
+      two: 'عضوين ما اتضافوش',
+      one: 'عضو واحد ما اتضافش',
+    );
+    return '$_temp0. ضيفهم من تبويب الأعضاء.';
+  }
+
+  @override
   String get groupEditTitle => 'تعديل الجروب';
 
   @override
@@ -2264,11 +2299,11 @@ class AppLocalizationsAr extends AppLocalizations {
       'اكتب عنوان إنستا باي أو رقم المحفظة أو الاتنين، وزمايلك هيشوفوهم لما يحبّوا يحوّلولك. التطبيق مبيحوّلش فلوس.';
 
   @override
-  String get handlesInstapayHint => 'مثال: username@instapay';
+  String get handlesInstapayHint => 'مثال: instapay URL';
 
   @override
   String get handlesWalletHint =>
-      'فودافون كاش، أورنج، وي، اتصالات أو محفظة بنكية';
+      'انستا باي، فودافون كاش، أورنج، وي، اتصالات أو محفظة بنكية';
 
   @override
   String get handlesInstapayInvalid =>
@@ -3118,8 +3153,27 @@ class AppLocalizationsAr extends AppLocalizations {
       'في مبالغ مقدرناش نقرأها. راجع الأصناف المعلّمة.';
 
   @override
-  String get scanNeedsPercent =>
-      'الإيصال مكتوب عليه مبلغ خدمة أو ضريبة. اكتب نسبته.';
+  String get scanQuantityCheck =>
+      'في كميات مقدرناش نقرأها فكتبناها 1. راجع الكميات.';
+
+  @override
+  String get scanUnitPriceCheck =>
+      'في أصناف عليها كمية من غير سعر الوحدة. كتبنا إجمالي السطر والكمية 1، راجعها.';
+
+  @override
+  String get scanDiscountFound => 'لقينا خصم على الإيصال وحطيناه. راجعه.';
+
+  @override
+  String get scanDiscountPercentKept =>
+      'الخصم مكتوب نسبة ومبلغ مع بعض. استخدمنا النسبة، راجعها.';
+
+  @override
+  String get scanDiscountDropped =>
+      'في خصم على الإيصال بس مش أصغر من إجمالي الأصناف، فمحطيناهوش. اكتبه بنفسك لو محتاجه.';
+
+  @override
+  String get scanTitleCategorySuggested =>
+      'كتبنا الاسم أو النوع من الإيصال. غيّرهم لو مش مظبوطين.';
 
   @override
   String get scanTruncated => 'الإيصال فيه أكتر من 100 صنف. قرأنا أول 100 بس.';
@@ -3279,7 +3333,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get expenseItzPersonNoItemsYet => 'أضف أصناف الأول.';
 
   @override
-  String get expenseItzChargesTitle => 'الخصم والخدمة والضريبة';
+  String get expenseItzChargesTitle => 'الخصم والتوصيل والخدمة والضريبة';
 
   @override
   String get expenseItzDiscountLabel => 'الخصم';
@@ -3369,4 +3423,151 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get expenseItzAssigneesCollapseSpoken => 'عرض أقل';
+
+  @override
+  String get expenseItzDeliveryLabel => 'التوصيل';
+
+  @override
+  String expenseItzDeliveryHint(String amount) {
+    return 'بتتقسم بالتساوي على اللي معاهم أصناف: $amount لكل واحد';
+  }
+
+  @override
+  String expenseItzDeliveryHintRange(String min, String max) {
+    return 'بتتقسم بالتساوي على اللي معاهم أصناف: من $min لـ $max لكل واحد';
+  }
+
+  @override
+  String expensePartDelivery(String amount) {
+    return 'توصيل $amount';
+  }
+
+  @override
+  String get expenseItzDiscountTooLarge =>
+      'الخصم لازم يكون أقل من إجمالي الأصناف.';
+
+  @override
+  String expenseItzSummaryTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'في $count حاجة لازم تتصلّح قبل الحفظ',
+      many: 'في $count حاجة لازم تتصلّح قبل الحفظ',
+      few: 'في $count حاجات لازم تتصلّح قبل الحفظ',
+      two: 'في حاجتين لازم تتصلّحوا قبل الحفظ',
+      one: 'في حاجة لازم تتصلّح قبل الحفظ',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get expenseItzSummaryHint => 'اضغط على أي حاجة عشان توصلها';
+
+  @override
+  String get expenseItzIssueItemsEmpty => 'أضف صنف واحد على الأقل';
+
+  @override
+  String expenseItzIssueItemName(String n) {
+    return 'اسم الصنف رقم $n';
+  }
+
+  @override
+  String expenseItzIssueItemPrice(String item) {
+    return 'سعر الصنف: $item';
+  }
+
+  @override
+  String expenseItzIssueItemQuantity(String item) {
+    return 'كمية الصنف: $item';
+  }
+
+  @override
+  String expenseItzIssueItemMembers(String item) {
+    return 'أعضاء الصنف: $item';
+  }
+
+  @override
+  String expenseItzItemExpandSpoken(String item) {
+    return 'افتح $item';
+  }
+
+  @override
+  String expenseItzItemCollapseSpoken(String item) {
+    return 'اقفل $item';
+  }
+
+  @override
+  String get expenseItzItemNeedsFixing => 'الصنف ناقص بيانات';
+
+  @override
+  String get expenseItzWhoShared => 'مين شارك؟';
+
+  @override
+  String get expenseItzPickerModeEqual => 'بالتساوي';
+
+  @override
+  String get expenseItzPickerModeQuantity => 'حسب الكمية';
+
+  @override
+  String expenseItzPickerDistributed(String x, String n) {
+    return 'وزّعت $x من $n';
+  }
+
+  @override
+  String expenseItzPickerQtyLine(String qty, String price) {
+    return 'الكمية $qty × $price';
+  }
+
+  @override
+  String get expenseItzPickerClearAll => 'مسح الكل';
+
+  @override
+  String expenseItzPickerSelectedNames(String names) {
+    return '$names';
+  }
+
+  @override
+  String get expenseItzPersonByPersonHint =>
+      'ضيف لكل شخص الأصناف اللي أكلها. لو صنف مشترك، استخدم «نسخ صنف موجود».';
+
+  @override
+  String expenseItzAddItemFor(String name) {
+    return 'إضافة صنف لـ $name';
+  }
+
+  @override
+  String get expenseItzCopyItem => 'نسخ صنف موجود';
+
+  @override
+  String expenseItzCopyItemSpoken(String item, String name) {
+    return 'ضيف «$item» لـ $name';
+  }
+
+  @override
+  String expenseItzPersonRemoveItem(String item, String name) {
+    return 'شيل «$item» من $name';
+  }
+
+  @override
+  String expenseItzMembersWithoutItems(String n) {
+    return 'أعضاء من غير أصناف ($n)';
+  }
+
+  @override
+  String get expenseItzPersonNoItemsLine => 'من غير أصناف';
+
+  @override
+  String get expenseFormSplitSubtitleAll => 'بالتساوي على كل الأعضاء';
+
+  @override
+  String get expenseFormSplitSubtitleSelected => 'بالتساوي على ناس محددين';
+
+  @override
+  String get expenseFormSplitSubtitleExact => 'كل واحد بمبلغ محدد';
+
+  @override
+  String get expenseFormSplitSubtitleItemized => 'كل صنف وليه ناسه';
+
+  @override
+  String get expenseFormChange => 'تغيير';
 }

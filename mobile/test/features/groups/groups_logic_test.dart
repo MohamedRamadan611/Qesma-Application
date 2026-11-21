@@ -197,6 +197,23 @@ void main() {
       expect(c.read(groupsListControllerProvider).items.any((g) => g.name == 'Dahab'), isTrue);
     });
 
+    test('optional members are added after the group is created', () async {
+      final id = await create().submit(name: 'Dahab', type: 'TRIP', members: ['Asem', 'Mona']);
+      expect(id, isNotNull);
+      expect(c.read(createGroupControllerProvider).failedMemberNames, isEmpty);
+      final names = server.groups[id]!.members.map((m) => m.name).toList();
+      expect(names, containsAll(['Asem', 'Mona']));
+    });
+
+    test('a member that cannot be added never undoes the group; it is reported', () async {
+      final id = await create().submit(name: 'Dahab', type: 'TRIP', members: ['Asem', 'Asem', 'Mona']);
+      expect(id, isNotNull, reason: 'the group is kept');
+      expect(c.read(createGroupControllerProvider).failedMemberNames, ['Asem']);
+      final names = server.groups[id]!.members.map((m) => m.name).toList();
+      expect(names, containsAll(['Asem', 'Mona']));
+      expect(server.requests.where((r) => r.startsWith('POST /api/v1/groups') && !r.contains('/members')), hasLength(1));
+    });
+
     test('a lost response: the group is found in the list, no second POST, no duplicate', () async {
       server.nextCreateFault = CreateFault.loseResponseAfterStoring;
       final id = await create().submit(name: 'Dahab', type: 'TRIP');

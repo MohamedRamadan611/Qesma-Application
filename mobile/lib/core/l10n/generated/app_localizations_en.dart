@@ -403,6 +403,38 @@ class AppLocalizationsEn extends AppLocalizations {
       'We\'re not sure the group was created. We will check first before trying again, so it isn\'t duplicated.';
 
   @override
+  String get groupMembersLabel => 'Group members (optional)';
+
+  @override
+  String get groupMembersNote =>
+      'You can skip this and add members later from the Members tab. You are added automatically.';
+
+  @override
+  String get groupMembersNameHint => 'Member name';
+
+  @override
+  String get groupMembersAddButton => 'Add';
+
+  @override
+  String get groupMembersDuplicate => 'This name is already added';
+
+  @override
+  String groupMembersRemove(String name) {
+    return 'Remove $name';
+  }
+
+  @override
+  String groupMembersPartialFail(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count members could not be added',
+      one: '1 member could not be added',
+    );
+    return '$_temp0. Add them from the Members tab.';
+  }
+
+  @override
   String get groupEditTitle => 'Edit group';
 
   @override
@@ -3147,8 +3179,28 @@ class AppLocalizationsEn extends AppLocalizations {
       'Some amounts couldn\'t be read. Check the marked items.';
 
   @override
-  String get scanNeedsPercent =>
-      'A service or tax amount was printed. Type its percentage.';
+  String get scanQuantityCheck =>
+      'Some quantities couldn\'t be read, so they were set to 1. Check the quantities.';
+
+  @override
+  String get scanUnitPriceCheck =>
+      'Some items show a quantity but no unit price. We entered the line total with quantity 1. Check them.';
+
+  @override
+  String get scanDiscountFound =>
+      'A discount was found on the receipt and filled in. Check it.';
+
+  @override
+  String get scanDiscountPercentKept =>
+      'The discount was printed as a percentage and an amount. We used the percentage. Check it.';
+
+  @override
+  String get scanDiscountDropped =>
+      'A discount was printed but it isn\'t smaller than the items total, so it was left out. Type it yourself if you need it.';
+
+  @override
+  String get scanTitleCategorySuggested =>
+      'We filled in the name or category from the receipt. Change them if they\'re wrong.';
 
   @override
   String get scanTruncated =>
@@ -3309,7 +3361,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get expenseItzPersonNoItemsYet => 'Add items first.';
 
   @override
-  String get expenseItzChargesTitle => 'Discount, service and tax';
+  String get expenseItzChargesTitle => 'Discount, delivery, service and tax';
 
   @override
   String get expenseItzDiscountLabel => 'Discount';
@@ -3398,4 +3450,148 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get expenseItzAssigneesCollapseSpoken => 'Show fewer';
+
+  @override
+  String get expenseItzDeliveryLabel => 'Delivery';
+
+  @override
+  String expenseItzDeliveryHint(String amount) {
+    return 'Split equally among members with items: $amount each';
+  }
+
+  @override
+  String expenseItzDeliveryHintRange(String min, String max) {
+    return 'Split equally among members with items: $min to $max each';
+  }
+
+  @override
+  String expensePartDelivery(String amount) {
+    return 'delivery $amount';
+  }
+
+  @override
+  String get expenseItzDiscountTooLarge =>
+      'The discount must be less than the items total.';
+
+  @override
+  String expenseItzSummaryTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count things to fix before saving',
+      one: '1 thing to fix before saving',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get expenseItzSummaryHint => 'Tap a row to go to it';
+
+  @override
+  String get expenseItzIssueItemsEmpty => 'Add at least one item';
+
+  @override
+  String expenseItzIssueItemName(String n) {
+    return 'Name of item $n';
+  }
+
+  @override
+  String expenseItzIssueItemPrice(String item) {
+    return 'Price of: $item';
+  }
+
+  @override
+  String expenseItzIssueItemQuantity(String item) {
+    return 'Quantity of: $item';
+  }
+
+  @override
+  String expenseItzIssueItemMembers(String item) {
+    return 'Members of: $item';
+  }
+
+  @override
+  String expenseItzItemExpandSpoken(String item) {
+    return 'Open $item';
+  }
+
+  @override
+  String expenseItzItemCollapseSpoken(String item) {
+    return 'Close $item';
+  }
+
+  @override
+  String get expenseItzItemNeedsFixing => 'This item needs fixing';
+
+  @override
+  String get expenseItzWhoShared => 'Who shared?';
+
+  @override
+  String get expenseItzPickerModeEqual => 'Equal';
+
+  @override
+  String get expenseItzPickerModeQuantity => 'By quantity';
+
+  @override
+  String expenseItzPickerDistributed(String x, String n) {
+    return 'Assigned $x of $n';
+  }
+
+  @override
+  String expenseItzPickerQtyLine(String qty, String price) {
+    return 'Quantity $qty × $price';
+  }
+
+  @override
+  String get expenseItzPickerClearAll => 'Clear all';
+
+  @override
+  String expenseItzPickerSelectedNames(String names) {
+    return '$names';
+  }
+
+  @override
+  String get expenseItzPersonByPersonHint =>
+      'Add each person\'s items. For a shared item, use “Copy an existing item”.';
+
+  @override
+  String expenseItzAddItemFor(String name) {
+    return 'Add an item for $name';
+  }
+
+  @override
+  String get expenseItzCopyItem => 'Copy an existing item';
+
+  @override
+  String expenseItzCopyItemSpoken(String item, String name) {
+    return 'Add “$item” to $name';
+  }
+
+  @override
+  String expenseItzPersonRemoveItem(String item, String name) {
+    return 'Remove “$item” from $name';
+  }
+
+  @override
+  String expenseItzMembersWithoutItems(String n) {
+    return 'Members with no items ($n)';
+  }
+
+  @override
+  String get expenseItzPersonNoItemsLine => 'No items';
+
+  @override
+  String get expenseFormSplitSubtitleAll => 'Equally among everyone';
+
+  @override
+  String get expenseFormSplitSubtitleSelected => 'Equally among chosen people';
+
+  @override
+  String get expenseFormSplitSubtitleExact => 'A set amount each';
+
+  @override
+  String get expenseFormSplitSubtitleItemized => 'Each item has its people';
+
+  @override
+  String get expenseFormChange => 'Change';
 }

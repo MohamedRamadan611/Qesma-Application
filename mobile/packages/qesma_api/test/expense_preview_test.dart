@@ -14,6 +14,12 @@ void main() {
     });
 
     // Integer minor units (piasters: 1 EGP = 100). Never a decimal.
+    // int deliveryMinor
+    test('to test the property `deliveryMinor`', () async {
+      // TODO
+    });
+
+    // Integer minor units (piasters: 1 EGP = 100). Never a decimal.
     // int discountMinor
     test('to test the property `discountMinor`', () async {
       // TODO

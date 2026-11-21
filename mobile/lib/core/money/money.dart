@@ -137,6 +137,19 @@ String _normalize(String input) {
   return buffer.toString();
 }
 
+/// A whole count printed on a receipt (an item quantity, SA17). String logic only: Western or Arabic-Indic digits,
+/// 1 to 4 of them, no sign, no decimals. Null when it is not a whole number or outside [min]..[max].
+abstract final class Count {
+  static int? parse(String input, {required int min, required int max}) {
+    final text = _normalize(input.trim());
+    if (!_digits.hasMatch(text)) return null;
+    final value = int.parse(text);
+    return value < min || value > max ? null : value;
+  }
+
+  static final RegExp _digits = RegExp(r'^\d{1,4}$');
+}
+
 /// Decimal inputs with one decimal, as integer tenths: kilometres and L/100 km in the Khorouga calculator
 /// (STANDALONE_SPEC 11, A168). String logic only, never `double`.
 abstract final class Tenths {

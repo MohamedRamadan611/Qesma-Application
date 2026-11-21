@@ -495,12 +495,15 @@ class ItemizedExpensesIT extends AbstractApiIT {
                                Long service, Long tax, Long adjustment, Integer serviceBps, Integer taxBps, String base) {
         // BSA2 (V21): an ITEMIZED row also carries its discount total (0 here: no discount).
         Long discount = "ITEMIZED".equals(type) && subtotal != null ? 0L : null;
+        // A180 (V22): and its delivery total (0 here: no delivery).
+        Long delivery = discount;
         jdbc.update("""
                 insert into expenses (id, group_id, title, split_type, total_minor, expense_date, subtotal_minor,
                     service_bps, service_minor, tax_bps, tax_minor, tax_base, adjustment_minor, discount_minor,
-                    created_by_user_id)
-                values (?::uuid, ?::uuid, 't', ?, ?, date '2026-10-18', ?, ?, ?, ?, ?, ?, ?, ?, ?::uuid)""",
-                id, groupId, type, total, subtotal, serviceBps, service, taxBps, tax, base, adjustment, discount, userId);
+                    delivery_minor, created_by_user_id)
+                values (?::uuid, ?::uuid, 't', ?, ?, date '2026-10-18', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::uuid)""",
+                id, groupId, type, total, subtotal, serviceBps, service, taxBps, tax, base, adjustment, discount,
+                delivery, userId);
     }
 
     @Test
@@ -661,6 +664,100 @@ class ItemizedExpensesIT extends AbstractApiIT {
         assertThat(got.get("shares")).isEqualTo(e.get("shares"));
         assertThat(got.get("charges")).isEqualTo(charges);
         assertThat(got.get("items")).isEqualTo(e.get("items"));
+    }
+
+    // ---- A180: delivery, outside discount/service/tax, equal among the members with an item (V17-V20) ----------
+
+    @Test
+    void v18DeliveryIsOutsideTheChargesAndSplitEquallyAmongMembersWithItems() throws Exception {
+        Session ali = newUser();
+        List<String> g = abc(ali);
+        Map<String, Object> body = v2Bill(restaurant(g), Map.of("bps", 1000), Map.of("bps", 1200),
+                Map.of("bps", 1400, "base", "SUBTOTAL_PLUS_SERVICE"), 0L, g.get(1), 51561L);
+        body.put("deliveryMinor", 1000);
+
+        JsonNode e = createExpense(ali, g.get(0), body);
+
+        assertThat(owed(e.get("shares"))).containsExactly(15273L, 15271L, 21017L);
+        assertThat(longs(e.get("shares"), "deliveryMinor")).containsExactly(334L, 333L, 333L);
+        assertThat(e.get("totalMinor").asLong()).isEqualTo(51561);
+        assertThat(e.get("charges").get("deliveryMinor").asLong()).isEqualTo(1000);
+        assertThat(e.get("charges").get("service").get("amountMinor").asLong()).isEqualTo(4752);
+        assertThat(e.get("charges").get("tax").get("amountMinor").asLong()).isEqualTo(6209);
+
+        // preview == create, and GET reads the same numbers back from the database
+        JsonNode p = preview(ali, g.get(0), body);
+        assertThat(p.get("deliveryMinor").asLong()).isEqualTo(1000);
+        assertThat(p.get("members")).isEqualTo(e.get("shares"));
+        JsonNode got = body(call(GET, "/api/v1/groups/" + g.get(0) + "/expenses/" + e.get("id").asText(), ali, null));
+        assertThat(got.get("shares")).isEqualTo(e.get("shares"));
+        assertThat(got.get("charges")).isEqualTo(e.get("charges"));
+        assertThat(jdbc.queryForObject("select delivery_minor from expenses where id = ?::uuid", Long.class,
+                e.get("id").asText())).isEqualTo(1000L);
+
+        // a bill without delivery shows 0, never null, and preview says 0 too
+        Map<String, Object> plain = v2Bill(restaurant(g), null, null, null, 0L, g.get(1), 44000L);
+        JsonNode none = createExpense(ali, g.get(0), plain);
+        assertThat(none.get("charges").get("deliveryMinor").asLong()).isZero();
+        assertThat(longs(none.get("shares"), "deliveryMinor")).containsExactly(0L, 0L, 0L);
+        assertThat(preview(ali, g.get(0), plain).get("deliveryMinor").asLong()).isZero();
+    }
+
+    @Test
+    void v17aMemberWithNoItemsOwesNoDeliveryAndABadDeliveryIsRejectedByBothEndpoints() throws Exception {
+        Session ali = newUser();
+        List<String> g = abc(ali);
+        List<Map<String, Object>> items = List.of(item("Pizza", 20000, g.get(1), g.get(2)), item("Pasta", 9000, g.get(3)));
+        Map<String, Object> body = bill(items, null, null, null, 0L, g.get(1), 30000L);
+        body.put("deliveryMinor", 1000);
+
+        JsonNode e = createExpense(ali, g.get(0), body);
+        assertThat(owed(e.get("shares"))).containsExactly(10334L, 10333L, 9333L);
+        assertThat(longs(e.get("shares"), "deliveryMinor")).containsExactly(334L, 333L, 333L);
+        assertThat(e.get("shares")).hasSize(3);                                  // g.get(0) has no item and owes nothing
+
+        // a fresh group, so "nothing persisted" is checkable
+        Session bo = newUser();
+        List<String> h = abc(bo);
+        List<Map<String, Object>> hItems = List.of(item("Pizza", 20000, h.get(1), h.get(2)));
+        for (Object bad : new Object[] {-1, 1000000000001L}) {
+            Map<String, Object> wrong = bill(hItems, null, null, null, 0L, h.get(1), 20000L);
+            wrong.put("deliveryMinor", bad);
+            assertCreateAndPreviewReject(bo, h.get(0), wrong, 422, "VALIDATION_ERROR");
+        }
+        Map<String, Object> equal = equalBody("Taxi", 3000, null, h.get(1), 3000L);
+        equal.put("deliveryMinor", 100);
+        assertCreateAndPreviewReject(bo, h.get(0), equal, 422, "VALIDATION_ERROR");
+    }
+
+    @Test
+    void deliveryCanBeAddedChangedAndRemovedByAnEditAndTheDatabaseKeepsItConsistent() throws Exception {
+        Session ali = newUser();
+        List<String> g = abc(ali);
+        List<Map<String, Object>> items = List.of(item("Pizza", 20000, g.get(1), g.get(2)));
+        JsonNode e = createExpense(ali, g.get(0), bill(items, null, null, null, 0L, g.get(1), 20000L));
+        String eid = e.get("id").asText();
+
+        Map<String, Object> withDelivery = bill(items, null, null, null, 0L, g.get(1), 20500L);
+        withDelivery.put("deliveryMinor", 500);
+        MvcResult put = call(org.springframework.http.HttpMethod.PUT,
+                "/api/v1/groups/" + g.get(0) + "/expenses/" + eid, ali, withDelivery, "If-Match", "\"1\"");
+        assertThat(status(put)).as(put.getResponse().getContentAsString()).isEqualTo(200);
+        JsonNode edited = body(put);
+        assertThat(edited.get("charges").get("deliveryMinor").asLong()).isEqualTo(500);
+        assertThat(owed(edited.get("shares"))).containsExactly(10250L, 10250L);
+
+        // the schema: delivery is part of the total and of each breakdown, and is mandatory on ITEMIZED rows
+        assertThatThrownBy(() -> jdbc.update("update expenses set delivery_minor = 400 where id = ?::uuid", eid))
+                .as("total must include the delivery").isInstanceOf(DataIntegrityViolationException.class);
+        assertThatThrownBy(() -> jdbc.update("update expenses set delivery_minor = null where id = ?::uuid", eid))
+                .as("an ITEMIZED expense carries its delivery").isInstanceOf(DataIntegrityViolationException.class);
+        assertThatThrownBy(() -> jdbc.update("update expenses set delivery_minor = -1, total_minor = 19999 where id = ?::uuid", eid))
+                .as("delivery is not negative").isInstanceOf(DataIntegrityViolationException.class);
+        assertThatThrownBy(() -> jdbc.update("update expense_splits set delivery_minor = delivery_minor + 1 where expense_id = ?::uuid",
+                eid)).as("the breakdown must still explain owed").isInstanceOf(DataIntegrityViolationException.class);
+        assertThatThrownBy(() -> jdbc.update("update expense_splits set delivery_minor = null where expense_id = ?::uuid", eid))
+                .as("delivery is all-or-nothing with the breakdown").isInstanceOf(DataIntegrityViolationException.class);
     }
 
     @Test

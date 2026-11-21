@@ -145,16 +145,18 @@ final class Item {
 }
 
 /// [members] is the group roster (provides sortOrder for every id that may appear); [adjustmentMinor] is a signed
-/// rounding/tip adjustment, 0 = none. A null charge is off.
+/// rounding/tip adjustment, 0 = none. A null charge is off. [deliveryMinor] is the delivery amount, 0 = none (A180):
+/// outside discount, service and tax, split equally among the members who have at least one item.
 final class ItemizedInput {
-  /// Spec 7.4 input: service as a rate ([serviceBps] null = no service), no discount.
+  /// Spec 7.4 input: service as a rate ([serviceBps] null = no service), no discount, no delivery.
   const ItemizedInput(this.members, this.items, this.serviceBps, this.tax, this.adjustmentMinor)
       : discount = null,
+        deliveryMinor = 0,
         _service = null;
 
-  /// STANDALONE_SPEC 18 input: every charge in either form.
+  /// STANDALONE_SPEC 18 input: every charge in either form, plus the delivery amount.
   const ItemizedInput.charges(this.members, this.items,
-      {this.discount, ChargeSpec? service, this.tax, this.adjustmentMinor = 0})
+      {this.discount, ChargeSpec? service, this.tax, this.adjustmentMinor = 0, this.deliveryMinor = 0})
       : serviceBps = null,
         _service = service;
 
@@ -167,15 +169,16 @@ final class ItemizedInput {
   final ChargeSpec? _service;
   final TaxSpec? tax;
   final int adjustmentMinor;
+  final int deliveryMinor;
 
   ChargeSpec? get service => _service ?? (serviceBps == null ? null : ChargeSpec.percent(serviceBps!));
 }
 
-/// owed = items - discount + service + tax + adjustment.
+/// owed = items - discount + service + tax + delivery + adjustment.
 final class MemberBreakdown {
   const MemberBreakdown(
       this.memberId, this.itemsMinor, this.serviceMinor, this.taxMinor, this.adjustmentMinor, this.owedMinor,
-      {this.discountMinor = 0});
+      {this.discountMinor = 0, this.deliveryMinor = 0});
 
   final String memberId;
   final int itemsMinor;
@@ -184,6 +187,7 @@ final class MemberBreakdown {
   final int taxMinor;
   final int adjustmentMinor;
   final int owedMinor;
+  final int deliveryMinor;
 
   @override
   bool operator ==(Object other) =>
@@ -194,22 +198,23 @@ final class MemberBreakdown {
       other.serviceMinor == serviceMinor &&
       other.taxMinor == taxMinor &&
       other.adjustmentMinor == adjustmentMinor &&
-      other.owedMinor == owedMinor;
+      other.owedMinor == owedMinor &&
+      other.deliveryMinor == deliveryMinor;
 
   @override
-  int get hashCode =>
-      Object.hash(memberId, itemsMinor, discountMinor, serviceMinor, taxMinor, adjustmentMinor, owedMinor);
+  int get hashCode => Object.hash(
+      memberId, itemsMinor, discountMinor, serviceMinor, taxMinor, adjustmentMinor, owedMinor, deliveryMinor);
 
   @override
   String toString() => 'MemberBreakdown($memberId, items $itemsMinor, discount $discountMinor, service $serviceMinor, '
-      'tax $taxMinor, adjustment $adjustmentMinor, owed $owedMinor)';
+      'tax $taxMinor, delivery $deliveryMinor, adjustment $adjustmentMinor, owed $owedMinor)';
 }
 
 /// [members] are in sortOrder; those who owe 0 are omitted (spec 7.4 step 6). [subtotalMinor] is the sum of the
-/// lines before the discount; total = subtotal - discount + service + tax + adjustment.
+/// lines before the discount; total = subtotal - discount + service + tax + delivery + adjustment.
 final class ItemizedResult {
   ItemizedResult(this.subtotalMinor, this.serviceMinor, this.taxMinor, this.adjustmentMinor, this.totalMinor,
-      List<MemberBreakdown> members, {this.discountMinor = 0})
+      List<MemberBreakdown> members, {this.discountMinor = 0, this.deliveryMinor = 0})
       : members = List.unmodifiable(members);
 
   final int subtotalMinor;
@@ -218,6 +223,7 @@ final class ItemizedResult {
   final int taxMinor;
   final int adjustmentMinor;
   final int totalMinor;
+  final int deliveryMinor;
   final List<MemberBreakdown> members;
 
   @override
@@ -229,15 +235,16 @@ final class ItemizedResult {
       other.taxMinor == taxMinor &&
       other.adjustmentMinor == adjustmentMinor &&
       other.totalMinor == totalMinor &&
+      other.deliveryMinor == deliveryMinor &&
       listEquals(other.members, members);
 
   @override
-  int get hashCode => Object.hash(
-      subtotalMinor, discountMinor, serviceMinor, taxMinor, adjustmentMinor, totalMinor, Object.hashAll(members));
+  int get hashCode => Object.hash(subtotalMinor, discountMinor, serviceMinor, taxMinor, adjustmentMinor, totalMinor,
+      deliveryMinor, Object.hashAll(members));
 
   @override
   String toString() => 'ItemizedResult(subtotal $subtotalMinor, discount $discountMinor, service $serviceMinor, '
-      'tax $taxMinor, adjustment $adjustmentMinor, total $totalMinor, $members)';
+      'tax $taxMinor, delivery $deliveryMinor, adjustment $adjustmentMinor, total $totalMinor, $members)';
 }
 
 /// ITEMIZED restaurant-bill split (spec 7.4, extended by STANDALONE_SPEC 18: bill discount, item quantity, service
@@ -277,9 +284,13 @@ abstract final class ItemizedCalculator {
     if (tax != null) {
       _checkCharge(tax.rate, 0, Bps.maxBps, 'tax');
     }
+    if (input.deliveryMinor < 0 || !Limits.withinAmountLimit(input.deliveryMinor)) {
+      throw EngineException.invalid('deliveryMinor must be between 0 and ${Limits.maxAmountMinor}');
+    }
 
     // Step 1: item shares, equal LRM among each item's assignees.
     final itemsMinor = List<int>.filled(n, 0);
+    final hasItem = List<bool>.filled(n, false);
     var subtotal = 0;
     for (final item in input.items) {
       final line = _lineAmount(item);
@@ -298,6 +309,7 @@ abstract final class ItemizedCalculator {
           throw EngineException.invalid('Duplicate assignee on an item');
         }
         idx.add(i);
+        hasItem[i] = true;
       }
       idx.sort();
       final shares = Lrm.allocate(line, List<int>.filled(idx.length, 1), [for (final i in idx) sortOrders[i]]);
@@ -351,15 +363,23 @@ abstract final class ItemizedCalculator {
       taxMinor = Lrm.allocate(taxTotal, baseWeights, sortOrders);
     }
 
-    // Step 5: signed adjustment, allocated by net shares (Lrm applies the sign afterwards).
+    // Step 5: delivery (A180): outside discount, service and tax; equal parts among the members with an item,
+    // leftover piasters by the usual largest-remainder order.
+    final deliveryTotal = input.deliveryMinor;
+    var deliveryMinor = List<int>.filled(n, 0);
+    if (deliveryTotal != 0) {
+      deliveryMinor = Lrm.allocate(deliveryTotal, [for (var i = 0; i < n; i++) hasItem[i] ? 1 : 0], sortOrders);
+    }
+
+    // Step 6: signed adjustment, allocated by net shares (Lrm applies the sign afterwards).
     final adjustment = input.adjustmentMinor;
     var adjustmentMinor = List<int>.filled(n, 0);
     if (adjustment != 0) {
       adjustmentMinor = Lrm.allocate(adjustment, netMinor, sortOrders);
     }
 
-    // Step 6: owed per member and total; total must be > 0.
-    final total = Exact.add(Exact.add(netSubtotal, serviceTotal), Exact.add(taxTotal, adjustment));
+    // Step 7: owed per member and total; total must be > 0.
+    final total = Exact.add(Exact.add(Exact.add(netSubtotal, serviceTotal), Exact.add(taxTotal, adjustment)), deliveryTotal);
     if (total <= 0) {
       throw EngineException.invalid('The bill total must be greater than zero');
     }
@@ -367,7 +387,8 @@ abstract final class ItemizedCalculator {
     var owedSum = 0;
     var discountSum = 0;
     for (var i = 0; i < n; i++) {
-      final owed = Exact.add(Exact.add(netMinor[i], serviceMinor[i]), Exact.add(taxMinor[i], adjustmentMinor[i]));
+      final owed = Exact.add(
+          Exact.add(Exact.add(netMinor[i], serviceMinor[i]), Exact.add(taxMinor[i], adjustmentMinor[i])), deliveryMinor[i]);
       if (owed < 0) {
         // Decision A12: an adjustment must never make one member's share negative.
         throw EngineException.invalid("The adjustment makes a member's share negative");
@@ -378,14 +399,14 @@ abstract final class ItemizedCalculator {
         // Members owing 0 are not participants.
         breakdown.add(MemberBreakdown(
             roster[i].id, itemsMinor[i], serviceMinor[i], taxMinor[i], adjustmentMinor[i], owed,
-            discountMinor: discountMinor[i]));
+            discountMinor: discountMinor[i], deliveryMinor: deliveryMinor[i]));
       }
     }
     if (owedSum != total || discountSum != discountTotal) {
       throw StateError('Engine invariant violated: parts do not sum to their totals');
     }
     return ItemizedResult(subtotal, serviceTotal, taxTotal, adjustment, total, breakdown,
-        discountMinor: discountTotal);
+        discountMinor: discountTotal, deliveryMinor: deliveryTotal);
   }
 
   /// Quantity 1..999, unit price > 0, line within the A43 cap; overflow is a VALIDATION_ERROR (A13).

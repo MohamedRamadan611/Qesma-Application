@@ -49,6 +49,7 @@ void main() {
   _fl14TimeGuard();
   _sa10PoolGuard();
   _sa16ItemizedGuard();
+  _sa17ReceiptScanGuard();
   test('no money arithmetic or floating point outside core/money', () {
     final hits = <String>[
       // Floating point types and conversions: allowed only for pixel sizes in theme/widgets.
@@ -397,5 +398,45 @@ void _sa16ItemizedGuard() {
       skip: (p) => p == 'lib/features/expenses/application/expense_command_builder.dart' || p.startsWith('lib/local/'),
     );
     expect(hits, isEmpty, reason: 'Build the request with buildItemizedCommand.\n${hits.join('\n')}');
+  });
+}
+
+// SA17 (STANDALONE_SPEC 18.4, A176): the receipt scan copies what the model read and never computes. A quantity above 1
+// without a unit price is flagged for the user; the client does not divide the line total. The parser and the mapper
+// may compare (>=, ==) but never add, multiply, divide or round an amount, a quantity or a percentage.
+final _scanArithmetic = RegExp(
+  r'\b(\w*Minor\w*|quantity|qty|unitPrice|unit|lineTotal|amount|subtotal|total|percent|bps)\b\s*(~/|[-+*/%])=?\s*[\w(]'
+  r'|[\w)\]]\s*(~/|[-+*/%])=?\s*\b(\w*Minor\w*|quantity|qty|unitPrice|unit|lineTotal|amount|subtotal|total|percent|bps)\b'
+  r'|\.fold\(|\.reduce\(|\.round\(|\.floor\(|\.ceil\(|\.truncate\(|\.toInt\(|\bdouble\b|\bnum\b|toDouble',
+);
+
+bool _isReceiptScanLogic(String path) =>
+    path == 'lib/features/receipt_scan/application/receipt_parser.dart' ||
+    path == 'lib/features/receipt_scan/application/receipt_draft_mapper.dart' ||
+    path == 'lib/features/receipt_scan/application/parsed_receipt.dart' ||
+    path == 'lib/features/receipt_scan/presentation/scan_flow.dart';
+
+void _sa17ReceiptScanGuard() {
+  test('no client-side division or other money math in the receipt scan (SA17)', () {
+    final hits = _scan(_scanArithmetic, skip: (p) => !_isReceiptScanLogic(p));
+    expect(hits, isEmpty, reason: 'The scan copies the printed numbers; the client never divides a line total or computes a price.\n${hits.join('\n')}');
+  });
+
+  test('the receipt scan guard is alive: the four files are scanned and the pattern catches money math', () {
+    final scanned = _dartFiles().map(_rel).where(_isReceiptScanLogic).toList();
+    expect(scanned, hasLength(4), reason: scanned.join('\n'));
+    expect(_scanArithmetic.hasMatch('final unit = lineTotal ~/ quantity;'), isTrue);
+    expect(_scanArithmetic.hasMatch('final unit = lineTotalMinor / item.quantity;'), isTrue);
+    expect(_scanArithmetic.hasMatch('final line = unitPrice * quantity;'), isTrue);
+    expect(_scanArithmetic.hasMatch('final sum = items.fold(0, (a, i) => a + i.minor);'), isTrue);
+    expect(_scanArithmetic.hasMatch('final left = subtotal - discount;'), isTrue);
+    expect(_scanArithmetic.hasMatch('if (amount >= subtotal) return dropped;'), isFalse);
+    expect(_scanArithmetic.hasMatch('final opensAs = quantity > 1 ? quantity : 1;'), isFalse);
+  });
+
+  test('the model never decides a number: the prompt says to copy and never calculate, and the model id is one constant', () {
+    final reader = File('lib/features/receipt_scan/application/firebase_receipt_reader.dart').readAsStringSync();
+    expect(reader, contains('Never calculate, correct or guess a number.'));
+    expect(RegExp(r'gemini-[\w.-]+').allMatches(reader).length, 1, reason: 'the model id appears once (kReceiptModel)');
   });
 }

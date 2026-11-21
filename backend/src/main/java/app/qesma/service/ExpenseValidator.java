@@ -45,12 +45,25 @@ final class ExpenseValidator {
      * @param discountBps    ITEMIZED only; the percent form of the discount (BSA2)
      * @param discountAmountMinor ITEMIZED only; the amount form of the discount; never with discountBps
      * @param adjustmentMinor ITEMIZED only, 0 when absent
+     * @param deliveryMinor  ITEMIZED only, 0 when absent (A180)
      */
     record Valid(String title, LocalDate expenseDate, String splitType, long totalMinor,
                  List<ExpenseCommand.PayerInput> payers, List<UUID> participantMemberIds,
                  List<ExpenseCommand.ShareInput> shares, List<ExpenseCommand.ItemInput> items, Integer serviceBps,
                  Long serviceAmountMinor, Integer taxBps, Long taxAmountMinor, String taxBase, Integer discountBps,
-                 Long discountAmountMinor, long adjustmentMinor, String category, boolean paidFromPool) {
+                 Long discountAmountMinor, long adjustmentMinor, String category, boolean paidFromPool,
+                 long deliveryMinor) {
+
+        /** Without delivery (A180). */
+        Valid(String title, LocalDate expenseDate, String splitType, long totalMinor,
+              List<ExpenseCommand.PayerInput> payers, List<UUID> participantMemberIds,
+              List<ExpenseCommand.ShareInput> shares, List<ExpenseCommand.ItemInput> items, Integer serviceBps,
+              Long serviceAmountMinor, Integer taxBps, Long taxAmountMinor, String taxBase, Integer discountBps,
+              Long discountAmountMinor, long adjustmentMinor, String category, boolean paidFromPool) {
+            this(title, expenseDate, splitType, totalMinor, payers, participantMemberIds, shares, items, serviceBps,
+                    serviceAmountMinor, taxBps, taxAmountMinor, taxBase, discountBps, discountAmountMinor,
+                    adjustmentMinor, category, paidFromPool, 0);
+        }
 
         /** Pre-BSA2 shape: percent charges only, no discount. */
         Valid(String title, LocalDate expenseDate, String splitType, long totalMinor,
@@ -73,7 +86,7 @@ final class ExpenseValidator {
         Valid withPoolFields(String newCategory, boolean newPaidFromPool) {
             return new Valid(title, expenseDate, splitType, totalMinor, payers, participantMemberIds, shares, items,
                     serviceBps, serviceAmountMinor, taxBps, taxAmountMinor, taxBase, discountBps, discountAmountMinor,
-                    adjustmentMinor, newCategory, newPaidFromPool);
+                    adjustmentMinor, newCategory, newPaidFromPool, deliveryMinor);
         }
 
         /** True when the tax is applied, in either form. */
@@ -285,11 +298,15 @@ final class ExpenseValidator {
             throw ApiException.validation("adjustmentMinor must be between -" + Limits.MAX_AMOUNT_MINOR + " and "
                     + Limits.MAX_AMOUNT_MINOR);
         }
+        long delivery = c.deliveryMinor() == null ? 0 : c.deliveryMinor();
+        if (delivery < 0 || delivery > Limits.MAX_AMOUNT_MINOR) {
+            throw ApiException.validation("deliveryMinor must be between 0 and " + Limits.MAX_AMOUNT_MINOR);
+        }
         return new Valid(title, date, "ITEMIZED", total, List.copyOf(payers), null, null, List.copyOf(clean),
                 service == null ? null : service.bps(), service == null ? null : service.amountMinor(),
                 tax == null ? null : tax.bps(), tax == null ? null : tax.amountMinor(), taxBase,
                 discount == null ? null : discount.bps(), discount == null ? null : discount.amountMinor(),
-                adjustment, DEFAULT_CATEGORY, false);
+                adjustment, DEFAULT_CATEGORY, false, delivery);
     }
 
     /**
@@ -342,8 +359,8 @@ final class ExpenseValidator {
 
     private static void rejectItemizedFields(ExpenseCommand c, String type) {
         if (c.items() != null || c.service() != null || c.tax() != null || c.adjustmentMinor() != null
-                || c.discount() != null) {
-            throw ApiException.validation("items, discount, service, tax and adjustmentMinor are only allowed for "
+                || c.discount() != null || c.deliveryMinor() != null) {
+            throw ApiException.validation("items, discount, service, tax, deliveryMinor and adjustmentMinor are only allowed for "
                     + "ITEMIZED expenses (this is " + type + ")");
         }
     }

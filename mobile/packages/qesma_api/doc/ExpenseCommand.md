@@ -10,6 +10,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **adjustmentMinor** | **int** | Integer minor units (piasters: 1 EGP = 100). Never a decimal. | [optional] 
 **category** | **String** |  | [optional] 
+**deliveryMinor** | **int** | Integer minor units (piasters: 1 EGP = 100). Never a decimal. | [optional] 
 **discount** | [**DiscountInput**](DiscountInput.md) |  | [optional] 
 **expenseDate** | [**Date**](Date.md) |  | 
 **items** | [**BuiltList&lt;ItemInput&gt;**](ItemInput.md) |  | [optional] 

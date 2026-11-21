@@ -11,6 +11,7 @@ import 'package:qesma/core/widgets/widgets.dart';
 import 'package:qesma/features/auth/application/auth_controller.dart';
 import 'package:qesma/features/auth/application/auth_state.dart';
 import 'package:qesma/features/expenses/application/expense_preview_controller.dart';
+import 'package:qesma/features/expenses/presentation/split_section.dart' show SplitMethodRow;
 import 'package:qesma_api/qesma_api.dart';
 
 import 'auth_ui.dart';
@@ -79,6 +80,18 @@ Future<void> tapText(WidgetTester tester, String text) async {
   final finder = find.text(text).first;
   await tester.ensureVisible(finder);
   await tester.tap(finder);
+  await tester.pumpAndSettle();
+}
+
+/// Chooses a split method: the form shows it as one row ("how to split"); a tap opens a sheet with the four methods and
+/// choosing one closes it (the redesign replaced the four chips).
+Future<void> chooseSplit(WidgetTester tester, String label) async {
+  final row = find.byType(SplitMethodRow);
+  await tester.ensureVisible(row.first);
+  await tester.pumpAndSettle();
+  await tester.tap(row.first);
+  await tester.pumpAndSettle();
+  await tester.tap(find.descendant(of: find.byType(AppBottomSheet), matching: find.text(label)));
   await tester.pumpAndSettle();
 }
 
