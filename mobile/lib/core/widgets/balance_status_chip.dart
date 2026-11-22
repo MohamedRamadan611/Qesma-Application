@@ -16,7 +16,10 @@ String balanceSpoken(AppLocalizations l10n, int netMinor) => netMinor > 0
 /// A member's net balance as a pill: word + signed amount (owed "له +100.00", owes
 /// "عليه −80.00", settled "خالص 0.00"). Colour is never the only signal.
 class BalanceStatusChip extends StatelessWidget {
-  const BalanceStatusChip(this.netMinor, {super.key});
+  const BalanceStatusChip(this.netMinor, {super.key, this.plain = false});
+
+  /// Coloured text only: no pill and no padding, so it lines up with other text (the summary card).
+  final bool plain;
 
   /// Net balance in piasters: positive = owed, negative = owes, zero = settled.
   final int netMinor;
@@ -40,9 +43,9 @@ class BalanceStatusChip extends StatelessWidget {
       label: spoken,
       child: ExcludeSemantics(
         child: DecoratedBox(
-          decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(QesmaRadii.pill)),
+          decoration: plain ? const BoxDecoration() : BoxDecoration(color: bg, borderRadius: BorderRadius.circular(QesmaRadii.pill)),
           child: Padding(
-            padding: const EdgeInsetsDirectional.symmetric(horizontal: 10, vertical: 4),
+            padding: plain ? EdgeInsets.zero : const EdgeInsetsDirectional.symmetric(horizontal: 10, vertical: 4),
             child: Text(
               '$word $amount',
               style: QesmaText.amountInline().copyWith(color: fg),

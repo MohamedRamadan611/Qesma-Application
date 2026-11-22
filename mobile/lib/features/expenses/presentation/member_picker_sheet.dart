@@ -126,7 +126,7 @@ class _MultiPickerSheetState extends State<_MultiPickerSheet> {
               padding: const EdgeInsets.only(bottom: QesmaSpacing.sm),
               child: Semantics(
                 liveRegion: true,
-                child: Text(l10n.expenseItzPickerCount('$count', '${widget.members.length}') + ' · ' + names.join(l10n.expenseListSeparator), maxLines: 2, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
+                child: Text('${l10n.expenseItzPickerCount('$count', '${widget.members.length}')} · ${names.join(l10n.expenseListSeparator)}', maxLines: 2, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
               ),
             ),
           AppButton(

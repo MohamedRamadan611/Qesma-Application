@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/theme/palette.dart';
+import '../../../core/theme/qesma_text.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
 
@@ -50,15 +51,30 @@ class GroupSummaryCard extends StatelessWidget {
           Row(
             children: [
               DecoratedBox(
-                decoration: BoxDecoration(color: colors.card, borderRadius: BorderRadius.circular(QesmaRadii.control)),
-                child: Padding(padding: const EdgeInsets.all(QesmaSpacing.sm), child: Icon(Icons.receipt_long_outlined, color: colors.success, size: 20)),
+                decoration: BoxDecoration(
+                  color: colors.card,
+                  borderRadius: BorderRadius.circular(QesmaRadii.control),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(QesmaSpacing.sm),
+                  child: Icon(
+                    Icons.receipt_long_outlined,
+                    color: colors.success,
+                    size: 20,
+                  ),
+                ),
               ),
               const SizedBox(width: QesmaSpacing.sm + 4),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: theme.textTheme.bodySmall?.copyWith(color: colors.textSecondary)),
+                    Text(
+                      title,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colors.textSecondary,
+                      ),
+                    ),
                     if (total != null) MoneyText(total, size: MoneySize.medium),
                   ],
                 ),
@@ -67,33 +83,78 @@ class GroupSummaryCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: QesmaSpacing.sm),
-          DecoratedBox(
-            decoration: BoxDecoration(color: colors.card, borderRadius: BorderRadius.circular(QesmaRadii.control)),
+          Padding(
+            padding: EdgeInsets.zero,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: QesmaSpacing.sm + 4, vertical: QesmaSpacing.sm),
+              padding: const EdgeInsets.symmetric(
+                horizontal: QesmaSpacing.sm + 4,
+                vertical: QesmaSpacing.sm,
+              ),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (net != null) ...[
                     Expanded(
+                      flex: 6,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(l10n.summaryYourPosition, style: theme.textTheme.bodySmall?.copyWith(color: colors.textSecondary)),
+                          Text(
+                            l10n.summaryYourPosition,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colors.textSecondary,
+                            ),
+                          ),
                           const SizedBox(height: QesmaSpacing.xs),
-                          BalanceStatusChip(net),
+                          SizedBox(
+                            height: 32,
+                            child: Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: AlignmentDirectional.centerStart,
+                                child: BalanceStatusChip(net, plain: true),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
+                    const SizedBox(width: QesmaSpacing.md),
                   ],
                   Expanded(
+                    flex: 5,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(l10n.summaryStatus, style: theme.textTheme.bodySmall?.copyWith(color: colors.textSecondary)),
-                        const SizedBox(height: QesmaSpacing.xs),
                         Text(
-                          statusLabel,
-                          style: theme.textTheme.titleSmall?.copyWith(color: settled ? colors.success : colors.primary, fontWeight: FontWeight.bold),
+                          l10n.summaryStatus,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: QesmaSpacing.xs),
+                        SizedBox(
+                          height: 32,
+                          child: Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: AlignmentDirectional.centerStart,
+                              child: Text(
+                                statusLabel,
+                                style: QesmaText.amountInline().copyWith(
+                                  color: settled
+                                      ? colors.success
+                                      : theme.colorScheme.onSurface,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -104,7 +165,12 @@ class GroupSummaryCard extends StatelessWidget {
           ),
           if (footnote != null) ...[
             const SizedBox(height: QesmaSpacing.sm),
-            Text(footnote!, style: theme.textTheme.bodySmall?.copyWith(color: colors.textSecondary)),
+            Text(
+              footnote!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colors.textSecondary,
+              ),
+            ),
           ],
         ],
       ),

@@ -18,7 +18,7 @@
   "fieldClear": "Clear text",
   "fieldCounter": "{count}/{max}",
 
-  "balanceOwed": "Owed",
+  "balanceOwed": "Gets back",
   "balanceOwes": "Owes",
   "balanceSettled": "Settled",
   "balanceOwedSpoken": "Owed {amount}",

@@ -55,7 +55,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get balanceOwed => 'Owed';
+  String get balanceOwed => 'Gets back';
 
   @override
   String get balanceOwes => 'Owes';

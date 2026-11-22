@@ -65,11 +65,15 @@ class ProfileRow extends StatelessWidget {
             Expanded(child: Text(title, style: theme.textTheme.titleSmall)),
             if (value != null) ...[
               const SizedBox(width: QesmaSpacing.sm),
-              Flexible(child: Text(value!, textAlign: TextAlign.end, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary))),
+              // Not a flex child: a Flexible would take half the row and push the value toward the middle.
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.45),
+                child: Text(value!, textAlign: TextAlign.end, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
+              ),
             ],
             if (onTap != null) ...[
               const SizedBox(width: QesmaSpacing.xs),
-              Icon(Icons.chevron_right, color: context.colors.textHelper),
+              Icon(Icons.chevron_right, color: context.colors.textHelper, textDirection: Directionality.of(context)),
             ],
           ],
         ),
