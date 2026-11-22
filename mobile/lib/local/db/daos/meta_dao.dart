@@ -43,6 +43,10 @@ class MetaDao extends DatabaseAccessor<LocalDatabase> with _$MetaDaoMixin {
         ),
       );
 
+  /// A184: how many days an archived group is kept before it is deleted (7, 15 or 30; the CHECK enforces it).
+  Future<void> setArchiveRetentionDays(int days) =>
+      (update(localMeta)..where((m) => m.id.equals(1))).write(LocalMetaCompanion(archiveRetentionDays: Value(days)));
+
   /// Remembers the last-used reminder tone (A148).
   Future<void> setLastReminderTone(String tone) => (update(localMeta)..where((m) => m.id.equals(1)))
       .write(LocalMetaCompanion(lastReminderTone: Value(tone)));

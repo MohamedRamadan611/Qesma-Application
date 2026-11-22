@@ -116,7 +116,7 @@ Pure functions in `qesma_engine`; integer / BigInt math only; no network, no map
 - `fuelMinor = round_half_up(km_tenths × l100_tenths × pricePerLitreMinor / 10000)` (BigInt intermediates, 7.1).
 - `total = fuelMinor + Σ tolls` (≤ 10^12).
 - Split **equally by LRM** among the chosen riders, ties by `sortOrder`; the driver counts only if chosen.
-- The fuel price is **user-editable** with a "last updated" date; no hardcoded official price and no network fetch (A142).
+- The fuel price is **user-editable** with a "last updated" date; no network fetch (A142). Update (2026-11-22, owner): the app bundles a small list of reference prices (official Egyptian pump prices with their date) offered as a tappable suggestion; the user decides, can edit it, and it is refreshed with each release.
 
 **Multi-stop ride.** Ordered stops form legs; each leg has a distance in tenths of km; each rider has a boarding and a leaving stop; the total fare is in piasters.
 

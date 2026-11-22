@@ -175,6 +175,15 @@ class _FuelInputs extends ConsumerWidget {
             ),
           ],
         ),
+        if (referencePricesMinor[s.fuelType] case final suggested? when saved?.pricePerLitreMinor != suggested)
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: ActionChip(
+              avatar: const Icon(Icons.local_gas_station_outlined, size: 18),
+              label: Text(l10n.calcPriceSuggest(moneyDisplay(l10n, suggested), ltrIsolate(isoDate(referencePricesDate)))),
+              onPressed: () => ref.read(fuelPricesRepositoryProvider).save(s.fuelType, suggested),
+            ),
+          ),
         const SizedBox(height: QesmaSpacing.md),
         _SectionLabel(l10n.calcTolls),
         for (var i = 0; i < s.tolls.length; i++)

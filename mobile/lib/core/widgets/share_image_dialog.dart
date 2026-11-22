@@ -120,17 +120,18 @@ class ShareCardFrame extends StatelessWidget {
 
 /// One "label ........ amount" row of a shared card.
 class ShareCardRow extends StatelessWidget {
-  const ShareCardRow({super.key, required this.label, required this.value});
+  const ShareCardRow({super.key, required this.label, required this.value, this.boldLabel = false});
 
   final String label;
   final String value;
+  final bool boldLabel;
 
   @override
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(
           children: [
-            Expanded(child: Text(label)),
+            Expanded(child: Text(label, style: boldLabel ? const TextStyle(fontWeight: FontWeight.bold) : null)),
             const SizedBox(width: QesmaSpacing.sm),
             Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
           ],

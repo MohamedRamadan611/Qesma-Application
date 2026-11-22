@@ -13,6 +13,8 @@ void main() {
   setUpAll(() => verifier = SchemaVerifier(GeneratedHelper()));
 
   _deliveryMigrationTests(() => verifier);
+  _instapayLinkMigrationTests(() => verifier);
+  _archiveMigrationTests(() => verifier);
 
   test('the exported v1 snapshot matches the schema in code', () async {
     final connection = await verifier.startAt(1);
@@ -283,6 +285,69 @@ void _deliveryMigrationTests(SchemaVerifier Function() verifier) {
       await expectLater(db.customSelect('SELECT 1').get(), throwsA(anything));
       expect(raw.select('PRAGMA user_version').single.values.single, 8);
       expect([for (final c in raw.select('PRAGMA table_info(expense_splits)')) c['name']], isNot(contains('delivery_minor')));
+    });
+  });
+}
+
+void _instapayLinkMigrationTests(SchemaVerifier Function() verifier) {
+  group('v9 -> v10 InstaPay link in payment_handles', () {
+    const p = '00000000-0000-4000-8000-000000000001';
+    const link = 'https://ipn.eg/S/m.ramadan611/instapay/6BrrCd';
+
+    test('keeps the stored handles and now accepts an ipn.eg link', () async {
+      final schema = await verifier().schemaAt(9);
+      final raw = schema.rawDatabase;
+      raw.execute('INSERT INTO local_meta (id, created_schema_version, created_at) VALUES (1, 9, 1000)');
+      raw.execute("INSERT INTO local_profile (id, display_name, created_at, updated_at) VALUES ('$p', 'Mona', 1, 1)");
+      raw.execute("INSERT INTO payment_handles (id, user_id, type, value, created_at, updated_at) VALUES ('00000000-0000-4000-8000-0000000000d1', '$p', 'INSTAPAY', 'mona@instapay', 1, 1)");
+      raw.execute("INSERT INTO payment_handles (id, user_id, type, value, created_at, updated_at) VALUES ('00000000-0000-4000-8000-0000000000d2', '$p', 'WALLET', '01012345678', 1, 1)");
+      final db = LocalDatabase(schema.newConnection());
+      await verifier().migrateAndValidate(db, 10);
+
+      final rows = {for (final r in await db.paymentHandlesDao.listForUser(p)) r.type: r.value};
+      expect(rows, {'INSTAPAY': 'mona@instapay', 'WALLET': '01012345678'});
+      const now = 1700000000000;
+      await db.paymentHandlesDao.upsert(PaymentHandleRow(id: '00000000-0000-4000-8000-0000000000d1', userId: p, type: 'INSTAPAY', value: link, createdAt: now, updatedAt: now));
+      expect((await db.paymentHandlesDao.listForUser(p)).firstWhere((r) => r.type == 'INSTAPAY').value, link);
+      await db.close();
+    });
+  });
+}
+
+void _archiveMigrationTests(SchemaVerifier Function() verifier) {
+  group('v10 -> v11 archive (A184)', () {
+    const p = '00000000-0000-4000-8000-000000000001';
+    const g = '00000000-0000-4000-8000-0000000000a1';
+
+    test('every group stays active and the retention period defaults to 30 days', () async {
+      final schema = await verifier().schemaAt(10);
+      final raw = schema.rawDatabase;
+      raw.execute('INSERT INTO local_meta (id, created_schema_version, created_at) VALUES (1, 10, 1000)');
+      raw.execute("INSERT INTO local_profile (id, display_name, created_at, updated_at) VALUES ('$p', 'Mona', 1, 1)");
+      raw.execute("INSERT INTO expense_groups (id, owner_user_id, name, type, created_at, updated_at) VALUES ('$g', '$p', 'Trip', 'TRIP', 1, 1)");
+      final db = LocalDatabase(schema.newConnection());
+      await verifier().migrateAndValidate(db, 11);
+
+      expect((await db.groupsDao.findById(g))!.archivedAt, isNull);
+      expect((await db.groupsDao.listByOwner(p, limit: 10, offset: 0)).map((x) => x.id), [g]);
+      expect((await db.metaDao.get()).archiveRetentionDays, 30);
+      await db.groupsDao.setArchivedAt(g, 5000);
+      expect(await db.groupsDao.listByOwner(p, limit: 10, offset: 0), isEmpty);
+      expect((await db.groupsDao.listArchived(p)).single.archivedAt, 5000);
+      await db.close();
+    });
+
+    test('the retention period accepts only 7, 15 or 30', () async {
+      final db = LocalDatabase.inMemory();
+      await db.metaDao.get().then((_) {}, onError: (_) {});
+      await db.customStatement('INSERT OR IGNORE INTO local_meta (id, created_schema_version, created_at) VALUES (1, 11, 1)');
+      for (final ok in [7, 15, 30]) {
+        await db.metaDao.setArchiveRetentionDays(ok);
+      }
+      for (final bad in [0, 1, 10, 31, 60]) {
+        await expectLater(db.metaDao.setArchiveRetentionDays(bad), throwsA(anything), reason: '$bad');
+      }
+      await db.close();
     });
   });
 }

@@ -12,7 +12,7 @@ import '../../../core/widgets/widgets.dart';
 import '../application/groups_list_controller.dart';
 import '../../backup/presentation/backup_banner.dart';
 import 'group_card.dart';
-import '../../../core/theme/palette.dart';
+import 'group_summary_card.dart';
 
 /// Home of the signed-in app: the paged list of groups (P2-01).
 /// Sign out lives on the Account tab.
@@ -122,7 +122,7 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
                     if (index == 0) {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [const BackupBanner(), _NetHeader(totalMinor: state.netTotalMinor)],
+                        children: [const BackupBanner(), _SummaryHeader(state: state)],
                       );
                     }
                     if (index > state.items.length) {
@@ -161,29 +161,26 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
   }
 }
 
-/// Net across all groups: only shown when the controller says it is valid (all pages
-/// loaded, one currency). The number is a sum of server-sent values.
-class _NetHeader extends StatelessWidget {
-  const _NetHeader({required this.totalMinor});
+/// The "total shared" card across all groups. The amount and the position are hidden when they would be wrong (not
+/// every page loaded, or several currencies); the count and the status line always show.
+class _SummaryHeader extends StatelessWidget {
+  const _SummaryHeader({required this.state});
 
-  final int? totalMinor;
+  final GroupsListState state;
 
   @override
   Widget build(BuildContext context) {
-    final total = totalMinor;
-    if (total == null) return const SizedBox.shrink();
     final l10n = AppLocalizations.of(context);
-    return AppCard(
-      color: context.colors.tint,
-      child: Wrap(
-        alignment: WrapAlignment.spaceBetween,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        spacing: QesmaSpacing.sm,
-        runSpacing: QesmaSpacing.sm,
-        children: [
-          Text(l10n.groupsNetTotal, style: Theme.of(context).textTheme.titleMedium),
-          BalanceStatusChip(total),
-        ],
+    final open = state.openGroupsCount;
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(bottom: QesmaSpacing.xs),
+      child: GroupSummaryCard(
+        title: l10n.summaryAllGroups,
+        totalSpentMinor: state.totalSpentMinor,
+        countLabel: l10n.summaryGroupsCount('${state.items.length}'),
+        netMinor: state.netTotalMinor,
+        statusLabel: open == 0 ? l10n.summaryAllSettled : l10n.summaryOpenGroups('$open'),
+        settled: open == 0,
       ),
     );
   }

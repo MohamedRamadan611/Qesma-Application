@@ -49,6 +49,14 @@ void main() {
     for (final bad in ['no-at-sign', 'a@b@c', 'ab', 'demo user@bank', 'دمو@bank', '@bank', 'demo@', '${'a' * 59}@b']) {
       test('"${bad.length > 20 ? '${bad.length} chars' : bad}" is invalid', () => expect(normaliseInstapay(bad).issue, HandleIssue.instapay));
     }
+    test('an InstaPay link is accepted and keeps the case of its path', () {
+      final r = normaliseInstapay('  https://ipn.eg/S/m.ramadan611/instapay/6BrrCd ');
+      expect((r.isValid, r.value), (true, 'https://ipn.eg/S/m.ramadan611/instapay/6BrrCd'));
+    });
+    test('the scheme and host of a link are lower-cased, the path is not', () => expect(normaliseInstapay('HTTPS://IPN.EG/S/AbC').value, 'https://ipn.eg/S/AbC'));
+    for (final bad in ['http://ipn.eg/S/x', 'https://ipn.eg.evil.com/S/x', 'https://evil.com/ipn.eg/S/x', 'https://ipn.eg/', 'https://ipn.eg/S/ x', 'https://ipn.eg/S/\u0645', 'https://ipn.eg/${'a' * 190}']) {
+      test('link "${bad.length > 30 ? '${bad.length} chars' : bad}" is invalid', () => expect(normaliseInstapay(bad).issue, HandleIssue.instapay));
+    }
     test('exactly 60 characters is accepted', () => expect(normaliseInstapay('${'a' * 58}@b').isValid, isTrue));
   });
 }

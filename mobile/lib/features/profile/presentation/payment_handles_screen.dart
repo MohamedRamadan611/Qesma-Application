@@ -172,7 +172,7 @@ class _PaymentHandlesScreenState extends ConsumerState<PaymentHandlesScreen> {
           hint: l10n.handlesInstapayHint,
           errorText: instapayError,
           enabled: !state.saving,
-          keyboardType: TextInputType.emailAddress,
+          keyboardType: TextInputType.url,
           textInputAction: TextInputAction.next,
           onChanged: (_) => setState(() {
             _touchedInstapay = true;

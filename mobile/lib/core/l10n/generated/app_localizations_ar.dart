@@ -171,7 +171,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get errorGroupNotEmptyMessage =>
-      'المجموعة فيها مصاريف أو تسويات، فمينفعش تتمسح.';
+      'المجموعة لسه فيها حسابات مش متسوّية. سوّي كل الحسابات الأول وبعدين امسحها.';
 
   @override
   String get errorOwnerMemberProtectedTitle => 'ده حسابك في المجموعة';
@@ -304,6 +304,103 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupsEmptyBody => 'ابدأ بجروب جديد وضيف أصحابك، وإحنا نحسبها.';
 
   @override
+  String get archiveTitle => 'الأرشيف';
+
+  @override
+  String get archiveAction => 'أرشفة الجروب';
+
+  @override
+  String get archiveConfirmTitle => 'تأرشف الجروب ده؟';
+
+  @override
+  String archiveConfirmBody(Object days, Object name) {
+    return '«$name» هيختفي من قايمة جروباتك وهيتمسح نهائيًا بكل مصاريفه ومدفوعاته بعد $days يوم. تقدر ترجّعه قبل كده.';
+  }
+
+  @override
+  String get archiveDone => 'الجروب اتأرشف.';
+
+  @override
+  String get archiveBlockedTitle => 'لسه مينفعش نأرشفه';
+
+  @override
+  String get archiveBlocked =>
+      'سوّي كل الحسابات وفرّغ الصندوق الأول، وبعدين تقدر تأرشف الجروب.';
+
+  @override
+  String get archiveRetentionLabel => 'مسح الجروبات المؤرشفة بعد';
+
+  @override
+  String get archiveRetention7 => '7 أيام';
+
+  @override
+  String get archiveRetention15 => '15 يوم';
+
+  @override
+  String get archiveRetention30 => 'شهر';
+
+  @override
+  String get archiveRetentionHint =>
+      'الجروب المؤرشف بيختفي من قايمتك. بعد المدة دي بيتمسح نهائيًا بكل مصاريفه. وقبلها تقدر ترجّعه.';
+
+  @override
+  String get archiveEmptyTitle => 'مفيش جروبات مؤرشفة';
+
+  @override
+  String get archiveEmptyBody =>
+      'الجروبات اللي بتأرشفها بعد ما تسوّي الحسابات هتظهر هنا.';
+
+  @override
+  String archiveArchivedOn(Object date) {
+    return 'اتأرشف في $date';
+  }
+
+  @override
+  String archiveDeletesOn(Object date) {
+    return 'هيتمسح نهائيًا في $date';
+  }
+
+  @override
+  String get archiveRestore => 'استرجاع';
+
+  @override
+  String get archiveDeleteNow => 'مسح دلوقتي';
+
+  @override
+  String get archiveRestored => 'الجروب رجع.';
+
+  @override
+  String get archiveDeleted => 'الجروب اتمسح.';
+
+  @override
+  String get summaryAllGroups => 'إجمالي كل جروباتك';
+
+  @override
+  String get summaryGroupTotal => 'إجمالي مصاريف الجروب';
+
+  @override
+  String summaryGroupsCount(Object n) {
+    return '$n جروبات';
+  }
+
+  @override
+  String get summaryYourPosition => 'موقفك';
+
+  @override
+  String get summaryStatus => 'حالة التسوية';
+
+  @override
+  String get summaryAllSettled => 'الكل متسوّي';
+
+  @override
+  String get summaryOpen => 'جاري الجمع';
+
+  @override
+  String summaryOpenGroups(Object n) {
+    return '$n جروب مفتوح';
+  }
+
+  @override
   String get groupsNetTotal => 'صافي رصيدك في كل الجروبات';
 
   @override
@@ -386,8 +483,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupPoolToggle => 'إضافة أمين صندوق';
 
   @override
-  String get groupPoolToggleHint =>
-      'واحد من الجروب بيمسك الكاش والكل بيدفع له إيداع. اختياري وتقدر تضيفه بعدين.';
+  String get groupPoolToggleHint => 'واحد بيمسك كاش الجروب.';
 
   @override
   String get groupPoolWho => 'مين اللي هيمسك الفلوس؟';
@@ -418,6 +514,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get groupMembersNameHint => 'اسم العضو';
+
+  @override
+  String get groupMemberNameOptional => 'اسم العضو داخل الجروب (اختياري)';
 
   @override
   String get groupMembersAddButton => 'إضافة';
@@ -463,7 +562,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String groupDeleteConfirmBody(String name) {
-    return 'هيتمسح «$name» نهائيًا ومش هينفع ترجّعه.';
+    return 'هيتمسح «$name» بكل مصاريفه ومدفوعاته نهائيًا ومش هينفع ترجّعه.';
   }
 
   @override
@@ -2060,7 +2159,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get payInstapayLabel => 'عنوان إنستا باي';
+  String get payInstapayLabel => 'عنوان أو لينك إنستا باي';
 
   @override
   String get payWalletLabel => 'محفظة إلكترونية';
@@ -2316,7 +2415,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'اكتب عنوان إنستا باي أو رقم المحفظة أو الاتنين، وزمايلك هيشوفوهم لما يحبّوا يحوّلولك. التطبيق مبيحوّلش فلوس.';
 
   @override
-  String get handlesInstapayHint => 'مثال: instapay URL';
+  String get handlesInstapayHint => 'username@instapay أو https://ipn.eg/S/...';
 
   @override
   String get handlesWalletHint =>
@@ -2324,7 +2423,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get handlesInstapayInvalid =>
-      'العنوان لازم يبقى بالشكل ده: name@bank، حروف إنجليزي وأرقام من غير مسافات (من 3 لـ 60 حرف).';
+      'اكتب العنوان بالشكل ده name@bank (حروف إنجليزي وأرقام من غير مسافات) أو الصق لينك إنستا باي اللي بيبدأ بـ https://ipn.eg/';
 
   @override
   String get handlesWalletInvalid =>
@@ -2394,6 +2493,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get onboardingNameTitle => 'اسمك إيه؟';
+
+  @override
+  String get onboardingPaymentTitle => 'بيانات الدفع (اختياري)';
+
+  @override
+  String get onboardingPaymentHelper =>
+      'علشان صحابك يعرفوا يبعتولك فلوسك فين. تقدر تضيفها أو تغيّرها بعدين.';
 
   @override
   String get onboardingNameHelper =>
@@ -2779,8 +2885,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get poolSectionTitle => 'الصندوق';
 
   @override
-  String get poolSectionHint =>
-      'واحد من المجموعة يمسك فلوس الكل، وكل واحد يسلّمه إيداعه.';
+  String get poolSectionHint => 'واحد بيمسك كاش الجروب.';
 
   @override
   String get poolTreasurerLabel => 'أمين الصندوق';
@@ -2841,6 +2946,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get poolEditDepositTitle => 'تعديل الإيداع';
+
+  @override
+  String get poolRemoveDeposit => 'حذف الإيداع';
+
+  @override
+  String get poolRemoveDepositTitle => 'تحذف الإيداع ده؟';
+
+  @override
+  String get poolRemoveDepositBody =>
+      'استخدمها لو كتبت المبلغ غلط. الإيداع هيفضل في القايمة بحالة «ملغي» ومش هيتحسب في الصندوق.';
+
+  @override
+  String get poolDepositRemoved => 'اتحذف الإيداع.';
+
+  @override
+  String get poolRemoveDepositFailed => 'معرفناش نحذف الإيداع. جرّب تاني.';
 
   @override
   String get poolEditDeposit => 'تعديل الإيداع ده';
@@ -2948,6 +3069,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get calcPriceSet => 'إضافة السعر';
+
+  @override
+  String calcPriceSuggest(String price, String date) {
+    return 'استخدم $price (السعر الرسمي، $date)';
+  }
 
   @override
   String calcPriceDialogTitle(String fuel) {

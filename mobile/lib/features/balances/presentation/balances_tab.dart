@@ -50,15 +50,7 @@ class BalancesTab extends ConsumerStatefulWidget {
 }
 
 class _BalancesTabState extends ConsumerState<BalancesTab> {
-  final _scroll = ScrollController();
-
   String get _gid => widget.group.id;
-
-  @override
-  void dispose() {
-    _scroll.dispose();
-    super.dispose();
-  }
 
   Future<void> _refresh() async {
     final failure = await ref.read(balancesControllerProvider(_gid).notifier).refresh();
@@ -138,7 +130,6 @@ class _BalancesTabState extends ConsumerState<BalancesTab> {
       child: Semantics(
         customSemanticsActions: {CustomSemanticsAction(label: l10n.balancesRefresh): _refresh},
         child: ListView(
-          controller: _scroll,
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsetsDirectional.fromSTEB(QesmaSpacing.margin, QesmaSpacing.sm, QesmaSpacing.margin, QesmaSpacing.xl),
           children: [

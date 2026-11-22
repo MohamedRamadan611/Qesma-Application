@@ -174,7 +174,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorGroupNotEmptyMessage =>
-      'This group has expenses or settlements, so it can\'t be deleted.';
+      'This group still has unsettled balances. Settle everything first, then you can delete it.';
 
   @override
   String get errorOwnerMemberProtectedTitle => 'This is your own member';
@@ -311,6 +311,103 @@ class AppLocalizationsEn extends AppLocalizations {
       'Start a group and add your friends. We will do the maths.';
 
   @override
+  String get archiveTitle => 'Archive';
+
+  @override
+  String get archiveAction => 'Archive group';
+
+  @override
+  String get archiveConfirmTitle => 'Archive this group?';
+
+  @override
+  String archiveConfirmBody(Object days, Object name) {
+    return '\"$name\" will leave your groups list and be deleted for good, with all its expenses and payments, after $days days. You can restore it before then.';
+  }
+
+  @override
+  String get archiveDone => 'Group archived.';
+
+  @override
+  String get archiveBlockedTitle => 'Can\'t archive yet';
+
+  @override
+  String get archiveBlocked =>
+      'Settle all balances and empty the pool first, then you can archive this group.';
+
+  @override
+  String get archiveRetentionLabel => 'Delete archived groups after';
+
+  @override
+  String get archiveRetention7 => '7 days';
+
+  @override
+  String get archiveRetention15 => '15 days';
+
+  @override
+  String get archiveRetention30 => '1 month';
+
+  @override
+  String get archiveRetentionHint =>
+      'An archived group is hidden from your list. After this period it is deleted for good with all its expenses. Until then you can restore it.';
+
+  @override
+  String get archiveEmptyTitle => 'No archived groups';
+
+  @override
+  String get archiveEmptyBody =>
+      'Groups you archive after settling up show up here.';
+
+  @override
+  String archiveArchivedOn(Object date) {
+    return 'Archived on $date';
+  }
+
+  @override
+  String archiveDeletesOn(Object date) {
+    return 'Deleted for good on $date';
+  }
+
+  @override
+  String get archiveRestore => 'Restore';
+
+  @override
+  String get archiveDeleteNow => 'Delete now';
+
+  @override
+  String get archiveRestored => 'Group restored.';
+
+  @override
+  String get archiveDeleted => 'Group deleted.';
+
+  @override
+  String get summaryAllGroups => 'Total across your groups';
+
+  @override
+  String get summaryGroupTotal => 'Total group expenses';
+
+  @override
+  String summaryGroupsCount(Object n) {
+    return '$n groups';
+  }
+
+  @override
+  String get summaryYourPosition => 'Your position';
+
+  @override
+  String get summaryStatus => 'Settlement status';
+
+  @override
+  String get summaryAllSettled => 'All settled';
+
+  @override
+  String get summaryOpen => 'In progress';
+
+  @override
+  String summaryOpenGroups(Object n) {
+    return '$n groups open';
+  }
+
+  @override
   String get groupsNetTotal => 'Your net across all groups';
 
   @override
@@ -395,8 +492,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupPoolToggle => 'Add a pool treasurer';
 
   @override
-  String get groupPoolToggleHint =>
-      'One member holds the group\'s cash and everyone hands them a deposit. Optional, you can set it later.';
+  String get groupPoolToggleHint => 'One member holds the group\'s cash.';
 
   @override
   String get groupPoolWho => 'Who holds the cash?';
@@ -428,6 +524,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groupMembersNameHint => 'Member name';
+
+  @override
+  String get groupMemberNameOptional => 'Member name in this group (optional)';
 
   @override
   String get groupMembersAddButton => 'Add';
@@ -470,7 +569,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String groupDeleteConfirmBody(String name) {
-    return '\"$name\" will be deleted permanently. This can\'t be undone.';
+    return '\"$name\" and all its expenses and payments will be deleted permanently. This can\'t be undone.';
   }
 
   @override
@@ -2082,7 +2181,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get payInstapayLabel => 'InstaPay address';
+  String get payInstapayLabel => 'InstaPay address or link';
 
   @override
   String get payWalletLabel => 'Mobile wallet';
@@ -2342,7 +2441,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Add your InstaPay address, your wallet number or both, and your friends will see them when they want to pay you. The app does not move money.';
 
   @override
-  String get handlesInstapayHint => 'Example: username@instapay';
+  String get handlesInstapayHint => 'username@instapay or https://ipn.eg/S/...';
 
   @override
   String get handlesWalletHint =>
@@ -2350,7 +2449,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get handlesInstapayInvalid =>
-      'Use the form name@bank: English letters and digits, no spaces (3 to 60 characters).';
+      'Use name@bank (English letters and digits, no spaces) or paste your InstaPay link that starts with https://ipn.eg/';
 
   @override
   String get handlesWalletInvalid =>
@@ -2422,6 +2521,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingNameTitle => 'What\'s your name?';
+
+  @override
+  String get onboardingPaymentTitle => 'Payment details (optional)';
+
+  @override
+  String get onboardingPaymentHelper =>
+      'So friends know where to send you money. You can add or change them later.';
 
   @override
   String get onboardingNameHelper =>
@@ -2800,8 +2906,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get poolSectionTitle => 'Pool';
 
   @override
-  String get poolSectionHint =>
-      'One member holds the group\'s cash; everyone hands them a deposit.';
+  String get poolSectionHint => 'One member holds the group\'s cash.';
 
   @override
   String get poolTreasurerLabel => 'Treasurer';
@@ -2863,6 +2968,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get poolEditDepositTitle => 'Edit deposit';
+
+  @override
+  String get poolRemoveDeposit => 'Remove deposit';
+
+  @override
+  String get poolRemoveDepositTitle => 'Remove this deposit?';
+
+  @override
+  String get poolRemoveDepositBody =>
+      'Use this if the amount was entered by mistake. The deposit stays in the list as cancelled and no longer counts in the pool.';
+
+  @override
+  String get poolDepositRemoved => 'Deposit removed.';
+
+  @override
+  String get poolRemoveDepositFailed =>
+      'Could not remove the deposit. Try again.';
 
   @override
   String get poolEditDeposit => 'Edit this deposit';
@@ -2970,6 +3092,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get calcPriceSet => 'Add price';
+
+  @override
+  String calcPriceSuggest(String price, String date) {
+    return 'Use $price (official price, $date)';
+  }
 
   @override
   String calcPriceDialogTitle(String fuel) {

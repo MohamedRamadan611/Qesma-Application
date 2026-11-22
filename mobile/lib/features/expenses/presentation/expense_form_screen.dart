@@ -411,7 +411,19 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
             const SizedBox(height: QesmaSpacing.md),
             _SaveFailure(failure: failure, onRetry: _save),
           ],
-          const SizedBox(height: QesmaSpacing.lg),
+          const SizedBox(height: QesmaSpacing.md),
+          // The totals line scrolls with the page; only Save stays fixed at the bottom.
+          _BottomBar(
+            summaryOnly: true,
+            form: form,
+            memberIds: memberIds,
+            canSave: canSave,
+            missingCount: isItemized && form.showAllErrors ? form.itemizedErrorCount(memberIds) : 0,
+            billTotalMinor: isItemized ? total : null,
+            submitting: view.submitting,
+            isEdit: _isEdit,
+            onSave: _save,
+          ),
         ],
       ),
     );
@@ -583,7 +595,10 @@ class _SaveFailure extends StatelessWidget {
 
 /// Exact mode's "typed so far against the total" line and the save button.
 class _BottomBar extends StatelessWidget {
-  const _BottomBar({required this.form, required this.memberIds, required this.canSave, required this.submitting, required this.isEdit, required this.onSave, this.billTotalMinor, this.missingCount = 0});
+  const _BottomBar({required this.form, required this.memberIds, required this.canSave, required this.submitting, required this.isEdit, required this.onSave, this.billTotalMinor, this.missingCount = 0, this.summaryOnly = false});
+
+  /// true: just the scrolling totals line; false: just the fixed Save button.
+  final bool summaryOnly;
 
   final ExpenseFormState form;
   final List<String> memberIds;
@@ -633,50 +648,50 @@ class _BottomBar extends StatelessWidget {
         ),
       );
     }
+    if (summaryOnly) {
+      // Compact: one tinted line (smaller amount), part of the scrolling page.
+      final rows = <Widget>[
+        ?summary,
+        if (form.splitMode == SplitMode.itemized)
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: QesmaSpacing.sm,
+            runSpacing: QesmaSpacing.xs,
+            children: [
+              Text(l10n.expenseItemizedBarTotal, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
+              if (billTotalMinor != null) MoneyText(billTotalMinor!, size: MoneySize.medium) else const SkeletonBlock(width: 80, height: 20),
+            ],
+          ),
+        if (missingCount > 0)
+          Semantics(
+            liveRegion: true,
+            child: Row(
+              children: [
+                ExcludeSemantics(child: Icon(Icons.error_outline, color: context.colors.error, size: 18)),
+                const SizedBox(width: QesmaSpacing.xs),
+                Expanded(child: Text(l10n.expenseItzMissingCount(missingCount), style: theme.textTheme.titleSmall?.copyWith(color: context.colors.error))),
+              ],
+            ),
+          ),
+      ];
+      if (rows.isEmpty) return const SizedBox.shrink();
+      return DecoratedBox(
+        decoration: BoxDecoration(color: context.colors.tint, borderRadius: BorderRadius.circular(QesmaRadii.control)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: QesmaSpacing.sm + 4, vertical: QesmaSpacing.sm),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: rows),
+        ),
+      );
+    }
     return Padding(
       padding: const EdgeInsetsDirectional.fromSTEB(QesmaSpacing.margin, QesmaSpacing.sm, QesmaSpacing.margin, QesmaSpacing.md),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ?summary,
-          if (form.splitMode == SplitMode.itemized)
-            Padding(
-              padding: const EdgeInsets.only(bottom: QesmaSpacing.sm),
-              // A wrap, not a row: at large text the amount goes under its label instead of squeezing it.
-              child: Wrap(
-                alignment: WrapAlignment.spaceBetween,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: QesmaSpacing.sm,
-                runSpacing: QesmaSpacing.xs,
-                children: [
-                  Text(l10n.expenseItemizedBarTotal, style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
-                  if (billTotalMinor != null) MoneyText(billTotalMinor!, size: MoneySize.large) else const SkeletonBlock(width: 96, height: 24),
-                ],
-              ),
-            ),
-          if (missingCount > 0)
-            Padding(
-              padding: const EdgeInsets.only(bottom: QesmaSpacing.sm),
-              child: Semantics(
-                liveRegion: true,
-                child: Row(
-                  children: [
-                    ExcludeSemantics(child: Icon(Icons.error_outline, color: context.colors.error, size: 20)),
-                    const SizedBox(width: QesmaSpacing.xs),
-                    Expanded(child: Text(l10n.expenseItzMissingCount(missingCount), style: theme.textTheme.titleSmall?.copyWith(color: context.colors.error))),
-                  ],
-                ),
-              ),
-            ),
-          AppButton(
-            label: isEdit ? l10n.expenseFormSaveChanges : (form.splitMode == SplitMode.itemized ? l10n.expenseItzSave : l10n.expenseFormSave),
-            icon: Icons.check,
-            loading: submitting,
-            // A restaurant bill keeps Save enabled so a tap can show what is missing; the others wait until valid.
-            onPressed: (canSave || form.splitMode == SplitMode.itemized) && !submitting ? onSave : null,
-          ),
-        ],
+      child: AppButton(
+        label: isEdit ? l10n.expenseFormSaveChanges : (form.splitMode == SplitMode.itemized ? l10n.expenseItzSave : l10n.expenseFormSave),
+        icon: Icons.check,
+        loading: submitting,
+        // A restaurant bill keeps Save enabled so a tap can show what is missing; the others wait until valid.
+        onPressed: (canSave || form.splitMode == SplitMode.itemized) && !submitting ? onSave : null,
       ),
     );
   }

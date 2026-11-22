@@ -46,6 +46,15 @@ class GroupsListState {
     return items.fold<int>(0, (sum, g) => sum + g.yourNetMinor);
   }
 
+  /// Total spent across all groups: same guard as [netTotalMinor] (every page loaded, one currency).
+  int? get totalSpentMinor {
+    if (netTotalMinor == null) return null;
+    return items.fold<int>(0, (sum, g) => sum + g.totalSpentMinor);
+  }
+
+  /// Groups where the caller still owes or is owed something (server `yourNetMinor` is not zero).
+  int get openGroupsCount => items.where((g) => g.yourNetMinor != 0).length;
+
   GroupsListState copyWith({
     GroupsStatus? status,
     List<GroupSummaryDto>? items,

@@ -49,3 +49,16 @@ final class FuelPricesRepository {
   Future<void> save(FuelType type, int pricePerLitreMinor) =>
       _db.fuelPricesDao.upsert(fuelType: type.wire, pricePerLitreMinor: pricePerLitreMinor, updatedAt: _clock());
 }
+
+/// Official Egyptian pump prices per litre in piasters, as announced by the fuel pricing committee on
+/// [referencePricesDate] (held steady in that decision). Offered only as a suggestion the user can tap; never applied
+/// silently (A142, updated 2026-11-22). Refresh with each release.
+const Map<FuelType, int> referencePricesMinor = {
+  FuelType.gasoline80: 2075,
+  FuelType.gasoline92: 2225,
+  FuelType.gasoline95: 2400,
+  FuelType.diesel: 2050,
+};
+
+/// The date of the committee decision behind [referencePricesMinor].
+final DateTime referencePricesDate = DateTime.utc(2026, 10, 15);

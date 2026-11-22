@@ -89,6 +89,7 @@ final class ProfileService {
 abstract final class HandleRules {
   static final RegExp _wallet = RegExp(r'^01[0125][0-9]{8}$');
   static final RegExp _instapay = RegExp(r'^[a-z0-9._-]+@[a-z0-9.-]+$');
+  static final RegExp _instapayLink = RegExp(r'^https://ipn\.eg/[A-Za-z0-9._~:/?#@!$&=%+-]+$');
 
   /// Egyptian mobile wallet: Arabic-Indic digits mapped, spaces/dashes dropped, `+20`/`0020` -> `0`.
   static String? wallet(String? raw) {
@@ -117,16 +118,24 @@ abstract final class HandleRules {
     return s;
   }
 
-  /// InstaPay address: ASCII only (checked before lower-casing), 3..60 characters, `name@bank`, one `@`.
+  /// InstaPay: an address (ASCII only, checked before lower-casing, 3..60 characters, `name@bank`, one `@`) or an
+  /// InstaPay link `https://ipn.eg/...` (16..200 URL-safe ASCII characters; scheme and host are lower-cased, the path
+  /// keeps its case because it is case-sensitive). Mirrors the `ck_payment_handles_instapay` CHECK.
   static String? instapay(String? raw) {
     if (raw == null || javaStrip(raw).isEmpty) return null;
     var s = javaStrip(raw);
-    if (s.codeUnits.any((c) => c > 127) || s.length < 3 || s.length > 60) throw _bad();
+    if (s.codeUnits.any((c) => c > 127)) throw _bad();
+    if (s.toLowerCase().startsWith('https://ipn.eg/')) {
+      final link = 'https://ipn.eg/${s.substring(15)}';
+      if (link.length > 200 || !_instapayLink.hasMatch(link)) throw _bad();
+      return link;
+    }
+    if (s.length < 3 || s.length > 60) throw _bad();
     s = s.toLowerCase();
     if (!_instapay.hasMatch(s) || s.indexOf('@') != s.lastIndexOf('@')) throw _bad();
     return s;
   }
 
   static LocalApiException _bad() =>
-      LocalApiException.validation('instapay must look like name@bank (3 to 60 letters, digits, dots, dashes)');
+      LocalApiException.validation('instapay must look like name@bank (3 to 60 letters, digits, dots, dashes) or be an https://ipn.eg/ link');
 }

@@ -53,7 +53,7 @@ final class GroupService {
   Future<PageResponseGroupSummaryDto> list(int page, int size) => _db.transaction(() async {
         FieldRules.page(page, size);
         final me = await _ctx.profile();
-        const membership = 'JOIN members me ON me.group_id = g.id AND me.user_id = ? AND me.status = \'ACTIVE\'';
+        const membership = 'JOIN members me ON me.group_id = g.id AND me.user_id = ? AND me.status = \'ACTIVE\' AND g.archived_at IS NULL';
         final total = await _db
             .customSelect('SELECT COUNT(*) AS n FROM expense_groups g $membership',
                 variables: [Variable.withString(me.id)], readsFrom: {_db.expenseGroups, _db.members})
@@ -144,7 +144,7 @@ final class GroupService {
     }
   }
 
-  /// Deletes a group with no ledger data at all (expenses incl. soft-deleted, settlements of any status) and no
+  /// Deletes a group with no ledger data, or one with history that is fully settled (all nets and the pool zero), and no
   /// other linked member; otherwise 409 GROUP_NOT_EMPTY (A23, B12).
   Future<void> delete(String groupId) => _db.transaction(() async {
         final access = await _ctx.requireGroup(groupId);
@@ -154,13 +154,46 @@ final class GroupService {
           variables: [Variable.withString(groupId)],
           readsFrom: {_db.expenses, _db.settlements},
         ).getSingle();
-        if (ledger.read<bool>('used')) {
-          throw LocalApiException.conflict('GROUP_NOT_EMPTY', 'The group has expenses or settlements');
-        }
         if (access.members.any((m) => m.userId != null && m.role != 'OWNER')) {
           throw LocalApiException.conflict('GROUP_NOT_EMPTY', 'The group has other members with an account');
         }
+        if (ledger.read<bool>('used')) {
+          // Standalone decision (A23 amended): a group with history can be deleted once it is fully settled, i.e.
+          // every member's net is zero and the pool (if any) is empty. Anything still open is blocked as before.
+          if (!await _isSettled(access)) {
+            throw LocalApiException.conflict('GROUP_NOT_EMPTY', 'The group has unsettled balances');
+          }
+          await _db.groupsDao.deleteGroupWithLedger(groupId);
+          return;
+        }
         await _db.groupsDao.deleteGroupWithMembers(groupId);
+      });
+
+  /// A183/A184: every member's net is zero and the pool (if the group has one) is empty.
+  Future<bool> _isSettled(GroupAccess access) async {
+    final nets = await _ledger.nets(access.group.id, access.members);
+    final poolOpen = access.group.treasurerMemberId != null && await _ledger.poolBalance(access.group.id) != 0;
+    return !nets.values.any((n) => n != 0) && !poolOpen;
+  }
+
+  Future<bool> isSettled(String groupId) => _db.transaction(() async => _isSettled(await _ctx.requireGroup(groupId)));
+
+  /// A184: hides a settled group from the groups list; it is deleted for good after the retention period. A group
+  /// with an open balance or a non-empty pool cannot be archived (409 GROUP_NOT_EMPTY, same rule as the delete).
+  /// Archiving an archived group changes nothing.
+  Future<void> archive(String groupId) => _db.transaction(() async {
+        final access = await _ctx.requireGroup(groupId);
+        if (access.group.archivedAt != null) return;
+        if (!await _isSettled(access)) {
+          throw LocalApiException.conflict('GROUP_NOT_EMPTY', 'The group has unsettled balances');
+        }
+        await _db.groupsDao.setArchivedAt(groupId, _ctx.clock());
+      });
+
+  /// A184: brings an archived group back to the list. Restoring an active group changes nothing.
+  Future<void> restore(String groupId) => _db.transaction(() async {
+        await _ctx.requireGroup(groupId);
+        await _db.groupsDao.setArchivedAt(groupId, null);
       });
 
   /// GroupDto exactly as GET shows it to the caller.

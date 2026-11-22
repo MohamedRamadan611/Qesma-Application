@@ -21,7 +21,9 @@ abstract final class BackupValidator {
   /// itemized rows, no amount forms), and checked against the V21 rules before anything is written. 9 (A180) added
   /// the itemized delivery (expenses.delivery_minor and the per-member part): optional on import, 0 on itemized
   /// rows, and checked against the V22 rules (it is part of the total and of each member's owed amount).
-  static const int currentSchemaVersion = 9;
+  /// 11 (A184) added expense_groups.archived_at (optional on import, null = active); the archive retention is a device setting.
+  /// 10 widened the InstaPay handle to also allow an https://ipn.eg/ link: no new field, so older files import as they are.
+  static const int currentSchemaVersion = 11;
 
   static BackupData parse(Uint8List bytes, {int maxBytes = maxBackupBytes}) {
     if (bytes.isEmpty) throw const BackupException(BackupError.unreadable);
@@ -136,6 +138,7 @@ abstract final class BackupValidator {
         version: r.integer('version', min: 1, max: _maxCount),
         memberSeq: r.integer('member_seq', min: 0, max: _maxCount),
         treasurerMemberId: r.optId('treasurer_member_id'), // schema 5 (SA10); older files have none
+        archivedAt: r.optTimestamp('archived_at'), // schema 11 (A184); older files have none
       );
 
   static const int _maxCount = 1 << 40;

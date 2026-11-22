@@ -30,6 +30,7 @@ class ModeFeatures {
     required this.pool,
     required this.calculator,
     required this.receiptScan,
+    required this.archive,
   });
 
   /// Today's app: everything on (backup is a local-mode feature, SA5).
@@ -57,6 +58,7 @@ class ModeFeatures {
     pool: false,
     calculator: false,
     receiptScan: false,
+    archive: false,
   );
 
   /// The standalone release: every server-only feature off. `backup` (export, restore, reminder banner) is on: SA5.
@@ -84,6 +86,7 @@ class ModeFeatures {
     pool: true,
     calculator: true,
     receiptScan: true,
+    archive: true,
   );
 
   static ModeFeatures of(AppMode mode) => mode == AppMode.local ? local : server;
@@ -122,6 +125,9 @@ class ModeFeatures {
   /// SA12: scan a receipt photo into an unsaved itemized bill (Firebase AI Logic, consent first). Local mode only;
   /// whether it is usable right now (Firebase ready, not hidden) is decided at run time by `receiptScanVisibleProvider`.
   final bool receiptScan;
+
+  /// A184: archive of settled groups (local mode only).
+  final bool archive;
 }
 
 final modeFeaturesProvider = Provider<ModeFeatures>((ref) => ModeFeatures.of(ref.watch(appModeProvider)));

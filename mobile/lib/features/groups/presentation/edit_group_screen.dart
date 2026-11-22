@@ -11,15 +11,19 @@ import '../../../core/router/app_router.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../application/group_detail_controller.dart';
+import '../application/groups_list_controller.dart';
 import '../application/group_permissions.dart';
 import '../data/group_type.dart';
 import 'group_dialogs.dart';
 import 'group_ui.dart';
 import '../../../core/features_for_mode.dart';
 import '../../../core/theme/palette.dart';
+import '../../../local/errors.dart';
+import '../../../local/insights/archive_provider.dart';
 import '../../../local/insights/pool_summary_provider.dart';
 import '../../balances/presentation/member_picker_sheet.dart';
 import '../../expenses/presentation/expense_ui.dart';
+import 'group_type_dropdown.dart';
 
 /// Edit group (P2-03): name and type via `PATCH` with `If-Match`; delete with confirm.
 /// No photo, no admin label, no status card.
@@ -115,6 +119,37 @@ class _EditGroupScreenState extends ConsumerState<EditGroupScreen> {
     }
   }
 
+  /// A184: archive a settled group (local mode). It leaves the list and is deleted after the retention period.
+  Future<void> _archive() async {
+    final l10n = AppLocalizations.of(context);
+    final group = ref.read(groupDetailControllerProvider(widget.gid)).group;
+    if (group == null) return;
+    final days = await ref.read(archiveRetentionProvider.future);
+    if (!mounted) return;
+    final confirmed = await showConfirmDialog(
+      context,
+      title: l10n.archiveConfirmTitle,
+      message: l10n.archiveConfirmBody(group.name, '$days'),
+      confirmLabel: l10n.archiveAction,
+    );
+    if (!confirmed || !mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(archiveServiceProvider).archive(widget.gid);
+    } on LocalApiException {
+      if (mounted) await showBlockedDialog(context, title: l10n.archiveBlockedTitle, message: l10n.archiveBlocked);
+      return;
+    }
+    if (!mounted) return;
+    // Leave first, refresh after: invalidating while this screen is still mounted made the archived group's screens
+    // rebuild against a group that is gone (a blank white frame) before the navigation finished.
+    final container = ProviderScope.containerOf(context, listen: false);
+    context.go(Routes.home);
+    messenger.showSnackBar(SnackBar(content: Text(l10n.archiveDone)));
+    container.invalidate(archivedGroupsProvider);
+    container.invalidate(groupsListControllerProvider);
+  }
+
   Future<void> _delete() async {
     final l10n = AppLocalizations.of(context);
     final detail = ref.read(groupDetailControllerProvider(widget.gid));
@@ -194,23 +229,14 @@ class _EditGroupScreenState extends ConsumerState<EditGroupScreen> {
           const SizedBox(height: QesmaSpacing.lg),
           Text(l10n.groupTypeLabel, style: theme.textTheme.labelLarge),
           const SizedBox(height: QesmaSpacing.sm),
-          Wrap(
-            spacing: QesmaSpacing.sm,
-            runSpacing: QesmaSpacing.sm,
-            children: [
-              for (final type in GroupType.values)
-                AppChoiceChip(
-                  label: type.label(l10n),
-                  icon: type.icon,
-                  selected: _type == type,
-                  onSelected: detail.busy
-                      ? null
-                      : (_) => setState(() {
-                            _type = type;
-                            _touched = true;
-                          }),
-                ),
-            ],
+          GroupTypeDropdown(
+            value: _type,
+            onChanged: detail.busy
+                ? null
+                : (type) => setState(() {
+                      _type = type;
+                      _touched = true;
+                    }),
           ),
           if (poolOn) ...[
             const SizedBox(height: QesmaSpacing.lg),
@@ -236,6 +262,15 @@ class _EditGroupScreenState extends ConsumerState<EditGroupScreen> {
             },
           ),
           const SizedBox(height: QesmaSpacing.sm),
+          if (ref.watch(modeFeaturesProvider).archive && ref.watch(groupPermissionsProvider(widget.gid)).canDeleteGroup) ...[
+            AppButton(
+              label: l10n.archiveAction,
+              icon: Icons.inventory_2_outlined,
+              variant: AppButtonVariant.secondary,
+              onPressed: detail.busy ? null : _archive,
+            ),
+            const SizedBox(height: QesmaSpacing.sm),
+          ],
           if (ref.watch(groupPermissionsProvider(widget.gid)).canDeleteGroup)   // only the owner deletes a group
             AppButton(
               label: l10n.groupDelete,

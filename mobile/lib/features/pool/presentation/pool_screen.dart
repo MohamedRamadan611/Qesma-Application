@@ -10,6 +10,8 @@ import '../../../core/widgets/widgets.dart';
 import '../../../local/insights/pool_summary_provider.dart';
 import '../../../local/insights/pool_summary_repository.dart';
 import '../../balances/application/record_payment_state.dart';
+import '../../balances/application/settlement_actions_controller.dart';
+import '../../balances/application/settlement_rules.dart';
 import '../../balances/presentation/record_payment_sheet.dart';
 import '../../expenses/presentation/expense_ui.dart';
 import '../../groups/application/group_detail_controller.dart';
@@ -44,14 +46,14 @@ class PoolScreen extends ConsumerWidget {
   }
 }
 
-class _PoolBody extends StatelessWidget {
+class _PoolBody extends ConsumerWidget {
   const _PoolBody({required this.group, required this.summary});
 
   final GroupDto group;
   final PoolSummary? summary;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final nameOf = memberNameResolver(group, l10n);
@@ -90,7 +92,7 @@ class _PoolBody extends StatelessWidget {
           EmptyState(icon: Icons.savings_outlined, title: l10n.poolDepositsEmpty, message: l10n.poolDepositsEmptyBody)
         else
           for (final d in s.deposits) ...[
-            _DepositRow(deposit: d, name: nameOf(d.fromMemberId), onEdit: d.cancelled ? null : () => showRecordPaymentSheet(context, gid: group.id, seed: PaymentSeed(fromId: d.fromMemberId, toId: treasurerId, amountMinor: d.amountMinor, poolDeposit: true, replacesId: d.id, settledOn: d.settledOn, note: d.note))),
+            _DepositRow(deposit: d, name: nameOf(d.fromMemberId), onRemove: d.cancelled ? null : () => _removeDeposit(context, ref, group.id, d.id), onEdit: d.cancelled ? null : () => showRecordPaymentSheet(context, gid: group.id, seed: PaymentSeed(fromId: d.fromMemberId, toId: treasurerId, amountMinor: d.amountMinor, poolDeposit: true, replacesId: d.id, settledOn: d.settledOn, note: d.note))),
             const SizedBox(height: QesmaSpacing.sm),
           ],
       ],
@@ -98,12 +100,30 @@ class _PoolBody extends StatelessWidget {
   }
 }
 
+/// Removes a deposit entered by mistake: asks first, then cancels it (soft: the row stays in the list as "cancelled"
+/// and the pool balance no longer counts it).
+Future<void> _removeDeposit(BuildContext context, WidgetRef ref, String gid, String sid) async {
+  final l10n = AppLocalizations.of(context);
+  final messenger = ScaffoldMessenger.of(context);
+  final ok = await showConfirmDialog(
+    context,
+    title: l10n.poolRemoveDepositTitle,
+    message: l10n.poolRemoveDepositBody,
+    confirmLabel: l10n.poolRemoveDeposit,
+    destructive: true,
+  );
+  if (!ok) return;
+  final result = await ref.read(settlementActionsControllerProvider(gid).notifier).perform(sid, SettlementAction.cancel);
+  messenger.showSnackBar(SnackBar(content: Text(result.outcome == SettlementActionOutcome.failed ? l10n.poolRemoveDepositFailed : l10n.poolDepositRemoved)));
+}
+
 class _DepositRow extends StatelessWidget {
-  const _DepositRow({required this.deposit, required this.name, this.onEdit});
+  const _DepositRow({required this.deposit, required this.name, this.onEdit, this.onRemove});
 
   final PoolDeposit deposit;
   final String name;
   final VoidCallback? onEdit;
+  final VoidCallback? onRemove;
 
   @override
   Widget build(BuildContext context) {
@@ -136,6 +156,12 @@ class _DepositRow extends StatelessWidget {
               icon: const Icon(Icons.edit_outlined),
               tooltip: AppLocalizations.of(context).poolEditDeposit,
               onPressed: onEdit,
+            ),
+          if (onRemove != null)
+            IconButton(
+              icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error),
+              tooltip: AppLocalizations.of(context).poolRemoveDeposit,
+              onPressed: onRemove,
             ),
         ],
       ),

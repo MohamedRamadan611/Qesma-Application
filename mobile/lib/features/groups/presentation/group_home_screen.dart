@@ -20,7 +20,9 @@ import '../../receipt_scan/presentation/scan_flow.dart';
 import '../application/group_detail_controller.dart';
 import '../application/group_permissions.dart';
 import '../data/group_type.dart';
+import 'group_summary_card.dart';
 import 'group_ui.dart';
+import '../../../core/format/date_format.dart';
 import 'members_tab.dart';
 
 /// Group home shell (P3-01): header with name, type, member count and total spent, and the
@@ -137,10 +139,27 @@ class _GroupHomeScreenState extends ConsumerState<GroupHomeScreen> {
               label: Text(l10n.expensesAdd),
             )
           : null,
-      body: Column(
+      // The header (summary, pool, tabs) scrolls away with the list instead of staying fixed.
+      body: NestedScrollView(
+        headerSliverBuilder: (context, _) => [
+          SliverToBoxAdapter(
+            child: Column(
         children: [
           // Payments waiting for this person to confirm (FL13), visible on every tab.
           IncomingPaymentsBanner(gid: group.id),
+          // The "total shared" card: total spent, member count, the caller's position and the settlement status.
+          Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(QesmaSpacing.margin, 0, QesmaSpacing.margin, QesmaSpacing.sm),
+            child: GroupSummaryCard(
+              title: l10n.summaryGroupTotal,
+              totalSpentMinor: group.totalSpentMinor,
+              countLabel: memberCountText(l10n, group.members.length),
+              netMinor: group.yourNetMinor,
+              statusLabel: group.yourNetMinor == 0 ? l10n.summaryAllSettled : l10n.summaryOpen,
+              settled: group.yourNetMinor == 0,
+              footnote: group.lastExpenseAt == null ? l10n.groupNoActivity : l10n.groupLastActivity(ltrIsolate(isoDate(group.lastExpenseAt!))),
+            ),
+          ),
           // SA10: the pool card, only when the group has a treasurer.
           if (ref.watch(modeFeaturesProvider).pool && group.treasurerMemberId != null)
             Padding(
@@ -160,8 +179,11 @@ class _GroupHomeScreenState extends ConsumerState<GroupHomeScreen> {
               onChanged: (i) => setState(() => _tab = i),
             ),
           ),
-          Expanded(child: tabBody),
         ],
+            ),
+          ),
+        ],
+        body: tabBody,
       ),
     );
   }

@@ -11,9 +11,9 @@ import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../application/create_group_controller.dart';
 import '../data/group_type.dart';
+import 'group_type_dropdown.dart';
 import 'group_ui.dart';
 import 'member_names_input.dart';
-import '../../../core/theme/palette.dart';
 
 /// Create group (P2-02): name (max 60), type chips, fixed EGP. No photo, no contacts.
 class CreateGroupScreen extends ConsumerStatefulWidget {
@@ -81,13 +81,6 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              l10n.groupCreateSubtitle,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: context.colors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: QesmaSpacing.lg),
             ListenableBuilder(
               listenable: _name,
               builder: (context, _) => AppTextField(
@@ -103,21 +96,7 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
             const SizedBox(height: QesmaSpacing.lg),
             Text(l10n.groupTypeLabel, style: theme.textTheme.labelLarge),
             const SizedBox(height: QesmaSpacing.sm),
-            Wrap(
-              spacing: QesmaSpacing.sm,
-              runSpacing: QesmaSpacing.sm,
-              children: [
-                for (final type in GroupType.values)
-                  AppChoiceChip(
-                    label: type.label(l10n),
-                    icon: type.icon,
-                    selected: _type == type,
-                    onSelected: state.submitting
-                        ? null
-                        : (_) => setState(() => _type = type),
-                  ),
-              ],
-            ),
+            GroupTypeDropdown(value: _type, onChanged: state.submitting ? null : (t) => setState(() => _type = t)),
             const SizedBox(height: QesmaSpacing.lg),
             Text(l10n.groupCurrencyLabel, style: theme.textTheme.labelLarge),
             const SizedBox(height: QesmaSpacing.sm),

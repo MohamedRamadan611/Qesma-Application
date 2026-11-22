@@ -509,6 +509,18 @@ class LocalMeta extends Table with TableInfo<LocalMeta, LocalMetaRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
+  static const VerificationMeta _archiveRetentionDaysMeta =
+      const VerificationMeta('archiveRetentionDays');
+  late final GeneratedColumn<int> archiveRetentionDays = GeneratedColumn<int>(
+    'archive_retention_days',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'NOT NULL DEFAULT 30 CHECK (archive_retention_days IN (7, 15, 30))',
+    defaultValue: const CustomExpression('30'),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -523,6 +535,7 @@ class LocalMeta extends Table with TableInfo<LocalMeta, LocalMetaRow> {
     ocrScanCount,
     ocrPermissionErrors,
     ocrHiddenUntil,
+    archiveRetentionDays,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -639,6 +652,15 @@ class LocalMeta extends Table with TableInfo<LocalMeta, LocalMetaRow> {
         ),
       );
     }
+    if (data.containsKey('archive_retention_days')) {
+      context.handle(
+        _archiveRetentionDaysMeta,
+        archiveRetentionDays.isAcceptableOrUnknown(
+          data['archive_retention_days']!,
+          _archiveRetentionDaysMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -696,6 +718,10 @@ class LocalMeta extends Table with TableInfo<LocalMeta, LocalMetaRow> {
         DriftSqlType.int,
         data['${effectivePrefix}ocr_hidden_until'],
       ),
+      archiveRetentionDays: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}archive_retention_days'],
+      )!,
     );
   }
 
@@ -729,6 +755,9 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
   final int ocrScanCount;
   final int ocrPermissionErrors;
   final int? ocrHiddenUntil;
+
+  /// Schema 11 (A184): how long an archived group is kept before it is deleted (days). Device setting, not exported.
+  final int archiveRetentionDays;
   const LocalMetaRow({
     required this.id,
     required this.createdSchemaVersion,
@@ -742,6 +771,7 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
     required this.ocrScanCount,
     required this.ocrPermissionErrors,
     this.ocrHiddenUntil,
+    required this.archiveRetentionDays,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -776,6 +806,7 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
     if (!nullToAbsent || ocrHiddenUntil != null) {
       map['ocr_hidden_until'] = Variable<int>(ocrHiddenUntil);
     }
+    map['archive_retention_days'] = Variable<int>(archiveRetentionDays);
     return map;
   }
 
@@ -808,6 +839,7 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
       ocrHiddenUntil: ocrHiddenUntil == null && nullToAbsent
           ? const Value.absent()
           : Value(ocrHiddenUntil),
+      archiveRetentionDays: Value(archiveRetentionDays),
     );
   }
 
@@ -839,6 +871,9 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
         json['ocr_permission_errors'],
       ),
       ocrHiddenUntil: serializer.fromJson<int?>(json['ocr_hidden_until']),
+      archiveRetentionDays: serializer.fromJson<int>(
+        json['archive_retention_days'],
+      ),
     );
   }
   @override
@@ -861,6 +896,7 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
       'ocr_scan_count': serializer.toJson<int>(ocrScanCount),
       'ocr_permission_errors': serializer.toJson<int>(ocrPermissionErrors),
       'ocr_hidden_until': serializer.toJson<int?>(ocrHiddenUntil),
+      'archive_retention_days': serializer.toJson<int>(archiveRetentionDays),
     };
   }
 
@@ -877,6 +913,7 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
     int? ocrScanCount,
     int? ocrPermissionErrors,
     Value<int?> ocrHiddenUntil = const Value.absent(),
+    int? archiveRetentionDays,
   }) => LocalMetaRow(
     id: id ?? this.id,
     createdSchemaVersion: createdSchemaVersion ?? this.createdSchemaVersion,
@@ -898,6 +935,7 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
     ocrHiddenUntil: ocrHiddenUntil.present
         ? ocrHiddenUntil.value
         : this.ocrHiddenUntil,
+    archiveRetentionDays: archiveRetentionDays ?? this.archiveRetentionDays,
   );
   LocalMetaRow copyWithCompanion(LocalMetaCompanion data) {
     return LocalMetaRow(
@@ -933,6 +971,9 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
       ocrHiddenUntil: data.ocrHiddenUntil.present
           ? data.ocrHiddenUntil.value
           : this.ocrHiddenUntil,
+      archiveRetentionDays: data.archiveRetentionDays.present
+          ? data.archiveRetentionDays.value
+          : this.archiveRetentionDays,
     );
   }
 
@@ -950,7 +991,8 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
           ..write('ocrScanDay: $ocrScanDay, ')
           ..write('ocrScanCount: $ocrScanCount, ')
           ..write('ocrPermissionErrors: $ocrPermissionErrors, ')
-          ..write('ocrHiddenUntil: $ocrHiddenUntil')
+          ..write('ocrHiddenUntil: $ocrHiddenUntil, ')
+          ..write('archiveRetentionDays: $archiveRetentionDays')
           ..write(')'))
         .toString();
   }
@@ -969,6 +1011,7 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
     ocrScanCount,
     ocrPermissionErrors,
     ocrHiddenUntil,
+    archiveRetentionDays,
   );
   @override
   bool operator ==(Object other) =>
@@ -985,7 +1028,8 @@ class LocalMetaRow extends DataClass implements Insertable<LocalMetaRow> {
           other.ocrScanDay == this.ocrScanDay &&
           other.ocrScanCount == this.ocrScanCount &&
           other.ocrPermissionErrors == this.ocrPermissionErrors &&
-          other.ocrHiddenUntil == this.ocrHiddenUntil);
+          other.ocrHiddenUntil == this.ocrHiddenUntil &&
+          other.archiveRetentionDays == this.archiveRetentionDays);
 }
 
 class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
@@ -1001,6 +1045,7 @@ class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
   final Value<int> ocrScanCount;
   final Value<int> ocrPermissionErrors;
   final Value<int?> ocrHiddenUntil;
+  final Value<int> archiveRetentionDays;
   const LocalMetaCompanion({
     this.id = const Value.absent(),
     this.createdSchemaVersion = const Value.absent(),
@@ -1014,6 +1059,7 @@ class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
     this.ocrScanCount = const Value.absent(),
     this.ocrPermissionErrors = const Value.absent(),
     this.ocrHiddenUntil = const Value.absent(),
+    this.archiveRetentionDays = const Value.absent(),
   });
   LocalMetaCompanion.insert({
     this.id = const Value.absent(),
@@ -1028,6 +1074,7 @@ class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
     this.ocrScanCount = const Value.absent(),
     this.ocrPermissionErrors = const Value.absent(),
     this.ocrHiddenUntil = const Value.absent(),
+    this.archiveRetentionDays = const Value.absent(),
   }) : createdSchemaVersion = Value(createdSchemaVersion),
        createdAt = Value(createdAt);
   static Insertable<LocalMetaRow> custom({
@@ -1043,6 +1090,7 @@ class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
     Expression<int>? ocrScanCount,
     Expression<int>? ocrPermissionErrors,
     Expression<int>? ocrHiddenUntil,
+    Expression<int>? archiveRetentionDays,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1061,6 +1109,8 @@ class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
       if (ocrPermissionErrors != null)
         'ocr_permission_errors': ocrPermissionErrors,
       if (ocrHiddenUntil != null) 'ocr_hidden_until': ocrHiddenUntil,
+      if (archiveRetentionDays != null)
+        'archive_retention_days': archiveRetentionDays,
     });
   }
 
@@ -1077,6 +1127,7 @@ class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
     Value<int>? ocrScanCount,
     Value<int>? ocrPermissionErrors,
     Value<int?>? ocrHiddenUntil,
+    Value<int>? archiveRetentionDays,
   }) {
     return LocalMetaCompanion(
       id: id ?? this.id,
@@ -1093,6 +1144,7 @@ class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
       ocrScanCount: ocrScanCount ?? this.ocrScanCount,
       ocrPermissionErrors: ocrPermissionErrors ?? this.ocrPermissionErrors,
       ocrHiddenUntil: ocrHiddenUntil ?? this.ocrHiddenUntil,
+      archiveRetentionDays: archiveRetentionDays ?? this.archiveRetentionDays,
     );
   }
 
@@ -1139,6 +1191,9 @@ class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
     if (ocrHiddenUntil.present) {
       map['ocr_hidden_until'] = Variable<int>(ocrHiddenUntil.value);
     }
+    if (archiveRetentionDays.present) {
+      map['archive_retention_days'] = Variable<int>(archiveRetentionDays.value);
+    }
     return map;
   }
 
@@ -1156,7 +1211,8 @@ class LocalMetaCompanion extends UpdateCompanion<LocalMetaRow> {
           ..write('ocrScanDay: $ocrScanDay, ')
           ..write('ocrScanCount: $ocrScanCount, ')
           ..write('ocrPermissionErrors: $ocrPermissionErrors, ')
-          ..write('ocrHiddenUntil: $ocrHiddenUntil')
+          ..write('ocrHiddenUntil: $ocrHiddenUntil, ')
+          ..write('archiveRetentionDays: $archiveRetentionDays')
           ..write(')'))
         .toString();
   }
@@ -1947,6 +2003,17 @@ class ExpenseGroups extends Table with TableInfo<ExpenseGroups, GroupRow> {
         requiredDuringInsert: false,
         $customConstraints: 'REFERENCES members(id)',
       );
+  static const VerificationMeta _archivedAtMeta = const VerificationMeta(
+    'archivedAt',
+  );
+  late final GeneratedColumn<int> archivedAt = GeneratedColumn<int>(
+    'archived_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1959,6 +2026,7 @@ class ExpenseGroups extends Table with TableInfo<ExpenseGroups, GroupRow> {
     version,
     memberSeq,
     treasurerMemberId,
+    archivedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2050,6 +2118,12 @@ class ExpenseGroups extends Table with TableInfo<ExpenseGroups, GroupRow> {
         ),
       );
     }
+    if (data.containsKey('archived_at')) {
+      context.handle(
+        _archivedAtMeta,
+        archivedAt.isAcceptableOrUnknown(data['archived_at']!, _archivedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -2099,6 +2173,10 @@ class ExpenseGroups extends Table with TableInfo<ExpenseGroups, GroupRow> {
         DriftSqlType.string,
         data['${effectivePrefix}treasurer_member_id'],
       ),
+      archivedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}archived_at'],
+      ),
     );
   }
 
@@ -2127,6 +2205,10 @@ class GroupRow extends DataClass implements Insertable<GroupRow> {
   /// Schema 5 (SA10, Java V20): the pool treasurer, a member of this group. SQLite cannot add V20's composite FK
   /// with ADD COLUMN, so "same group" is the pair of triggers below the members table; ACTIVE is the service's.
   final String? treasurerMemberId;
+
+  /// Schema 11 (A184): set when the group is archived (UTC epoch ms); NULL = active. An archived group is hidden
+  /// from the groups list and is deleted for good after `local_meta.archive_retention_days`.
+  final int? archivedAt;
   const GroupRow({
     required this.id,
     required this.ownerUserId,
@@ -2138,6 +2220,7 @@ class GroupRow extends DataClass implements Insertable<GroupRow> {
     required this.version,
     required this.memberSeq,
     this.treasurerMemberId,
+    this.archivedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2153,6 +2236,9 @@ class GroupRow extends DataClass implements Insertable<GroupRow> {
     map['member_seq'] = Variable<int>(memberSeq);
     if (!nullToAbsent || treasurerMemberId != null) {
       map['treasurer_member_id'] = Variable<String>(treasurerMemberId);
+    }
+    if (!nullToAbsent || archivedAt != null) {
+      map['archived_at'] = Variable<int>(archivedAt);
     }
     return map;
   }
@@ -2171,6 +2257,9 @@ class GroupRow extends DataClass implements Insertable<GroupRow> {
       treasurerMemberId: treasurerMemberId == null && nullToAbsent
           ? const Value.absent()
           : Value(treasurerMemberId),
+      archivedAt: archivedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(archivedAt),
     );
   }
 
@@ -2192,6 +2281,7 @@ class GroupRow extends DataClass implements Insertable<GroupRow> {
       treasurerMemberId: serializer.fromJson<String?>(
         json['treasurer_member_id'],
       ),
+      archivedAt: serializer.fromJson<int?>(json['archived_at']),
     );
   }
   @override
@@ -2208,6 +2298,7 @@ class GroupRow extends DataClass implements Insertable<GroupRow> {
       'version': serializer.toJson<int>(version),
       'member_seq': serializer.toJson<int>(memberSeq),
       'treasurer_member_id': serializer.toJson<String?>(treasurerMemberId),
+      'archived_at': serializer.toJson<int?>(archivedAt),
     };
   }
 
@@ -2222,6 +2313,7 @@ class GroupRow extends DataClass implements Insertable<GroupRow> {
     int? version,
     int? memberSeq,
     Value<String?> treasurerMemberId = const Value.absent(),
+    Value<int?> archivedAt = const Value.absent(),
   }) => GroupRow(
     id: id ?? this.id,
     ownerUserId: ownerUserId ?? this.ownerUserId,
@@ -2235,6 +2327,7 @@ class GroupRow extends DataClass implements Insertable<GroupRow> {
     treasurerMemberId: treasurerMemberId.present
         ? treasurerMemberId.value
         : this.treasurerMemberId,
+    archivedAt: archivedAt.present ? archivedAt.value : this.archivedAt,
   );
   GroupRow copyWithCompanion(ExpenseGroupsCompanion data) {
     return GroupRow(
@@ -2254,6 +2347,9 @@ class GroupRow extends DataClass implements Insertable<GroupRow> {
       treasurerMemberId: data.treasurerMemberId.present
           ? data.treasurerMemberId.value
           : this.treasurerMemberId,
+      archivedAt: data.archivedAt.present
+          ? data.archivedAt.value
+          : this.archivedAt,
     );
   }
 
@@ -2269,7 +2365,8 @@ class GroupRow extends DataClass implements Insertable<GroupRow> {
           ..write('updatedAt: $updatedAt, ')
           ..write('version: $version, ')
           ..write('memberSeq: $memberSeq, ')
-          ..write('treasurerMemberId: $treasurerMemberId')
+          ..write('treasurerMemberId: $treasurerMemberId, ')
+          ..write('archivedAt: $archivedAt')
           ..write(')'))
         .toString();
   }
@@ -2286,6 +2383,7 @@ class GroupRow extends DataClass implements Insertable<GroupRow> {
     version,
     memberSeq,
     treasurerMemberId,
+    archivedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -2300,7 +2398,8 @@ class GroupRow extends DataClass implements Insertable<GroupRow> {
           other.updatedAt == this.updatedAt &&
           other.version == this.version &&
           other.memberSeq == this.memberSeq &&
-          other.treasurerMemberId == this.treasurerMemberId);
+          other.treasurerMemberId == this.treasurerMemberId &&
+          other.archivedAt == this.archivedAt);
 }
 
 class ExpenseGroupsCompanion extends UpdateCompanion<GroupRow> {
@@ -2314,6 +2413,7 @@ class ExpenseGroupsCompanion extends UpdateCompanion<GroupRow> {
   final Value<int> version;
   final Value<int> memberSeq;
   final Value<String?> treasurerMemberId;
+  final Value<int?> archivedAt;
   final Value<int> rowid;
   const ExpenseGroupsCompanion({
     this.id = const Value.absent(),
@@ -2326,6 +2426,7 @@ class ExpenseGroupsCompanion extends UpdateCompanion<GroupRow> {
     this.version = const Value.absent(),
     this.memberSeq = const Value.absent(),
     this.treasurerMemberId = const Value.absent(),
+    this.archivedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ExpenseGroupsCompanion.insert({
@@ -2339,6 +2440,7 @@ class ExpenseGroupsCompanion extends UpdateCompanion<GroupRow> {
     this.version = const Value.absent(),
     this.memberSeq = const Value.absent(),
     this.treasurerMemberId = const Value.absent(),
+    this.archivedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        ownerUserId = Value(ownerUserId),
@@ -2357,6 +2459,7 @@ class ExpenseGroupsCompanion extends UpdateCompanion<GroupRow> {
     Expression<int>? version,
     Expression<int>? memberSeq,
     Expression<String>? treasurerMemberId,
+    Expression<int>? archivedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2370,6 +2473,7 @@ class ExpenseGroupsCompanion extends UpdateCompanion<GroupRow> {
       if (version != null) 'version': version,
       if (memberSeq != null) 'member_seq': memberSeq,
       if (treasurerMemberId != null) 'treasurer_member_id': treasurerMemberId,
+      if (archivedAt != null) 'archived_at': archivedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2385,6 +2489,7 @@ class ExpenseGroupsCompanion extends UpdateCompanion<GroupRow> {
     Value<int>? version,
     Value<int>? memberSeq,
     Value<String?>? treasurerMemberId,
+    Value<int?>? archivedAt,
     Value<int>? rowid,
   }) {
     return ExpenseGroupsCompanion(
@@ -2398,6 +2503,7 @@ class ExpenseGroupsCompanion extends UpdateCompanion<GroupRow> {
       version: version ?? this.version,
       memberSeq: memberSeq ?? this.memberSeq,
       treasurerMemberId: treasurerMemberId ?? this.treasurerMemberId,
+      archivedAt: archivedAt ?? this.archivedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2435,6 +2541,9 @@ class ExpenseGroupsCompanion extends UpdateCompanion<GroupRow> {
     if (treasurerMemberId.present) {
       map['treasurer_member_id'] = Variable<String>(treasurerMemberId.value);
     }
+    if (archivedAt.present) {
+      map['archived_at'] = Variable<int>(archivedAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2454,6 +2563,7 @@ class ExpenseGroupsCompanion extends UpdateCompanion<GroupRow> {
           ..write('version: $version, ')
           ..write('memberSeq: $memberSeq, ')
           ..write('treasurerMemberId: $treasurerMemberId, ')
+          ..write('archivedAt: $archivedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -7219,7 +7329,7 @@ class PaymentHandles extends Table
   List<String> get customConstraints => const [
     'CONSTRAINT uq_payment_handles_user_type UNIQUE(user_id, type)',
     'CONSTRAINT ck_payment_handles_wallet CHECK(type <> \'WALLET\' OR value GLOB \'01[0125][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]\')',
-    'CONSTRAINT ck_payment_handles_instapay CHECK(type <> \'INSTAPAY\' OR(length(value) BETWEEN 3 AND 60 AND value GLOB \'?*@?*\' AND value NOT GLOB \'*@*@*\' AND value NOT GLOB \'*[^a-z0-9._@-]*\' AND value NOT GLOB \'*@*_*\'))',
+    'CONSTRAINT ck_payment_handles_instapay CHECK(type <> \'INSTAPAY\' OR((length(value) BETWEEN 3 AND 60 AND value GLOB \'?*@?*\' AND value NOT GLOB \'*@*@*\' AND value NOT GLOB \'*[^a-z0-9._@-]*\' AND value NOT GLOB \'*@*_*\')OR(length(value) BETWEEN 16 AND 200 AND value GLOB \'https://ipn.eg/?*\' AND value NOT GLOB \'*[^A-Za-z0-9._~:/?#@!\$&=%+-]*\')))',
   ];
   @override
   bool get dontWriteConstraints => true;
@@ -9145,6 +9255,7 @@ typedef $LocalMetaCreateCompanionBuilder = LocalMetaCompanion Function({
   Value<int> ocrScanCount,
   Value<int> ocrPermissionErrors,
   Value<int?> ocrHiddenUntil,
+  Value<int> archiveRetentionDays,
 });
 typedef $LocalMetaUpdateCompanionBuilder = LocalMetaCompanion Function({
   Value<int> id,
@@ -9159,6 +9270,7 @@ typedef $LocalMetaUpdateCompanionBuilder = LocalMetaCompanion Function({
   Value<int> ocrScanCount,
   Value<int> ocrPermissionErrors,
   Value<int?> ocrHiddenUntil,
+  Value<int> archiveRetentionDays,
 });
 
 class $LocalMetaFilterComposer extends Composer<_$LocalDatabase, LocalMeta> {
@@ -9226,6 +9338,11 @@ class $LocalMetaFilterComposer extends Composer<_$LocalDatabase, LocalMeta> {
 
   ColumnFilters<int> get ocrHiddenUntil => $composableBuilder(
     column: $table.ocrHiddenUntil,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get archiveRetentionDays => $composableBuilder(
+    column: $table.archiveRetentionDays,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -9297,6 +9414,11 @@ class $LocalMetaOrderingComposer extends Composer<_$LocalDatabase, LocalMeta> {
     column: $table.ocrHiddenUntil,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get archiveRetentionDays => $composableBuilder(
+    column: $table.archiveRetentionDays,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $LocalMetaAnnotationComposer
@@ -9363,6 +9485,11 @@ class $LocalMetaAnnotationComposer
     column: $table.ocrHiddenUntil,
     builder: (column) => column,
   );
+
+  GeneratedColumn<int> get archiveRetentionDays => $composableBuilder(
+    column: $table.archiveRetentionDays,
+    builder: (column) => column,
+  );
 }
 
 class $LocalMetaTableManager
@@ -9408,6 +9535,7 @@ class $LocalMetaTableManager
                 Value<int> ocrScanCount = const Value.absent(),
                 Value<int> ocrPermissionErrors = const Value.absent(),
                 Value<int?> ocrHiddenUntil = const Value.absent(),
+                Value<int> archiveRetentionDays = const Value.absent(),
               }) => LocalMetaCompanion(
                 id: id,
                 createdSchemaVersion: createdSchemaVersion,
@@ -9421,6 +9549,7 @@ class $LocalMetaTableManager
                 ocrScanCount: ocrScanCount,
                 ocrPermissionErrors: ocrPermissionErrors,
                 ocrHiddenUntil: ocrHiddenUntil,
+                archiveRetentionDays: archiveRetentionDays,
               ),
           createCompanionCallback:
               ({
@@ -9436,6 +9565,7 @@ class $LocalMetaTableManager
                 Value<int> ocrScanCount = const Value.absent(),
                 Value<int> ocrPermissionErrors = const Value.absent(),
                 Value<int?> ocrHiddenUntil = const Value.absent(),
+                Value<int> archiveRetentionDays = const Value.absent(),
               }) => LocalMetaCompanion.insert(
                 id: id,
                 createdSchemaVersion: createdSchemaVersion,
@@ -9449,6 +9579,7 @@ class $LocalMetaTableManager
                 ocrScanCount: ocrScanCount,
                 ocrPermissionErrors: ocrPermissionErrors,
                 ocrHiddenUntil: ocrHiddenUntil,
+                archiveRetentionDays: archiveRetentionDays,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -10382,6 +10513,7 @@ typedef $ExpenseGroupsCreateCompanionBuilder = ExpenseGroupsCompanion Function({
   Value<int> version,
   Value<int> memberSeq,
   Value<String?> treasurerMemberId,
+  Value<int?> archivedAt,
   Value<int> rowid,
 });
 typedef $ExpenseGroupsUpdateCompanionBuilder = ExpenseGroupsCompanion Function({
@@ -10395,6 +10527,7 @@ typedef $ExpenseGroupsUpdateCompanionBuilder = ExpenseGroupsCompanion Function({
   Value<int> version,
   Value<int> memberSeq,
   Value<String?> treasurerMemberId,
+  Value<int?> archivedAt,
   Value<int> rowid,
 });
 
@@ -10539,6 +10672,11 @@ class $ExpenseGroupsFilterComposer
 
   ColumnFilters<int> get memberSeq => $composableBuilder(
     column: $table.memberSeq,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get archivedAt => $composableBuilder(
+    column: $table.archivedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -10713,6 +10851,11 @@ class $ExpenseGroupsOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get archivedAt => $composableBuilder(
+    column: $table.archivedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $LocalProfileOrderingComposer get ownerUserId {
     final $LocalProfileOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -10794,6 +10937,11 @@ class $ExpenseGroupsAnnotationComposer
 
   GeneratedColumn<int> get memberSeq =>
       $composableBuilder(column: $table.memberSeq, builder: (column) => column);
+
+  GeneratedColumn<int> get archivedAt => $composableBuilder(
+    column: $table.archivedAt,
+    builder: (column) => column,
+  );
 
   $LocalProfileAnnotationComposer get ownerUserId {
     final $LocalProfileAnnotationComposer composer = $composerBuilder(
@@ -10961,6 +11109,7 @@ class $ExpenseGroupsTableManager
                 Value<int> version = const Value.absent(),
                 Value<int> memberSeq = const Value.absent(),
                 Value<String?> treasurerMemberId = const Value.absent(),
+                Value<int?> archivedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExpenseGroupsCompanion(
                 id: id,
@@ -10973,6 +11122,7 @@ class $ExpenseGroupsTableManager
                 version: version,
                 memberSeq: memberSeq,
                 treasurerMemberId: treasurerMemberId,
+                archivedAt: archivedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -10987,6 +11137,7 @@ class $ExpenseGroupsTableManager
                 Value<int> version = const Value.absent(),
                 Value<int> memberSeq = const Value.absent(),
                 Value<String?> treasurerMemberId = const Value.absent(),
+                Value<int?> archivedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExpenseGroupsCompanion.insert(
                 id: id,
@@ -10999,6 +11150,7 @@ class $ExpenseGroupsTableManager
                 version: version,
                 memberSeq: memberSeq,
                 treasurerMemberId: treasurerMemberId,
+                archivedAt: archivedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

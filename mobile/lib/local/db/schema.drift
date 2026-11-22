@@ -32,6 +32,8 @@ CREATE TABLE local_meta (
     ocr_scan_count             INTEGER NOT NULL DEFAULT 0 CHECK (ocr_scan_count >= 0),
     ocr_permission_errors      INTEGER NOT NULL DEFAULT 0 CHECK (ocr_permission_errors >= 0),
     ocr_hidden_until           INTEGER,
+    -- Schema 11 (A184): how long an archived group is kept before it is deleted (days). Device setting, not exported.
+    archive_retention_days     INTEGER NOT NULL DEFAULT 30 CHECK (archive_retention_days IN (7, 15, 30)),
     CHECK ((last_export_at IS NULL) = (last_export_format_version IS NULL))
 ) STRICT AS LocalMetaRow;
 
@@ -48,7 +50,10 @@ CREATE TABLE expense_groups (
     member_seq    INTEGER NOT NULL DEFAULT 0 CHECK (member_seq >= 0),
     -- Schema 5 (SA10, Java V20): the pool treasurer, a member of this group. SQLite cannot add V20's composite FK
     -- with ADD COLUMN, so "same group" is the pair of triggers below the members table; ACTIVE is the service's.
-    treasurer_member_id TEXT REFERENCES members (id)
+    treasurer_member_id TEXT REFERENCES members (id),
+    -- Schema 11 (A184): set when the group is archived (UTC epoch ms); NULL = active. An archived group is hidden
+    -- from the groups list and is deleted for good after `local_meta.archive_retention_days`.
+    archived_at INTEGER
 ) STRICT AS GroupRow;
 
 CREATE INDEX ix_expense_groups_owner_created ON expense_groups (owner_user_id, created_at DESC, id DESC);
@@ -279,7 +284,7 @@ CREATE INDEX ix_settlements_deposits ON settlements (group_id) WHERE kind = 'POO
 -- V16 payment_handles (the local profile's own handles only). The Postgres regexes are ported to GLOB so the
 -- file needs no custom SQL function:
 --   WALLET   ^01[0125][0-9]{8}$
---   INSTAPAY ^[a-z0-9._-]+@[a-z0-9.-]+$, 3..60 characters
+--   INSTAPAY ^[a-z0-9._-]+@[a-z0-9.-]+$ (3..60 characters) OR an InstaPay link https://ipn.eg/... (16..200, URL-safe ASCII, case kept)
 CREATE TABLE payment_handles (
     id         TEXT    NOT NULL PRIMARY KEY CHECK (length(id) = 36),
     user_id    TEXT    NOT NULL REFERENCES local_profile (id),
@@ -291,11 +296,14 @@ CREATE TABLE payment_handles (
     CONSTRAINT ck_payment_handles_wallet CHECK (type <> 'WALLET'
         OR value GLOB '01[0125][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'),
     CONSTRAINT ck_payment_handles_instapay CHECK (type <> 'INSTAPAY' OR (
-        length(value) BETWEEN 3 AND 60
-        AND value GLOB '?*@?*'
-        AND value NOT GLOB '*@*@*'
-        AND value NOT GLOB '*[^a-z0-9._@-]*'
-        AND value NOT GLOB '*@*_*'))
+        (length(value) BETWEEN 3 AND 60
+            AND value GLOB '?*@?*'
+            AND value NOT GLOB '*@*@*'
+            AND value NOT GLOB '*[^a-z0-9._@-]*'
+            AND value NOT GLOB '*@*_*')
+        OR (length(value) BETWEEN 16 AND 200
+            AND value GLOB 'https://ipn.eg/?*'
+            AND value NOT GLOB '*[^A-Za-z0-9._~:/?#@!$&=%+-]*')))
 ) STRICT AS PaymentHandleRow;
 
 -- V5 idempotency_keys. One local user, so the scope is the key alone (STANDALONE_SPEC 3.4).

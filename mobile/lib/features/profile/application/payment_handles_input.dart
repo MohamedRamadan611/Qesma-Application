@@ -42,13 +42,22 @@ HandleInput normaliseWallet(String? input) {
   return HandleInput.value(digits);
 }
 
-/// `name@bank`, 3..60 ASCII characters, exactly one `@`, stored lower case. Blank means "remove".
+final RegExp _instapayLinkPattern = RegExp(r'^https://ipn\.eg/[A-Za-z0-9._~:/?#@!$&=%+-]+$');
+
+/// An InstaPay address `name@bank` (3..60 ASCII characters, exactly one `@`, stored lower case) or an InstaPay link
+/// `https://ipn.eg/...` (up to 200 characters; scheme and host are lower-cased, the path keeps its case). Blank means "remove".
 HandleInput normaliseInstapay(String? input) {
   final raw = (input ?? '').trim();
   if (raw.isEmpty) return const HandleInput.removed();
+  final ascii = raw.runes.every((r) => r > 0x20 && r < 0x7F);
+  if (!ascii) return const HandleInput.invalid(HandleIssue.instapay);
+  if (raw.toLowerCase().startsWith('https://ipn.eg/')) {
+    final link = 'https://ipn.eg/${raw.substring(15)}';
+    if (link.length > 200 || !_instapayLinkPattern.hasMatch(link)) return const HandleInput.invalid(HandleIssue.instapay);
+    return HandleInput.value(link);
+  }
   final text = raw.toLowerCase();
-  final ascii = text.runes.every((r) => r > 0x20 && r < 0x7F);
-  if (!ascii || text.length < 3 || text.length > 60) return const HandleInput.invalid(HandleIssue.instapay);
+  if (text.length < 3 || text.length > 60) return const HandleInput.invalid(HandleIssue.instapay);
   if ('@'.allMatches(text).length != 1) return const HandleInput.invalid(HandleIssue.instapay);
   if (!_instapayPattern.hasMatch(text)) return const HandleInput.invalid(HandleIssue.instapay);
   return HandleInput.value(text);

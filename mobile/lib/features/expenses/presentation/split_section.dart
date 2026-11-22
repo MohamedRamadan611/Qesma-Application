@@ -148,11 +148,19 @@ class SplitMethodRow extends StatelessWidget {
       label: '${l10n.expenseFormSplitTitle}: ${labelOf(l10n, mode)}, ${subtitleOf(l10n, mode)}',
       onTap: () => _choose(context),
       child: ExcludeSemantics(
-        child: InkWell(
+        child: Material(
+          color: context.colors.primaryContainer.withValues(alpha: 0.35),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(QesmaRadii.control),
+            side: BorderSide(color: context.colors.primary, width: 1.5),
+          ),
+          child: InkWell(
           borderRadius: BorderRadius.circular(QesmaRadii.control),
           onTap: () => _choose(context),
           child: ConstrainedBox(
             constraints: const BoxConstraints(minHeight: kMinTouch + 8),
+            child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: QesmaSpacing.sm + 4, vertical: QesmaSpacing.sm),
             child: Row(
               children: [
                 Icon(iconOf(mode), color: context.colors.primary),
@@ -161,17 +169,19 @@ class SplitMethodRow extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(l10n.expenseFormSplitTitle, style: theme.textTheme.labelLarge?.copyWith(color: context.colors.textSecondary)),
+                      Text(l10n.expenseFormSplitTitle, style: theme.textTheme.labelLarge?.copyWith(color: context.colors.primary, fontWeight: FontWeight.bold)),
                       Text(labelOf(l10n, mode), style: theme.textTheme.titleMedium),
                       Text(subtitleOf(l10n, mode), style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
                     ],
                   ),
                 ),
                 const SizedBox(width: QesmaSpacing.sm),
-                const Icon(Icons.chevron_right),
+                Icon(Icons.chevron_right, color: context.colors.primary),
               ],
             ),
+            ),
           ),
+        ),
         ),
       ),
     );

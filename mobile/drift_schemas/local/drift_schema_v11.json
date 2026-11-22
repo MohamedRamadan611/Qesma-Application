@@ -1,0 +1,2432 @@
+{
+  "_meta": {
+    "description": "This file contains a serialized version of schema entities for drift.",
+    "version": "1.3.0"
+  },
+  "options": {
+    "store_date_time_values_as_text": false
+  },
+  "entities": [
+    {
+      "id": 0,
+      "references": [],
+      "type": "table",
+      "data": {
+        "name": "local_profile",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY CHECK (length(id) = 36)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key"
+            ]
+          },
+          {
+            "name": "display_name",
+            "getter_name": "displayName",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (length(trim(display_name)) BETWEEN 1 AND 60)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "updated_at",
+            "getter_name": "updatedAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "singleton",
+            "getter_name": "singleton",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT 1 UNIQUE CHECK (singleton = 1)",
+            "default_dart": "const CustomExpression('1')",
+            "default_client_dart": null,
+            "dsl_features": [
+              "unique"
+            ]
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [],
+        "strict": true
+      }
+    },
+    {
+      "id": 1,
+      "references": [],
+      "type": "table",
+      "data": {
+        "name": "local_meta",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY CHECK (id = 1)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key"
+            ]
+          },
+          {
+            "name": "created_schema_version",
+            "getter_name": "createdSchemaVersion",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (created_schema_version >= 1)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "last_export_at",
+            "getter_name": "lastExportAt",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "last_export_format_version",
+            "getter_name": "lastExportFormatVersion",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "CHECK (last_export_format_version IS NULL OR last_export_format_version >= 1)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "backup_reminder_snoozed_until",
+            "getter_name": "backupReminderSnoozedUntil",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "last_reminder_tone",
+            "getter_name": "lastReminderTone",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "CHECK (last_reminder_tone IS NULL OR last_reminder_tone IN ('SOFT', 'FIRM', 'FUNNY'))",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "ocr_consent_at",
+            "getter_name": "ocrConsentAt",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "ocr_scan_day",
+            "getter_name": "ocrScanDay",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "CHECK (ocr_scan_day IS NULL OR ocr_scan_day GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]')",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "ocr_scan_count",
+            "getter_name": "ocrScanCount",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT 0 CHECK (ocr_scan_count >= 0)",
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "ocr_permission_errors",
+            "getter_name": "ocrPermissionErrors",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT 0 CHECK (ocr_permission_errors >= 0)",
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "ocr_hidden_until",
+            "getter_name": "ocrHiddenUntil",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "archive_retention_days",
+            "getter_name": "archiveRetentionDays",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT 30 CHECK (archive_retention_days IN (7, 15, 30))",
+            "default_dart": "const CustomExpression('30')",
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [
+          "CHECK((last_export_at IS NULL)=(last_export_format_version IS NULL))"
+        ],
+        "strict": true
+      }
+    },
+    {
+      "id": 2,
+      "references": [
+        3,
+        0
+      ],
+      "type": "table",
+      "data": {
+        "name": "members",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY CHECK (length(id) = 36)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key"
+            ]
+          },
+          {
+            "name": "group_id",
+            "getter_name": "groupId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES expense_groups(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "expense_groups",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "display_name",
+            "getter_name": "displayName",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (length(trim(display_name)) BETWEEN 1 AND 40)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "name_key",
+            "getter_name": "nameKey",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (name_key <> '' AND name_key = lower(name_key))",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "user_id",
+            "getter_name": "userId",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "REFERENCES local_profile(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "local_profile",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "sort_order",
+            "getter_name": "sortOrder",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (sort_order >= 1)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "role",
+            "getter_name": "role",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT 'MEMBER' CHECK (role IN ('OWNER', 'ADMIN', 'MEMBER'))",
+            "default_dart": "const CustomExpression('\\'MEMBER\\'')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "status",
+            "getter_name": "status",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'LEFT'))",
+            "default_dart": "const CustomExpression('\\'ACTIVE\\'')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "joined_at",
+            "getter_name": "joinedAt",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "left_at",
+            "getter_name": "leftAt",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [
+          "CONSTRAINT uq_members_group_sort_order UNIQUE(group_id, sort_order)",
+          "CONSTRAINT uq_members_group_name_key UNIQUE(group_id, name_key)",
+          "CONSTRAINT ck_members_owner_linked_active CHECK(role <> 'OWNER' OR(user_id IS NOT NULL AND status = 'ACTIVE'))",
+          "CONSTRAINT ck_members_left_at CHECK((status = 'LEFT')=(left_at IS NOT NULL))",
+          "CONSTRAINT ck_members_left_linked CHECK(status <> 'LEFT' OR user_id IS NOT NULL)"
+        ],
+        "strict": true,
+        "unique_keys": [
+          [
+            "group_id",
+            "sort_order"
+          ],
+          [
+            "group_id",
+            "name_key"
+          ]
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "references": [
+        0,
+        2
+      ],
+      "type": "table",
+      "data": {
+        "name": "expense_groups",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY CHECK (length(id) = 36)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key"
+            ]
+          },
+          {
+            "name": "owner_user_id",
+            "getter_name": "ownerUserId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES local_profile(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "local_profile",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "name",
+            "getter_name": "name",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (length(trim(name)) BETWEEN 1 AND 60)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "type",
+            "getter_name": "type",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (type IN ('TRIP', 'HOUSING', 'OUTING', 'OTHER'))",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "currency_code",
+            "getter_name": "currencyCode",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT 'EGP' CHECK (length(currency_code) = 3 AND currency_code NOT GLOB '*[^A-Z]*')",
+            "default_dart": "const CustomExpression('\\'EGP\\'')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "updated_at",
+            "getter_name": "updatedAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "version",
+            "getter_name": "version",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT 1 CHECK (version >= 1)",
+            "default_dart": "const CustomExpression('1')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "member_seq",
+            "getter_name": "memberSeq",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT 0 CHECK (member_seq >= 0)",
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "treasurer_member_id",
+            "getter_name": "treasurerMemberId",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "REFERENCES members(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "members",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "archived_at",
+            "getter_name": "archivedAt",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [],
+        "strict": true
+      }
+    },
+    {
+      "id": 4,
+      "references": [
+        3
+      ],
+      "type": "index",
+      "data": {
+        "on": 3,
+        "name": "ix_expense_groups_owner_created",
+        "sql": "CREATE INDEX ix_expense_groups_owner_created ON expense_groups (owner_user_id, created_at DESC, id DESC);",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 5,
+      "references": [
+        3,
+        2
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 3,
+        "references_in_body": [
+          3,
+          2
+        ],
+        "name": "expense_groups_treasurer_insert",
+        "sql": "CREATE TRIGGER expense_groups_treasurer_insert BEFORE INSERT ON expense_groups\r\nWHEN NEW.treasurer_member_id IS NOT NULL\r\n    AND NOT EXISTS (SELECT 1 FROM members WHERE id = NEW.treasurer_member_id AND group_id = NEW.id)\r\nBEGIN\r\n    SELECT RAISE(ABORT, 'the treasurer must be a member of the same group');\r\nEND;"
+      }
+    },
+    {
+      "id": 6,
+      "references": [
+        3,
+        2
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 3,
+        "references_in_body": [
+          3,
+          2
+        ],
+        "name": "expense_groups_treasurer_update",
+        "sql": "CREATE TRIGGER expense_groups_treasurer_update BEFORE UPDATE OF treasurer_member_id ON expense_groups\r\nWHEN NEW.treasurer_member_id IS NOT NULL\r\n    AND NOT EXISTS (SELECT 1 FROM members WHERE id = NEW.treasurer_member_id AND group_id = NEW.id)\r\nBEGIN\r\n    SELECT RAISE(ABORT, 'the treasurer must be a member of the same group');\r\nEND;"
+      }
+    },
+    {
+      "id": 7,
+      "references": [
+        2
+      ],
+      "type": "index",
+      "data": {
+        "on": 2,
+        "name": "ux_members_group_user",
+        "sql": "CREATE UNIQUE INDEX ux_members_group_user ON members (group_id, user_id) WHERE user_id IS NOT NULL;",
+        "unique": true,
+        "columns": []
+      }
+    },
+    {
+      "id": 8,
+      "references": [
+        2
+      ],
+      "type": "index",
+      "data": {
+        "on": 2,
+        "name": "ux_members_group_owner",
+        "sql": "CREATE UNIQUE INDEX ux_members_group_owner ON members (group_id) WHERE role = 'OWNER';",
+        "unique": true,
+        "columns": []
+      }
+    },
+    {
+      "id": 9,
+      "references": [
+        3,
+        0
+      ],
+      "type": "table",
+      "data": {
+        "name": "expenses",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY CHECK (length(id) = 36)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key"
+            ]
+          },
+          {
+            "name": "group_id",
+            "getter_name": "groupId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES expense_groups(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "expense_groups",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "title",
+            "getter_name": "title",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (length(trim(title)) BETWEEN 1 AND 100)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "split_type",
+            "getter_name": "splitType",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (split_type IN ('EQUAL', 'EXACT', 'ITEMIZED'))",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "total_minor",
+            "getter_name": "totalMinor",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (total_minor BETWEEN 1 AND 1000000000000)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "expense_date",
+            "getter_name": "expenseDate",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (date(expense_date) IS expense_date)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "subtotal_minor",
+            "getter_name": "subtotalMinor",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "service_bps",
+            "getter_name": "serviceBps",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "CHECK (service_bps IS NULL OR service_bps BETWEEN 0 AND 10000)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "service_minor",
+            "getter_name": "serviceMinor",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "tax_bps",
+            "getter_name": "taxBps",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "CHECK (tax_bps IS NULL OR tax_bps BETWEEN 0 AND 10000)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "tax_minor",
+            "getter_name": "taxMinor",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "tax_base",
+            "getter_name": "taxBase",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "CHECK (tax_base IS NULL OR tax_base IN ('SUBTOTAL', 'SUBTOTAL_PLUS_SERVICE'))",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "adjustment_minor",
+            "getter_name": "adjustmentMinor",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "created_by_user_id",
+            "getter_name": "createdByUserId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES local_profile(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "local_profile",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "updated_at",
+            "getter_name": "updatedAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "deleted_at",
+            "getter_name": "deletedAt",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "version",
+            "getter_name": "version",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT 1 CHECK (version >= 1)",
+            "default_dart": "const CustomExpression('1')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "category",
+            "getter_name": "category",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT 'OTHER' CHECK (category IN ('FOOD', 'TRANSPORT', 'FUEL', 'ACCOMMODATION', 'GROCERIES', 'SHOPPING', 'ENTERTAINMENT', 'BILLS', 'OTHER'))",
+            "default_dart": "const CustomExpression('\\'OTHER\\'')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "paid_from_pool",
+            "getter_name": "paidFromPool",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT 0 CHECK (paid_from_pool IN (0, 1))",
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "discount_bps",
+            "getter_name": "discountBps",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "CHECK (discount_bps IS NULL OR discount_bps BETWEEN 1 AND 9999)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "discount_amount_minor",
+            "getter_name": "discountAmountMinor",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "CHECK (discount_amount_minor IS NULL OR discount_amount_minor BETWEEN 1 AND 1000000000000)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "discount_minor",
+            "getter_name": "discountMinor",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "service_amount_minor",
+            "getter_name": "serviceAmountMinor",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "CHECK (service_amount_minor IS NULL OR service_amount_minor BETWEEN 1 AND 1000000000000)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "tax_amount_minor",
+            "getter_name": "taxAmountMinor",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "CHECK (tax_amount_minor IS NULL OR tax_amount_minor BETWEEN 1 AND 1000000000000)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "delivery_minor",
+            "getter_name": "deliveryMinor",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "CHECK (delivery_minor IS NULL OR delivery_minor BETWEEN 0 AND 1000000000000)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [
+          "CONSTRAINT ck_expenses_charge_one_form CHECK(NOT(discount_bps IS NOT NULL AND discount_amount_minor IS NOT NULL)AND NOT(service_bps IS NOT NULL AND service_amount_minor IS NOT NULL)AND NOT(tax_bps IS NOT NULL AND tax_amount_minor IS NOT NULL))",
+          "CONSTRAINT ck_expenses_itemized_columns CHECK(split_type = 'ITEMIZED' OR(subtotal_minor IS NULL AND service_bps IS NULL AND service_minor IS NULL AND tax_bps IS NULL AND tax_minor IS NULL AND tax_base IS NULL AND adjustment_minor IS NULL AND discount_bps IS NULL AND discount_amount_minor IS NULL AND discount_minor IS NULL AND service_amount_minor IS NULL AND tax_amount_minor IS NULL AND delivery_minor IS NULL))",
+          "CONSTRAINT ck_expenses_itemized_charges CHECK(split_type <> 'ITEMIZED' OR(subtotal_minor IS NOT NULL AND subtotal_minor > 0 AND discount_minor IS NOT NULL AND discount_minor >= 0 AND discount_minor < subtotal_minor AND service_minor IS NOT NULL AND service_minor >= 0 AND tax_minor IS NOT NULL AND tax_minor >= 0 AND delivery_minor IS NOT NULL AND delivery_minor >= 0 AND adjustment_minor IS NOT NULL AND total_minor = subtotal_minor - discount_minor + service_minor + tax_minor + delivery_minor + adjustment_minor AND((discount_bps IS NOT NULL OR discount_amount_minor IS NOT NULL)=(discount_minor > 0))AND(discount_amount_minor IS NULL OR discount_minor = discount_amount_minor)AND(service_bps IS NOT NULL OR service_amount_minor IS NOT NULL OR service_minor = 0)AND(service_amount_minor IS NULL OR service_minor = service_amount_minor)AND(tax_bps IS NOT NULL OR tax_amount_minor IS NOT NULL OR tax_minor = 0)AND(tax_amount_minor IS NULL OR tax_minor = tax_amount_minor)AND((tax_bps IS NULL AND tax_amount_minor IS NULL)=(tax_base IS NULL))))"
+        ],
+        "strict": true
+      }
+    },
+    {
+      "id": 10,
+      "references": [
+        9
+      ],
+      "type": "index",
+      "data": {
+        "on": 9,
+        "name": "ix_expenses_group_list",
+        "sql": "CREATE INDEX ix_expenses_group_list ON expenses (group_id, expense_date DESC, created_at DESC, id DESC)\r\n    WHERE deleted_at IS NULL;",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 11,
+      "references": [
+        9
+      ],
+      "type": "index",
+      "data": {
+        "on": 9,
+        "name": "ix_expenses_group_category",
+        "sql": "CREATE INDEX ix_expenses_group_category ON expenses (group_id, category) WHERE deleted_at IS NULL;",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 12,
+      "references": [
+        9
+      ],
+      "type": "index",
+      "data": {
+        "on": 9,
+        "name": "ix_expenses_group",
+        "sql": "CREATE INDEX ix_expenses_group ON expenses (group_id);",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 13,
+      "references": [
+        9
+      ],
+      "type": "index",
+      "data": {
+        "on": 9,
+        "name": "ix_expenses_pool",
+        "sql": "CREATE INDEX ix_expenses_pool ON expenses (group_id) WHERE paid_from_pool = 1;",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 14,
+      "references": [
+        9,
+        2
+      ],
+      "type": "table",
+      "data": {
+        "name": "expense_payers",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "expense_id",
+            "getter_name": "expenseId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES expenses(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "expenses",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "member_id",
+            "getter_name": "memberId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES members(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "members",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "amount_minor",
+            "getter_name": "amountMinor",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (amount_minor BETWEEN 1 AND 1000000000000)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [
+          "PRIMARY KEY(expense_id, member_id)"
+        ],
+        "strict": true,
+        "explicit_pk": [
+          "expense_id",
+          "member_id"
+        ]
+      }
+    },
+    {
+      "id": 15,
+      "references": [
+        14
+      ],
+      "type": "index",
+      "data": {
+        "on": 14,
+        "name": "ix_expense_payers_member",
+        "sql": "CREATE INDEX ix_expense_payers_member ON expense_payers (member_id);",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 16,
+      "references": [
+        9,
+        2
+      ],
+      "type": "table",
+      "data": {
+        "name": "expense_splits",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "expense_id",
+            "getter_name": "expenseId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES expenses(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "expenses",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "member_id",
+            "getter_name": "memberId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES members(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "members",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "owed_minor",
+            "getter_name": "owedMinor",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (owed_minor BETWEEN 0 AND 1000000000000)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "items_minor",
+            "getter_name": "itemsMinor",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "service_minor",
+            "getter_name": "serviceMinor",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "tax_minor",
+            "getter_name": "taxMinor",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "adjustment_minor",
+            "getter_name": "adjustmentMinor",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "discount_minor",
+            "getter_name": "discountMinor",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "delivery_minor",
+            "getter_name": "deliveryMinor",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [
+          "PRIMARY KEY(expense_id, member_id)",
+          "CONSTRAINT ck_expense_splits_breakdown CHECK((items_minor IS NULL AND discount_minor IS NULL AND service_minor IS NULL AND tax_minor IS NULL AND adjustment_minor IS NULL AND delivery_minor IS NULL)OR(items_minor IS NOT NULL AND items_minor >= 0 AND discount_minor IS NOT NULL AND discount_minor >= 0 AND discount_minor <= items_minor AND service_minor IS NOT NULL AND service_minor >= 0 AND tax_minor IS NOT NULL AND tax_minor >= 0 AND delivery_minor IS NOT NULL AND delivery_minor >= 0 AND adjustment_minor IS NOT NULL AND owed_minor = items_minor - discount_minor + service_minor + tax_minor + delivery_minor + adjustment_minor))"
+        ],
+        "strict": true,
+        "explicit_pk": [
+          "expense_id",
+          "member_id"
+        ]
+      }
+    },
+    {
+      "id": 17,
+      "references": [
+        16
+      ],
+      "type": "index",
+      "data": {
+        "on": 16,
+        "name": "ix_expense_splits_member",
+        "sql": "CREATE INDEX ix_expense_splits_member ON expense_splits (member_id);",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 18,
+      "references": [
+        9
+      ],
+      "type": "table",
+      "data": {
+        "name": "expense_items",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY CHECK (length(id) = 36)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key"
+            ]
+          },
+          {
+            "name": "expense_id",
+            "getter_name": "expenseId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES expenses(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "expenses",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "name",
+            "getter_name": "name",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (length(trim(name)) BETWEEN 1 AND 100)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "amount_minor",
+            "getter_name": "amountMinor",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (amount_minor BETWEEN 1 AND 1000000000000)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "sort_order",
+            "getter_name": "sortOrder",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (sort_order >= 0)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "quantity",
+            "getter_name": "quantity",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT 1 CHECK (quantity BETWEEN 1 AND 999)",
+            "default_dart": "const CustomExpression('1')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "unit_amount_minor",
+            "getter_name": "unitAmountMinor",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (unit_amount_minor BETWEEN 1 AND 1000000000000)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [
+          "CONSTRAINT ux_expense_items_order UNIQUE(expense_id, sort_order)",
+          "CONSTRAINT ck_expense_items_line CHECK(amount_minor = quantity * unit_amount_minor)"
+        ],
+        "strict": true,
+        "unique_keys": [
+          [
+            "expense_id",
+            "sort_order"
+          ]
+        ]
+      }
+    },
+    {
+      "id": 19,
+      "references": [
+        18,
+        2
+      ],
+      "type": "table",
+      "data": {
+        "name": "expense_item_assignees",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "item_id",
+            "getter_name": "itemId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES expense_items(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "expense_items",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "member_id",
+            "getter_name": "memberId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES members(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "members",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [
+          "PRIMARY KEY(item_id, member_id)"
+        ],
+        "strict": true,
+        "explicit_pk": [
+          "item_id",
+          "member_id"
+        ]
+      }
+    },
+    {
+      "id": 20,
+      "references": [
+        19
+      ],
+      "type": "index",
+      "data": {
+        "on": 19,
+        "name": "ix_expense_item_assignees_member",
+        "sql": "CREATE INDEX ix_expense_item_assignees_member ON expense_item_assignees (member_id);",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 21,
+      "references": [
+        9,
+        0
+      ],
+      "type": "table",
+      "data": {
+        "name": "expense_revisions",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY CHECK (length(id) = 36)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key"
+            ]
+          },
+          {
+            "name": "expense_id",
+            "getter_name": "expenseId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES expenses(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "expenses",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "version",
+            "getter_name": "version",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (version >= 1)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "change_type",
+            "getter_name": "changeType",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (change_type IN ('CREATE', 'UPDATE', 'DELETE'))",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "snapshot",
+            "getter_name": "snapshot",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (json_valid(snapshot) AND json_type(snapshot) = 'object')",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "changed_by_user_id",
+            "getter_name": "changedByUserId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES local_profile(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "local_profile",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "changed_at",
+            "getter_name": "changedAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [
+          "CONSTRAINT ux_expense_revisions_version UNIQUE(expense_id, version)"
+        ],
+        "strict": true,
+        "unique_keys": [
+          [
+            "expense_id",
+            "version"
+          ]
+        ]
+      }
+    },
+    {
+      "id": 22,
+      "references": [
+        21
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 21,
+        "references_in_body": [
+          21
+        ],
+        "name": "expense_revisions_append_only",
+        "sql": "CREATE TRIGGER expense_revisions_append_only BEFORE UPDATE ON expense_revisions\r\nBEGIN\r\n    SELECT RAISE(ABORT, 'expense_revisions are append-only');\r\nEND;"
+      }
+    },
+    {
+      "id": 23,
+      "references": [
+        3,
+        2,
+        0
+      ],
+      "type": "table",
+      "data": {
+        "name": "settlements",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY CHECK (length(id) = 36)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key"
+            ]
+          },
+          {
+            "name": "group_id",
+            "getter_name": "groupId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES expense_groups(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "expense_groups",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "from_member_id",
+            "getter_name": "fromMemberId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES members(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "members",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "to_member_id",
+            "getter_name": "toMemberId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES members(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "members",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "amount_minor",
+            "getter_name": "amountMinor",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (amount_minor BETWEEN 1 AND 1000000000000)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "settled_on",
+            "getter_name": "settledOn",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (date(settled_on) IS settled_on)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "note",
+            "getter_name": "note",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "CHECK (note IS NULL OR length(trim(note)) BETWEEN 1 AND 200)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "created_by_user_id",
+            "getter_name": "createdByUserId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES local_profile(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "local_profile",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "created_by_member_id",
+            "getter_name": "createdByMemberId",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "REFERENCES members(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "members",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "status",
+            "getter_name": "status",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (status IN ('PENDING', 'CONFIRMED', 'DISPUTED', 'CANCELLED'))",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "declared_at",
+            "getter_name": "declaredAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "confirmed_at",
+            "getter_name": "confirmedAt",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "disputed_at",
+            "getter_name": "disputedAt",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "cancelled_at",
+            "getter_name": "cancelledAt",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "recorded_by_admin",
+            "getter_name": "recordedByAdmin",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT 0 CHECK (recorded_by_admin IN (0, 1))",
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "kind",
+            "getter_name": "kind",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT 'PAYMENT' CHECK (kind IN ('PAYMENT', 'POOL_DEPOSIT'))",
+            "default_dart": "const CustomExpression('\\'PAYMENT\\'')",
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [
+          "CONSTRAINT ck_settlements_members CHECK(from_member_id <> to_member_id)",
+          "CONSTRAINT ck_settlements_confirmed_at CHECK((status = 'CONFIRMED')=(confirmed_at IS NOT NULL))",
+          "CONSTRAINT ck_settlements_cancelled_at CHECK((status = 'CANCELLED')=(cancelled_at IS NOT NULL))",
+          "CONSTRAINT ck_settlements_disputed_at CHECK(status <> 'DISPUTED' OR disputed_at IS NOT NULL)",
+          "CONSTRAINT ck_settlements_pending_clean CHECK(status <> 'PENDING' OR(disputed_at IS NULL AND confirmed_at IS NULL))"
+        ],
+        "strict": true
+      }
+    },
+    {
+      "id": 24,
+      "references": [
+        23
+      ],
+      "type": "index",
+      "data": {
+        "on": 23,
+        "name": "ix_settlements_group_list",
+        "sql": "CREATE INDEX ix_settlements_group_list ON settlements (group_id, settled_on DESC, created_at DESC, id DESC);",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 25,
+      "references": [
+        23
+      ],
+      "type": "index",
+      "data": {
+        "on": 23,
+        "name": "ix_settlements_group_confirmed",
+        "sql": "CREATE INDEX ix_settlements_group_confirmed ON settlements (group_id) WHERE status = 'CONFIRMED';",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 26,
+      "references": [
+        23
+      ],
+      "type": "index",
+      "data": {
+        "on": 23,
+        "name": "ix_settlements_from_member",
+        "sql": "CREATE INDEX ix_settlements_from_member ON settlements (from_member_id);",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 27,
+      "references": [
+        23
+      ],
+      "type": "index",
+      "data": {
+        "on": 23,
+        "name": "ix_settlements_to_member",
+        "sql": "CREATE INDEX ix_settlements_to_member ON settlements (to_member_id);",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 28,
+      "references": [
+        23
+      ],
+      "type": "index",
+      "data": {
+        "on": 23,
+        "name": "ix_settlements_deposits",
+        "sql": "CREATE INDEX ix_settlements_deposits ON settlements (group_id) WHERE kind = 'POOL_DEPOSIT';",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 29,
+      "references": [
+        0
+      ],
+      "type": "table",
+      "data": {
+        "name": "payment_handles",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY CHECK (length(id) = 36)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key"
+            ]
+          },
+          {
+            "name": "user_id",
+            "getter_name": "userId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES local_profile(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "local_profile",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "type",
+            "getter_name": "type",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (type IN ('INSTAPAY', 'WALLET'))",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "value",
+            "getter_name": "value",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "updated_at",
+            "getter_name": "updatedAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [
+          "CONSTRAINT uq_payment_handles_user_type UNIQUE(user_id, type)",
+          "CONSTRAINT ck_payment_handles_wallet CHECK(type <> 'WALLET' OR value GLOB '01[0125][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]')",
+          "CONSTRAINT ck_payment_handles_instapay CHECK(type <> 'INSTAPAY' OR((length(value) BETWEEN 3 AND 60 AND value GLOB '?*@?*' AND value NOT GLOB '*@*@*' AND value NOT GLOB '*[^a-z0-9._@-]*' AND value NOT GLOB '*@*_*')OR(length(value) BETWEEN 16 AND 200 AND value GLOB 'https://ipn.eg/?*' AND value NOT GLOB '*[^A-Za-z0-9._~:/?#@!$&=%+-]*')))"
+        ],
+        "strict": true,
+        "unique_keys": [
+          [
+            "user_id",
+            "type"
+          ]
+        ]
+      }
+    },
+    {
+      "id": 30,
+      "references": [],
+      "type": "table",
+      "data": {
+        "name": "idempotency_keys",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "key",
+            "getter_name": "key",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY CHECK (length(\"key\") = 36)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key"
+            ]
+          },
+          {
+            "name": "endpoint",
+            "getter_name": "endpoint",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "request_hash",
+            "getter_name": "requestHash",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "response_status",
+            "getter_name": "responseStatus",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (response_status BETWEEN 100 AND 599)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "response_body",
+            "getter_name": "responseBody",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (json_valid(response_body))",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [],
+        "strict": true
+      }
+    },
+    {
+      "id": 31,
+      "references": [
+        30
+      ],
+      "type": "index",
+      "data": {
+        "on": 30,
+        "name": "ix_idempotency_keys_created",
+        "sql": "CREATE INDEX ix_idempotency_keys_created ON idempotency_keys (created_at);",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 32,
+      "references": [],
+      "type": "table",
+      "data": {
+        "name": "fuel_prices",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "fuel_type",
+            "getter_name": "fuelType",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY CHECK (fuel_type IN ('GASOLINE_80', 'GASOLINE_92', 'GASOLINE_95', 'DIESEL'))",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key"
+            ]
+          },
+          {
+            "name": "price_per_litre_minor",
+            "getter_name": "pricePerLitreMinor",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (price_per_litre_minor BETWEEN 1 AND 100000)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "updated_at",
+            "getter_name": "updatedAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [],
+        "strict": true
+      }
+    }
+  ],
+  "fixed_sql": [
+    {
+      "name": "local_profile",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"local_profile\" (\"id\" TEXT NOT NULL PRIMARY KEY CHECK (length(id) = 36), \"display_name\" TEXT NOT NULL CHECK (length(trim(display_name)) BETWEEN 1 AND 60), \"created_at\" INTEGER NOT NULL, \"updated_at\" INTEGER NOT NULL, \"singleton\" INTEGER NOT NULL DEFAULT 1 UNIQUE CHECK (singleton = 1)) STRICT;"
+        }
+      ]
+    },
+    {
+      "name": "local_meta",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"local_meta\" (\"id\" INTEGER NOT NULL PRIMARY KEY CHECK (id = 1), \"created_schema_version\" INTEGER NOT NULL CHECK (created_schema_version >= 1), \"created_at\" INTEGER NOT NULL, \"last_export_at\" INTEGER, \"last_export_format_version\" INTEGER CHECK (last_export_format_version IS NULL OR last_export_format_version >= 1), \"backup_reminder_snoozed_until\" INTEGER, \"last_reminder_tone\" TEXT CHECK (last_reminder_tone IS NULL OR last_reminder_tone IN ('SOFT', 'FIRM', 'FUNNY')), \"ocr_consent_at\" INTEGER, \"ocr_scan_day\" TEXT CHECK (ocr_scan_day IS NULL OR ocr_scan_day GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'), \"ocr_scan_count\" INTEGER NOT NULL DEFAULT 0 CHECK (ocr_scan_count >= 0), \"ocr_permission_errors\" INTEGER NOT NULL DEFAULT 0 CHECK (ocr_permission_errors >= 0), \"ocr_hidden_until\" INTEGER, \"archive_retention_days\" INTEGER NOT NULL DEFAULT 30 CHECK (archive_retention_days IN (7, 15, 30)), CHECK((last_export_at IS NULL)=(last_export_format_version IS NULL))) STRICT;"
+        }
+      ]
+    },
+    {
+      "name": "members",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"members\" (\"id\" TEXT NOT NULL PRIMARY KEY CHECK (length(id) = 36), \"group_id\" TEXT NOT NULL REFERENCES expense_groups(id), \"display_name\" TEXT NOT NULL CHECK (length(trim(display_name)) BETWEEN 1 AND 40), \"name_key\" TEXT NOT NULL CHECK (name_key <> '' AND name_key = lower(name_key)), \"user_id\" TEXT REFERENCES local_profile(id), \"sort_order\" INTEGER NOT NULL CHECK (sort_order >= 1), \"role\" TEXT NOT NULL DEFAULT 'MEMBER' CHECK (role IN ('OWNER', 'ADMIN', 'MEMBER')), \"status\" TEXT NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'LEFT')), \"joined_at\" INTEGER, \"left_at\" INTEGER, \"created_at\" INTEGER NOT NULL, CONSTRAINT uq_members_group_sort_order UNIQUE(group_id, sort_order), CONSTRAINT uq_members_group_name_key UNIQUE(group_id, name_key), CONSTRAINT ck_members_owner_linked_active CHECK(role <> 'OWNER' OR(user_id IS NOT NULL AND status = 'ACTIVE')), CONSTRAINT ck_members_left_at CHECK((status = 'LEFT')=(left_at IS NOT NULL)), CONSTRAINT ck_members_left_linked CHECK(status <> 'LEFT' OR user_id IS NOT NULL)) STRICT;"
+        }
+      ]
+    },
+    {
+      "name": "expense_groups",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"expense_groups\" (\"id\" TEXT NOT NULL PRIMARY KEY CHECK (length(id) = 36), \"owner_user_id\" TEXT NOT NULL REFERENCES local_profile(id), \"name\" TEXT NOT NULL CHECK (length(trim(name)) BETWEEN 1 AND 60), \"type\" TEXT NOT NULL CHECK (type IN ('TRIP', 'HOUSING', 'OUTING', 'OTHER')), \"currency_code\" TEXT NOT NULL DEFAULT 'EGP' CHECK (length(currency_code) = 3 AND currency_code NOT GLOB '*[^A-Z]*'), \"created_at\" INTEGER NOT NULL, \"updated_at\" INTEGER NOT NULL, \"version\" INTEGER NOT NULL DEFAULT 1 CHECK (version >= 1), \"member_seq\" INTEGER NOT NULL DEFAULT 0 CHECK (member_seq >= 0), \"treasurer_member_id\" TEXT REFERENCES members(id), \"archived_at\" INTEGER) STRICT;"
+        }
+      ]
+    },
+    {
+      "name": "ix_expense_groups_owner_created",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_expense_groups_owner_created ON expense_groups (owner_user_id, created_at DESC, id DESC)"
+        }
+      ]
+    },
+    {
+      "name": "expense_groups_treasurer_insert",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER expense_groups_treasurer_insert BEFORE INSERT ON expense_groups WHEN NEW.treasurer_member_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM members WHERE id = NEW.treasurer_member_id AND group_id = NEW.id) BEGIN SELECT RAISE (ABORT, 'the treasurer must be a member of the same group');END"
+        }
+      ]
+    },
+    {
+      "name": "expense_groups_treasurer_update",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER expense_groups_treasurer_update BEFORE UPDATE OF treasurer_member_id ON expense_groups WHEN NEW.treasurer_member_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM members WHERE id = NEW.treasurer_member_id AND group_id = NEW.id) BEGIN SELECT RAISE (ABORT, 'the treasurer must be a member of the same group');END"
+        }
+      ]
+    },
+    {
+      "name": "ux_members_group_user",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE UNIQUE INDEX ux_members_group_user ON members (group_id, user_id) WHERE user_id IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "ux_members_group_owner",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE UNIQUE INDEX ux_members_group_owner ON members (group_id) WHERE role = 'OWNER'"
+        }
+      ]
+    },
+    {
+      "name": "expenses",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"expenses\" (\"id\" TEXT NOT NULL PRIMARY KEY CHECK (length(id) = 36), \"group_id\" TEXT NOT NULL REFERENCES expense_groups(id), \"title\" TEXT NOT NULL CHECK (length(trim(title)) BETWEEN 1 AND 100), \"split_type\" TEXT NOT NULL CHECK (split_type IN ('EQUAL', 'EXACT', 'ITEMIZED')), \"total_minor\" INTEGER NOT NULL CHECK (total_minor BETWEEN 1 AND 1000000000000), \"expense_date\" TEXT NOT NULL CHECK (date(expense_date) IS expense_date), \"subtotal_minor\" INTEGER, \"service_bps\" INTEGER CHECK (service_bps IS NULL OR service_bps BETWEEN 0 AND 10000), \"service_minor\" INTEGER, \"tax_bps\" INTEGER CHECK (tax_bps IS NULL OR tax_bps BETWEEN 0 AND 10000), \"tax_minor\" INTEGER, \"tax_base\" TEXT CHECK (tax_base IS NULL OR tax_base IN ('SUBTOTAL', 'SUBTOTAL_PLUS_SERVICE')), \"adjustment_minor\" INTEGER, \"created_by_user_id\" TEXT NOT NULL REFERENCES local_profile(id), \"created_at\" INTEGER NOT NULL, \"updated_at\" INTEGER NOT NULL, \"deleted_at\" INTEGER, \"version\" INTEGER NOT NULL DEFAULT 1 CHECK (version >= 1), \"category\" TEXT NOT NULL DEFAULT 'OTHER' CHECK (category IN ('FOOD', 'TRANSPORT', 'FUEL', 'ACCOMMODATION', 'GROCERIES', 'SHOPPING', 'ENTERTAINMENT', 'BILLS', 'OTHER')), \"paid_from_pool\" INTEGER NOT NULL DEFAULT 0 CHECK (paid_from_pool IN (0, 1)), \"discount_bps\" INTEGER CHECK (discount_bps IS NULL OR discount_bps BETWEEN 1 AND 9999), \"discount_amount_minor\" INTEGER CHECK (discount_amount_minor IS NULL OR discount_amount_minor BETWEEN 1 AND 1000000000000), \"discount_minor\" INTEGER, \"service_amount_minor\" INTEGER CHECK (service_amount_minor IS NULL OR service_amount_minor BETWEEN 1 AND 1000000000000), \"tax_amount_minor\" INTEGER CHECK (tax_amount_minor IS NULL OR tax_amount_minor BETWEEN 1 AND 1000000000000), \"delivery_minor\" INTEGER CHECK (delivery_minor IS NULL OR delivery_minor BETWEEN 0 AND 1000000000000), CONSTRAINT ck_expenses_charge_one_form CHECK(NOT(discount_bps IS NOT NULL AND discount_amount_minor IS NOT NULL)AND NOT(service_bps IS NOT NULL AND service_amount_minor IS NOT NULL)AND NOT(tax_bps IS NOT NULL AND tax_amount_minor IS NOT NULL)), CONSTRAINT ck_expenses_itemized_columns CHECK(split_type = 'ITEMIZED' OR(subtotal_minor IS NULL AND service_bps IS NULL AND service_minor IS NULL AND tax_bps IS NULL AND tax_minor IS NULL AND tax_base IS NULL AND adjustment_minor IS NULL AND discount_bps IS NULL AND discount_amount_minor IS NULL AND discount_minor IS NULL AND service_amount_minor IS NULL AND tax_amount_minor IS NULL AND delivery_minor IS NULL)), CONSTRAINT ck_expenses_itemized_charges CHECK(split_type <> 'ITEMIZED' OR(subtotal_minor IS NOT NULL AND subtotal_minor > 0 AND discount_minor IS NOT NULL AND discount_minor >= 0 AND discount_minor < subtotal_minor AND service_minor IS NOT NULL AND service_minor >= 0 AND tax_minor IS NOT NULL AND tax_minor >= 0 AND delivery_minor IS NOT NULL AND delivery_minor >= 0 AND adjustment_minor IS NOT NULL AND total_minor = subtotal_minor - discount_minor + service_minor + tax_minor + delivery_minor + adjustment_minor AND((discount_bps IS NOT NULL OR discount_amount_minor IS NOT NULL)=(discount_minor > 0))AND(discount_amount_minor IS NULL OR discount_minor = discount_amount_minor)AND(service_bps IS NOT NULL OR service_amount_minor IS NOT NULL OR service_minor = 0)AND(service_amount_minor IS NULL OR service_minor = service_amount_minor)AND(tax_bps IS NOT NULL OR tax_amount_minor IS NOT NULL OR tax_minor = 0)AND(tax_amount_minor IS NULL OR tax_minor = tax_amount_minor)AND((tax_bps IS NULL AND tax_amount_minor IS NULL)=(tax_base IS NULL))))) STRICT;"
+        }
+      ]
+    },
+    {
+      "name": "ix_expenses_group_list",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_expenses_group_list ON expenses (group_id, expense_date DESC, created_at DESC, id DESC) WHERE deleted_at IS NULL"
+        }
+      ]
+    },
+    {
+      "name": "ix_expenses_group_category",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_expenses_group_category ON expenses (group_id, category) WHERE deleted_at IS NULL"
+        }
+      ]
+    },
+    {
+      "name": "ix_expenses_group",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_expenses_group ON expenses (group_id)"
+        }
+      ]
+    },
+    {
+      "name": "ix_expenses_pool",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_expenses_pool ON expenses (group_id) WHERE paid_from_pool = 1"
+        }
+      ]
+    },
+    {
+      "name": "expense_payers",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"expense_payers\" (\"expense_id\" TEXT NOT NULL REFERENCES expenses(id), \"member_id\" TEXT NOT NULL REFERENCES members(id), \"amount_minor\" INTEGER NOT NULL CHECK (amount_minor BETWEEN 1 AND 1000000000000), PRIMARY KEY(expense_id, member_id)) STRICT;"
+        }
+      ]
+    },
+    {
+      "name": "ix_expense_payers_member",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_expense_payers_member ON expense_payers (member_id)"
+        }
+      ]
+    },
+    {
+      "name": "expense_splits",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"expense_splits\" (\"expense_id\" TEXT NOT NULL REFERENCES expenses(id), \"member_id\" TEXT NOT NULL REFERENCES members(id), \"owed_minor\" INTEGER NOT NULL CHECK (owed_minor BETWEEN 0 AND 1000000000000), \"items_minor\" INTEGER, \"service_minor\" INTEGER, \"tax_minor\" INTEGER, \"adjustment_minor\" INTEGER, \"discount_minor\" INTEGER, \"delivery_minor\" INTEGER, PRIMARY KEY(expense_id, member_id), CONSTRAINT ck_expense_splits_breakdown CHECK((items_minor IS NULL AND discount_minor IS NULL AND service_minor IS NULL AND tax_minor IS NULL AND adjustment_minor IS NULL AND delivery_minor IS NULL)OR(items_minor IS NOT NULL AND items_minor >= 0 AND discount_minor IS NOT NULL AND discount_minor >= 0 AND discount_minor <= items_minor AND service_minor IS NOT NULL AND service_minor >= 0 AND tax_minor IS NOT NULL AND tax_minor >= 0 AND delivery_minor IS NOT NULL AND delivery_minor >= 0 AND adjustment_minor IS NOT NULL AND owed_minor = items_minor - discount_minor + service_minor + tax_minor + delivery_minor + adjustment_minor))) STRICT;"
+        }
+      ]
+    },
+    {
+      "name": "ix_expense_splits_member",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_expense_splits_member ON expense_splits (member_id)"
+        }
+      ]
+    },
+    {
+      "name": "expense_items",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"expense_items\" (\"id\" TEXT NOT NULL PRIMARY KEY CHECK (length(id) = 36), \"expense_id\" TEXT NOT NULL REFERENCES expenses(id), \"name\" TEXT NOT NULL CHECK (length(trim(name)) BETWEEN 1 AND 100), \"amount_minor\" INTEGER NOT NULL CHECK (amount_minor BETWEEN 1 AND 1000000000000), \"sort_order\" INTEGER NOT NULL CHECK (sort_order >= 0), \"quantity\" INTEGER NOT NULL DEFAULT 1 CHECK (quantity BETWEEN 1 AND 999), \"unit_amount_minor\" INTEGER NOT NULL CHECK (unit_amount_minor BETWEEN 1 AND 1000000000000), CONSTRAINT ux_expense_items_order UNIQUE(expense_id, sort_order), CONSTRAINT ck_expense_items_line CHECK(amount_minor = quantity * unit_amount_minor)) STRICT;"
+        }
+      ]
+    },
+    {
+      "name": "expense_item_assignees",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"expense_item_assignees\" (\"item_id\" TEXT NOT NULL REFERENCES expense_items(id), \"member_id\" TEXT NOT NULL REFERENCES members(id), PRIMARY KEY(item_id, member_id)) STRICT;"
+        }
+      ]
+    },
+    {
+      "name": "ix_expense_item_assignees_member",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_expense_item_assignees_member ON expense_item_assignees (member_id)"
+        }
+      ]
+    },
+    {
+      "name": "expense_revisions",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"expense_revisions\" (\"id\" TEXT NOT NULL PRIMARY KEY CHECK (length(id) = 36), \"expense_id\" TEXT NOT NULL REFERENCES expenses(id), \"version\" INTEGER NOT NULL CHECK (version >= 1), \"change_type\" TEXT NOT NULL CHECK (change_type IN ('CREATE', 'UPDATE', 'DELETE')), \"snapshot\" TEXT NOT NULL CHECK (json_valid(snapshot) AND json_type(snapshot) = 'object'), \"changed_by_user_id\" TEXT NOT NULL REFERENCES local_profile(id), \"changed_at\" INTEGER NOT NULL, CONSTRAINT ux_expense_revisions_version UNIQUE(expense_id, version)) STRICT;"
+        }
+      ]
+    },
+    {
+      "name": "expense_revisions_append_only",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER expense_revisions_append_only BEFORE UPDATE ON expense_revisions BEGIN SELECT RAISE (ABORT, 'expense_revisions are append-only');END"
+        }
+      ]
+    },
+    {
+      "name": "settlements",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"settlements\" (\"id\" TEXT NOT NULL PRIMARY KEY CHECK (length(id) = 36), \"group_id\" TEXT NOT NULL REFERENCES expense_groups(id), \"from_member_id\" TEXT NOT NULL REFERENCES members(id), \"to_member_id\" TEXT NOT NULL REFERENCES members(id), \"amount_minor\" INTEGER NOT NULL CHECK (amount_minor BETWEEN 1 AND 1000000000000), \"settled_on\" TEXT NOT NULL CHECK (date(settled_on) IS settled_on), \"note\" TEXT CHECK (note IS NULL OR length(trim(note)) BETWEEN 1 AND 200), \"created_by_user_id\" TEXT NOT NULL REFERENCES local_profile(id), \"created_by_member_id\" TEXT REFERENCES members(id), \"created_at\" INTEGER NOT NULL, \"status\" TEXT NOT NULL CHECK (status IN ('PENDING', 'CONFIRMED', 'DISPUTED', 'CANCELLED')), \"declared_at\" INTEGER NOT NULL, \"confirmed_at\" INTEGER, \"disputed_at\" INTEGER, \"cancelled_at\" INTEGER, \"recorded_by_admin\" INTEGER NOT NULL DEFAULT 0 CHECK (recorded_by_admin IN (0, 1)), \"kind\" TEXT NOT NULL DEFAULT 'PAYMENT' CHECK (kind IN ('PAYMENT', 'POOL_DEPOSIT')), CONSTRAINT ck_settlements_members CHECK(from_member_id <> to_member_id), CONSTRAINT ck_settlements_confirmed_at CHECK((status = 'CONFIRMED')=(confirmed_at IS NOT NULL)), CONSTRAINT ck_settlements_cancelled_at CHECK((status = 'CANCELLED')=(cancelled_at IS NOT NULL)), CONSTRAINT ck_settlements_disputed_at CHECK(status <> 'DISPUTED' OR disputed_at IS NOT NULL), CONSTRAINT ck_settlements_pending_clean CHECK(status <> 'PENDING' OR(disputed_at IS NULL AND confirmed_at IS NULL))) STRICT;"
+        }
+      ]
+    },
+    {
+      "name": "ix_settlements_group_list",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_settlements_group_list ON settlements (group_id, settled_on DESC, created_at DESC, id DESC)"
+        }
+      ]
+    },
+    {
+      "name": "ix_settlements_group_confirmed",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_settlements_group_confirmed ON settlements (group_id) WHERE status = 'CONFIRMED'"
+        }
+      ]
+    },
+    {
+      "name": "ix_settlements_from_member",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_settlements_from_member ON settlements (from_member_id)"
+        }
+      ]
+    },
+    {
+      "name": "ix_settlements_to_member",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_settlements_to_member ON settlements (to_member_id)"
+        }
+      ]
+    },
+    {
+      "name": "ix_settlements_deposits",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_settlements_deposits ON settlements (group_id) WHERE kind = 'POOL_DEPOSIT'"
+        }
+      ]
+    },
+    {
+      "name": "payment_handles",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"payment_handles\" (\"id\" TEXT NOT NULL PRIMARY KEY CHECK (length(id) = 36), \"user_id\" TEXT NOT NULL REFERENCES local_profile(id), \"type\" TEXT NOT NULL CHECK (type IN ('INSTAPAY', 'WALLET')), \"value\" TEXT NOT NULL, \"created_at\" INTEGER NOT NULL, \"updated_at\" INTEGER NOT NULL, CONSTRAINT uq_payment_handles_user_type UNIQUE(user_id, type), CONSTRAINT ck_payment_handles_wallet CHECK(type <> 'WALLET' OR value GLOB '01[0125][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'), CONSTRAINT ck_payment_handles_instapay CHECK(type <> 'INSTAPAY' OR((length(value) BETWEEN 3 AND 60 AND value GLOB '?*@?*' AND value NOT GLOB '*@*@*' AND value NOT GLOB '*[^a-z0-9._@-]*' AND value NOT GLOB '*@*_*')OR(length(value) BETWEEN 16 AND 200 AND value GLOB 'https://ipn.eg/?*' AND value NOT GLOB '*[^A-Za-z0-9._~:/?#@!$&=%+-]*')))) STRICT;"
+        }
+      ]
+    },
+    {
+      "name": "idempotency_keys",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"idempotency_keys\" (\"key\" TEXT NOT NULL PRIMARY KEY CHECK (length(\"key\") = 36), \"endpoint\" TEXT NOT NULL, \"request_hash\" TEXT NOT NULL, \"response_status\" INTEGER NOT NULL CHECK (response_status BETWEEN 100 AND 599), \"response_body\" TEXT NOT NULL CHECK (json_valid(response_body)), \"created_at\" INTEGER NOT NULL) STRICT;"
+        }
+      ]
+    },
+    {
+      "name": "ix_idempotency_keys_created",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_idempotency_keys_created ON idempotency_keys (created_at)"
+        }
+      ]
+    },
+    {
+      "name": "fuel_prices",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"fuel_prices\" (\"fuel_type\" TEXT NOT NULL PRIMARY KEY CHECK (fuel_type IN ('GASOLINE_80', 'GASOLINE_92', 'GASOLINE_95', 'DIESEL')), \"price_per_litre_minor\" INTEGER NOT NULL CHECK (price_per_litre_minor BETWEEN 1 AND 100000), \"updated_at\" INTEGER NOT NULL) STRICT;"
+        }
+      ]
+    }
+  ]
+}

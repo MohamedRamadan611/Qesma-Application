@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/local_auth_controller.dart';
@@ -9,6 +10,7 @@ import '../../../core/theme/palette.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../expenses/presentation/status_banner.dart';
+import '../../profile/application/payment_handles_input.dart';
 import '../../profile/application/update_profile_controller.dart';
 import '../application/auth_controller.dart';
 
@@ -31,20 +33,29 @@ class _LocalNameScreenState extends ConsumerState<LocalNameScreen> {
   @override
   void dispose() {
     _name.dispose();
+    _instapay.dispose();
+    _wallet.dispose();
     super.dispose();
   }
 
   ProfileForm get _form => ProfileForm(original: '', name: _name.text);
 
+  final TextEditingController _instapay = TextEditingController();
+  final TextEditingController _wallet = TextEditingController();
+  bool _touchedInstapay = false;
+  bool _touchedWallet = false;
+
+  HandlesDraft get _handles => evaluateHandles(instapay: _instapay.text, wallet: _wallet.text);
+
   Future<void> _save() async {
     setState(() => _touched = true);
-    if (_saving || _form.error != null) return;
+    if (_saving || _form.error != null || !_handles.isValid) return;
     setState(() {
       _saving = true;
       _failure = null;
     });
     final controller = ref.read(authControllerProvider.notifier) as LocalAuthController;
-    final failure = await controller.createProfile(_form.trimmed);
+    final failure = await controller.createProfile(_form.trimmed, instapay: _handles.instapay.value, wallet: _handles.wallet.value);
     if (mounted && failure != null) {
       setState(() {
         _saving = false;
@@ -88,6 +99,34 @@ class _LocalNameScreenState extends ConsumerState<LocalNameScreen> {
               const SizedBox(height: QesmaSpacing.xs),
               Text(l10n.onboardingNameHelper, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper)),
             ],
+            const SizedBox(height: QesmaSpacing.lg),
+            Text(l10n.onboardingPaymentTitle, style: theme.textTheme.titleSmall),
+            const SizedBox(height: QesmaSpacing.xs),
+            Text(l10n.onboardingPaymentHelper, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper)),
+            const SizedBox(height: QesmaSpacing.md),
+            AppTextField(
+              controller: _instapay,
+              label: l10n.payInstapayLabel,
+              hint: l10n.handlesInstapayHint,
+              errorText: _touchedInstapay && _handles.instapay.issue != null ? l10n.handlesInstapayInvalid : null,
+              enabled: !_saving,
+              keyboardType: TextInputType.url,
+              textInputAction: TextInputAction.next,
+              onChanged: (_) => setState(() => _touchedInstapay = true),
+            ),
+            const SizedBox(height: QesmaSpacing.md),
+            AppTextField(
+              controller: _wallet,
+              label: l10n.payWalletLabel,
+              hint: l10n.handlesWalletHint,
+              errorText: _touchedWallet && _handles.wallet.issue != null ? l10n.handlesWalletInvalid : null,
+              enabled: !_saving,
+              keyboardType: TextInputType.phone,
+              textInputAction: TextInputAction.done,
+              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9٠-٩۰-۹+\s\-]'))],
+              onChanged: (_) => setState(() => _touchedWallet = true),
+              onSubmitted: (_) => _save(),
+            ),
             if (_failure != null) ...[
               const SizedBox(height: QesmaSpacing.md),
               StatusBanner(icon: Icons.error_outline, text: errorCopyFor(l10n, _failure!).message, tone: BannerTone.error),

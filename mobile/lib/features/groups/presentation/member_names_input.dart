@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/l10n/generated/app_localizations.dart';
-import '../../../core/theme/palette.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
 
@@ -50,21 +49,16 @@ class _MemberNamesInputState extends State<MemberNamesInput> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(l10n.groupMembersLabel, style: theme.textTheme.labelLarge),
-        const SizedBox(height: QesmaSpacing.xs),
-        Text(l10n.groupMembersNote, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper)),
-        const SizedBox(height: QesmaSpacing.sm),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               child: AppTextField(
                 controller: _controller,
-                label: l10n.memberNameLabel,
+                label: l10n.groupMemberNameOptional,
                 hint: l10n.groupMembersNameHint,
                 maxLength: memberNameMaxLength,
                 enabled: widget.enabled,
@@ -79,9 +73,10 @@ class _MemberNamesInputState extends State<MemberNamesInput> {
             const SizedBox(width: QesmaSpacing.sm),
             Padding(
               padding: const EdgeInsets.only(top: QesmaSpacing.lg),
-              child: IconButton.filledTonal(
-                tooltip: l10n.groupMembersAddButton,
-                icon: const Icon(Icons.person_add_alt_1_outlined),
+              child: FilledButton.icon(
+                style: FilledButton.styleFrom(minimumSize: const Size(0, 52), padding: const EdgeInsets.symmetric(horizontal: QesmaSpacing.md)),
+                icon: const Icon(Icons.person_add_alt_1),
+                label: Text(l10n.groupMembersAddButton),
                 onPressed: widget.enabled ? _add : null,
               ),
             ),

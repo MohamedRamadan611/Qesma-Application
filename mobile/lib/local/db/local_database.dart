@@ -60,7 +60,7 @@ class LocalDatabase extends _$LocalDatabase {
   final int Function() _clock;
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -182,6 +182,18 @@ class LocalDatabase extends _$LocalDatabase {
             ], columnTransformer: {
               s.deliveryMinor: const CustomExpression<int>('CASE WHEN items_minor IS NOT NULL THEN 0 END'),
             }));
+          },
+          // InstaPay link: the payment_handles CHECK now also accepts https://ipn.eg/... links next to name@bank
+          // addresses. A CHECK cannot be altered in SQLite, so the table is rebuilt with drift's 12-step copy; every
+          // stored handle (address or wallet) already satisfies the wider rule and is copied unchanged.
+          from9To10: (m, schema) async {
+            await m.alterTable(TableMigration(schema.paymentHandles));
+          },
+          // A184: archive. Two additive columns: expense_groups.archived_at (NULL = active) and
+          // local_meta.archive_retention_days (NOT NULL DEFAULT 30), so every existing row stays valid and active.
+          from10To11: (m, schema) async {
+            await m.addColumn(schema.expenseGroups, schema.expenseGroups.archivedAt);
+            await m.addColumn(schema.localMeta, schema.localMeta.archiveRetentionDays);
           },
         );
 }

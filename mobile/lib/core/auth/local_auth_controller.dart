@@ -31,9 +31,21 @@ class LocalAuthController extends AuthController {
   }
 
   /// Onboarding: `PATCH /me` creates the profile. Returns null on success, the failure otherwise (the form stays).
-  Future<ApiFailure?> createProfile(String displayName) async {
+  ///
+  /// [instapay] / [wallet] are the optional payment details (already normalised by the screen). They are saved right
+  /// after the profile exists and before the session state flips (which moves the router away from the onboarding).
+  /// A failure to save them never blocks onboarding: they can be added later under Account.
+  Future<ApiFailure?> createProfile(String displayName, {String? instapay, String? wallet}) async {
     try {
-      final user = await ref.read(profileRepositoryProvider).updateName(displayName);
+      final repo = ref.read(profileRepositoryProvider);
+      final user = await repo.updateName(displayName);
+      if (instapay != null || wallet != null) {
+        try {
+          await repo.savePaymentHandles(instapay: instapay, wallet: wallet);
+        } on ApiFailure {
+          // Optional extras; the profile itself was created.
+        }
+      }
       if (ref.mounted) state = AuthSignedIn(user);
       return null;
     } on ApiFailure catch (failure) {

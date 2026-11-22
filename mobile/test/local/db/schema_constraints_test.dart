@@ -433,5 +433,25 @@ void main() {
         await db.paymentHandlesDao.upsert(handle('INSTAPAY', ok));
       }
     });
+
+    test('InstaPay links: https://ipn.eg/ + URL-safe characters, 16..200, case kept', () async {
+      for (final bad in [
+        'http://ipn.eg/S/m/instapay/6BrrCd', // not https
+        'https://ipn.eg.evil.com/S/x', // lookalike host
+        'https://evil.com/ipn.eg/S/x',
+        'https://IPN.EG/S/x', // the stored form has a lower-case host
+        'https://ipn.eg/', // empty path
+        'https://ipn.eg/S/ x', // space
+        'https://ipn.eg/S/\u0645', // non-ASCII
+        'https://ipn.eg/S/<script>',
+        'https://ipn.eg/${'a' * 190}', // over 200
+      ]) {
+        await expectLater(db.paymentHandlesDao.upsert(handle('INSTAPAY', bad)), rejected, reason: bad);
+      }
+      for (final ok in ['https://ipn.eg/S/m.ramadan611/instapay/6BrrCd', 'https://ipn.eg/x?a=1&b=2#f', 'https://ipn.eg/${'a' * 185}']) {
+        await db.paymentHandlesDao.upsert(handle('INSTAPAY', ok));
+      }
+      expect((await db.paymentHandlesDao.listForUser(profileId)).single.value, 'https://ipn.eg/${'a' * 185}');
+    });
   });
 }

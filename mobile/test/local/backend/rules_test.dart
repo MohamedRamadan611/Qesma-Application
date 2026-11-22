@@ -30,18 +30,29 @@ void main() {
       expect(await http.count('members'), 0);
     });
 
-    test('blocked by a live expense, by a soft-deleted one, and by a cancelled payment', () async {
-      final eid = (await http.expense(gid, equalBody(9000, [(id: you, amount: 9000)]))).data['id'];
+    test('blocked while balances are open; deleted with all its history once settled', () async {
+      final ali = await http.member(gid, 'Ali');
+      final eid = (await http.expense(gid, equalBody(9000, [(id: you, amount: 9000)], participants: [you, ali]))).data['id'];
       await expectCode(http.delete('/groups/$gid'), 409, 'GROUP_NOT_EMPTY');
-      expect((await http.delete('/groups/$gid/expenses/$eid', ifMatch: '"1"')).statusCode, 204);
-      await expectCode(http.delete('/groups/$gid'), 409, 'GROUP_NOT_EMPTY');
+      // Ali pays his half back: everything is settled, so the group and its ledger can go.
+      await http.settlement(gid, {'fromMemberId': ali, 'toMemberId': you, 'amountMinor': 4500, 'settledOn': '2026-11-01'});
+      expect((await http.delete('/groups/$gid')).statusCode, 204);
+      expect((await http.get('/groups/$gid')).statusCode, 404);
+      for (final table in ['expenses', 'expense_payers', 'expense_splits', 'expense_revisions', 'settlements', 'members']) {
+        expect(await http.count(table), 0, reason: table);
+      }
+      expect(eid, isNotNull);
+    });
 
-      final other = (await http.group(name: 'Second'))['id'] as String;
-      final otherYou = (await http.get('/groups/$other')).data['yourMemberId'];
-      final ali = await http.member(other, 'Ali');
-      final s = await http.settlement(other, {'fromMemberId': ali, 'toMemberId': otherYou, 'amountMinor': 100, 'settledOn': '2026-11-01'});
-      expect((await http.post('/groups/$other/settlements/${s.data['id']}/cancel', null)).data['status'], 'CANCELLED');
-      await expectCode(http.delete('/groups/$other'), 409, 'GROUP_NOT_EMPTY');
+    test('soft-deleted expenses and cancelled payments do not block a settled group, and are removed with it', () async {
+      final eid = (await http.expense(gid, equalBody(9000, [(id: you, amount: 9000)]))).data['id'];
+      expect((await http.delete('/groups/$gid/expenses/$eid', ifMatch: '"1"')).statusCode, 204);
+      final ali = await http.member(gid, 'Ali');
+      final s = await http.settlement(gid, {'fromMemberId': ali, 'toMemberId': you, 'amountMinor': 100, 'settledOn': '2026-11-01'});
+      expect((await http.post('/groups/$gid/settlements/${s.data['id']}/cancel', null)).data['status'], 'CANCELLED');
+      expect((await http.delete('/groups/$gid')).statusCode, 204);
+      expect(await http.count('expenses'), 0);
+      expect(await http.count('settlements'), 0);
     });
 
     test('an unknown group is 404', () async {

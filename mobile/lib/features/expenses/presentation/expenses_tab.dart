@@ -32,26 +32,12 @@ class ExpensesTab extends ConsumerStatefulWidget {
 }
 
 class _ExpensesTabState extends ConsumerState<ExpensesTab> {
-  final _scroll = ScrollController();
-
   String get _gid => widget.group.id;
 
-  @override
-  void initState() {
-    super.initState();
-    _scroll.addListener(_onScroll);
-  }
-
-  @override
-  void dispose() {
-    _scroll.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    if (!_scroll.hasClients) return;
-    // Within about three cards of the end.
-    if (_scroll.position.extentAfter < 500) _loadMore();
+  // Within about three cards of the end. A notification, not an own controller: the list shares the page scroll.
+  bool _onScroll(ScrollNotification n) {
+    if (n.depth == 0 && n.metrics.extentAfter < 500) _loadMore();
+    return false;
   }
 
   /// Scrolling loads the next page; after a failure the "try again" row (not a scroll event) retries.
@@ -166,8 +152,9 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
       // Pull to refresh is a gesture; screen-reader users get the same thing as a named action.
       child: Semantics(
         customSemanticsActions: {CustomSemanticsAction(label: l10n.expensesRefresh): _refresh},
-        child: ListView.builder(
-        controller: _scroll,
+        child: NotificationListener<ScrollNotification>(
+          onNotification: _onScroll,
+          child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsetsDirectional.fromSTEB(QesmaSpacing.margin, QesmaSpacing.sm, QesmaSpacing.margin, 96),
         itemCount: rows.length + (state.loadingMore || state.loadMoreFailed ? 1 : 0),
@@ -224,6 +211,7 @@ class _ExpensesTabState extends ConsumerState<ExpensesTab> {
             ),
           );
         },
+        ),
         ),
       ),
     );

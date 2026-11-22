@@ -365,7 +365,7 @@ abstract class AppLocalizations {
   /// GROUP_NOT_EMPTY dialog body.
   ///
   /// In ar, this message translates to:
-  /// **'المجموعة فيها مصاريف أو تسويات، فمينفعش تتمسح.'**
+  /// **'المجموعة لسه فيها حسابات مش متسوّية. سوّي كل الحسابات الأول وبعدين امسحها.'**
   String get errorGroupNotEmptyMessage;
 
   /// OWNER_MEMBER_PROTECTED dialog title.
@@ -602,6 +602,174 @@ abstract class AppLocalizations {
   /// **'ابدأ بجروب جديد وضيف أصحابك، وإحنا نحسبها.'**
   String get groupsEmptyBody;
 
+  /// Archive screen title and the row in the Account tab.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأرشيف'**
+  String get archiveTitle;
+
+  /// Button in Edit group and confirm label.
+  ///
+  /// In ar, this message translates to:
+  /// **'أرشفة الجروب'**
+  String get archiveAction;
+
+  /// Confirm dialog title.
+  ///
+  /// In ar, this message translates to:
+  /// **'تأرشف الجروب ده؟'**
+  String get archiveConfirmTitle;
+
+  /// Confirm dialog body; days is the retention period.
+  ///
+  /// In ar, this message translates to:
+  /// **'«{name}» هيختفي من قايمة جروباتك وهيتمسح نهائيًا بكل مصاريفه ومدفوعاته بعد {days} يوم. تقدر ترجّعه قبل كده.'**
+  String archiveConfirmBody(Object days, Object name);
+
+  /// Snackbar after archiving.
+  ///
+  /// In ar, this message translates to:
+  /// **'الجروب اتأرشف.'**
+  String get archiveDone;
+
+  /// Dialog title when the group is not settled.
+  ///
+  /// In ar, this message translates to:
+  /// **'لسه مينفعش نأرشفه'**
+  String get archiveBlockedTitle;
+
+  /// Dialog body when the group is not settled.
+  ///
+  /// In ar, this message translates to:
+  /// **'سوّي كل الحسابات وفرّغ الصندوق الأول، وبعدين تقدر تأرشف الجروب.'**
+  String get archiveBlocked;
+
+  /// Label of the retention dropdown.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسح الجروبات المؤرشفة بعد'**
+  String get archiveRetentionLabel;
+
+  /// Retention option.
+  ///
+  /// In ar, this message translates to:
+  /// **'7 أيام'**
+  String get archiveRetention7;
+
+  /// Retention option.
+  ///
+  /// In ar, this message translates to:
+  /// **'15 يوم'**
+  String get archiveRetention15;
+
+  /// Retention option (30 days).
+  ///
+  /// In ar, this message translates to:
+  /// **'شهر'**
+  String get archiveRetention30;
+
+  /// Explains the retention period.
+  ///
+  /// In ar, this message translates to:
+  /// **'الجروب المؤرشف بيختفي من قايمتك. بعد المدة دي بيتمسح نهائيًا بكل مصاريفه. وقبلها تقدر ترجّعه.'**
+  String get archiveRetentionHint;
+
+  /// Empty archive title.
+  ///
+  /// In ar, this message translates to:
+  /// **'مفيش جروبات مؤرشفة'**
+  String get archiveEmptyTitle;
+
+  /// Empty archive body.
+  ///
+  /// In ar, this message translates to:
+  /// **'الجروبات اللي بتأرشفها بعد ما تسوّي الحسابات هتظهر هنا.'**
+  String get archiveEmptyBody;
+
+  /// Archived group row.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتأرشف في {date}'**
+  String archiveArchivedOn(Object date);
+
+  /// Archived group row: when it is deleted.
+  ///
+  /// In ar, this message translates to:
+  /// **'هيتمسح نهائيًا في {date}'**
+  String archiveDeletesOn(Object date);
+
+  /// Restore an archived group.
+  ///
+  /// In ar, this message translates to:
+  /// **'استرجاع'**
+  String get archiveRestore;
+
+  /// Delete an archived group at once.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسح دلوقتي'**
+  String get archiveDeleteNow;
+
+  /// Snackbar after restore.
+  ///
+  /// In ar, this message translates to:
+  /// **'الجروب رجع.'**
+  String get archiveRestored;
+
+  /// Snackbar after delete.
+  ///
+  /// In ar, this message translates to:
+  /// **'الجروب اتمسح.'**
+  String get archiveDeleted;
+
+  /// Title of the summary card on the Groups screen.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجمالي كل جروباتك'**
+  String get summaryAllGroups;
+
+  /// Title of the summary card on a group home.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجمالي مصاريف الجروب'**
+  String get summaryGroupTotal;
+
+  /// Chip on the Groups summary card: how many groups.
+  ///
+  /// In ar, this message translates to:
+  /// **'{n} جروبات'**
+  String summaryGroupsCount(Object n);
+
+  /// Label above the owed/owe chip on the summary card.
+  ///
+  /// In ar, this message translates to:
+  /// **'موقفك'**
+  String get summaryYourPosition;
+
+  /// Label above the settlement status on the summary card.
+  ///
+  /// In ar, this message translates to:
+  /// **'حالة التسوية'**
+  String get summaryStatus;
+
+  /// Summary status when nothing is owed.
+  ///
+  /// In ar, this message translates to:
+  /// **'الكل متسوّي'**
+  String get summaryAllSettled;
+
+  /// Summary status of a group where the caller still owes or is owed.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاري الجمع'**
+  String get summaryOpen;
+
+  /// Summary status on the Groups screen: groups with open balances.
+  ///
+  /// In ar, this message translates to:
+  /// **'{n} جروب مفتوح'**
+  String summaryOpenGroups(Object n);
+
   /// Header card on the groups list: the user's net across all groups (shown only when all groups use one currency).
   ///
   /// In ar, this message translates to:
@@ -749,7 +917,7 @@ abstract class AppLocalizations {
   /// Hint under the pool switch.
   ///
   /// In ar, this message translates to:
-  /// **'واحد من الجروب بيمسك الكاش والكل بيدفع له إيداع. اختياري وتقدر تضيفه بعدين.'**
+  /// **'واحد بيمسك كاش الجروب.'**
   String get groupPoolToggleHint;
 
   /// Label above the treasurer choice.
@@ -805,6 +973,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'اسم العضو'**
   String get groupMembersNameHint;
+
+  /// Label of the optional member-name field on create group.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسم العضو داخل الجروب (اختياري)'**
+  String get groupMemberNameOptional;
 
   /// Adds the typed name to the list of members to create.
   ///
@@ -863,7 +1037,7 @@ abstract class AppLocalizations {
   /// Delete group confirmation body.
   ///
   /// In ar, this message translates to:
-  /// **'هيتمسح «{name}» نهائيًا ومش هينفع ترجّعه.'**
+  /// **'هيتمسح «{name}» بكل مصاريفه ومدفوعاته نهائيًا ومش هينفع ترجّعه.'**
   String groupDeleteConfirmBody(String name);
 
   /// Blocked delete dialog: the recorded total.
@@ -3575,7 +3749,7 @@ abstract class AppLocalizations {
   /// Label of the receiver's InstaPay address.
   ///
   /// In ar, this message translates to:
-  /// **'عنوان إنستا باي'**
+  /// **'عنوان أو لينك إنستا باي'**
   String get payInstapayLabel;
 
   /// Label of the receiver's mobile wallet number.
@@ -4001,7 +4175,7 @@ abstract class AppLocalizations {
   /// Hint of the InstaPay field.
   ///
   /// In ar, this message translates to:
-  /// **'مثال: instapay URL'**
+  /// **'username@instapay أو https://ipn.eg/S/...'**
   String get handlesInstapayHint;
 
   /// Hint of the wallet field.
@@ -4013,7 +4187,7 @@ abstract class AppLocalizations {
   /// Inline error of the InstaPay field.
   ///
   /// In ar, this message translates to:
-  /// **'العنوان لازم يبقى بالشكل ده: name@bank، حروف إنجليزي وأرقام من غير مسافات (من 3 لـ 60 حرف).'**
+  /// **'اكتب العنوان بالشكل ده name@bank (حروف إنجليزي وأرقام من غير مسافات) أو الصق لينك إنستا باي اللي بيبدأ بـ https://ipn.eg/'**
   String get handlesInstapayInvalid;
 
   /// Inline error of the wallet field.
@@ -4129,6 +4303,18 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'اسمك إيه؟'**
   String get onboardingNameTitle;
+
+  /// Local onboarding: heading of the optional InstaPay / wallet fields.
+  ///
+  /// In ar, this message translates to:
+  /// **'بيانات الدفع (اختياري)'**
+  String get onboardingPaymentTitle;
+
+  /// Local onboarding: helper under the payment details heading.
+  ///
+  /// In ar, this message translates to:
+  /// **'علشان صحابك يعرفوا يبعتولك فلوسك فين. تقدر تضيفها أو تغيّرها بعدين.'**
+  String get onboardingPaymentHelper;
 
   /// Local mode onboarding: helper under the name field.
   ///
@@ -4758,7 +4944,7 @@ abstract class AppLocalizations {
   /// SA10: one-line explanation of the pool under the edit-group section title.
   ///
   /// In ar, this message translates to:
-  /// **'واحد من المجموعة يمسك فلوس الكل، وكل واحد يسلّمه إيداعه.'**
+  /// **'واحد بيمسك كاش الجروب.'**
   String get poolSectionHint;
 
   /// SA10: label of the treasurer field.
@@ -4868,6 +5054,36 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تعديل الإيداع'**
   String get poolEditDepositTitle;
+
+  /// Tooltip and confirm label of the remove button on a deposit row.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف الإيداع'**
+  String get poolRemoveDeposit;
+
+  /// Confirm dialog title when removing a pool deposit.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحذف الإيداع ده؟'**
+  String get poolRemoveDepositTitle;
+
+  /// Confirm dialog body when removing a pool deposit.
+  ///
+  /// In ar, this message translates to:
+  /// **'استخدمها لو كتبت المبلغ غلط. الإيداع هيفضل في القايمة بحالة «ملغي» ومش هيتحسب في الصندوق.'**
+  String get poolRemoveDepositBody;
+
+  /// Snackbar after removing a deposit.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتحذف الإيداع.'**
+  String get poolDepositRemoved;
+
+  /// Snackbar when removing a deposit failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'معرفناش نحذف الإيداع. جرّب تاني.'**
+  String get poolRemoveDepositFailed;
 
   /// Tooltip of the edit button on a deposit row.
   ///
@@ -5060,6 +5276,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'إضافة السعر'**
   String get calcPriceSet;
+
+  /// Chip that fills the fuel price with the bundled reference price.
+  ///
+  /// In ar, this message translates to:
+  /// **'استخدم {price} (السعر الرسمي، {date})'**
+  String calcPriceSuggest(String price, String date);
 
   /// SA11: price dialog title.
   ///
