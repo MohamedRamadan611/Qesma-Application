@@ -17,6 +17,8 @@ Name | Type | Description | Notes
 **items** | [**BuiltList&lt;ItemView&gt;**](ItemView.md) |  | [optional] 
 **paidFromPool** | **bool** |  | 
 **payers** | [**BuiltList&lt;PayerView&gt;**](PayerView.md) |  | 
+**periodFrom** | [**Date**](Date.md) |  | [optional] 
+**periodTo** | [**Date**](Date.md) |  | [optional] 
 **shares** | [**BuiltList&lt;ShareView&gt;**](ShareView.md) |  | 
 **splitType** | **String** |  | 
 **title** | **String** |  | 

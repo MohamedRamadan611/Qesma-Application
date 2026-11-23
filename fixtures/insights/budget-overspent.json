@@ -1,0 +1,33 @@
+{
+  "name": "budget-overspent",
+  "description": "STANDALONE_SPEC 20.3: budget 1,000.00, spent 1,250.50: remaining -250.50, progress 12,505 bps (uncapped; the bar is capped at 10,000), no per day left. Daily average 1,250.50 / 2 = 625.25.",
+  "input": {
+    "budgetMinor": 100000,
+    "tripStartDate": "2026-11-01",
+    "tripEndDate": "2026-11-04",
+    "activeMemberCount": 2,
+    "today": "2026-11-02",
+    "expenses": [
+      {"expenseId": "e1", "totalMinor": 100000, "expenseDate": "2026-11-01", "paidFromPool": false, "deleted": false},
+      {"expenseId": "e2", "totalMinor": 25050, "expenseDate": "2026-11-02", "paidFromPool": true, "deleted": false}
+    ]
+  },
+  "expected": {
+    "budgetMinor": 100000,
+    "spentMinor": 125050,
+    "remainingMinor": -25050,
+    "overBudget": true,
+    "overByMinor": 25050,
+    "progressBps": 12505,
+    "barFillBps": 10000,
+    "perDay": [
+      {"date": "2026-11-02", "totalMinor": 25050},
+      {"date": "2026-11-01", "totalMinor": 100000}
+    ],
+    "elapsedDays": 2,
+    "dailyAverageMinor": 62525,
+    "daysLeft": null,
+    "perDayLeftMinor": null,
+    "costPerHeadMinor": 50000
+  }
+}

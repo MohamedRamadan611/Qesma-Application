@@ -195,7 +195,7 @@ class GroupApiSliceTest {
     @Test
     void patchPassesTheParsedVersionAndReturnsTheNewEtag() throws Exception {
         ExpenseGroup updated = group(4);
-        when(groups.update(me, gid, 3, "New", null, null)).thenReturn(updated);
+        when(groups.update(me, gid, 3, "New", null, null, GroupService.BudgetPatch.NONE)).thenReturn(updated);
         Member kept = member(UUID.randomUUID(), "Ali", 1);
         when(groups.get(me, gid)).thenReturn(new GroupService.GroupDetail(updated, List.of(kept), 500L, null, null, null, "OWNER", false));
 
@@ -211,7 +211,7 @@ class GroupApiSliceTest {
 
     @Test
     void staleVersionIs409VersionConflict() throws Exception {
-        when(groups.update(any(), any(), any(Integer.class), any(), any(), any()))
+        when(groups.update(any(), any(), any(Integer.class), any(), any(), any(), any()))
                 .thenThrow(ApiException.conflict(ErrorCode.VERSION_CONFLICT, "stale"));
         ExpenseGroup latest = group(5);
         Member kept = member(UUID.randomUUID(), "Ali", 1);   // built first: it is itself a mock

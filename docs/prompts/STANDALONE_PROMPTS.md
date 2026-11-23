@@ -33,6 +33,13 @@ Discipline (same as Phase 1 and 2): one prompt per fresh session; Step 0 plan an
 | 18 | `/sa16-itemized-editor-ux` | P8-01 revised: by-item / by-person modes, compact cards, member picker sheet, discount and `%`/amount rows, quantity, validation summary, printed-total tolerance (A174), CTA pass, read-only details | SA15 | medium |
 | 19 | `/sa17-receipt-ocr-v2` | OCR reads quantity, unit price, discount, merchant (→ title) and category (A176) | SA16 | medium |
 
+| 20 | `/bsa3-shares-budget-contract` | Java: SHARES split with proration by days present, member default weight, group budget and trip dates; migration; OpenAPI; fixtures V21–V28; regenerate client (STANDALONE_SPEC 19, 20.1, A185–A192) | SA17, Docker | **high** |
+| 21 | `/sa18-shares-local` | Dart engine parity on V21–V28; drift schema 12 (shares + budget columns); local validator, calculator, preview, backup | BSA3 | **high** |
+| 22 | `/sa19-shares-editor` | "By shares" split method: units per person, optional billing period with days present, member default weight, details/history (UI only) | SA18 | medium |
+| 23 | `/sa20-trip-budget` | Budget settings, budget card and screen: progress, per day, daily average, per day left, cost per head (estimate); engine `TripBudget` + fixtures `insights/budget-*` | SA19 | **high** |
+
+Rows 20–23 were added on 2026-11-22 and also run before `/sa13-release`. Verification: `/bsa3` then `/r-review` and `/v-verify bsa3`; `/sa18` and `/sa20` then `/flr-review` and `/flv-verify` (money); `/sa19` then `/flr-review`. Models: Opus for BSA3, SA18 and the SA20 engine/repository; Sonnet for SA19 and the SA20 UI.
+
 Rows 16–19 were added on 2026-11-20 and run before `/sa13-release`. Their command files are in `.claude/commands/`. Verification: `/bsa2` then `/r-review` and `/v-verify bsa2`; `/sa15` then `/flr-review` and `/flv-verify sa15` (money); `/sa16` and `/sa17` then `/flr-review`.
 
 SA9, SA11 and SA12 do not depend on each other's code; the order above only keeps one change in flight at a time. SA12 may move earlier if the Firebase setup is ready.
@@ -53,6 +60,8 @@ SA9, SA11 and SA12 do not depend on each other's code; the order above only keep
 | Receipt OCR | SA12 | none (derive; P8-01 editor receives the draft) |
 | Release, privacy, store listing | SA13 | — |
 | Voice entry (update 1) | SA14 | none (derive) |
+| Fair-share (SHARES split, proration by days present) | BSA3, SA18, SA19 | none (derive; split-method sheet of A181) |
+| Trip budget | BSA3, SA18, SA20 | none (derive) |
 
 ## Server phase (not written yet)
 To-buy checklist (members claim items), B18/FL17 push, FL15 notifications/activity, FL16 conflict/delete-account UI, B19/FL18 hardening, and the "upload my local data" import endpoint plus `RemoteRepository` switch (remove the `LocalBackend` override). Server endpoints for My share and the recap are added then (they are local-only computations in the standalone app).

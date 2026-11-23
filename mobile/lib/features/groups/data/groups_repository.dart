@@ -72,7 +72,18 @@ class GroupsRepository {
 
   /// `PATCH` with `If-Match`. The group must have been read first (no blind edits).
   /// [treasurerMemberId] null leaves the treasurer as it is (SA10: it can be set or changed, never cleared).
-  Future<GroupDto> update(String gid, {required String name, required String type, String? treasurerMemberId}) => _run(() async {
+  Future<GroupDto> update(
+    String gid, {
+    required String name,
+    required String type,
+    String? treasurerMemberId,
+    int? budgetMinor,
+    bool clearBudget = false,
+    Date? tripStartDate,
+    Date? tripEndDate,
+    bool clearTripStartDate = false,
+    bool clearTripEndDate = false,
+  }) => _run(() async {
         final ifMatch = _etags.ifMatchFor(gid);
         if (ifMatch == null) throw const ApiUnexpected();
         final response = await _api.getGroupControllerApi().updateGroup(
@@ -81,7 +92,13 @@ class GroupsRepository {
               updateGroupRequest: UpdateGroupRequest((b) => b
                 ..name = name
                 ..type = type
-                ..treasurerMemberId = treasurerMemberId),
+                ..treasurerMemberId = treasurerMemberId
+                ..budgetMinor = budgetMinor
+                ..clearBudget = clearBudget ? true : null
+                ..tripStartDate = tripStartDate
+                ..tripEndDate = tripEndDate
+                ..clearTripStartDate = clearTripStartDate ? true : null
+                ..clearTripEndDate = clearTripEndDate ? true : null),
             );
         final group = response.data;
         if (group == null) throw const ApiUnexpected();
@@ -114,6 +131,21 @@ class GroupsRepository {
         final member = response.data;
         if (member == null) throw const ApiUnexpected();
         return member;
+      });
+
+  /// `PATCH` with only the default share (SA19): [units] 1..100, or null to clear it.
+  Future<void> setMemberDefaultShare(String gid, String mid, int? units) => _run(() async {
+        await _api.getMemberControllerApi().renameMember(
+              gid: gid,
+              mid: mid,
+              updateMemberRequest: UpdateMemberRequest((b) {
+                if (units == null) {
+                  b.clearDefaultShareUnits = true;
+                } else {
+                  b.defaultShareUnits = units;
+                }
+              }),
+            );
       });
 
   Future<void> deleteMember(String gid, String mid) =>

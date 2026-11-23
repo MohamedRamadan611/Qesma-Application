@@ -8,6 +8,10 @@ part of 'update_member_request.dart';
 
 class _$UpdateMemberRequest extends UpdateMemberRequest {
   @override
+  final bool? clearDefaultShareUnits;
+  @override
+  final int? defaultShareUnits;
+  @override
   final String? displayName;
   @override
   final String? role;
@@ -18,7 +22,12 @@ class _$UpdateMemberRequest extends UpdateMemberRequest {
           [void Function(UpdateMemberRequestBuilder)? updates]) =>
       (UpdateMemberRequestBuilder()..update(updates))._build();
 
-  _$UpdateMemberRequest._({this.displayName, this.role, this.status})
+  _$UpdateMemberRequest._(
+      {this.clearDefaultShareUnits,
+      this.defaultShareUnits,
+      this.displayName,
+      this.role,
+      this.status})
       : super._();
   @override
   UpdateMemberRequest rebuild(
@@ -33,6 +42,8 @@ class _$UpdateMemberRequest extends UpdateMemberRequest {
   bool operator ==(Object other) {
     if (identical(other, this)) return true;
     return other is UpdateMemberRequest &&
+        clearDefaultShareUnits == other.clearDefaultShareUnits &&
+        defaultShareUnits == other.defaultShareUnits &&
         displayName == other.displayName &&
         role == other.role &&
         status == other.status;
@@ -41,6 +52,8 @@ class _$UpdateMemberRequest extends UpdateMemberRequest {
   @override
   int get hashCode {
     var _$hash = 0;
+    _$hash = $jc(_$hash, clearDefaultShareUnits.hashCode);
+    _$hash = $jc(_$hash, defaultShareUnits.hashCode);
     _$hash = $jc(_$hash, displayName.hashCode);
     _$hash = $jc(_$hash, role.hashCode);
     _$hash = $jc(_$hash, status.hashCode);
@@ -51,6 +64,8 @@ class _$UpdateMemberRequest extends UpdateMemberRequest {
   @override
   String toString() {
     return (newBuiltValueToStringHelper(r'UpdateMemberRequest')
+          ..add('clearDefaultShareUnits', clearDefaultShareUnits)
+          ..add('defaultShareUnits', defaultShareUnits)
           ..add('displayName', displayName)
           ..add('role', role)
           ..add('status', status))
@@ -61,6 +76,16 @@ class _$UpdateMemberRequest extends UpdateMemberRequest {
 class UpdateMemberRequestBuilder
     implements Builder<UpdateMemberRequest, UpdateMemberRequestBuilder> {
   _$UpdateMemberRequest? _$v;
+
+  bool? _clearDefaultShareUnits;
+  bool? get clearDefaultShareUnits => _$this._clearDefaultShareUnits;
+  set clearDefaultShareUnits(bool? clearDefaultShareUnits) =>
+      _$this._clearDefaultShareUnits = clearDefaultShareUnits;
+
+  int? _defaultShareUnits;
+  int? get defaultShareUnits => _$this._defaultShareUnits;
+  set defaultShareUnits(int? defaultShareUnits) =>
+      _$this._defaultShareUnits = defaultShareUnits;
 
   String? _displayName;
   String? get displayName => _$this._displayName;
@@ -81,6 +106,8 @@ class UpdateMemberRequestBuilder
   UpdateMemberRequestBuilder get _$this {
     final $v = _$v;
     if ($v != null) {
+      _clearDefaultShareUnits = $v.clearDefaultShareUnits;
+      _defaultShareUnits = $v.defaultShareUnits;
       _displayName = $v.displayName;
       _role = $v.role;
       _status = $v.status;
@@ -105,6 +132,8 @@ class UpdateMemberRequestBuilder
   _$UpdateMemberRequest _build() {
     final _$result = _$v ??
         _$UpdateMemberRequest._(
+          clearDefaultShareUnits: clearDefaultShareUnits,
+          defaultShareUnits: defaultShareUnits,
           displayName: displayName,
           role: role,
           status: status,

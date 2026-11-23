@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:qesma_api/src/model/date.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
@@ -17,7 +18,10 @@ part 'share_view.g.dart';
 /// * [itemsMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
 /// * [memberId] 
 /// * [owedMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
+/// * [presentFrom] 
+/// * [presentTo] 
 /// * [serviceMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
+/// * [shareUnits] 
 /// * [taxMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
 @BuiltValue()
 abstract class ShareView implements Built<ShareView, ShareViewBuilder> {
@@ -44,9 +48,18 @@ abstract class ShareView implements Built<ShareView, ShareViewBuilder> {
   @BuiltValueField(wireName: r'owedMinor')
   int get owedMinor;
 
+  @BuiltValueField(wireName: r'presentFrom')
+  Date? get presentFrom;
+
+  @BuiltValueField(wireName: r'presentTo')
+  Date? get presentTo;
+
   /// Integer minor units (piasters: 1 EGP = 100). Never a decimal.
   @BuiltValueField(wireName: r'serviceMinor')
   int? get serviceMinor;
+
+  @BuiltValueField(wireName: r'shareUnits')
+  int? get shareUnits;
 
   /// Integer minor units (piasters: 1 EGP = 100). Never a decimal.
   @BuiltValueField(wireName: r'taxMinor')
@@ -113,10 +126,31 @@ class _$ShareViewSerializer implements PrimitiveSerializer<ShareView> {
       object.owedMinor,
       specifiedType: const FullType(int),
     );
+    if (object.presentFrom != null) {
+      yield r'presentFrom';
+      yield serializers.serialize(
+        object.presentFrom,
+        specifiedType: const FullType.nullable(Date),
+      );
+    }
+    if (object.presentTo != null) {
+      yield r'presentTo';
+      yield serializers.serialize(
+        object.presentTo,
+        specifiedType: const FullType.nullable(Date),
+      );
+    }
     if (object.serviceMinor != null) {
       yield r'serviceMinor';
       yield serializers.serialize(
         object.serviceMinor,
+        specifiedType: const FullType.nullable(int),
+      );
+    }
+    if (object.shareUnits != null) {
+      yield r'shareUnits';
+      yield serializers.serialize(
+        object.shareUnits,
         specifiedType: const FullType.nullable(int),
       );
     }
@@ -196,6 +230,22 @@ class _$ShareViewSerializer implements PrimitiveSerializer<ShareView> {
           ) as int;
           result.owedMinor = valueDes;
           break;
+        case r'presentFrom':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(Date),
+          ) as Date?;
+          if (valueDes == null) continue;
+          result.presentFrom = valueDes;
+          break;
+        case r'presentTo':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(Date),
+          ) as Date?;
+          if (valueDes == null) continue;
+          result.presentTo = valueDes;
+          break;
         case r'serviceMinor':
           final valueDes = serializers.deserialize(
             value,
@@ -203,6 +253,14 @@ class _$ShareViewSerializer implements PrimitiveSerializer<ShareView> {
           ) as int?;
           if (valueDes == null) continue;
           result.serviceMinor = valueDes;
+          break;
+        case r'shareUnits':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
+          if (valueDes == null) continue;
+          result.shareUnits = valueDes;
           break;
         case r'taxMinor':
           final valueDes = serializers.deserialize(

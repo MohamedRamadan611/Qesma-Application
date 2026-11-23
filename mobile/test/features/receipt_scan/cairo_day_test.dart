@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:qesma/features/receipt_scan/application/cairo_day.dart';
+import 'package:qesma/core/format/cairo_day.dart';
 
 /// The daily cap counts Africa/Cairo calendar days (A145). Egypt: UTC+2, UTC+3 from the last Friday of April to the
 /// last Thursday of October (2026: 24 April 00:00 local to 29 October 24:00 local).

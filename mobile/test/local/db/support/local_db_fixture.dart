@@ -133,3 +133,28 @@ SettlementRow confirmedSettlement(String id, {String? from, String? to, int amou
 Future<void> raw(LocalDatabase db, String sql, [List<Object?> args = const []]) =>
     db.customStatement(sql, args);
 
+
+/// SA18: a SHARES rent for November, units 2 / 1, Ali present from the 12th (weights 60 / 19 of 9000 -> 6835 / 2165).
+ExpenseGraph sharesExpense(String id) => ExpenseGraph(
+      expense: ExpenseRow(
+        paidFromPool: 0,
+        id: id,
+        groupId: groupId,
+        title: 'Rent',
+        splitType: 'SHARES',
+        totalMinor: 9000,
+        expenseDate: '2025-12-01',
+        createdByUserId: profileId,
+        createdAt: t0,
+        updatedAt: t0,
+        version: 1,
+        category: 'BILLS',
+        periodFrom: '2025-11-01',
+        periodTo: '2025-11-30',
+      ),
+      payers: [PayerRow(expenseId: id, memberId: youId, amountMinor: 9000)],
+      splits: [
+        SplitRow(expenseId: id, memberId: youId, owedMinor: 6835, shareUnits: 2, presentFrom: '2025-11-01', presentTo: '2025-11-30'),
+        SplitRow(expenseId: id, memberId: aliId, owedMinor: 2165, shareUnits: 1, presentFrom: '2025-11-12', presentTo: '2025-11-30'),
+      ],
+    );

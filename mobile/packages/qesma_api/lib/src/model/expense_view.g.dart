@@ -26,6 +26,10 @@ class _$ExpenseView extends ExpenseView {
   @override
   final BuiltList<PayerView> payers;
   @override
+  final Date? periodFrom;
+  @override
+  final Date? periodTo;
+  @override
   final BuiltList<ShareView> shares;
   @override
   final String splitType;
@@ -49,6 +53,8 @@ class _$ExpenseView extends ExpenseView {
       this.items,
       required this.paidFromPool,
       required this.payers,
+      this.periodFrom,
+      this.periodTo,
       required this.shares,
       required this.splitType,
       required this.title,
@@ -75,6 +81,8 @@ class _$ExpenseView extends ExpenseView {
         items == other.items &&
         paidFromPool == other.paidFromPool &&
         payers == other.payers &&
+        periodFrom == other.periodFrom &&
+        periodTo == other.periodTo &&
         shares == other.shares &&
         splitType == other.splitType &&
         title == other.title &&
@@ -94,6 +102,8 @@ class _$ExpenseView extends ExpenseView {
     _$hash = $jc(_$hash, items.hashCode);
     _$hash = $jc(_$hash, paidFromPool.hashCode);
     _$hash = $jc(_$hash, payers.hashCode);
+    _$hash = $jc(_$hash, periodFrom.hashCode);
+    _$hash = $jc(_$hash, periodTo.hashCode);
     _$hash = $jc(_$hash, shares.hashCode);
     _$hash = $jc(_$hash, splitType.hashCode);
     _$hash = $jc(_$hash, title.hashCode);
@@ -115,6 +125,8 @@ class _$ExpenseView extends ExpenseView {
           ..add('items', items)
           ..add('paidFromPool', paidFromPool)
           ..add('payers', payers)
+          ..add('periodFrom', periodFrom)
+          ..add('periodTo', periodTo)
           ..add('shares', shares)
           ..add('splitType', splitType)
           ..add('title', title)
@@ -164,6 +176,14 @@ class ExpenseViewBuilder implements Builder<ExpenseView, ExpenseViewBuilder> {
       _$this._payers ??= ListBuilder<PayerView>();
   set payers(ListBuilder<PayerView>? payers) => _$this._payers = payers;
 
+  Date? _periodFrom;
+  Date? get periodFrom => _$this._periodFrom;
+  set periodFrom(Date? periodFrom) => _$this._periodFrom = periodFrom;
+
+  Date? _periodTo;
+  Date? get periodTo => _$this._periodTo;
+  set periodTo(Date? periodTo) => _$this._periodTo = periodTo;
+
   ListBuilder<ShareView>? _shares;
   ListBuilder<ShareView> get shares =>
       _$this._shares ??= ListBuilder<ShareView>();
@@ -201,6 +221,8 @@ class ExpenseViewBuilder implements Builder<ExpenseView, ExpenseViewBuilder> {
       _items = $v.items?.toBuilder();
       _paidFromPool = $v.paidFromPool;
       _payers = $v.payers.toBuilder();
+      _periodFrom = $v.periodFrom;
+      _periodTo = $v.periodTo;
       _shares = $v.shares.toBuilder();
       _splitType = $v.splitType;
       _title = $v.title;
@@ -243,6 +265,8 @@ class ExpenseViewBuilder implements Builder<ExpenseView, ExpenseViewBuilder> {
             paidFromPool: BuiltValueNullFieldError.checkNotNull(
                 paidFromPool, r'ExpenseView', 'paidFromPool'),
             payers: payers.build(),
+            periodFrom: periodFrom,
+            periodTo: periodTo,
             shares: shares.build(),
             splitType: BuiltValueNullFieldError.checkNotNull(
                 splitType, r'ExpenseView', 'splitType'),
@@ -264,6 +288,7 @@ class ExpenseViewBuilder implements Builder<ExpenseView, ExpenseViewBuilder> {
 
         _$failedField = 'payers';
         payers.build();
+
         _$failedField = 'shares';
         shares.build();
       } catch (e) {

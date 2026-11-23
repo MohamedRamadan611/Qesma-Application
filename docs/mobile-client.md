@@ -94,3 +94,18 @@ Responses:
 - Revisions written before BSA2 read back with quantity 1, unit = amount and no discount.
 
 The app compiles against the regenerated client with no UI change: the bill card hides the rate tag when `bps` is null, the edit prefill leaves the percent field empty for an amount-form charge, and the local backend fills `quantity = 1`, `unitAmountMinor = amountMinor` and `discountMinor = 0`. The editor (SA16) and the local engine/backend (SA15) add the new inputs.
+
+## BSA3 (fair-share SHARES split and trip budget) contract changes
+No new operations (STANDALONE_SPEC 19, 20.1; A185–A197; regenerated with `mobile/tool/generate_api.sh`).
+
+Requests:
+- `createExpense`, `updateExpense`, `previewExpense`: `splitType` may be `SHARES`, with `shareParticipants[]` (new `ShareParticipantInput {memberId, shareUnits, presentFrom?, presentTo?}`, units 1..100) and an optional `periodFrom`/`periodTo` (both or neither, inclusive, at most 366 days, independent of `expenseDate`). Presence needs a period and must lie inside it; each bound defaults to the period bound. `participantMemberIds`, `shares` and itemized fields are rejected on SHARES, and the SHARES fields on any other type (422 `VALIDATION_ERROR`, the message names the field, e.g. `shareParticipants[1].shareUnits`).
+- `updateGroup` (`UpdateGroupRequest`): `budgetMinor` (1..10^12), `tripStartDate`, `tripEndDate`, each optional; absent/null = no change; `clearBudget` / `clearTripStartDate` / `clearTripEndDate` = true clears; a value with its clear flag is 422; end ≥ start on the resulting state.
+- `updateMember` (`UpdateMemberRequest`): `defaultShareUnits` (1..100) and `clearDefaultShareUnits`; same permission as a rename. It only prefills the SHARES editor: no stored expense changes.
+
+Responses (all new fields nullable):
+- `ShareView.shareUnits`, `presentFrom`, `presentTo` (SHARES only; presence is normalized: both bounds with a period, null without). `ExpenseView.periodFrom/periodTo` and `ExpensePreview.periodFrom/periodTo`.
+- `MemberDto.defaultShareUnits`; `GroupDto.budgetMinor`, `tripStartDate`, `tripEndDate`. The budget **figures** (spent, per day, cost per head) are computed by the app, never sent by the server (A191).
+- Revisions written before BSA3 read back with the new fields null.
+
+The app compiles against the regenerated client with no UI change: `SplitType` gains `shares` (label only, not offered by the form), and the Edit button of a SHARES expense is disabled until the editor exists (SA19) rather than reopening it as EQUAL. The Dart engine and local backend runners skip V21–V28 (`SA18: SHARES parity`) until SA18 ports them.

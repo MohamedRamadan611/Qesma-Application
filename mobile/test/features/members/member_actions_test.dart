@@ -24,9 +24,11 @@ const _unlink = MemberAction.unlink;
 const _markLeft = MemberAction.markLeft;
 const _reactivate = MemberAction.reactivate;
 const _transfer = MemberAction.transferOwnership;
+const _defaultShare = MemberAction.defaultShare;
 
 _Case _c(String name, GroupRole viewer, String role, {bool linked = true, bool left = false, bool self = false, required Set<MemberAction> expected}) =>
-    (name: name, viewer: viewer, role: role, linked: linked, left: left, self: self, expected: expected);
+    // SA19: "Default share" is offered wherever rename is (the same permission), so the written-out sets list rename only.
+    (name: name, viewer: viewer, role: role, linked: linked, left: left, self: self, expected: expected.contains(_rename) ? {...expected, _defaultShare} : expected);
 
 void main() {
   const owner = GroupRole.owner;

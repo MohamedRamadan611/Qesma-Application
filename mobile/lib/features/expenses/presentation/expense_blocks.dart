@@ -85,9 +85,12 @@ class PayersBlock extends StatelessWidget {
 }
 
 class _PersonRow extends StatefulWidget {
-  const _PersonRow({required this.memberId, required this.name, required this.isYou, required this.amountMinor, this.subline, this.sublineSpoken, this.expandable = false});
+  const _PersonRow({required this.memberId, required this.name, required this.isYou, required this.amountMinor, this.subline, this.sublineSpoken, this.itemsLine, this.expandable = false});
 
   final String memberId;
+
+  /// "Items: Pizza ×2, Cola": the names of the items this person takes part in (details page only).
+  final String? itemsLine;
   final String name;
   final bool isYou;
   final int amountMinor;
@@ -165,12 +168,17 @@ class _PersonRowState extends State<_PersonRow> {
                 )
               else
                 header,
+              // Main line: "100 EGP items + 15 service"; the item names follow as a description.
               if (showSubline) ...[
                 const SizedBox(height: QesmaSpacing.sm),
                 Semantics(
                   label: widget.sublineSpoken ?? widget.subline,
-                  child: ExcludeSemantics(child: Text(widget.subline!, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary))),
+                  child: ExcludeSemantics(child: Text(widget.subline!, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600))),
                 ),
+              ],
+              if (widget.itemsLine != null) ...[
+                const SizedBox(height: QesmaSpacing.xs),
+                Text(widget.itemsLine!, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
               ],
             ],
           ),
@@ -367,9 +375,12 @@ class _ChargesBox extends StatelessWidget {
 /// (items, service, tax, adjustment). Used by the details page (saved numbers) and by the bill
 /// editor (the preview's numbers). Nothing is added up here; there is no "a + b + c = total" line.
 class ShareRows extends StatelessWidget {
-  const ShareRows({super.key, required this.shares, required this.nameOf, required this.yourMemberId, this.expandable = false});
+  const ShareRows({super.key, required this.shares, required this.nameOf, required this.yourMemberId, this.items, this.expandable = false});
 
   final List<ShareView> shares;
+
+  /// The bill's items; when given, each person's row lists the names of the items they take part in.
+  final List<ItemView>? items;
   final String Function(String) nameOf;
   final String? yourMemberId;
 
@@ -398,6 +409,22 @@ class ShareRows extends StatelessWidget {
     );
   }
 
+  String? _itemsLine(AppLocalizations l10n, String memberId) {
+    final mine = [
+      for (final item in items ?? const <ItemView>[])
+        if (item.assigneeMemberIds.contains(memberId)) item.quantity > 1 ? '${item.name} ×${item.quantity}' : item.name,
+    ];
+    if (mine.isEmpty) return null;
+    return l10n.expensePersonItemsList(mine.join(l10n.expenseListSeparator));
+  }
+
+  /// SA19: "2 shares · Days present: 2026-11-12 – 2026-11-30", exactly what the server stored for a shares split.
+  String? _sharesLine(AppLocalizations l10n, ShareView share) {
+    final units = share.shareUnits;
+    if (units == null) return null;
+    return [unitsText(l10n, units), ?presenceLineOf(l10n, share)].join(' · ');
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -412,6 +439,7 @@ class ShareRows extends StatelessWidget {
             amountMinor: share.owedMinor,
             subline: _subline(l10n, share)?.shown,
             sublineSpoken: _subline(l10n, share)?.said,
+            itemsLine: _itemsLine(l10n, share.memberId) ?? _sharesLine(l10n, share),
             expandable: expandable,
           ),
           const SizedBox(height: QesmaSpacing.sm),
@@ -437,7 +465,7 @@ class BreakdownBlock extends StatelessWidget {
       title: l10n.expenseBreakdownTitle,
       icon: Icons.groups_outlined,
       count: countPhrase(shares.length, one: l10n.expenseBreakdownCountOne, two: l10n.expenseBreakdownCountTwo, few: l10n.expenseBreakdownCount, many: l10n.expenseBreakdownCountMany),
-      child: ShareRows(shares: shares, nameOf: nameOf, yourMemberId: yourMemberId),
+      child: ShareRows(shares: shares, nameOf: nameOf, yourMemberId: yourMemberId, items: expense.items?.toList()),
     );
   }
 }

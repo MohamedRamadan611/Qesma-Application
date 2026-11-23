@@ -1339,6 +1339,17 @@ class Members extends Table with TableInfo<Members, MemberRow> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
+  static const VerificationMeta _defaultShareUnitsMeta = const VerificationMeta(
+    'defaultShareUnits',
+  );
+  late final GeneratedColumn<int> defaultShareUnits = GeneratedColumn<int>(
+    'default_share_units',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'CHECK (default_share_units IS NULL OR default_share_units BETWEEN 1 AND 100)',
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1352,6 +1363,7 @@ class Members extends Table with TableInfo<Members, MemberRow> {
     joinedAt,
     leftAt,
     createdAt,
+    defaultShareUnits,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1443,6 +1455,15 @@ class Members extends Table with TableInfo<Members, MemberRow> {
     } else if (isInserting) {
       context.missing(_createdAtMeta);
     }
+    if (data.containsKey('default_share_units')) {
+      context.handle(
+        _defaultShareUnitsMeta,
+        defaultShareUnits.isAcceptableOrUnknown(
+          data['default_share_units']!,
+          _defaultShareUnitsMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1501,6 +1522,10 @@ class Members extends Table with TableInfo<Members, MemberRow> {
         DriftSqlType.int,
         data['${effectivePrefix}created_at'],
       )!,
+      defaultShareUnits: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}default_share_units'],
+      ),
     );
   }
 
@@ -1535,6 +1560,9 @@ class MemberRow extends DataClass implements Insertable<MemberRow> {
   final int? joinedAt;
   final int? leftAt;
   final int createdAt;
+
+  /// Schema 12 (A188, Java V23): the default weight, a SHARES form prefill only.
+  final int? defaultShareUnits;
   const MemberRow({
     required this.id,
     required this.groupId,
@@ -1547,6 +1575,7 @@ class MemberRow extends DataClass implements Insertable<MemberRow> {
     this.joinedAt,
     this.leftAt,
     required this.createdAt,
+    this.defaultShareUnits,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1568,6 +1597,9 @@ class MemberRow extends DataClass implements Insertable<MemberRow> {
       map['left_at'] = Variable<int>(leftAt);
     }
     map['created_at'] = Variable<int>(createdAt);
+    if (!nullToAbsent || defaultShareUnits != null) {
+      map['default_share_units'] = Variable<int>(defaultShareUnits);
+    }
     return map;
   }
 
@@ -1590,6 +1622,9 @@ class MemberRow extends DataClass implements Insertable<MemberRow> {
           ? const Value.absent()
           : Value(leftAt),
       createdAt: Value(createdAt),
+      defaultShareUnits: defaultShareUnits == null && nullToAbsent
+          ? const Value.absent()
+          : Value(defaultShareUnits),
     );
   }
 
@@ -1610,6 +1645,7 @@ class MemberRow extends DataClass implements Insertable<MemberRow> {
       joinedAt: serializer.fromJson<int?>(json['joined_at']),
       leftAt: serializer.fromJson<int?>(json['left_at']),
       createdAt: serializer.fromJson<int>(json['created_at']),
+      defaultShareUnits: serializer.fromJson<int?>(json['default_share_units']),
     );
   }
   @override
@@ -1627,6 +1663,7 @@ class MemberRow extends DataClass implements Insertable<MemberRow> {
       'joined_at': serializer.toJson<int?>(joinedAt),
       'left_at': serializer.toJson<int?>(leftAt),
       'created_at': serializer.toJson<int>(createdAt),
+      'default_share_units': serializer.toJson<int?>(defaultShareUnits),
     };
   }
 
@@ -1642,6 +1679,7 @@ class MemberRow extends DataClass implements Insertable<MemberRow> {
     Value<int?> joinedAt = const Value.absent(),
     Value<int?> leftAt = const Value.absent(),
     int? createdAt,
+    Value<int?> defaultShareUnits = const Value.absent(),
   }) => MemberRow(
     id: id ?? this.id,
     groupId: groupId ?? this.groupId,
@@ -1654,6 +1692,9 @@ class MemberRow extends DataClass implements Insertable<MemberRow> {
     joinedAt: joinedAt.present ? joinedAt.value : this.joinedAt,
     leftAt: leftAt.present ? leftAt.value : this.leftAt,
     createdAt: createdAt ?? this.createdAt,
+    defaultShareUnits: defaultShareUnits.present
+        ? defaultShareUnits.value
+        : this.defaultShareUnits,
   );
   MemberRow copyWithCompanion(MembersCompanion data) {
     return MemberRow(
@@ -1670,6 +1711,9 @@ class MemberRow extends DataClass implements Insertable<MemberRow> {
       joinedAt: data.joinedAt.present ? data.joinedAt.value : this.joinedAt,
       leftAt: data.leftAt.present ? data.leftAt.value : this.leftAt,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      defaultShareUnits: data.defaultShareUnits.present
+          ? data.defaultShareUnits.value
+          : this.defaultShareUnits,
     );
   }
 
@@ -1686,7 +1730,8 @@ class MemberRow extends DataClass implements Insertable<MemberRow> {
           ..write('status: $status, ')
           ..write('joinedAt: $joinedAt, ')
           ..write('leftAt: $leftAt, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('defaultShareUnits: $defaultShareUnits')
           ..write(')'))
         .toString();
   }
@@ -1704,6 +1749,7 @@ class MemberRow extends DataClass implements Insertable<MemberRow> {
     joinedAt,
     leftAt,
     createdAt,
+    defaultShareUnits,
   );
   @override
   bool operator ==(Object other) =>
@@ -1719,7 +1765,8 @@ class MemberRow extends DataClass implements Insertable<MemberRow> {
           other.status == this.status &&
           other.joinedAt == this.joinedAt &&
           other.leftAt == this.leftAt &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.defaultShareUnits == this.defaultShareUnits);
 }
 
 class MembersCompanion extends UpdateCompanion<MemberRow> {
@@ -1734,6 +1781,7 @@ class MembersCompanion extends UpdateCompanion<MemberRow> {
   final Value<int?> joinedAt;
   final Value<int?> leftAt;
   final Value<int> createdAt;
+  final Value<int?> defaultShareUnits;
   final Value<int> rowid;
   const MembersCompanion({
     this.id = const Value.absent(),
@@ -1747,6 +1795,7 @@ class MembersCompanion extends UpdateCompanion<MemberRow> {
     this.joinedAt = const Value.absent(),
     this.leftAt = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.defaultShareUnits = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   MembersCompanion.insert({
@@ -1761,6 +1810,7 @@ class MembersCompanion extends UpdateCompanion<MemberRow> {
     this.joinedAt = const Value.absent(),
     this.leftAt = const Value.absent(),
     required int createdAt,
+    this.defaultShareUnits = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        groupId = Value(groupId),
@@ -1780,6 +1830,7 @@ class MembersCompanion extends UpdateCompanion<MemberRow> {
     Expression<int>? joinedAt,
     Expression<int>? leftAt,
     Expression<int>? createdAt,
+    Expression<int>? defaultShareUnits,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1794,6 +1845,7 @@ class MembersCompanion extends UpdateCompanion<MemberRow> {
       if (joinedAt != null) 'joined_at': joinedAt,
       if (leftAt != null) 'left_at': leftAt,
       if (createdAt != null) 'created_at': createdAt,
+      if (defaultShareUnits != null) 'default_share_units': defaultShareUnits,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1810,6 +1862,7 @@ class MembersCompanion extends UpdateCompanion<MemberRow> {
     Value<int?>? joinedAt,
     Value<int?>? leftAt,
     Value<int>? createdAt,
+    Value<int?>? defaultShareUnits,
     Value<int>? rowid,
   }) {
     return MembersCompanion(
@@ -1824,6 +1877,7 @@ class MembersCompanion extends UpdateCompanion<MemberRow> {
       joinedAt: joinedAt ?? this.joinedAt,
       leftAt: leftAt ?? this.leftAt,
       createdAt: createdAt ?? this.createdAt,
+      defaultShareUnits: defaultShareUnits ?? this.defaultShareUnits,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1864,6 +1918,9 @@ class MembersCompanion extends UpdateCompanion<MemberRow> {
     if (createdAt.present) {
       map['created_at'] = Variable<int>(createdAt.value);
     }
+    if (defaultShareUnits.present) {
+      map['default_share_units'] = Variable<int>(defaultShareUnits.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1884,6 +1941,7 @@ class MembersCompanion extends UpdateCompanion<MemberRow> {
           ..write('joinedAt: $joinedAt, ')
           ..write('leftAt: $leftAt, ')
           ..write('createdAt: $createdAt, ')
+          ..write('defaultShareUnits: $defaultShareUnits, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2014,6 +2072,39 @@ class ExpenseGroups extends Table with TableInfo<ExpenseGroups, GroupRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
+  static const VerificationMeta _budgetMinorMeta = const VerificationMeta(
+    'budgetMinor',
+  );
+  late final GeneratedColumn<int> budgetMinor = GeneratedColumn<int>(
+    'budget_minor',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'CHECK (budget_minor IS NULL OR budget_minor BETWEEN 1 AND 1000000000000)',
+  );
+  static const VerificationMeta _tripStartDateMeta = const VerificationMeta(
+    'tripStartDate',
+  );
+  late final GeneratedColumn<String> tripStartDate = GeneratedColumn<String>(
+    'trip_start_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'CHECK (trip_start_date IS NULL OR date(trip_start_date) IS trip_start_date)',
+  );
+  static const VerificationMeta _tripEndDateMeta = const VerificationMeta(
+    'tripEndDate',
+  );
+  late final GeneratedColumn<String> tripEndDate = GeneratedColumn<String>(
+    'trip_end_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'CHECK (trip_end_date IS NULL OR(date(trip_end_date) IS trip_end_date AND(trip_start_date IS NULL OR trip_end_date >= trip_start_date)))',
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2027,6 +2118,9 @@ class ExpenseGroups extends Table with TableInfo<ExpenseGroups, GroupRow> {
     memberSeq,
     treasurerMemberId,
     archivedAt,
+    budgetMinor,
+    tripStartDate,
+    tripEndDate,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2124,6 +2218,33 @@ class ExpenseGroups extends Table with TableInfo<ExpenseGroups, GroupRow> {
         archivedAt.isAcceptableOrUnknown(data['archived_at']!, _archivedAtMeta),
       );
     }
+    if (data.containsKey('budget_minor')) {
+      context.handle(
+        _budgetMinorMeta,
+        budgetMinor.isAcceptableOrUnknown(
+          data['budget_minor']!,
+          _budgetMinorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('trip_start_date')) {
+      context.handle(
+        _tripStartDateMeta,
+        tripStartDate.isAcceptableOrUnknown(
+          data['trip_start_date']!,
+          _tripStartDateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('trip_end_date')) {
+      context.handle(
+        _tripEndDateMeta,
+        tripEndDate.isAcceptableOrUnknown(
+          data['trip_end_date']!,
+          _tripEndDateMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -2177,6 +2298,18 @@ class ExpenseGroups extends Table with TableInfo<ExpenseGroups, GroupRow> {
         DriftSqlType.int,
         data['${effectivePrefix}archived_at'],
       ),
+      budgetMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}budget_minor'],
+      ),
+      tripStartDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}trip_start_date'],
+      ),
+      tripEndDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}trip_end_date'],
+      ),
     );
   }
 
@@ -2209,6 +2342,12 @@ class GroupRow extends DataClass implements Insertable<GroupRow> {
   /// Schema 11 (A184): set when the group is archived (UTC epoch ms); NULL = active. An archived group is hidden
   /// from the groups list and is deleted for good after `local_meta.archive_retention_days`.
   final int? archivedAt;
+
+  /// Schema 12 (A190, A193, Java V23): trip budget settings, each optional and clearable. Column CHECKs (added with
+  /// ADD COLUMN; the table is not rebuilt): budget 1..10^12, real dates, end >= start when both are set.
+  final int? budgetMinor;
+  final String? tripStartDate;
+  final String? tripEndDate;
   const GroupRow({
     required this.id,
     required this.ownerUserId,
@@ -2221,6 +2360,9 @@ class GroupRow extends DataClass implements Insertable<GroupRow> {
     required this.memberSeq,
     this.treasurerMemberId,
     this.archivedAt,
+    this.budgetMinor,
+    this.tripStartDate,
+    this.tripEndDate,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2239,6 +2381,15 @@ class GroupRow extends DataClass implements Insertable<GroupRow> {
     }
     if (!nullToAbsent || archivedAt != null) {
       map['archived_at'] = Variable<int>(archivedAt);
+    }
+    if (!nullToAbsent || budgetMinor != null) {
+      map['budget_minor'] = Variable<int>(budgetMinor);
+    }
+    if (!nullToAbsent || tripStartDate != null) {
+      map['trip_start_date'] = Variable<String>(tripStartDate);
+    }
+    if (!nullToAbsent || tripEndDate != null) {
+      map['trip_end_date'] = Variable<String>(tripEndDate);
     }
     return map;
   }
@@ -2260,6 +2411,15 @@ class GroupRow extends DataClass implements Insertable<GroupRow> {
       archivedAt: archivedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(archivedAt),
+      budgetMinor: budgetMinor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(budgetMinor),
+      tripStartDate: tripStartDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tripStartDate),
+      tripEndDate: tripEndDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tripEndDate),
     );
   }
 
@@ -2282,6 +2442,9 @@ class GroupRow extends DataClass implements Insertable<GroupRow> {
         json['treasurer_member_id'],
       ),
       archivedAt: serializer.fromJson<int?>(json['archived_at']),
+      budgetMinor: serializer.fromJson<int?>(json['budget_minor']),
+      tripStartDate: serializer.fromJson<String?>(json['trip_start_date']),
+      tripEndDate: serializer.fromJson<String?>(json['trip_end_date']),
     );
   }
   @override
@@ -2299,6 +2462,9 @@ class GroupRow extends DataClass implements Insertable<GroupRow> {
       'member_seq': serializer.toJson<int>(memberSeq),
       'treasurer_member_id': serializer.toJson<String?>(treasurerMemberId),
       'archived_at': serializer.toJson<int?>(archivedAt),
+      'budget_minor': serializer.toJson<int?>(budgetMinor),
+      'trip_start_date': serializer.toJson<String?>(tripStartDate),
+      'trip_end_date': serializer.toJson<String?>(tripEndDate),
     };
   }
 
@@ -2314,6 +2480,9 @@ class GroupRow extends DataClass implements Insertable<GroupRow> {
     int? memberSeq,
     Value<String?> treasurerMemberId = const Value.absent(),
     Value<int?> archivedAt = const Value.absent(),
+    Value<int?> budgetMinor = const Value.absent(),
+    Value<String?> tripStartDate = const Value.absent(),
+    Value<String?> tripEndDate = const Value.absent(),
   }) => GroupRow(
     id: id ?? this.id,
     ownerUserId: ownerUserId ?? this.ownerUserId,
@@ -2328,6 +2497,11 @@ class GroupRow extends DataClass implements Insertable<GroupRow> {
         ? treasurerMemberId.value
         : this.treasurerMemberId,
     archivedAt: archivedAt.present ? archivedAt.value : this.archivedAt,
+    budgetMinor: budgetMinor.present ? budgetMinor.value : this.budgetMinor,
+    tripStartDate: tripStartDate.present
+        ? tripStartDate.value
+        : this.tripStartDate,
+    tripEndDate: tripEndDate.present ? tripEndDate.value : this.tripEndDate,
   );
   GroupRow copyWithCompanion(ExpenseGroupsCompanion data) {
     return GroupRow(
@@ -2350,6 +2524,15 @@ class GroupRow extends DataClass implements Insertable<GroupRow> {
       archivedAt: data.archivedAt.present
           ? data.archivedAt.value
           : this.archivedAt,
+      budgetMinor: data.budgetMinor.present
+          ? data.budgetMinor.value
+          : this.budgetMinor,
+      tripStartDate: data.tripStartDate.present
+          ? data.tripStartDate.value
+          : this.tripStartDate,
+      tripEndDate: data.tripEndDate.present
+          ? data.tripEndDate.value
+          : this.tripEndDate,
     );
   }
 
@@ -2366,7 +2549,10 @@ class GroupRow extends DataClass implements Insertable<GroupRow> {
           ..write('version: $version, ')
           ..write('memberSeq: $memberSeq, ')
           ..write('treasurerMemberId: $treasurerMemberId, ')
-          ..write('archivedAt: $archivedAt')
+          ..write('archivedAt: $archivedAt, ')
+          ..write('budgetMinor: $budgetMinor, ')
+          ..write('tripStartDate: $tripStartDate, ')
+          ..write('tripEndDate: $tripEndDate')
           ..write(')'))
         .toString();
   }
@@ -2384,6 +2570,9 @@ class GroupRow extends DataClass implements Insertable<GroupRow> {
     memberSeq,
     treasurerMemberId,
     archivedAt,
+    budgetMinor,
+    tripStartDate,
+    tripEndDate,
   );
   @override
   bool operator ==(Object other) =>
@@ -2399,7 +2588,10 @@ class GroupRow extends DataClass implements Insertable<GroupRow> {
           other.version == this.version &&
           other.memberSeq == this.memberSeq &&
           other.treasurerMemberId == this.treasurerMemberId &&
-          other.archivedAt == this.archivedAt);
+          other.archivedAt == this.archivedAt &&
+          other.budgetMinor == this.budgetMinor &&
+          other.tripStartDate == this.tripStartDate &&
+          other.tripEndDate == this.tripEndDate);
 }
 
 class ExpenseGroupsCompanion extends UpdateCompanion<GroupRow> {
@@ -2414,6 +2606,9 @@ class ExpenseGroupsCompanion extends UpdateCompanion<GroupRow> {
   final Value<int> memberSeq;
   final Value<String?> treasurerMemberId;
   final Value<int?> archivedAt;
+  final Value<int?> budgetMinor;
+  final Value<String?> tripStartDate;
+  final Value<String?> tripEndDate;
   final Value<int> rowid;
   const ExpenseGroupsCompanion({
     this.id = const Value.absent(),
@@ -2427,6 +2622,9 @@ class ExpenseGroupsCompanion extends UpdateCompanion<GroupRow> {
     this.memberSeq = const Value.absent(),
     this.treasurerMemberId = const Value.absent(),
     this.archivedAt = const Value.absent(),
+    this.budgetMinor = const Value.absent(),
+    this.tripStartDate = const Value.absent(),
+    this.tripEndDate = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ExpenseGroupsCompanion.insert({
@@ -2441,6 +2639,9 @@ class ExpenseGroupsCompanion extends UpdateCompanion<GroupRow> {
     this.memberSeq = const Value.absent(),
     this.treasurerMemberId = const Value.absent(),
     this.archivedAt = const Value.absent(),
+    this.budgetMinor = const Value.absent(),
+    this.tripStartDate = const Value.absent(),
+    this.tripEndDate = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        ownerUserId = Value(ownerUserId),
@@ -2460,6 +2661,9 @@ class ExpenseGroupsCompanion extends UpdateCompanion<GroupRow> {
     Expression<int>? memberSeq,
     Expression<String>? treasurerMemberId,
     Expression<int>? archivedAt,
+    Expression<int>? budgetMinor,
+    Expression<String>? tripStartDate,
+    Expression<String>? tripEndDate,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2474,6 +2678,9 @@ class ExpenseGroupsCompanion extends UpdateCompanion<GroupRow> {
       if (memberSeq != null) 'member_seq': memberSeq,
       if (treasurerMemberId != null) 'treasurer_member_id': treasurerMemberId,
       if (archivedAt != null) 'archived_at': archivedAt,
+      if (budgetMinor != null) 'budget_minor': budgetMinor,
+      if (tripStartDate != null) 'trip_start_date': tripStartDate,
+      if (tripEndDate != null) 'trip_end_date': tripEndDate,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2490,6 +2697,9 @@ class ExpenseGroupsCompanion extends UpdateCompanion<GroupRow> {
     Value<int>? memberSeq,
     Value<String?>? treasurerMemberId,
     Value<int?>? archivedAt,
+    Value<int?>? budgetMinor,
+    Value<String?>? tripStartDate,
+    Value<String?>? tripEndDate,
     Value<int>? rowid,
   }) {
     return ExpenseGroupsCompanion(
@@ -2504,6 +2714,9 @@ class ExpenseGroupsCompanion extends UpdateCompanion<GroupRow> {
       memberSeq: memberSeq ?? this.memberSeq,
       treasurerMemberId: treasurerMemberId ?? this.treasurerMemberId,
       archivedAt: archivedAt ?? this.archivedAt,
+      budgetMinor: budgetMinor ?? this.budgetMinor,
+      tripStartDate: tripStartDate ?? this.tripStartDate,
+      tripEndDate: tripEndDate ?? this.tripEndDate,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2544,6 +2757,15 @@ class ExpenseGroupsCompanion extends UpdateCompanion<GroupRow> {
     if (archivedAt.present) {
       map['archived_at'] = Variable<int>(archivedAt.value);
     }
+    if (budgetMinor.present) {
+      map['budget_minor'] = Variable<int>(budgetMinor.value);
+    }
+    if (tripStartDate.present) {
+      map['trip_start_date'] = Variable<String>(tripStartDate.value);
+    }
+    if (tripEndDate.present) {
+      map['trip_end_date'] = Variable<String>(tripEndDate.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2564,6 +2786,9 @@ class ExpenseGroupsCompanion extends UpdateCompanion<GroupRow> {
           ..write('memberSeq: $memberSeq, ')
           ..write('treasurerMemberId: $treasurerMemberId, ')
           ..write('archivedAt: $archivedAt, ')
+          ..write('budgetMinor: $budgetMinor, ')
+          ..write('tripStartDate: $tripStartDate, ')
+          ..write('tripEndDate: $tripEndDate, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2614,8 +2839,7 @@ class Expenses extends Table with TableInfo<Expenses, ExpenseRow> {
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
-    $customConstraints:
-        'NOT NULL CHECK (split_type IN (\'EQUAL\', \'EXACT\', \'ITEMIZED\'))',
+    $customConstraints: 'NOT NULL CHECK (split_type IN (\'EQUAL\', \'EXACT\', \'ITEMIZED\', \'SHARES\'))',
   );
   static const VerificationMeta _totalMinorMeta = const VerificationMeta(
     'totalMinor',
@@ -2862,6 +3086,30 @@ class Expenses extends Table with TableInfo<Expenses, ExpenseRow> {
     requiredDuringInsert: false,
     $customConstraints: 'CHECK (delivery_minor IS NULL OR delivery_minor BETWEEN 0 AND 1000000000000)',
   );
+  static const VerificationMeta _periodFromMeta = const VerificationMeta(
+    'periodFrom',
+  );
+  late final GeneratedColumn<String> periodFrom = GeneratedColumn<String>(
+    'period_from',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'CHECK (period_from IS NULL OR date(period_from) IS period_from)',
+  );
+  static const VerificationMeta _periodToMeta = const VerificationMeta(
+    'periodTo',
+  );
+  late final GeneratedColumn<String> periodTo = GeneratedColumn<String>(
+    'period_to',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'CHECK (period_to IS NULL OR date(period_to) IS period_to)',
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2890,6 +3138,8 @@ class Expenses extends Table with TableInfo<Expenses, ExpenseRow> {
     serviceAmountMinor,
     taxAmountMinor,
     deliveryMinor,
+    periodFrom,
+    periodTo,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3110,6 +3360,18 @@ class Expenses extends Table with TableInfo<Expenses, ExpenseRow> {
         ),
       );
     }
+    if (data.containsKey('period_from')) {
+      context.handle(
+        _periodFromMeta,
+        periodFrom.isAcceptableOrUnknown(data['period_from']!, _periodFromMeta),
+      );
+    }
+    if (data.containsKey('period_to')) {
+      context.handle(
+        _periodToMeta,
+        periodTo.isAcceptableOrUnknown(data['period_to']!, _periodToMeta),
+      );
+    }
     return context;
   }
 
@@ -3223,6 +3485,14 @@ class Expenses extends Table with TableInfo<Expenses, ExpenseRow> {
         DriftSqlType.int,
         data['${effectivePrefix}delivery_minor'],
       ),
+      periodFrom: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}period_from'],
+      ),
+      periodTo: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}period_to'],
+      ),
     );
   }
 
@@ -3235,6 +3505,7 @@ class Expenses extends Table with TableInfo<Expenses, ExpenseRow> {
   bool get isStrict => true;
   @override
   List<String> get customConstraints => const [
+    'CONSTRAINT ck_expenses_period CHECK((period_from IS NULL AND period_to IS NULL)OR(split_type = \'SHARES\' AND period_from IS NOT NULL AND period_to IS NOT NULL AND period_to >= period_from AND julianday(period_to) - julianday(period_from) <= 365))',
     'CONSTRAINT ck_expenses_charge_one_form CHECK(NOT(discount_bps IS NOT NULL AND discount_amount_minor IS NOT NULL)AND NOT(service_bps IS NOT NULL AND service_amount_minor IS NOT NULL)AND NOT(tax_bps IS NOT NULL AND tax_amount_minor IS NOT NULL))',
     'CONSTRAINT ck_expenses_itemized_columns CHECK(split_type = \'ITEMIZED\' OR(subtotal_minor IS NULL AND service_bps IS NULL AND service_minor IS NULL AND tax_bps IS NULL AND tax_minor IS NULL AND tax_base IS NULL AND adjustment_minor IS NULL AND discount_bps IS NULL AND discount_amount_minor IS NULL AND discount_minor IS NULL AND service_amount_minor IS NULL AND tax_amount_minor IS NULL AND delivery_minor IS NULL))',
     'CONSTRAINT ck_expenses_itemized_charges CHECK(split_type <> \'ITEMIZED\' OR(subtotal_minor IS NOT NULL AND subtotal_minor > 0 AND discount_minor IS NOT NULL AND discount_minor >= 0 AND discount_minor < subtotal_minor AND service_minor IS NOT NULL AND service_minor >= 0 AND tax_minor IS NOT NULL AND tax_minor >= 0 AND delivery_minor IS NOT NULL AND delivery_minor >= 0 AND adjustment_minor IS NOT NULL AND total_minor = subtotal_minor - discount_minor + service_minor + tax_minor + delivery_minor + adjustment_minor AND((discount_bps IS NOT NULL OR discount_amount_minor IS NOT NULL)=(discount_minor > 0))AND(discount_amount_minor IS NULL OR discount_minor = discount_amount_minor)AND(service_bps IS NOT NULL OR service_amount_minor IS NOT NULL OR service_minor = 0)AND(service_amount_minor IS NULL OR service_minor = service_amount_minor)AND(tax_bps IS NOT NULL OR tax_amount_minor IS NOT NULL OR tax_minor = 0)AND(tax_amount_minor IS NULL OR tax_minor = tax_amount_minor)AND((tax_bps IS NULL AND tax_amount_minor IS NULL)=(tax_base IS NULL))))',
@@ -3278,6 +3549,10 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
   /// Schema 9 (Java V22, A180): the delivery amount (request and computed total are the same number). NULL on
   /// EQUAL/EXACT, 0 or more on ITEMIZED.
   final int? deliveryMinor;
+
+  /// Schema 12 (A186, Java V23): the optional inclusive period of a SHARES expense (independent of expense_date).
+  final String? periodFrom;
+  final String? periodTo;
   const ExpenseRow({
     required this.id,
     required this.groupId,
@@ -3305,6 +3580,8 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
     this.serviceAmountMinor,
     this.taxAmountMinor,
     this.deliveryMinor,
+    this.periodFrom,
+    this.periodTo,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3362,6 +3639,12 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
     }
     if (!nullToAbsent || deliveryMinor != null) {
       map['delivery_minor'] = Variable<int>(deliveryMinor);
+    }
+    if (!nullToAbsent || periodFrom != null) {
+      map['period_from'] = Variable<String>(periodFrom);
+    }
+    if (!nullToAbsent || periodTo != null) {
+      map['period_to'] = Variable<String>(periodTo);
     }
     return map;
   }
@@ -3422,6 +3705,12 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
       deliveryMinor: deliveryMinor == null && nullToAbsent
           ? const Value.absent()
           : Value(deliveryMinor),
+      periodFrom: periodFrom == null && nullToAbsent
+          ? const Value.absent()
+          : Value(periodFrom),
+      periodTo: periodTo == null && nullToAbsent
+          ? const Value.absent()
+          : Value(periodTo),
     );
   }
 
@@ -3461,6 +3750,8 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
       ),
       taxAmountMinor: serializer.fromJson<int?>(json['tax_amount_minor']),
       deliveryMinor: serializer.fromJson<int?>(json['delivery_minor']),
+      periodFrom: serializer.fromJson<String?>(json['period_from']),
+      periodTo: serializer.fromJson<String?>(json['period_to']),
     );
   }
   @override
@@ -3493,6 +3784,8 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
       'service_amount_minor': serializer.toJson<int?>(serviceAmountMinor),
       'tax_amount_minor': serializer.toJson<int?>(taxAmountMinor),
       'delivery_minor': serializer.toJson<int?>(deliveryMinor),
+      'period_from': serializer.toJson<String?>(periodFrom),
+      'period_to': serializer.toJson<String?>(periodTo),
     };
   }
 
@@ -3523,6 +3816,8 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
     Value<int?> serviceAmountMinor = const Value.absent(),
     Value<int?> taxAmountMinor = const Value.absent(),
     Value<int?> deliveryMinor = const Value.absent(),
+    Value<String?> periodFrom = const Value.absent(),
+    Value<String?> periodTo = const Value.absent(),
   }) => ExpenseRow(
     id: id ?? this.id,
     groupId: groupId ?? this.groupId,
@@ -3564,6 +3859,8 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
     deliveryMinor: deliveryMinor.present
         ? deliveryMinor.value
         : this.deliveryMinor,
+    periodFrom: periodFrom.present ? periodFrom.value : this.periodFrom,
+    periodTo: periodTo.present ? periodTo.value : this.periodTo,
   );
   ExpenseRow copyWithCompanion(ExpensesCompanion data) {
     return ExpenseRow(
@@ -3621,6 +3918,10 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
       deliveryMinor: data.deliveryMinor.present
           ? data.deliveryMinor.value
           : this.deliveryMinor,
+      periodFrom: data.periodFrom.present
+          ? data.periodFrom.value
+          : this.periodFrom,
+      periodTo: data.periodTo.present ? data.periodTo.value : this.periodTo,
     );
   }
 
@@ -3652,7 +3953,9 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
           ..write('discountMinor: $discountMinor, ')
           ..write('serviceAmountMinor: $serviceAmountMinor, ')
           ..write('taxAmountMinor: $taxAmountMinor, ')
-          ..write('deliveryMinor: $deliveryMinor')
+          ..write('deliveryMinor: $deliveryMinor, ')
+          ..write('periodFrom: $periodFrom, ')
+          ..write('periodTo: $periodTo')
           ..write(')'))
         .toString();
   }
@@ -3685,6 +3988,8 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
     serviceAmountMinor,
     taxAmountMinor,
     deliveryMinor,
+    periodFrom,
+    periodTo,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -3715,7 +4020,9 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
           other.discountMinor == this.discountMinor &&
           other.serviceAmountMinor == this.serviceAmountMinor &&
           other.taxAmountMinor == this.taxAmountMinor &&
-          other.deliveryMinor == this.deliveryMinor);
+          other.deliveryMinor == this.deliveryMinor &&
+          other.periodFrom == this.periodFrom &&
+          other.periodTo == this.periodTo);
 }
 
 class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
@@ -3745,6 +4052,8 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
   final Value<int?> serviceAmountMinor;
   final Value<int?> taxAmountMinor;
   final Value<int?> deliveryMinor;
+  final Value<String?> periodFrom;
+  final Value<String?> periodTo;
   final Value<int> rowid;
   const ExpensesCompanion({
     this.id = const Value.absent(),
@@ -3773,6 +4082,8 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     this.serviceAmountMinor = const Value.absent(),
     this.taxAmountMinor = const Value.absent(),
     this.deliveryMinor = const Value.absent(),
+    this.periodFrom = const Value.absent(),
+    this.periodTo = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ExpensesCompanion.insert({
@@ -3802,6 +4113,8 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     this.serviceAmountMinor = const Value.absent(),
     this.taxAmountMinor = const Value.absent(),
     this.deliveryMinor = const Value.absent(),
+    this.periodFrom = const Value.absent(),
+    this.periodTo = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        groupId = Value(groupId),
@@ -3839,6 +4152,8 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     Expression<int>? serviceAmountMinor,
     Expression<int>? taxAmountMinor,
     Expression<int>? deliveryMinor,
+    Expression<String>? periodFrom,
+    Expression<String>? periodTo,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -3870,6 +4185,8 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
         'service_amount_minor': serviceAmountMinor,
       if (taxAmountMinor != null) 'tax_amount_minor': taxAmountMinor,
       if (deliveryMinor != null) 'delivery_minor': deliveryMinor,
+      if (periodFrom != null) 'period_from': periodFrom,
+      if (periodTo != null) 'period_to': periodTo,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3901,6 +4218,8 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     Value<int?>? serviceAmountMinor,
     Value<int?>? taxAmountMinor,
     Value<int?>? deliveryMinor,
+    Value<String?>? periodFrom,
+    Value<String?>? periodTo,
     Value<int>? rowid,
   }) {
     return ExpensesCompanion(
@@ -3930,6 +4249,8 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
       serviceAmountMinor: serviceAmountMinor ?? this.serviceAmountMinor,
       taxAmountMinor: taxAmountMinor ?? this.taxAmountMinor,
       deliveryMinor: deliveryMinor ?? this.deliveryMinor,
+      periodFrom: periodFrom ?? this.periodFrom,
+      periodTo: periodTo ?? this.periodTo,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4015,6 +4336,12 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     if (deliveryMinor.present) {
       map['delivery_minor'] = Variable<int>(deliveryMinor.value);
     }
+    if (periodFrom.present) {
+      map['period_from'] = Variable<String>(periodFrom.value);
+    }
+    if (periodTo.present) {
+      map['period_to'] = Variable<String>(periodTo.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -4050,6 +4377,8 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
           ..write('serviceAmountMinor: $serviceAmountMinor, ')
           ..write('taxAmountMinor: $taxAmountMinor, ')
           ..write('deliveryMinor: $deliveryMinor, ')
+          ..write('periodFrom: $periodFrom, ')
+          ..write('periodTo: $periodTo, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4441,6 +4770,42 @@ class ExpenseSplits extends Table with TableInfo<ExpenseSplits, SplitRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
+  static const VerificationMeta _shareUnitsMeta = const VerificationMeta(
+    'shareUnits',
+  );
+  late final GeneratedColumn<int> shareUnits = GeneratedColumn<int>(
+    'share_units',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'CHECK (share_units IS NULL OR share_units BETWEEN 1 AND 100)',
+  );
+  static const VerificationMeta _presentFromMeta = const VerificationMeta(
+    'presentFrom',
+  );
+  late final GeneratedColumn<String> presentFrom = GeneratedColumn<String>(
+    'present_from',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'CHECK (present_from IS NULL OR date(present_from) IS present_from)',
+  );
+  static const VerificationMeta _presentToMeta = const VerificationMeta(
+    'presentTo',
+  );
+  late final GeneratedColumn<String> presentTo = GeneratedColumn<String>(
+    'present_to',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'CHECK (present_to IS NULL OR date(present_to) IS present_to)',
+  );
   @override
   List<GeneratedColumn> get $columns => [
     expenseId,
@@ -4452,6 +4817,9 @@ class ExpenseSplits extends Table with TableInfo<ExpenseSplits, SplitRow> {
     adjustmentMinor,
     discountMinor,
     deliveryMinor,
+    shareUnits,
+    presentFrom,
+    presentTo,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4537,6 +4905,27 @@ class ExpenseSplits extends Table with TableInfo<ExpenseSplits, SplitRow> {
         ),
       );
     }
+    if (data.containsKey('share_units')) {
+      context.handle(
+        _shareUnitsMeta,
+        shareUnits.isAcceptableOrUnknown(data['share_units']!, _shareUnitsMeta),
+      );
+    }
+    if (data.containsKey('present_from')) {
+      context.handle(
+        _presentFromMeta,
+        presentFrom.isAcceptableOrUnknown(
+          data['present_from']!,
+          _presentFromMeta,
+        ),
+      );
+    }
+    if (data.containsKey('present_to')) {
+      context.handle(
+        _presentToMeta,
+        presentTo.isAcceptableOrUnknown(data['present_to']!, _presentToMeta),
+      );
+    }
     return context;
   }
 
@@ -4582,6 +4971,18 @@ class ExpenseSplits extends Table with TableInfo<ExpenseSplits, SplitRow> {
         DriftSqlType.int,
         data['${effectivePrefix}delivery_minor'],
       ),
+      shareUnits: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}share_units'],
+      ),
+      presentFrom: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}present_from'],
+      ),
+      presentTo: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}present_to'],
+      ),
     );
   }
 
@@ -4595,6 +4996,8 @@ class ExpenseSplits extends Table with TableInfo<ExpenseSplits, SplitRow> {
   @override
   List<String> get customConstraints => const [
     'PRIMARY KEY(expense_id, member_id)',
+    'CONSTRAINT ck_expense_splits_presence CHECK((present_from IS NULL AND present_to IS NULL)OR(share_units IS NOT NULL AND present_from IS NOT NULL AND present_to IS NOT NULL AND present_to >= present_from))',
+    'CONSTRAINT ck_expense_splits_shares_not_itemized CHECK(share_units IS NULL OR items_minor IS NULL)',
     'CONSTRAINT ck_expense_splits_breakdown CHECK((items_minor IS NULL AND discount_minor IS NULL AND service_minor IS NULL AND tax_minor IS NULL AND adjustment_minor IS NULL AND delivery_minor IS NULL)OR(items_minor IS NOT NULL AND items_minor >= 0 AND discount_minor IS NOT NULL AND discount_minor >= 0 AND discount_minor <= items_minor AND service_minor IS NOT NULL AND service_minor >= 0 AND tax_minor IS NOT NULL AND tax_minor >= 0 AND delivery_minor IS NOT NULL AND delivery_minor >= 0 AND adjustment_minor IS NOT NULL AND owed_minor = items_minor - discount_minor + service_minor + tax_minor + delivery_minor + adjustment_minor))',
   ];
   @override
@@ -4615,6 +5018,12 @@ class SplitRow extends DataClass implements Insertable<SplitRow> {
 
   /// Schema 9 (Java V22, A180): this member's part of the delivery (ITEMIZED breakdown only).
   final int? deliveryMinor;
+
+  /// Schema 12 (A185, A186, Java V23): SHARES inputs (owed_minor stays the stored result). Presence is stored
+  /// normalized: with a period both bounds are set.
+  final int? shareUnits;
+  final String? presentFrom;
+  final String? presentTo;
   const SplitRow({
     required this.expenseId,
     required this.memberId,
@@ -4625,6 +5034,9 @@ class SplitRow extends DataClass implements Insertable<SplitRow> {
     this.adjustmentMinor,
     this.discountMinor,
     this.deliveryMinor,
+    this.shareUnits,
+    this.presentFrom,
+    this.presentTo,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -4649,6 +5061,15 @@ class SplitRow extends DataClass implements Insertable<SplitRow> {
     }
     if (!nullToAbsent || deliveryMinor != null) {
       map['delivery_minor'] = Variable<int>(deliveryMinor);
+    }
+    if (!nullToAbsent || shareUnits != null) {
+      map['share_units'] = Variable<int>(shareUnits);
+    }
+    if (!nullToAbsent || presentFrom != null) {
+      map['present_from'] = Variable<String>(presentFrom);
+    }
+    if (!nullToAbsent || presentTo != null) {
+      map['present_to'] = Variable<String>(presentTo);
     }
     return map;
   }
@@ -4676,6 +5097,15 @@ class SplitRow extends DataClass implements Insertable<SplitRow> {
       deliveryMinor: deliveryMinor == null && nullToAbsent
           ? const Value.absent()
           : Value(deliveryMinor),
+      shareUnits: shareUnits == null && nullToAbsent
+          ? const Value.absent()
+          : Value(shareUnits),
+      presentFrom: presentFrom == null && nullToAbsent
+          ? const Value.absent()
+          : Value(presentFrom),
+      presentTo: presentTo == null && nullToAbsent
+          ? const Value.absent()
+          : Value(presentTo),
     );
   }
 
@@ -4694,6 +5124,9 @@ class SplitRow extends DataClass implements Insertable<SplitRow> {
       adjustmentMinor: serializer.fromJson<int?>(json['adjustment_minor']),
       discountMinor: serializer.fromJson<int?>(json['discount_minor']),
       deliveryMinor: serializer.fromJson<int?>(json['delivery_minor']),
+      shareUnits: serializer.fromJson<int?>(json['share_units']),
+      presentFrom: serializer.fromJson<String?>(json['present_from']),
+      presentTo: serializer.fromJson<String?>(json['present_to']),
     );
   }
   @override
@@ -4709,6 +5142,9 @@ class SplitRow extends DataClass implements Insertable<SplitRow> {
       'adjustment_minor': serializer.toJson<int?>(adjustmentMinor),
       'discount_minor': serializer.toJson<int?>(discountMinor),
       'delivery_minor': serializer.toJson<int?>(deliveryMinor),
+      'share_units': serializer.toJson<int?>(shareUnits),
+      'present_from': serializer.toJson<String?>(presentFrom),
+      'present_to': serializer.toJson<String?>(presentTo),
     };
   }
 
@@ -4722,6 +5158,9 @@ class SplitRow extends DataClass implements Insertable<SplitRow> {
     Value<int?> adjustmentMinor = const Value.absent(),
     Value<int?> discountMinor = const Value.absent(),
     Value<int?> deliveryMinor = const Value.absent(),
+    Value<int?> shareUnits = const Value.absent(),
+    Value<String?> presentFrom = const Value.absent(),
+    Value<String?> presentTo = const Value.absent(),
   }) => SplitRow(
     expenseId: expenseId ?? this.expenseId,
     memberId: memberId ?? this.memberId,
@@ -4738,6 +5177,9 @@ class SplitRow extends DataClass implements Insertable<SplitRow> {
     deliveryMinor: deliveryMinor.present
         ? deliveryMinor.value
         : this.deliveryMinor,
+    shareUnits: shareUnits.present ? shareUnits.value : this.shareUnits,
+    presentFrom: presentFrom.present ? presentFrom.value : this.presentFrom,
+    presentTo: presentTo.present ? presentTo.value : this.presentTo,
   );
   SplitRow copyWithCompanion(ExpenseSplitsCompanion data) {
     return SplitRow(
@@ -4760,6 +5202,13 @@ class SplitRow extends DataClass implements Insertable<SplitRow> {
       deliveryMinor: data.deliveryMinor.present
           ? data.deliveryMinor.value
           : this.deliveryMinor,
+      shareUnits: data.shareUnits.present
+          ? data.shareUnits.value
+          : this.shareUnits,
+      presentFrom: data.presentFrom.present
+          ? data.presentFrom.value
+          : this.presentFrom,
+      presentTo: data.presentTo.present ? data.presentTo.value : this.presentTo,
     );
   }
 
@@ -4774,7 +5223,10 @@ class SplitRow extends DataClass implements Insertable<SplitRow> {
           ..write('taxMinor: $taxMinor, ')
           ..write('adjustmentMinor: $adjustmentMinor, ')
           ..write('discountMinor: $discountMinor, ')
-          ..write('deliveryMinor: $deliveryMinor')
+          ..write('deliveryMinor: $deliveryMinor, ')
+          ..write('shareUnits: $shareUnits, ')
+          ..write('presentFrom: $presentFrom, ')
+          ..write('presentTo: $presentTo')
           ..write(')'))
         .toString();
   }
@@ -4790,6 +5242,9 @@ class SplitRow extends DataClass implements Insertable<SplitRow> {
     adjustmentMinor,
     discountMinor,
     deliveryMinor,
+    shareUnits,
+    presentFrom,
+    presentTo,
   );
   @override
   bool operator ==(Object other) =>
@@ -4803,7 +5258,10 @@ class SplitRow extends DataClass implements Insertable<SplitRow> {
           other.taxMinor == this.taxMinor &&
           other.adjustmentMinor == this.adjustmentMinor &&
           other.discountMinor == this.discountMinor &&
-          other.deliveryMinor == this.deliveryMinor);
+          other.deliveryMinor == this.deliveryMinor &&
+          other.shareUnits == this.shareUnits &&
+          other.presentFrom == this.presentFrom &&
+          other.presentTo == this.presentTo);
 }
 
 class ExpenseSplitsCompanion extends UpdateCompanion<SplitRow> {
@@ -4816,6 +5274,9 @@ class ExpenseSplitsCompanion extends UpdateCompanion<SplitRow> {
   final Value<int?> adjustmentMinor;
   final Value<int?> discountMinor;
   final Value<int?> deliveryMinor;
+  final Value<int?> shareUnits;
+  final Value<String?> presentFrom;
+  final Value<String?> presentTo;
   final Value<int> rowid;
   const ExpenseSplitsCompanion({
     this.expenseId = const Value.absent(),
@@ -4827,6 +5288,9 @@ class ExpenseSplitsCompanion extends UpdateCompanion<SplitRow> {
     this.adjustmentMinor = const Value.absent(),
     this.discountMinor = const Value.absent(),
     this.deliveryMinor = const Value.absent(),
+    this.shareUnits = const Value.absent(),
+    this.presentFrom = const Value.absent(),
+    this.presentTo = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ExpenseSplitsCompanion.insert({
@@ -4839,6 +5303,9 @@ class ExpenseSplitsCompanion extends UpdateCompanion<SplitRow> {
     this.adjustmentMinor = const Value.absent(),
     this.discountMinor = const Value.absent(),
     this.deliveryMinor = const Value.absent(),
+    this.shareUnits = const Value.absent(),
+    this.presentFrom = const Value.absent(),
+    this.presentTo = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : expenseId = Value(expenseId),
        memberId = Value(memberId),
@@ -4853,6 +5320,9 @@ class ExpenseSplitsCompanion extends UpdateCompanion<SplitRow> {
     Expression<int>? adjustmentMinor,
     Expression<int>? discountMinor,
     Expression<int>? deliveryMinor,
+    Expression<int>? shareUnits,
+    Expression<String>? presentFrom,
+    Expression<String>? presentTo,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -4865,6 +5335,9 @@ class ExpenseSplitsCompanion extends UpdateCompanion<SplitRow> {
       if (adjustmentMinor != null) 'adjustment_minor': adjustmentMinor,
       if (discountMinor != null) 'discount_minor': discountMinor,
       if (deliveryMinor != null) 'delivery_minor': deliveryMinor,
+      if (shareUnits != null) 'share_units': shareUnits,
+      if (presentFrom != null) 'present_from': presentFrom,
+      if (presentTo != null) 'present_to': presentTo,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4879,6 +5352,9 @@ class ExpenseSplitsCompanion extends UpdateCompanion<SplitRow> {
     Value<int?>? adjustmentMinor,
     Value<int?>? discountMinor,
     Value<int?>? deliveryMinor,
+    Value<int?>? shareUnits,
+    Value<String?>? presentFrom,
+    Value<String?>? presentTo,
     Value<int>? rowid,
   }) {
     return ExpenseSplitsCompanion(
@@ -4891,6 +5367,9 @@ class ExpenseSplitsCompanion extends UpdateCompanion<SplitRow> {
       adjustmentMinor: adjustmentMinor ?? this.adjustmentMinor,
       discountMinor: discountMinor ?? this.discountMinor,
       deliveryMinor: deliveryMinor ?? this.deliveryMinor,
+      shareUnits: shareUnits ?? this.shareUnits,
+      presentFrom: presentFrom ?? this.presentFrom,
+      presentTo: presentTo ?? this.presentTo,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4925,6 +5404,15 @@ class ExpenseSplitsCompanion extends UpdateCompanion<SplitRow> {
     if (deliveryMinor.present) {
       map['delivery_minor'] = Variable<int>(deliveryMinor.value);
     }
+    if (shareUnits.present) {
+      map['share_units'] = Variable<int>(shareUnits.value);
+    }
+    if (presentFrom.present) {
+      map['present_from'] = Variable<String>(presentFrom.value);
+    }
+    if (presentTo.present) {
+      map['present_to'] = Variable<String>(presentTo.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -4943,6 +5431,9 @@ class ExpenseSplitsCompanion extends UpdateCompanion<SplitRow> {
           ..write('adjustmentMinor: $adjustmentMinor, ')
           ..write('discountMinor: $discountMinor, ')
           ..write('deliveryMinor: $deliveryMinor, ')
+          ..write('shareUnits: $shareUnits, ')
+          ..write('presentFrom: $presentFrom, ')
+          ..write('presentTo: $presentTo, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -9624,6 +10115,7 @@ typedef $MembersCreateCompanionBuilder = MembersCompanion Function({
   Value<int?> joinedAt,
   Value<int?> leftAt,
   required int createdAt,
+  Value<int?> defaultShareUnits,
   Value<int> rowid,
 });
 typedef $MembersUpdateCompanionBuilder = MembersCompanion Function({
@@ -9638,6 +10130,7 @@ typedef $MembersUpdateCompanionBuilder = MembersCompanion Function({
   Value<int?> joinedAt,
   Value<int?> leftAt,
   Value<int> createdAt,
+  Value<int?> defaultShareUnits,
   Value<int> rowid,
 });
 
@@ -9804,6 +10297,11 @@ class $MembersFilterComposer extends Composer<_$LocalDatabase, Members> {
 
   ColumnFilters<int> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get defaultShareUnits => $composableBuilder(
+    column: $table.defaultShareUnits,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -10007,6 +10505,11 @@ class $MembersOrderingComposer extends Composer<_$LocalDatabase, Members> {
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get defaultShareUnits => $composableBuilder(
+    column: $table.defaultShareUnits,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $ExpenseGroupsOrderingComposer get groupId {
     final $ExpenseGroupsOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -10090,6 +10593,11 @@ class $MembersAnnotationComposer extends Composer<_$LocalDatabase, Members> {
 
   GeneratedColumn<int> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get defaultShareUnits => $composableBuilder(
+    column: $table.defaultShareUnits,
+    builder: (column) => column,
+  );
 
   $ExpenseGroupsAnnotationComposer get groupId {
     final $ExpenseGroupsAnnotationComposer composer = $composerBuilder(
@@ -10284,6 +10792,7 @@ class $MembersTableManager
                 Value<int?> joinedAt = const Value.absent(),
                 Value<int?> leftAt = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
+                Value<int?> defaultShareUnits = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MembersCompanion(
                 id: id,
@@ -10297,6 +10806,7 @@ class $MembersTableManager
                 joinedAt: joinedAt,
                 leftAt: leftAt,
                 createdAt: createdAt,
+                defaultShareUnits: defaultShareUnits,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -10312,6 +10822,7 @@ class $MembersTableManager
                 Value<int?> joinedAt = const Value.absent(),
                 Value<int?> leftAt = const Value.absent(),
                 required int createdAt,
+                Value<int?> defaultShareUnits = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MembersCompanion.insert(
                 id: id,
@@ -10325,6 +10836,7 @@ class $MembersTableManager
                 joinedAt: joinedAt,
                 leftAt: leftAt,
                 createdAt: createdAt,
+                defaultShareUnits: defaultShareUnits,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -10514,6 +11026,9 @@ typedef $ExpenseGroupsCreateCompanionBuilder = ExpenseGroupsCompanion Function({
   Value<int> memberSeq,
   Value<String?> treasurerMemberId,
   Value<int?> archivedAt,
+  Value<int?> budgetMinor,
+  Value<String?> tripStartDate,
+  Value<String?> tripEndDate,
   Value<int> rowid,
 });
 typedef $ExpenseGroupsUpdateCompanionBuilder = ExpenseGroupsCompanion Function({
@@ -10528,6 +11043,9 @@ typedef $ExpenseGroupsUpdateCompanionBuilder = ExpenseGroupsCompanion Function({
   Value<int> memberSeq,
   Value<String?> treasurerMemberId,
   Value<int?> archivedAt,
+  Value<int?> budgetMinor,
+  Value<String?> tripStartDate,
+  Value<String?> tripEndDate,
   Value<int> rowid,
 });
 
@@ -10677,6 +11195,21 @@ class $ExpenseGroupsFilterComposer
 
   ColumnFilters<int> get archivedAt => $composableBuilder(
     column: $table.archivedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get budgetMinor => $composableBuilder(
+    column: $table.budgetMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tripStartDate => $composableBuilder(
+    column: $table.tripStartDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tripEndDate => $composableBuilder(
+    column: $table.tripEndDate,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -10856,6 +11389,21 @@ class $ExpenseGroupsOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get budgetMinor => $composableBuilder(
+    column: $table.budgetMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tripStartDate => $composableBuilder(
+    column: $table.tripStartDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tripEndDate => $composableBuilder(
+    column: $table.tripEndDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $LocalProfileOrderingComposer get ownerUserId {
     final $LocalProfileOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -10940,6 +11488,21 @@ class $ExpenseGroupsAnnotationComposer
 
   GeneratedColumn<int> get archivedAt => $composableBuilder(
     column: $table.archivedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get budgetMinor => $composableBuilder(
+    column: $table.budgetMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get tripStartDate => $composableBuilder(
+    column: $table.tripStartDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get tripEndDate => $composableBuilder(
+    column: $table.tripEndDate,
     builder: (column) => column,
   );
 
@@ -11110,6 +11673,9 @@ class $ExpenseGroupsTableManager
                 Value<int> memberSeq = const Value.absent(),
                 Value<String?> treasurerMemberId = const Value.absent(),
                 Value<int?> archivedAt = const Value.absent(),
+                Value<int?> budgetMinor = const Value.absent(),
+                Value<String?> tripStartDate = const Value.absent(),
+                Value<String?> tripEndDate = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExpenseGroupsCompanion(
                 id: id,
@@ -11123,6 +11689,9 @@ class $ExpenseGroupsTableManager
                 memberSeq: memberSeq,
                 treasurerMemberId: treasurerMemberId,
                 archivedAt: archivedAt,
+                budgetMinor: budgetMinor,
+                tripStartDate: tripStartDate,
+                tripEndDate: tripEndDate,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -11138,6 +11707,9 @@ class $ExpenseGroupsTableManager
                 Value<int> memberSeq = const Value.absent(),
                 Value<String?> treasurerMemberId = const Value.absent(),
                 Value<int?> archivedAt = const Value.absent(),
+                Value<int?> budgetMinor = const Value.absent(),
+                Value<String?> tripStartDate = const Value.absent(),
+                Value<String?> tripEndDate = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExpenseGroupsCompanion.insert(
                 id: id,
@@ -11151,6 +11723,9 @@ class $ExpenseGroupsTableManager
                 memberSeq: memberSeq,
                 treasurerMemberId: treasurerMemberId,
                 archivedAt: archivedAt,
+                budgetMinor: budgetMinor,
+                tripStartDate: tripStartDate,
+                tripEndDate: tripEndDate,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -11334,6 +11909,8 @@ typedef $ExpensesCreateCompanionBuilder = ExpensesCompanion Function({
   Value<int?> serviceAmountMinor,
   Value<int?> taxAmountMinor,
   Value<int?> deliveryMinor,
+  Value<String?> periodFrom,
+  Value<String?> periodTo,
   Value<int> rowid,
 });
 typedef $ExpensesUpdateCompanionBuilder = ExpensesCompanion Function({
@@ -11363,6 +11940,8 @@ typedef $ExpensesUpdateCompanionBuilder = ExpensesCompanion Function({
   Value<int?> serviceAmountMinor,
   Value<int?> taxAmountMinor,
   Value<int?> deliveryMinor,
+  Value<String?> periodFrom,
+  Value<String?> periodTo,
   Value<int> rowid,
 });
 
@@ -11606,6 +12185,16 @@ class $ExpensesFilterComposer extends Composer<_$LocalDatabase, Expenses> {
 
   ColumnFilters<int> get deliveryMinor => $composableBuilder(
     column: $table.deliveryMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get periodFrom => $composableBuilder(
+    column: $table.periodFrom,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get periodTo => $composableBuilder(
+    column: $table.periodTo,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -11884,6 +12473,16 @@ class $ExpensesOrderingComposer extends Composer<_$LocalDatabase, Expenses> {
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get periodFrom => $composableBuilder(
+    column: $table.periodFrom,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get periodTo => $composableBuilder(
+    column: $table.periodTo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $ExpenseGroupsOrderingComposer get groupId {
     final $ExpenseGroupsOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -12036,6 +12635,14 @@ class $ExpensesAnnotationComposer extends Composer<_$LocalDatabase, Expenses> {
     column: $table.deliveryMinor,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get periodFrom => $composableBuilder(
+    column: $table.periodFrom,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get periodTo =>
+      $composableBuilder(column: $table.periodTo, builder: (column) => column);
 
   $ExpenseGroupsAnnotationComposer get groupId {
     final $ExpenseGroupsAnnotationComposer composer = $composerBuilder(
@@ -12245,6 +12852,8 @@ class $ExpensesTableManager
                 Value<int?> serviceAmountMinor = const Value.absent(),
                 Value<int?> taxAmountMinor = const Value.absent(),
                 Value<int?> deliveryMinor = const Value.absent(),
+                Value<String?> periodFrom = const Value.absent(),
+                Value<String?> periodTo = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExpensesCompanion(
                 id: id,
@@ -12273,6 +12882,8 @@ class $ExpensesTableManager
                 serviceAmountMinor: serviceAmountMinor,
                 taxAmountMinor: taxAmountMinor,
                 deliveryMinor: deliveryMinor,
+                periodFrom: periodFrom,
+                periodTo: periodTo,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -12303,6 +12914,8 @@ class $ExpensesTableManager
                 Value<int?> serviceAmountMinor = const Value.absent(),
                 Value<int?> taxAmountMinor = const Value.absent(),
                 Value<int?> deliveryMinor = const Value.absent(),
+                Value<String?> periodFrom = const Value.absent(),
+                Value<String?> periodTo = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExpensesCompanion.insert(
                 id: id,
@@ -12331,6 +12944,8 @@ class $ExpensesTableManager
                 serviceAmountMinor: serviceAmountMinor,
                 taxAmountMinor: taxAmountMinor,
                 deliveryMinor: deliveryMinor,
+                periodFrom: periodFrom,
+                periodTo: periodTo,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -12878,6 +13493,9 @@ typedef $ExpenseSplitsCreateCompanionBuilder = ExpenseSplitsCompanion Function({
   Value<int?> adjustmentMinor,
   Value<int?> discountMinor,
   Value<int?> deliveryMinor,
+  Value<int?> shareUnits,
+  Value<String?> presentFrom,
+  Value<String?> presentTo,
   Value<int> rowid,
 });
 typedef $ExpenseSplitsUpdateCompanionBuilder = ExpenseSplitsCompanion Function({
@@ -12890,6 +13508,9 @@ typedef $ExpenseSplitsUpdateCompanionBuilder = ExpenseSplitsCompanion Function({
   Value<int?> adjustmentMinor,
   Value<int?> discountMinor,
   Value<int?> deliveryMinor,
+  Value<int?> shareUnits,
+  Value<String?> presentFrom,
+  Value<String?> presentTo,
   Value<int> rowid,
 });
 
@@ -12973,6 +13594,21 @@ class $ExpenseSplitsFilterComposer
 
   ColumnFilters<int> get deliveryMinor => $composableBuilder(
     column: $table.deliveryMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get shareUnits => $composableBuilder(
+    column: $table.shareUnits,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get presentFrom => $composableBuilder(
+    column: $table.presentFrom,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get presentTo => $composableBuilder(
+    column: $table.presentTo,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -13067,6 +13703,21 @@ class $ExpenseSplitsOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get shareUnits => $composableBuilder(
+    column: $table.shareUnits,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get presentFrom => $composableBuilder(
+    column: $table.presentFrom,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get presentTo => $composableBuilder(
+    column: $table.presentTo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $ExpensesOrderingComposer get expenseId {
     final $ExpensesOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -13154,6 +13805,19 @@ class $ExpenseSplitsAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<int> get shareUnits => $composableBuilder(
+    column: $table.shareUnits,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get presentFrom => $composableBuilder(
+    column: $table.presentFrom,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get presentTo =>
+      $composableBuilder(column: $table.presentTo, builder: (column) => column);
+
   $ExpensesAnnotationComposer get expenseId {
     final $ExpensesAnnotationComposer composer = $composerBuilder(
       composer: this,
@@ -13238,6 +13902,9 @@ class $ExpenseSplitsTableManager
                 Value<int?> adjustmentMinor = const Value.absent(),
                 Value<int?> discountMinor = const Value.absent(),
                 Value<int?> deliveryMinor = const Value.absent(),
+                Value<int?> shareUnits = const Value.absent(),
+                Value<String?> presentFrom = const Value.absent(),
+                Value<String?> presentTo = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExpenseSplitsCompanion(
                 expenseId: expenseId,
@@ -13249,6 +13916,9 @@ class $ExpenseSplitsTableManager
                 adjustmentMinor: adjustmentMinor,
                 discountMinor: discountMinor,
                 deliveryMinor: deliveryMinor,
+                shareUnits: shareUnits,
+                presentFrom: presentFrom,
+                presentTo: presentTo,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -13262,6 +13932,9 @@ class $ExpenseSplitsTableManager
                 Value<int?> adjustmentMinor = const Value.absent(),
                 Value<int?> discountMinor = const Value.absent(),
                 Value<int?> deliveryMinor = const Value.absent(),
+                Value<int?> shareUnits = const Value.absent(),
+                Value<String?> presentFrom = const Value.absent(),
+                Value<String?> presentTo = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExpenseSplitsCompanion.insert(
                 expenseId: expenseId,
@@ -13273,6 +13946,9 @@ class $ExpenseSplitsTableManager
                 adjustmentMinor: adjustmentMinor,
                 discountMinor: discountMinor,
                 deliveryMinor: deliveryMinor,
+                shareUnits: shareUnits,
+                presentFrom: presentFrom,
+                presentTo: presentTo,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

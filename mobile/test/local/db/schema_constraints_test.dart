@@ -454,4 +454,85 @@ void main() {
       expect((await db.paymentHandlesDao.listForUser(profileId)).single.value, 'https://ipn.eg/${'a' * 185}');
     });
   });
+  group('SHARES and trip budget (schema 12, Java V23)', () {
+    Future<void> expense(ExpenseRow Function(ExpenseRow e) change) async {
+      final g = sharesExpense(tid(110));
+      await insertExpense(ExpenseGraph(expense: change(g.expense), payers: g.payers, splits: g.splits));
+    }
+
+    Future<void> splits(SplitRow Function(SplitRow s) change) async {
+      final g = sharesExpense(tid(111));
+      await insertExpense(ExpenseGraph(expense: g.expense, payers: g.payers, splits: [change(g.splits.first), g.splits[1]]));
+    }
+
+    test('a valid SHARES expense with and without a period is accepted', () async {
+      await insertExpense(sharesExpense(tid(112)));
+      final g = sharesExpense(tid(113));
+      await insertExpense(ExpenseGraph(
+        expense: g.expense.copyWith(periodFrom: const Value(null), periodTo: const Value(null)),
+        payers: g.payers,
+        splits: [for (final s in g.splits) s.copyWith(presentFrom: const Value(null), presentTo: const Value(null))],
+      ));
+    });
+
+    test('the period: one bound, reversed, 367 days, a bad date, or on another split type is refused', () async {
+      await expectLater(expense((e) => e.copyWith(periodTo: const Value(null))), rejected);
+      await expectLater(expense((e) => e.copyWith(periodFrom: const Value('2025-12-01'))), rejected);
+      await expectLater(
+          expense((e) => e.copyWith(periodFrom: const Value('2025-01-01'), periodTo: const Value('2026-01-02'))), rejected);
+      await expectLater(expense((e) => e.copyWith(periodFrom: const Value('2025-02-30'))), rejected);
+      final eq = equalExpense(tid(114));
+      await expectLater(
+        insertExpense(ExpenseGraph(
+            expense: eq.expense.copyWith(periodFrom: const Value('2025-11-01'), periodTo: const Value('2025-11-30')),
+            payers: eq.payers,
+            splits: eq.splits)),
+        rejected,
+      );
+    });
+
+    test('366 days is the longest period', () async {
+      await expense((e) => e.copyWith(periodFrom: const Value('2028-01-01'), periodTo: const Value('2028-12-31')));
+    });
+
+    test('split units 0 or 101, presence without units, one bound, reversed, or next to a breakdown is refused', () async {
+      await expectLater(splits((s) => s.copyWith(shareUnits: const Value(0))), rejected);
+      await expectLater(splits((s) => s.copyWith(shareUnits: const Value(101))), rejected);
+      await expectLater(splits((s) => s.copyWith(shareUnits: const Value(null))), rejected);
+      await expectLater(splits((s) => s.copyWith(presentTo: const Value(null))), rejected);
+      await expectLater(
+          splits((s) => s.copyWith(presentFrom: const Value('2025-11-30'), presentTo: const Value('2025-11-29'))), rejected);
+      final it = itemizedExpense(tid(115));
+      await expectLater(
+        insertExpense(ExpenseGraph(
+            expense: it.expense,
+            payers: it.payers,
+            splits: [it.splits.first.copyWith(shareUnits: const Value(1)), ...it.splits.skip(1)],
+            items: it.items,
+            assignees: it.assignees)),
+        rejected,
+      );
+    });
+
+    test('member default units 1..100 or NULL', () async {
+      Future<void> set(String v) => db.customStatement("UPDATE members SET default_share_units = $v WHERE id = '$aliId'");
+      for (final ok in ['1', '100', 'NULL']) {
+        await set(ok);
+      }
+      for (final bad in ['0', '101']) {
+        await expectLater(set(bad), rejected, reason: bad);
+      }
+    });
+
+    test('group budget 1..10^12, real trip dates, end >= start', () async {
+      Future<void> set(String sql) => db.customStatement("UPDATE expense_groups SET $sql WHERE id = '$groupId'");
+      await set("budget_minor = $cap, trip_start_date = '2026-07-01', trip_end_date = '2026-07-01'");
+      await set("trip_start_date = NULL, trip_end_date = '2026-06-01'");
+      await set("trip_start_date = '2026-07-01', trip_end_date = NULL");
+      await expectLater(set('budget_minor = 0'), rejected);
+      await expectLater(set('budget_minor = ${cap + 1}'), rejected);
+      await expectLater(set("trip_end_date = '2026-06-30'"), rejected);
+      await expectLater(set("trip_start_date = '2026-02-30'"), rejected);
+    });
+  });
 }

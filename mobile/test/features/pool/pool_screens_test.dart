@@ -71,14 +71,14 @@ void main() {
 
       // Group home: the compact card with the meter as the backend sent it (150.00 left).
       await go(Routes.group(gid));
-      expect(find.text(l10n.poolSectionTitle), findsOneWidget);
+      expect(find.text(l10n.poolBalanceLabel), findsOneWidget);
       expect(find.text(l10n.poolRemaining), findsOneWidget);
       expect(find.text(money(15000)), findsOneWidget);
       expect(find.text(l10n.poolAddDeposit), findsOneWidget);
 
       // No treasurer: no card.
       await go(Routes.group(plainGid));
-      expect(find.text(l10n.poolSectionTitle), findsNothing);
+      expect(find.text(l10n.poolBalanceLabel), findsNothing);
 
       // Pool screen: deposited, spent, left, and the deposits.
       await go(Routes.pool(gid));

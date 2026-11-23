@@ -31,6 +31,7 @@ import '../../features/profile/presentation/payment_handles_screen.dart';
 import '../../features/profile/presentation/profile_hub_screen.dart';
 import '../../features/calculator/presentation/calculator_screen.dart';
 import '../../features/expenses/application/expense_draft.dart';
+import '../../features/budget/presentation/budget_screen.dart';
 import '../../features/pool/presentation/pool_screen.dart';
 import '../../features/recap/presentation/trip_recap_screen.dart';
 import '../app_mode.dart';
@@ -55,6 +56,7 @@ abstract final class Routes {
   static String editExpense(String gid, String eid) => '/groups/$gid/expenses/$eid/edit';
   static String recap(String gid) => '/groups/$gid/recap';
   static String pool(String gid) => '/groups/$gid/pool';
+  static String budget(String gid) => '/groups/$gid/budget';
   static String calculator(String gid) => '/groups/$gid/calculator';
   static const String splash = '/splash';
   static const String welcome = '/welcome';
@@ -218,6 +220,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           if (features.recap) GoRoute(path: 'recap', builder: (context, state) => TripRecapScreen(gid: state.pathParameters['gid']!)),
           if (features.calculator) GoRoute(path: 'calculator', builder: (context, state) => CalculatorScreen(gid: state.pathParameters['gid']!)),
           if (features.pool) GoRoute(path: 'pool', builder: (context, state) => PoolScreen(gid: state.pathParameters['gid']!)),
+          if (features.budget) GoRoute(path: 'budget', builder: (context, state) => BudgetScreen(gid: state.pathParameters['gid']!)),
           GoRoute(path: 'edit', builder: (context, state) => EditGroupScreen(gid: state.pathParameters['gid']!)),
           GoRoute(path: 'settlements/:sid', builder: (context, state) => SettlementDetailScreen(gid: state.pathParameters['gid']!, sid: state.pathParameters['sid']!)),
           if (features.joinRequests) GoRoute(path: 'join-requests', builder: (context, state) => JoinRequestsScreen(gid: state.pathParameters['gid']!)),

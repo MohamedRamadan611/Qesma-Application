@@ -26,6 +26,8 @@ part 'expense_view.g.dart';
 /// * [items] 
 /// * [paidFromPool] 
 /// * [payers] 
+/// * [periodFrom] 
+/// * [periodTo] 
 /// * [shares] 
 /// * [splitType] 
 /// * [title] 
@@ -59,6 +61,12 @@ abstract class ExpenseView implements Built<ExpenseView, ExpenseViewBuilder> {
 
   @BuiltValueField(wireName: r'payers')
   BuiltList<PayerView> get payers;
+
+  @BuiltValueField(wireName: r'periodFrom')
+  Date? get periodFrom;
+
+  @BuiltValueField(wireName: r'periodTo')
+  Date? get periodTo;
 
   @BuiltValueField(wireName: r'shares')
   BuiltList<ShareView> get shares;
@@ -148,6 +156,20 @@ class _$ExpenseViewSerializer implements PrimitiveSerializer<ExpenseView> {
       object.payers,
       specifiedType: const FullType(BuiltList, [FullType(PayerView)]),
     );
+    if (object.periodFrom != null) {
+      yield r'periodFrom';
+      yield serializers.serialize(
+        object.periodFrom,
+        specifiedType: const FullType.nullable(Date),
+      );
+    }
+    if (object.periodTo != null) {
+      yield r'periodTo';
+      yield serializers.serialize(
+        object.periodTo,
+        specifiedType: const FullType.nullable(Date),
+      );
+    }
     yield r'shares';
     yield serializers.serialize(
       object.shares,
@@ -259,6 +281,22 @@ class _$ExpenseViewSerializer implements PrimitiveSerializer<ExpenseView> {
             specifiedType: const FullType(BuiltList, [FullType(PayerView)]),
           ) as BuiltList<PayerView>;
           result.payers.replace(valueDes);
+          break;
+        case r'periodFrom':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(Date),
+          ) as Date?;
+          if (valueDes == null) continue;
+          result.periodFrom = valueDes;
+          break;
+        case r'periodTo':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(Date),
+          ) as Date?;
+          if (valueDes == null) continue;
+          result.periodTo = valueDes;
           break;
         case r'shares':
           final valueDes = serializers.deserialize(

@@ -1,0 +1,13 @@
+---
+description: "SA19 — Shares editor: SHARES split method in the expense form, units per person, optional period with days present, member default weight, details and history"
+---
+
+Read AGENTS.md, mobile/AGENTS.md, `.claude/mobile/SCREEN_MAP.md` (Shares row and rules 1, 2, 8), docs/STANDALONE_SPEC.md sections 15 and 19, Decision Log A185–A189 and A181 (split-method sheet), docs/design/DESIGN.md, `lib/features/expenses/` (form shell, split-method sheet, `split_type.dart`, member picker, preview wiring, details, history), `lib/features/members/` (options sheet), `test/guards/`. Prerequisite: SA18 merged. Skills (max 4): ui-ux-pro-max, design-system, accessibility-review, ux-copy.
+
+Why: flats need unequal and prorated splits. The local backend (SA18) already computes them; this prompt is UI only. **No money math in widgets**: every owed amount and every day count shown comes from the preview response.
+
+Step 0 (plan, wait for approval): (1) the split-method sheet gains a fifth row "بالحصص" / "By shares" with a one-line explanation; (2) Shares mode: one row per participant with a units stepper 1..100 (prefilled from the member default weight, else 1), add/remove participants via the existing member picker; (3) an optional "Billing period" switch: from–to date pickers, then per person a "present from–to" range defaulting to the whole period (a compact "full period" chip that expands to the range); (4) the preview list shows each person's owed amount and the days/units text from the preview (`shareUnits`, `presentFrom`, `presentTo`); field errors from `VALIDATION_ERROR` paths under the right row; (5) member options sheet: "Default share" stepper (clearable); (6) expense details and revision history show units and the presence range; (7) Arabic copy (حصص، حصة، أيام الإقامة، فترة الفاتورة) with ux-copy; (8) scope guard key `shares` (section 15).
+
+Implement: split-method row, Shares editor widgets, period and presence pickers, preview wiring, member default weight, details/history, ARB strings ar/en, guard update, SCREEN_MAP row.
+Tests (first): widget tests ar/en at text scale 2.0 for the editor (stepper bounds, period on/off, presence range, errors placed by field path), the member default weight, details; a test that the form sends the SHARES request shape and never computes owed amounts; goldens; guards (`source_guards_test.dart` no arithmetic, `scope_guard_test.dart` with the `shares` key, mode guard).
+Constraints: no new dependencies; RTL first; 48dp targets; numbers formatted by the existing money formatter. Done when analyze and tests pass. Then Stop protocol; do NOT start SA20.

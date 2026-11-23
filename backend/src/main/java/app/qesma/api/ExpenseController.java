@@ -55,13 +55,16 @@ public class ExpenseController {
      * {@code Idempotency-Replayed: true}) and creates nothing; the same key with a different request is 422.
      */
     @PostMapping
-    @Operation(summary = "Create an expense (EQUAL, EXACT or ITEMIZED)",
+    @Operation(summary = "Create an expense (EQUAL, EXACT, ITEMIZED or SHARES)",
             description = "Idempotency-Key (UUID) is required. For ITEMIZED, totalMinor is optional: the server "
-                    + "computes it and the payers must add up to it (PAYERS_TOTAL_MISMATCH otherwise).")
+                    + "computes it and the payers must add up to it (PAYERS_TOTAL_MISMATCH otherwise). SHARES "
+                    + "splits totalMinor by shareUnits (1..100) x days present in the optional periodFrom..periodTo "
+                    + "(inclusive, at most 366 days); see STANDALONE_SPEC 19.")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = {
             @ExampleObject(name = "EQUAL", value = ApiExamples.EQUAL),
             @ExampleObject(name = "EXACT", value = ApiExamples.EXACT),
-            @ExampleObject(name = "ITEMIZED", value = ApiExamples.ITEMIZED)}))
+            @ExampleObject(name = "ITEMIZED", value = ApiExamples.ITEMIZED),
+            @ExampleObject(name = "SHARES", value = ApiExamples.SHARES)}))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Created (or the stored answer of an identical earlier request: header Idempotency-Replayed: true)",
             headers = {@io.swagger.v3.oas.annotations.headers.Header(name = "ETag", description = "Version of the expense",
                     schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string")),
@@ -99,7 +102,8 @@ public class ExpenseController {
     @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = {
             @ExampleObject(name = "EQUAL", value = ApiExamples.EQUAL),
             @ExampleObject(name = "EXACT", value = ApiExamples.EXACT),
-            @ExampleObject(name = "ITEMIZED", value = ApiExamples.ITEMIZED)}))
+            @ExampleObject(name = "ITEMIZED", value = ApiExamples.ITEMIZED),
+            @ExampleObject(name = "SHARES", value = ApiExamples.SHARES)}))
     public ExpensePreview preview(@PathVariable UUID gid, @RequestBody ExpenseCommand command) {
         return expenses.preview(currentUser.id(), gid, command);
     }
@@ -146,7 +150,8 @@ public class ExpenseController {
     @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = {
             @ExampleObject(name = "EQUAL", value = ApiExamples.EQUAL),
             @ExampleObject(name = "EXACT", value = ApiExamples.EXACT),
-            @ExampleObject(name = "ITEMIZED", value = ApiExamples.ITEMIZED)}))
+            @ExampleObject(name = "ITEMIZED", value = ApiExamples.ITEMIZED),
+            @ExampleObject(name = "SHARES", value = ApiExamples.SHARES)}))
     public ResponseEntity<ExpenseView> update(@PathVariable UUID gid, @PathVariable UUID eid,
                                               @RequestHeader(value = "If-Match", required = false) String ifMatch,
                                               @RequestBody ExpenseCommand command) {

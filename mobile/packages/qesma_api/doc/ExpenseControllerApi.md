@@ -9,7 +9,7 @@ All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**createExpense**](ExpenseControllerApi.md#createexpense) | **POST** /api/v1/groups/{gid}/expenses | Create an expense (EQUAL, EXACT or ITEMIZED)
+[**createExpense**](ExpenseControllerApi.md#createexpense) | **POST** /api/v1/groups/{gid}/expenses | Create an expense (EQUAL, EXACT, ITEMIZED or SHARES)
 [**deleteExpense**](ExpenseControllerApi.md#deleteexpense) | **DELETE** /api/v1/groups/{gid}/expenses/{eid} | Delete an expense (soft delete, keeps the history)
 [**getExpense**](ExpenseControllerApi.md#getexpense) | **GET** /api/v1/groups/{gid}/expenses/{eid} | 
 [**listExpenseRevisions**](ExpenseControllerApi.md#listexpenserevisions) | **GET** /api/v1/groups/{gid}/expenses/{eid}/revisions | History of an expense, oldest first
@@ -21,9 +21,9 @@ Method | HTTP request | Description
 # **createExpense**
 > ExpenseView createExpense(gid, idempotencyKey, expenseCommand)
 
-Create an expense (EQUAL, EXACT or ITEMIZED)
+Create an expense (EQUAL, EXACT, ITEMIZED or SHARES)
 
-Idempotency-Key (UUID) is required. For ITEMIZED, totalMinor is optional: the server computes it and the payers must add up to it (PAYERS_TOTAL_MISMATCH otherwise).
+Idempotency-Key (UUID) is required. For ITEMIZED, totalMinor is optional: the server computes it and the payers must add up to it (PAYERS_TOTAL_MISMATCH otherwise). SHARES splits totalMinor by shareUnits (1..100) x days present in the optional periodFrom..periodTo (inclusive, at most 366 days); see STANDALONE_SPEC 19.
 
 ### Example
 ```dart

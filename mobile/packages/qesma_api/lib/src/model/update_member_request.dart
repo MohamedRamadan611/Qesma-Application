@@ -11,11 +11,19 @@ part 'update_member_request.g.dart';
 /// UpdateMemberRequest
 ///
 /// Properties:
+/// * [clearDefaultShareUnits] 
+/// * [defaultShareUnits] 
 /// * [displayName] 
 /// * [role] 
 /// * [status] 
 @BuiltValue()
 abstract class UpdateMemberRequest implements Built<UpdateMemberRequest, UpdateMemberRequestBuilder> {
+  @BuiltValueField(wireName: r'clearDefaultShareUnits')
+  bool? get clearDefaultShareUnits;
+
+  @BuiltValueField(wireName: r'defaultShareUnits')
+  int? get defaultShareUnits;
+
   @BuiltValueField(wireName: r'displayName')
   String? get displayName;
 
@@ -48,6 +56,20 @@ class _$UpdateMemberRequestSerializer implements PrimitiveSerializer<UpdateMembe
     UpdateMemberRequest object, {
     FullType specifiedType = FullType.unspecified,
   }) sync* {
+    if (object.clearDefaultShareUnits != null) {
+      yield r'clearDefaultShareUnits';
+      yield serializers.serialize(
+        object.clearDefaultShareUnits,
+        specifiedType: const FullType(bool),
+      );
+    }
+    if (object.defaultShareUnits != null) {
+      yield r'defaultShareUnits';
+      yield serializers.serialize(
+        object.defaultShareUnits,
+        specifiedType: const FullType(int),
+      );
+    }
     if (object.displayName != null) {
       yield r'displayName';
       yield serializers.serialize(
@@ -92,6 +114,20 @@ class _$UpdateMemberRequestSerializer implements PrimitiveSerializer<UpdateMembe
       final key = serializedList[i] as String;
       final value = serializedList[i + 1];
       switch (key) {
+        case r'clearDefaultShareUnits':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(bool),
+          ) as bool;
+          result.clearDefaultShareUnits = valueDes;
+          break;
+        case r'defaultShareUnits':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(int),
+          ) as int;
+          result.defaultShareUnits = valueDes;
+          break;
         case r'displayName':
           final valueDes = serializers.deserialize(
             value,

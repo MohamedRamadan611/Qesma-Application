@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:qesma_api/qesma_api.dart' show Date;
 
 import '../../../core/errors/api_failure.dart';
 import '../data/groups_repository.dart';
@@ -21,6 +22,7 @@ class CreateGroupState {
     this.createdGroupId,
     this.failedMemberNames = const [],
     this.treasurerFailed = false,
+    this.budgetFailed = false,
   });
 
   final bool submitting;
@@ -35,6 +37,9 @@ class CreateGroupState {
 
   /// A treasurer was asked for but could not be set after the group was created (the group is kept).
   final bool treasurerFailed;
+
+  /// A budget was asked for but could not be saved after the group was created (the group is kept; A199).
+  final bool budgetFailed;
 }
 
 /// Creates a group without ever duplicating it. `POST /groups` has no idempotency key
@@ -53,7 +58,7 @@ class CreateGroupController extends Notifier<CreateGroupState> {
   ///
   /// [members] are name-only members added one by one after the group exists. A failure
   /// there never undoes the group: the names that failed are in [CreateGroupState.failedMemberNames].
-  Future<String?> submit({required String name, required String type, String currencyCode = 'EGP', List<String> members = const [], bool poolOn = false, String? treasurerName}) async {
+  Future<String?> submit({required String name, required String type, String currencyCode = 'EGP', List<String> members = const [], bool poolOn = false, String? treasurerName, int? budgetMinor, Date? tripStart, Date? tripEnd}) async {
     if (state.submitting) return null;
     state = const CreateGroupState(submitting: true);
     try {
@@ -62,19 +67,19 @@ class CreateGroupController extends Notifier<CreateGroupState> {
 
       if (state.outcomeUnknown || _attempted) {
         final found = await _findCreated(name, type);
-        if (found != null) return await _succeeded(found, members, poolOn, treasurerName);
+        if (found != null) return await _succeeded(found, members, poolOn, treasurerName, budgetMinor, tripStart, tripEnd);
       }
 
       _attempted = true;
       final group = await _repo.create(name: name, type: type, currencyCode: currencyCode);
-      return await _succeeded(group.id, members, poolOn, treasurerName);
+      return await _succeeded(group.id, members, poolOn, treasurerName, budgetMinor, tripStart, tripEnd);
     } on ApiFailure catch (failure) {
       final unknown = _attempted && outcomeUnknown(failure);
       if (unknown) {
         // Look once more right away: the group may already exist.
         try {
           final found = await _findCreated(name, type);
-          if (found != null) return await _succeeded(found, members, poolOn, treasurerName);
+          if (found != null) return await _succeeded(found, members, poolOn, treasurerName, budgetMinor, tripStart, tripEnd);
           // Reachable server and no such group: safe to retry.
           _attempted = false;
           state = CreateGroupState(failure: failure);
@@ -101,7 +106,15 @@ class CreateGroupController extends Notifier<CreateGroupState> {
   }
 
   /// [treasurerName] null with [poolOn] = the creator is the treasurer.
-  Future<String> _succeeded(String id, List<String> members, bool poolOn, String? treasurerName) async {
+  Future<String> _succeeded(
+    String id,
+    List<String> members,
+    bool poolOn,
+    String? treasurerName,
+    int? budgetMinor,
+    Date? tripStart,
+    Date? tripEnd,
+  ) async {
     final failed = <String>[];
     for (final member in members) {
       try {
@@ -126,7 +139,17 @@ class CreateGroupController extends Notifier<CreateGroupState> {
         treasurerFailed = true;
       }
     }
-    state = CreateGroupState(createdGroupId: id, failedMemberNames: failed, treasurerFailed: treasurerFailed);
+    // A199: the pool and the budget are exclusive; the screen sends at most one of them.
+    var budgetFailed = false;
+    if (!poolOn && budgetMinor != null) {
+      try {
+        final g = await _repo.get(id);
+        await _repo.update(id, name: g.name, type: g.type, budgetMinor: budgetMinor, tripStartDate: tripStart, tripEndDate: tripEnd);
+      } on ApiFailure {
+        budgetFailed = true;
+      }
+    }
+    state = CreateGroupState(createdGroupId: id, failedMemberNames: failed, treasurerFailed: treasurerFailed, budgetFailed: budgetFailed);
     unawaited(ref.read(groupsListControllerProvider.notifier).refresh());
     return id;
   }

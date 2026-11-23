@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:qesma_api/qesma_api.dart';
+import 'package:qesma_engine/qesma_engine.dart' show Limits;
 
 import '../db/local_database.dart';
 import '../errors.dart';
@@ -32,19 +33,41 @@ final class MemberService {
         return memberDto((await _db.membersDao.findById(id))!, access.profile.id);
       });
 
-  Future<MemberDto> update(String groupId, String memberId, {String? displayName, String? role, String? status}) =>
+  /// Renames a member and/or sets or clears its default SHARES weight (A188, A193; Java `MemberService.update`).
+  /// Every check runs before the first write, so a rejected field means nothing is applied.
+  Future<MemberDto> update(String groupId, String memberId,
+          {String? displayName,
+          String? role,
+          String? status,
+          int? defaultShareUnits,
+          bool clearDefaultShareUnits = false}) =>
       _db.transaction(() async {
         final access = await _ctx.requireGroup(groupId);
-        if (access.member(memberId) == null) throw LocalApiException.notFound();
-        if (displayName == null && role == null && status == null) {
-          throw LocalApiException.validation('Nothing to update');
+        final member = access.member(memberId);
+        if (member == null) throw LocalApiException.notFound();
+        final touchesDefault = defaultShareUnits != null || clearDefaultShareUnits;
+        if (displayName == null && role == null && status == null && !touchesDefault) {
+          throw LocalApiException.validation(
+              'Send at least one of displayName, role, status, defaultShareUnits or clearDefaultShareUnits');
         }
         if (role != null || status != null) {
           throw LocalApiException.validation('Roles and member status cannot be changed in this app');
         }
-        final name = FieldRules.name(displayName, FieldRules.memberNameMax, 'displayName');
-        await _requireUniqueName(groupId, name, exceptMemberId: memberId);
-        await _db.membersDao.rename(memberId, name);
+        if (defaultShareUnits != null && clearDefaultShareUnits) {
+          throw LocalApiException.validation('defaultShareUnits and clearDefaultShareUnits cannot both be sent');
+        }
+        if (defaultShareUnits != null &&
+            (defaultShareUnits < Limits.minShareUnits || defaultShareUnits > Limits.maxShareUnits)) {
+          throw LocalApiException.validation(
+              'defaultShareUnits must be between ${Limits.minShareUnits} and ${Limits.maxShareUnits}');
+        }
+        String? name;
+        if (displayName != null) {
+          name = FieldRules.name(displayName, FieldRules.memberNameMax, 'displayName');
+          await _requireUniqueName(groupId, name, exceptMemberId: memberId);
+        }
+        if (name != null && name != member.displayName) await _db.membersDao.rename(memberId, name);
+        if (touchesDefault) await _db.membersDao.setDefaultShareUnits(memberId, defaultShareUnits);
         return memberDto((await _db.membersDao.findById(memberId))!, access.profile.id);
       });
 

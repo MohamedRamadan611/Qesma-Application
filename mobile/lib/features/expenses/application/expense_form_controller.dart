@@ -16,6 +16,7 @@ import 'expense_form_prefill.dart';
 import 'expense_form_state.dart';
 import 'expense_preview_controller.dart';
 import 'expense_refresh.dart';
+import 'shares_field_errors.dart';
 
 /// `(gid, eid)`: eid is null when adding. Records compare by value, so they work as a family key.
 typedef ExpenseFormKey = ({String gid, String? eid});
@@ -609,12 +610,94 @@ class ExpenseFormController extends Notifier<ExpenseFormView> {
       _set(next);
       return;
     }
+    if (mode == SplitMode.shares) {
+      // Everyone starts with their default share (or 1); the user edits from there. Nothing is calculated here.
+      if (next.shares.rows.isEmpty) next = next.copyWith(shares: next.shares.copyWith(rows: _shareRows(memberIds)));
+      _set(next);
+      return;
+    }
     if (mode != SplitMode.all && (f.splitMode == SplitMode.all || f.selectedIds.isEmpty)) {
       next = next.copyWith(selectedIds: {...memberIds});
     }
     if (mode == SplitMode.exact) next = next.copyWith(exactTexts: const {});
     _set(next);
     if (mode == SplitMode.exact) unawaited(prefillExact());
+  }
+
+  // ---- shares (SA19) ----
+
+  /// One row per id in [ids] (in member order), with the member's default share or 1 unit.
+  List<ShareRowDraft> _shareRows(Iterable<String> ids, {List<ShareRowDraft> keep = const []}) {
+    final wanted = ids.toSet();
+    final kept = {for (final r in keep) r.memberId: r};
+    return [
+      for (final m in members)
+        if (wanted.contains(m.id)) kept[m.id] ?? ShareRowDraft(memberId: m.id, units: (m.defaultShareUnits ?? kMinShareUnits).clamp(kMinShareUnits, kMaxShareUnits)),
+    ];
+  }
+
+  void _setShares(SharesDraft draft) {
+    final f = form;
+    if (f != null) _set(f.copyWith(shares: draft));
+  }
+
+  /// One step of a person's units, kept inside the allowed range.
+  void stepShareUnits(String memberId, int delta) {
+    final f = form;
+    if (f == null) return;
+    final rows = [
+      for (final r in f.shares.rows) r.memberId == memberId ? r.copyWith(units: (r.units + delta).clamp(kMinShareUnits, kMaxShareUnits)) : r,
+    ];
+    _setShares(f.shares.copyWith(rows: rows));
+  }
+
+  /// The people picked in the member picker: new people start with their default share, removed ones are dropped, the
+  /// rest keep what was set.
+  void setShareMembers(Set<String> ids) {
+    final f = form;
+    if (f == null) return;
+    _setShares(f.shares.copyWith(rows: _shareRows(ids, keep: f.shares.rows)));
+  }
+
+  /// The billing period, both dates at once. A person's presence that is no longer inside it goes back to "full
+  /// period" (a comparison of dates only).
+  void setPeriod(Date from, Date to) {
+    final f = form;
+    if (f == null) return;
+    final rows = [
+      for (final r in f.shares.rows)
+        r.hasPresence && (r.presentFrom!.compareTo(from) < 0 || r.presentTo!.compareTo(to) > 0) ? r.copyWith(clearPresence: true) : r,
+    ];
+    _setShares(f.shares.copyWith(rows: rows, periodOn: true, periodFrom: from, periodTo: to));
+  }
+
+  /// Billing period off: no period and nobody has a presence range.
+  void clearPeriod() {
+    final f = form;
+    if (f == null) return;
+    _setShares(f.shares.copyWith(rows: [for (final r in f.shares.rows) r.copyWith(clearPresence: true)], periodOn: false, clearPeriod: true));
+  }
+
+  void setPresence(String memberId, Date from, Date to) {
+    final f = form;
+    if (f == null) return;
+    _setShares(f.shares.copyWith(rows: [for (final r in f.shares.rows) r.memberId == memberId ? r.copyWith(presentFrom: from, presentTo: to) : r]));
+  }
+
+  void resetPresence(String memberId) {
+    final f = form;
+    if (f == null) return;
+    _setShares(f.shares.copyWith(rows: [for (final r in f.shares.rows) r.memberId == memberId ? r.copyWith(clearPresence: true) : r]));
+  }
+
+  /// Which row or the period the server's last refusal named (the last save, or the split preview of the form as it is).
+  SharesFieldErrors sharesFieldErrors() {
+    final f = form;
+    if (f == null || f.splitMode != SplitMode.shares) return SharesFieldErrors.none;
+    final command = buildExpenseCommand(f, edit: isEdit, memberIds: memberIds, preview: true);
+    final preview = ref.read(expensePreviewControllerProvider((gid: gid, slot: PreviewSlot.split)));
+    final previewFailure = command != null && preview.key == commandKey(command) && preview.status == PreviewStatus.failed ? preview.failure : null;
+    return sharesFieldErrorsOf([state.failure, previewFailure], f.participantIds(memberIds));
   }
 
   /// Checks or unchecks a member in Selected and Exact mode.

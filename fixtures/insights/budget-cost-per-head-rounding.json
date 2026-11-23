@@ -1,0 +1,27 @@
+{
+  "name": "budget-cost-per-head-rounding",
+  "description": "STANDALONE_SPEC 20.3: budget 100.00 over 3 ACTIVE members (the group's 4th member is LEFT and is not counted, so activeMemberCount is 3): LRM parts 33.34 / 33.33 / 33.33, the largest is the estimate. No expenses: no daily average.",
+  "input": {
+    "budgetMinor": 10000,
+    "tripStartDate": null,
+    "tripEndDate": null,
+    "activeMemberCount": 3,
+    "today": "2026-11-02",
+    "expenses": []
+  },
+  "expected": {
+    "budgetMinor": 10000,
+    "spentMinor": 0,
+    "remainingMinor": 10000,
+    "overBudget": false,
+    "overByMinor": null,
+    "progressBps": 0,
+    "barFillBps": 0,
+    "perDay": [],
+    "elapsedDays": null,
+    "dailyAverageMinor": null,
+    "daysLeft": null,
+    "perDayLeftMinor": null,
+    "costPerHeadMinor": 3334
+  }
+}

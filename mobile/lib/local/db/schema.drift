@@ -53,7 +53,13 @@ CREATE TABLE expense_groups (
     treasurer_member_id TEXT REFERENCES members (id),
     -- Schema 11 (A184): set when the group is archived (UTC epoch ms); NULL = active. An archived group is hidden
     -- from the groups list and is deleted for good after `local_meta.archive_retention_days`.
-    archived_at INTEGER
+    archived_at INTEGER,
+    -- Schema 12 (A190, A193, Java V23): trip budget settings, each optional and clearable. Column CHECKs (added with
+    -- ADD COLUMN; the table is not rebuilt): budget 1..10^12, real dates, end >= start when both are set.
+    budget_minor INTEGER CHECK (budget_minor IS NULL OR budget_minor BETWEEN 1 AND 1000000000000),
+    trip_start_date TEXT CHECK (trip_start_date IS NULL OR date(trip_start_date) IS trip_start_date),
+    trip_end_date TEXT CHECK (trip_end_date IS NULL OR (date(trip_end_date) IS trip_end_date
+        AND (trip_start_date IS NULL OR trip_end_date >= trip_start_date)))
 ) STRICT AS GroupRow;
 
 CREATE INDEX ix_expense_groups_owner_created ON expense_groups (owner_user_id, created_at DESC, id DESC);
@@ -73,6 +79,8 @@ CREATE TABLE members (
     joined_at    INTEGER,
     left_at      INTEGER,
     created_at   INTEGER NOT NULL,
+    -- Schema 12 (A188, Java V23): the default weight, a SHARES form prefill only.
+    default_share_units INTEGER CHECK (default_share_units IS NULL OR default_share_units BETWEEN 1 AND 100),
     CONSTRAINT uq_members_group_sort_order UNIQUE (group_id, sort_order),
     CONSTRAINT uq_members_group_name_key UNIQUE (group_id, name_key),
     CONSTRAINT ck_members_owner_linked_active CHECK (role <> 'OWNER' OR (user_id IS NOT NULL AND status = 'ACTIVE')),
@@ -103,7 +111,7 @@ CREATE TABLE expenses (
     id                 TEXT    NOT NULL PRIMARY KEY CHECK (length(id) = 36),
     group_id           TEXT    NOT NULL REFERENCES expense_groups (id),
     title              TEXT    NOT NULL CHECK (length(trim(title)) BETWEEN 1 AND 100),
-    split_type         TEXT    NOT NULL CHECK (split_type IN ('EQUAL', 'EXACT', 'ITEMIZED')),
+    split_type         TEXT    NOT NULL CHECK (split_type IN ('EQUAL', 'EXACT', 'ITEMIZED', 'SHARES')),
     total_minor        INTEGER NOT NULL CHECK (total_minor BETWEEN 1 AND 1000000000000),
     expense_date       TEXT    NOT NULL CHECK (date(expense_date) IS expense_date),
     subtotal_minor     INTEGER,
@@ -131,6 +139,14 @@ CREATE TABLE expenses (
     -- Schema 9 (Java V22, A180): the delivery amount (request and computed total are the same number). NULL on
     -- EQUAL/EXACT, 0 or more on ITEMIZED.
     delivery_minor        INTEGER CHECK (delivery_minor IS NULL OR delivery_minor BETWEEN 0 AND 1000000000000),
+    -- Schema 12 (A186, Java V23): the optional inclusive period of a SHARES expense (independent of expense_date).
+    period_from           TEXT    CHECK (period_from IS NULL OR date(period_from) IS period_from),
+    period_to             TEXT    CHECK (period_to IS NULL OR date(period_to) IS period_to),
+    -- Both bounds or neither; only on SHARES; inclusive and at most 366 days (to - from <= 365).
+    CONSTRAINT ck_expenses_period CHECK (
+        (period_from IS NULL AND period_to IS NULL)
+        OR (split_type = 'SHARES' AND period_from IS NOT NULL AND period_to IS NOT NULL
+            AND period_to >= period_from AND julianday(period_to) - julianday(period_from) <= 365)),
     -- Each charge is in one form at most: a percentage or an amount (A171, A173).
     CONSTRAINT ck_expenses_charge_one_form CHECK (
         NOT (discount_bps IS NOT NULL AND discount_amount_minor IS NOT NULL)
@@ -191,7 +207,19 @@ CREATE TABLE expense_splits (
     discount_minor   INTEGER,
     -- Schema 9 (Java V22, A180): this member's part of the delivery (ITEMIZED breakdown only).
     delivery_minor   INTEGER,
+    -- Schema 12 (A185, A186, Java V23): SHARES inputs (owed_minor stays the stored result). Presence is stored
+    -- normalized: with a period both bounds are set.
+    share_units      INTEGER CHECK (share_units IS NULL OR share_units BETWEEN 1 AND 100),
+    present_from     TEXT    CHECK (present_from IS NULL OR date(present_from) IS present_from),
+    present_to       TEXT    CHECK (present_to IS NULL OR date(present_to) IS present_to),
     PRIMARY KEY (expense_id, member_id),
+    -- Presence is both bounds or neither, only next to units, and not reversed.
+    CONSTRAINT ck_expense_splits_presence CHECK (
+        (present_from IS NULL AND present_to IS NULL)
+        OR (share_units IS NOT NULL AND present_from IS NOT NULL AND present_to IS NOT NULL
+            AND present_to >= present_from)),
+    -- A split row is either an itemized breakdown row or a SHARES row, never both.
+    CONSTRAINT ck_expense_splits_shares_not_itemized CHECK (share_units IS NULL OR items_minor IS NULL),
     -- The breakdown is all-or-nothing and explains owed exactly; a member's discount part never exceeds their items.
     CONSTRAINT ck_expense_splits_breakdown CHECK (
         (items_minor IS NULL AND discount_minor IS NULL AND service_minor IS NULL AND tax_minor IS NULL

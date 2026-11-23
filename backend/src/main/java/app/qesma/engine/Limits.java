@@ -9,6 +9,13 @@ public final class Limits {
 
     public static final long MAX_AMOUNT_MINOR = 1_000_000_000_000L;
 
+    /** SHARES units per participant (A185). */
+    public static final int MIN_SHARE_UNITS = 1;
+    public static final int MAX_SHARE_UNITS = 100;
+
+    /** Longest SHARES period, inclusive (A186). */
+    public static final int MAX_PERIOD_DAYS = 366;
+
     private Limits() {
     }
 

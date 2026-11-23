@@ -17,10 +17,13 @@ import app.qesma.persistence.UserRepository;
 import app.qesma.persistence.YourNetQuery;
 import app.qesma.domain.User;
 import app.qesma.engine.BalanceCalculator;
+import app.qesma.engine.Limits;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Clock;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -134,9 +137,24 @@ public class GroupService {
      * VERSION_CONFLICT, and Hibernate's version check catches a race between this check and the write.
      * Ownership (404) is decided before anything about versions or input is revealed.
      */
-    @Transactional
+    @Transactional // self-invocation bypasses the proxy, so this overload opens the transaction itself
     public ExpenseGroup update(UUID userId, UUID groupId, int expectedVersion, String rawName, String rawType,
                                UUID treasurerMemberId) {
+        return update(userId, groupId, expectedVersion, rawName, rawType, treasurerMemberId, BudgetPatch.NONE);
+    }
+
+    /**
+     * The trip budget settings of {@code PATCH /groups/{gid}} (A190, A193). A null value is "not sent"; a
+     * {@code clear*} flag clears that field; a value and its clear flag together are a 422.
+     */
+    public record BudgetPatch(Long budgetMinor, boolean clearBudget, LocalDate tripStartDate,
+                              boolean clearTripStartDate, LocalDate tripEndDate, boolean clearTripEndDate) {
+        public static final BudgetPatch NONE = new BudgetPatch(null, false, null, false, null, false);
+    }
+
+    @Transactional
+    public ExpenseGroup update(UUID userId, UUID groupId, int expectedVersion, String rawName, String rawType,
+                               UUID treasurerMemberId, BudgetPatch budget) {
         // Row lock: deposits and pool expenses take the same lock, so the pool-untouched check below cannot race them.
         ExpenseGroup group = access.requireForUpdate(userId, groupId, Permission.EDIT_GROUP).group();
         if (group.getVersion() != expectedVersion) {
@@ -148,15 +166,52 @@ public class GroupService {
         if (treasurerChanges) {
             requireTreasurerChange(group, treasurerMemberId);
         }
-        if (!name.equals(group.getName()) || !type.equals(group.getType()) || treasurerChanges) {
+        BudgetPatch b = budget == null ? BudgetPatch.NONE : budget;
+        Long newBudget = resulting(b.budgetMinor(), b.clearBudget(), group.getBudgetMinor(), "budgetMinor");
+        LocalDate newStart = resulting(b.tripStartDate(), b.clearTripStartDate(), group.getTripStartDate(),
+                "tripStartDate");
+        LocalDate newEnd = resulting(b.tripEndDate(), b.clearTripEndDate(), group.getTripEndDate(), "tripEndDate");
+        if (newBudget != null && (newBudget < 1 || newBudget > Limits.MAX_AMOUNT_MINOR)) {
+            throw ApiException.validation("budgetMinor must be between 1 and " + Limits.MAX_AMOUNT_MINOR);
+        }
+        requireTripDate(newStart, "tripStartDate");
+        requireTripDate(newEnd, "tripEndDate");
+        // Checked on the resulting state, so sending only one date cannot leave the stored pair reversed.
+        if (newStart != null && newEnd != null && newEnd.isBefore(newStart)) {
+            throw ApiException.validation("tripEndDate must not be before tripStartDate");
+        }
+        boolean budgetChanges = !Objects.equals(newBudget, group.getBudgetMinor())
+                || !Objects.equals(newStart, group.getTripStartDate()) || !Objects.equals(newEnd, group.getTripEndDate());
+        if (!name.equals(group.getName()) || !type.equals(group.getType()) || treasurerChanges || budgetChanges) {
             group.edit(name, type, clock.instant());
             if (treasurerChanges) {
                 group.setTreasurer(treasurerMemberId, clock.instant());
+            }
+            if (budgetChanges) {
+                group.setBudget(newBudget, newStart, newEnd, clock.instant());
             }
             group = groups.saveAndFlush(group); // flush now so the new version is known and a lost race throws here
             record("updated", userId, groupId);
         }
         return group;
+    }
+
+    /** A193: the value after the patch; a value together with its clear flag is a 422. */
+    private static <T> T resulting(T sent, boolean clear, T stored, String field) {
+        if (clear && sent != null) {
+            throw ApiException.validation(field + " and its clear flag cannot both be sent");
+        }
+        if (clear) {
+            return null;
+        }
+        return sent != null ? sent : stored;
+    }
+
+    private static void requireTripDate(LocalDate d, String field) {
+        if (d != null && (d.isBefore(ExpenseValidator.MIN_DATE) || d.isAfter(ExpenseValidator.MAX_DATE))) {
+            throw ApiException.validation(field + " must be between " + ExpenseValidator.MIN_DATE + " and "
+                    + ExpenseValidator.MAX_DATE);
+        }
     }
 
     /**

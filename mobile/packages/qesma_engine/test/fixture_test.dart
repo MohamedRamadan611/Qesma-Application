@@ -16,16 +16,18 @@ List<File> _fixtureFiles() =>
 String _name(File f) => f.uri.pathSegments.last;
 
 void main() {
-  test('all spec vectors are present (V1-V8 spec 10, V9-V16 STANDALONE_SPEC 18.6, V17-V20 delivery A180)', () {
+  test('all spec vectors are present (V1-V8 spec 10, V9-V16 STANDALONE_SPEC 18.6, V17-V20 A180, V21-V28 SHARES 19.2)',
+      () {
     final names = _fixtureFiles().map(_name).toList();
-    expect(names.length, greaterThanOrEqualTo(20));
-    for (var v = 1; v <= 20; v++) {
+    expect(names.length, greaterThanOrEqualTo(28));
+    for (var v = 1; v <= 28; v++) {
       expect(names.any((n) => n.startsWith('V$v-')), isTrue, reason: 'V$v missing');
     }
   });
 
   for (final file in _fixtureFiles()) {
-    test(_name(file), () => _run(jsonDecode(file.readAsStringSync()) as Map<String, dynamic>));
+    final vector = jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
+    test(_name(file), () => _run(vector));
   }
 }
 
@@ -71,6 +73,28 @@ void _run(Map<String, dynamic> fixture) {
         itemized = result;
         total = result.totalMinor;
         owed = {for (final b in result.members) b.memberId: b.owedMinor};
+      case 'SHARES':
+        total = e['totalMinor'] as int;
+        final shares = [
+          for (final p in _list(e['shareParticipants']))
+            WeightedShare(p['memberId'] as String, members.firstWhere((m) => m.id == p['memberId']).sortOrder,
+                p['shareUnits'] as int,
+                presentFrom: p['presentFrom'] as String?, presentTo: p['presentTo'] as String?),
+        ];
+        final period = e.containsKey('periodFrom') || e.containsKey('periodTo')
+            ? SharePeriod(e['periodFrom'] as String?, e['periodTo'] as String?)
+            : null;
+        final rejected =
+            expected.containsKey('expenses') ? _list(expected['expenses'])[i] : const <String, dynamic>{};
+        if (rejected.containsKey('error')) {
+          // A187/A194: the engine itself rejects every SHARES rule; a rejected expense is not in the ledger.
+          final code = EngineErrorCode.values.firstWhere((c) => c.wireName == rejected['error']);
+          expect(() => SplitCalculator.shares(total, shares, period: period),
+              throwsA(isA<EngineException>().having((x) => x.code, 'code', code)),
+              reason: 'expense $i');
+          continue;
+        }
+        owed = SplitCalculator.shares(total, shares, period: period);
       default:
         throw ArgumentError('unknown expense type ${e['type']}');
     }

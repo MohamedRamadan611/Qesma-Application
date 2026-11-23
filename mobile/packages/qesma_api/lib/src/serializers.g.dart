@@ -70,6 +70,7 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(SettlementCommand.serializer)
       ..add(SettlementView.serializer)
       ..add(ShareInput.serializer)
+      ..add(ShareParticipantInput.serializer)
       ..add(ShareView.serializer)
       ..add(TaxCharge.serializer)
       ..add(TaxInput.serializer)
@@ -108,6 +109,10 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(PayerInput)]),
           () => ListBuilder<PayerInput>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(ShareParticipantInput)]),
+          () => ListBuilder<ShareParticipantInput>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(ShareInput)]),
           () => ListBuilder<ShareInput>())

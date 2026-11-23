@@ -6,7 +6,9 @@ import 'package:qesma_api/qesma_api.dart';
 import '../../../core/errors/api_problem.dart';
 import '../../../core/errors/error_copy.dart';
 import '../../../core/format/date_format.dart';
+import '../../../core/format/clock.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
+import '../../../core/money/money.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
@@ -14,6 +16,7 @@ import '../application/group_detail_controller.dart';
 import '../application/groups_list_controller.dart';
 import '../application/group_permissions.dart';
 import '../data/group_type.dart';
+import 'budget_settings_form.dart';
 import 'group_dialogs.dart';
 import 'group_ui.dart';
 import '../../../core/features_for_mode.dart';
@@ -42,6 +45,15 @@ class _EditGroupScreenState extends ConsumerState<EditGroupScreen> {
 
   /// SA10: the chosen treasurer (null = none yet). Only sent when it differs from the group's.
   String? _treasurerId;
+
+  /// SA20: the budget form. An empty amount means "no budget"; the dates are null when not set.
+  String _budgetText = '';
+
+  /// The extra amount typed in "Add to the budget"; "Add" moves it into [_budgetText] and empties this.
+  String _topUpText = '';
+  bool _topUpInvalid = false;
+  Date? _tripStart;
+  Date? _tripEnd;
   bool _filled = false;
 
   /// The user changed the form: reloads (after a conflict) must not overwrite it.
@@ -69,6 +81,13 @@ class _EditGroupScreenState extends ConsumerState<EditGroupScreen> {
     if (_name.text != group.name) _name.text = group.name;
     _type = GroupType.fromWire(group.type);
     _treasurerId = group.treasurerMemberId;
+    _loadBudget(group);
+  }
+
+  void _loadBudget(GroupDto group) {
+    _budgetText = group.budgetMinor == null ? '' : Money.formatPlain(group.budgetMinor!);
+    _tripStart = group.tripStartDate;
+    _tripEnd = group.tripEndDate;
   }
 
   void _fillOnce(GroupDto group) {
@@ -77,6 +96,7 @@ class _EditGroupScreenState extends ConsumerState<EditGroupScreen> {
     _name.text = group.name;
     _type = GroupType.fromWire(group.type);
     _treasurerId = group.treasurerMemberId;
+    _loadBudget(group);
   }
 
   Future<void> _pickTreasurer(GroupDto group) async {
@@ -90,14 +110,69 @@ class _EditGroupScreenState extends ConsumerState<EditGroupScreen> {
     }
   }
 
+  void _applyTopUp() {
+    final extra = Money.parse(_topUpText);
+    final base = Money.parse(_budgetText);
+    final total = extra == null || base == null ? null : Money.addCapped(base, extra);
+    setState(() {
+      if (total == null) {
+        _topUpInvalid = true;
+      } else {
+        _budgetText = Money.formatPlain(total);
+        _topUpText = '';
+        _topUpInvalid = false;
+        _touched = true;
+      }
+    });
+  }
+
+  Future<void> _pickTripDate({required bool start}) async {
+    final picked = await pickTripDate(
+      context,
+      today: ref.read(clockProvider)().toDate(),
+      current: start ? _tripStart : _tripEnd,
+      notBefore: start ? null : _tripStart,
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      if (start) {
+        _tripStart = picked;
+        // An end before the new start would be reversed: drop it (it is optional) rather than keep an invalid pair.
+        if (_tripEnd != null && _tripEnd!.compareTo(_tripStart!) < 0) _tripEnd = null;
+      } else {
+        _tripEnd = picked;
+      }
+      _touched = true;
+    });
+  }
+
+  void _clearTripDate({required bool start}) => setState(() {
+        if (start) {
+          _tripStart = null;
+        } else {
+          _tripEnd = null;
+        }
+        _touched = true;
+      });
+
   Future<void> _save() async {
     final l10n = AppLocalizations.of(context);
     final controller = ref.read(groupDetailControllerProvider(widget.gid).notifier);
-    final current = ref.read(groupDetailControllerProvider(widget.gid)).group?.treasurerMemberId;
+    final saved = ref.read(groupDetailControllerProvider(widget.gid)).group;
+    final current = saved?.treasurerMemberId;
+    final budgetOn = ref.read(modeFeaturesProvider).budget;
+    final budget = Money.parse(_budgetText);
+    final clearBudget = budgetOn && _budgetText.trim().isEmpty && saved?.budgetMinor != null;
     final failure = await controller.save(
       name: _name.text.trim(),
       type: _type.wire,
       treasurerMemberId: _treasurerId != current ? _treasurerId : null,
+      budgetMinor: budgetOn && budget != null && budget != saved?.budgetMinor ? budget : null,
+      clearBudget: clearBudget,
+      tripStartDate: budgetOn && _tripStart != null && _tripStart != saved?.tripStartDate ? _tripStart : null,
+      tripEndDate: budgetOn && _tripEnd != null && _tripEnd != saved?.tripEndDate ? _tripEnd : null,
+      clearTripStartDate: budgetOn && _tripStart == null && saved?.tripStartDate != null,
+      clearTripEndDate: budgetOn && _tripEnd == null && saved?.tripEndDate != null,
     );
     if (!mounted) return;
     if (failure == null) {
@@ -117,6 +192,14 @@ class _EditGroupScreenState extends ConsumerState<EditGroupScreen> {
       default:
         showFailureSnack(context, failure);
     }
+  }
+
+  /// SA20: the budget form differs from what is saved.
+  bool _budgetChanged(GroupDto group) {
+    final saved = group.budgetMinor;
+    final typed = _budgetText.trim().isEmpty ? null : Money.parse(_budgetText);
+    final amountChanged = _budgetText.trim().isEmpty ? saved != null : typed != saved;
+    return amountChanged || _tripStart != group.tripStartDate || _tripEnd != group.tripEndDate;
   }
 
   /// A184: archive a settled group (local mode). It leaves the list and is deleted after the retention period.
@@ -191,6 +274,9 @@ class _EditGroupScreenState extends ConsumerState<EditGroupScreen> {
     final group = detail.group;
     if (group != null) _fillOnce(group);
     final poolOn = ref.watch(modeFeaturesProvider).pool;
+    final budgetOn = ref.watch(modeFeaturesProvider).budget;
+    final budgetInvalid = budgetOn && _budgetText.trim().isNotEmpty && Money.parse(_budgetText) == null;
+    final hasBudgetText = budgetOn && _budgetText.trim().isNotEmpty;
     // A137: locked once the pool was used (the server's 409 stays the authority).
     final poolLocked = poolOn && (ref.watch(poolSummaryProvider(widget.gid)).value?.locked ?? false);
 
@@ -238,7 +324,8 @@ class _EditGroupScreenState extends ConsumerState<EditGroupScreen> {
                       _touched = true;
                     }),
           ),
-          if (poolOn) ...[
+          // A199: a group has a pool treasurer or a trip budget, never both. Each section hides while the other is in use.
+          if (poolOn && !hasBudgetText) ...[
             const SizedBox(height: QesmaSpacing.lg),
             _PoolSection(
               group: group,
@@ -247,17 +334,45 @@ class _EditGroupScreenState extends ConsumerState<EditGroupScreen> {
               onPick: detail.busy || poolLocked ? null : () => _pickTreasurer(group),
             ),
           ],
+          if (budgetOn && _treasurerId == null) ...[
+            const SizedBox(height: QesmaSpacing.lg),
+            BudgetSettingsForm(
+              amountText: _budgetText,
+              amountInvalid: budgetInvalid,
+              start: _tripStart,
+              end: _tripEnd,
+              enabled: !detail.busy,
+              onAmount: (text) => setState(() {
+                _budgetText = text;
+                _touched = true;
+              }),
+              topUpText: group.budgetMinor != null && Money.parse(_budgetText) != null ? _topUpText : null,
+              topUpInvalid: _topUpInvalid,
+              onTopUpText: (text) => setState(() {
+                _topUpText = text;
+                _topUpInvalid = false;
+              }),
+              onTopUp: _applyTopUp,
+              onClear: () => setState(() {
+                _budgetText = '';
+                _touched = true;
+              }),
+              onPick: (start) => _pickTripDate(start: start),
+              onClearDate: (start) => _clearTripDate(start: start),
+            ),
+          ],
           const SizedBox(height: QesmaSpacing.lg),
           ListenableBuilder(
             listenable: _name,
             builder: (context, _) {
               final changed =
-                  _name.text.trim() != group.name || _type.wire != group.type || _treasurerId != group.treasurerMemberId;
+                  _name.text.trim() != group.name || _type.wire != group.type || _treasurerId != group.treasurerMemberId ||
+                  (budgetOn && _budgetChanged(group));
               return AppButton(
                 label: l10n.groupSaveChanges,
                 icon: Icons.check,
                 loading: detail.busy,
-                onPressed: changed && _name.text.trim().isNotEmpty && !detail.busy ? _save : null,
+                onPressed: changed && _name.text.trim().isNotEmpty && !budgetInvalid && !detail.busy ? _save : null,
               );
             },
           ),

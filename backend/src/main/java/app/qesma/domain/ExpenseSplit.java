@@ -9,6 +9,7 @@ import jakarta.persistence.PostPersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.util.Objects;
 import java.util.UUID;
 import org.springframework.data.domain.Persistable;
@@ -52,6 +53,17 @@ public class ExpenseSplit implements Persistable<ExpenseSplit.Key> {
     @Column(name = "delivery_minor", updatable = false)
     private Long deliveryMinor;
 
+    // SHARES inputs (A185-A186, NULL on other types); presence is stored normalized: both bounds when the expense
+    // has a period (defaulted to the period), NULL without one (A195)
+    @Column(name = "share_units", updatable = false)
+    private Integer shareUnits;
+
+    @Column(name = "present_from", updatable = false)
+    private LocalDate presentFrom;
+
+    @Column(name = "present_to", updatable = false)
+    private LocalDate presentTo;
+
     @Transient
     private boolean isNew = true;
 
@@ -74,6 +86,16 @@ public class ExpenseSplit implements Persistable<ExpenseSplit.Key> {
         this.serviceMinor = serviceMinor;
         this.taxMinor = taxMinor;
         this.adjustmentMinor = adjustmentMinor;
+    }
+
+    /** SHARES: the units and the (normalized) presence next to the owed amount. */
+    public static ExpenseSplit shares(UUID expenseId, UUID memberId, long owedMinor, int shareUnits,
+                                      LocalDate presentFrom, LocalDate presentTo) {
+        ExpenseSplit s = new ExpenseSplit(expenseId, memberId, owedMinor);
+        s.shareUnits = shareUnits;
+        s.presentFrom = presentFrom;
+        s.presentTo = presentTo;
+        return s;
     }
 
     @Override
@@ -126,6 +148,18 @@ public class ExpenseSplit implements Persistable<ExpenseSplit.Key> {
 
     public Long getDeliveryMinor() {
         return deliveryMinor;
+    }
+
+    public Integer getShareUnits() {
+        return shareUnits;
+    }
+
+    public LocalDate getPresentFrom() {
+        return presentFrom;
+    }
+
+    public LocalDate getPresentTo() {
+        return presentTo;
     }
 
     /** Composite primary key (expense_id, member_id). */

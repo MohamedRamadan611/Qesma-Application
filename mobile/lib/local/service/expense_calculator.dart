@@ -4,10 +4,19 @@ import '../db/local_database.dart';
 import '../errors.dart';
 import 'expense_validator.dart';
 
-/// One member's share as the API shows it; the five breakdown fields are set for ITEMIZED only.
+/// One member's share as the API shows it; the breakdown fields are set for ITEMIZED only, the units and the
+/// normalized presence for SHARES only.
 final class ShareComp {
   const ShareComp(this.memberId, this.owedMinor,
-      {this.itemsMinor, this.discountMinor, this.serviceMinor, this.taxMinor, this.adjustmentMinor, this.deliveryMinor});
+      {this.itemsMinor,
+      this.discountMinor,
+      this.serviceMinor,
+      this.taxMinor,
+      this.adjustmentMinor,
+      this.deliveryMinor,
+      this.shareUnits,
+      this.presentFrom,
+      this.presentTo});
   final String memberId;
   final int owedMinor;
   final int? itemsMinor;
@@ -16,6 +25,9 @@ final class ShareComp {
   final int? taxMinor;
   final int? adjustmentMinor;
   final int? deliveryMinor;
+  final int? shareUnits;
+  final String? presentFrom;
+  final String? presentTo;
 }
 
 /// Everything the engine decided about a request (Java `ExpenseCalculator.Computation`). Itemized fields are null
@@ -40,6 +52,8 @@ final class Computation {
     this.taxMinor = 0,
     this.adjustmentMinor = 0,
     this.deliveryMinor = 0,
+    this.periodFrom,
+    this.periodTo,
   });
 
   final String splitType;
@@ -59,6 +73,10 @@ final class Computation {
   final int deliveryMinor;
   final List<ShareComp> shares;
   final List<Payer> payers;
+
+  /// SHARES only: the optional period (A186), null otherwise.
+  final String? periodFrom;
+  final String? periodTo;
 
   bool get itemized => splitType == 'ITEMIZED';
 
@@ -92,6 +110,7 @@ abstract final class ExpenseCalculator {
       final computed = switch (request.splitType) {
         'EQUAL' => _equal(request, roster, payers),
         'EXACT' => _exact(request, roster, payers),
+        'SHARES' => _shares(request, roster, payers),
         _ => _itemized(request, roster, payers),
       };
       // The engine computes an ITEMIZED total itself: it must respect the same cap as a stated one (CP2-001).
@@ -136,6 +155,35 @@ abstract final class ExpenseCalculator {
   static Computation _exact(ValidExpense request, _Roster roster, List<Payer> payers) {
     final shares = [for (final s in request.shares!) Share(roster.require(s.memberId), s.amountMinor)];
     return _plain(request, roster, SplitCalculator.exact(request.totalMinor, shares), payers);
+  }
+
+  /// SHARES (A185-A186, Java `ExpenseCalculator.shares`): members follow the EQUAL rules (usable roster); presence
+  /// is already normalized by the validator.
+  static Computation _shares(ValidExpense request, _Roster roster, List<Payer> payers) {
+    final byId = <String, ValidShareParticipant>{};
+    final weighted = <WeightedShare>[];
+    for (final p in request.shareParticipants!) {
+      final id = roster.require(p.memberId);
+      byId[id] = p;
+      weighted.add(WeightedShare(id, roster.usable[id]!.sortOrder, p.shareUnits,
+          presentFrom: p.presentFrom, presentTo: p.presentTo));
+    }
+    final period = request.periodFrom == null ? null : SharePeriod(request.periodFrom, request.periodTo);
+    final owed = SplitCalculator.shares(request.totalMinor, weighted, period: period);
+    return Computation(
+      splitType: 'SHARES',
+      totalMinor: request.totalMinor,
+      shares: [
+        for (final e in owed.entries) // already in sortOrder order
+          ShareComp(e.key, e.value,
+              shareUnits: byId[e.key]!.shareUnits,
+              presentFrom: byId[e.key]!.presentFrom,
+              presentTo: byId[e.key]!.presentTo),
+      ],
+      payers: payers,
+      periodFrom: request.periodFrom,
+      periodTo: request.periodTo,
+    );
   }
 
   static Computation _plain(ValidExpense request, _Roster roster, Map<String, int> owed, List<Payer> payers) {

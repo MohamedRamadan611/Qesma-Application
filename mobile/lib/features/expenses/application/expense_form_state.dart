@@ -5,8 +5,9 @@ import '../../../core/widgets/code_point_limit.dart';
 import 'expense_draft.dart' show ScanNote;
 
 /// Which people share the expense and how: everyone or some members equally, typed exact
-/// amounts, or a restaurant bill with items, service, tax and an adjustment (itemized).
-enum SplitMode { all, selected, exact, itemized }
+/// amounts, a restaurant bill with items, service, tax and an adjustment (itemized), or units per person with an
+/// optional billing period (shares, SA19).
+enum SplitMode { all, selected, exact, itemized, shares }
 
 /// Sections of the form a missing field can be in, in screen order (scroll-to-first-error).
 enum ErrorSection { title, payers, items, charges }
@@ -62,6 +63,10 @@ enum ChargeKind { discount, service, tax }
 
 /// A charge is typed as a percentage or as an amount (A171, A173).
 enum ChargeMode { percent, amount }
+
+/// Units a person can hold in a shares split (A187; the server decides, the stepper only keeps inside the range).
+const int kMinShareUnits = 1;
+const int kMaxShareUnits = 100;
 
 /// Quantity limits of an item (A172).
 const int kMinQuantity = 1;
@@ -305,6 +310,78 @@ class ItemizedDraft {
   }
 }
 
+/// One person of a shares split as the user set it: units, and optionally the dates they were present (both or none; null
+/// means the whole billing period). Pure state: no day counting, the server prorates.
+class ShareRowDraft {
+  const ShareRowDraft({required this.memberId, this.units = kMinShareUnits, this.presentFrom, this.presentTo});
+
+  final String memberId;
+  final int units;
+  final Date? presentFrom;
+  final Date? presentTo;
+
+  /// True when the person is present for part of the period only.
+  bool get hasPresence => presentFrom != null && presentTo != null;
+
+  bool get unitsValid => units >= kMinShareUnits && units <= kMaxShareUnits;
+
+  ShareRowDraft copyWith({int? units, Date? presentFrom, Date? presentTo, bool clearPresence = false}) => ShareRowDraft(
+        memberId: memberId,
+        units: units ?? this.units,
+        presentFrom: clearPresence ? null : (presentFrom ?? this.presentFrom),
+        presentTo: clearPresence ? null : (presentTo ?? this.presentTo),
+      );
+
+  bool sameAs(ShareRowDraft other) =>
+      memberId == other.memberId && units == other.units && presentFrom == other.presentFrom && presentTo == other.presentTo;
+}
+
+/// The shares split being edited: who takes part with how many units, and an optional billing period (both dates or no
+/// period). The amounts that come out of it are the preview's, never worked out here.
+class SharesDraft {
+  const SharesDraft({this.rows = const [], this.periodOn = false, this.periodFrom, this.periodTo});
+
+  /// In the group's member order.
+  final List<ShareRowDraft> rows;
+  final bool periodOn;
+  final Date? periodFrom;
+  final Date? periodTo;
+
+  bool get periodComplete => !periodOn || (periodFrom != null && periodTo != null);
+
+  ShareRowDraft? rowOf(String memberId) {
+    for (final row in rows) {
+      if (row.memberId == memberId) return row;
+    }
+    return null;
+  }
+
+  /// Rows of current members (a removed member's row is ignored).
+  List<ShareRowDraft> rowsAmong(List<String> memberIds) => [for (final id in memberIds) ?rowOf(id)];
+
+  bool valid(List<String> memberIds) {
+    final among = rowsAmong(memberIds);
+    return among.isNotEmpty && among.every((r) => r.unitsValid) && periodComplete;
+  }
+
+  SharesDraft copyWith({List<ShareRowDraft>? rows, bool? periodOn, Date? periodFrom, Date? periodTo, bool clearPeriod = false}) => SharesDraft(
+        rows: rows ?? this.rows,
+        periodOn: periodOn ?? this.periodOn,
+        periodFrom: clearPeriod ? null : (periodFrom ?? this.periodFrom),
+        periodTo: clearPeriod ? null : (periodTo ?? this.periodTo),
+      );
+
+  bool sameAs(SharesDraft other) {
+    if (periodOn != other.periodOn || periodFrom != other.periodFrom || periodTo != other.periodTo || rows.length != other.rows.length) {
+      return false;
+    }
+    for (var i = 0; i < rows.length; i++) {
+      if (!rows[i].sameAs(other.rows[i])) return false;
+    }
+    return true;
+  }
+}
+
 /// Everything the user typed or chose on the add/edit form. Immutable; the controller
 /// replaces it as a whole. Pure: no I/O and no money arithmetic beyond ADDING UP what the
 /// user typed (the "remaining" indicators the spec allows). Splits, rounding, service, tax and
@@ -324,6 +401,7 @@ class ExpenseFormState {
     this.payerMode = PayerMode.single,
     this.payerTexts = const {},
     this.itemized = const ItemizedDraft(),
+    this.shares = const SharesDraft(),
     this.serverTotalMinor,
     this.printedTotalMinor,
     this.scanNotes = const {},
@@ -364,6 +442,9 @@ class ExpenseFormState {
   /// The restaurant bill (used in [SplitMode.itemized]).
   final ItemizedDraft itemized;
 
+  /// The shares split (used in [SplitMode.shares]).
+  final SharesDraft shares;
+
   /// The total the SERVER reported for the current itemized inputs (a copy of the preview's
   /// `totalMinor`). Null while the inputs changed and no answer for them has arrived yet.
   final int? serverTotalMinor;
@@ -399,6 +480,7 @@ class ExpenseFormState {
     String? singlePayerId,
     Map<String, String>? payerTexts,
     ItemizedDraft? itemized,
+    SharesDraft? shares,
     int? serverTotalMinor,
     int? printedTotalMinor,
     Set<ScanNote>? scanNotes,
@@ -423,6 +505,7 @@ class ExpenseFormState {
         singlePayerId: singlePayerId ?? this.singlePayerId,
         payerTexts: payerTexts ?? this.payerTexts,
         itemized: itemized ?? this.itemized,
+        shares: shares ?? this.shares,
         serverTotalMinor: clearServerTotal ? null : (serverTotalMinor ?? this.serverTotalMinor),
         printedTotalMinor: printedTotalMinor ?? this.printedTotalMinor,
         scanNotes: scanNotes ?? this.scanNotes,
@@ -452,8 +535,11 @@ class ExpenseFormState {
   // ---- split ----
 
   /// Who shares the expense, in the group's member order.
-  List<String> participantIds(List<String> memberIds) =>
-      splitMode == SplitMode.all ? memberIds : [for (final id in memberIds) if (selectedIds.contains(id)) id];
+  List<String> participantIds(List<String> memberIds) => switch (splitMode) {
+        SplitMode.all => memberIds,
+        SplitMode.shares => [for (final row in shares.rowsAmong(memberIds)) row.memberId],
+        _ => [for (final id in memberIds) if (selectedIds.contains(id)) id],
+      };
 
   /// Amount typed for [memberId] in Exact mode (0 allowed), or null when empty/invalid.
   int? exactMinorOf(String memberId) {
@@ -488,6 +574,7 @@ class ExpenseFormState {
         SplitMode.selected => participantIds(memberIds).isNotEmpty,
         SplitMode.exact => exactValid(memberIds),
         SplitMode.itemized => itemized.valid(memberIds),
+        SplitMode.shares => shares.valid(memberIds),
       };
 
   // ---- payers ----
@@ -585,7 +672,8 @@ class ExpenseFormState {
       payerMode != other.payerMode ||
       singlePayerId != other.singlePayerId ||
       !_sameMap(payerTexts, other.payerTexts) ||
-      !itemized.sameAs(other.itemized);
+      !itemized.sameAs(other.itemized) ||
+      !shares.sameAs(other.shares);
 
   static bool _sameSet(Set<String> a, Set<String> b) => a.length == b.length && a.containsAll(b);
 

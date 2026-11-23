@@ -15,6 +15,7 @@ void main() {
   _deliveryMigrationTests(() => verifier);
   _instapayLinkMigrationTests(() => verifier);
   _archiveMigrationTests(() => verifier);
+  _sharesBudgetMigrationTests(() => verifier);
 
   test('the exported v1 snapshot matches the schema in code', () async {
     final connection = await verifier.startAt(1);
@@ -117,12 +118,25 @@ void main() {
 
     final db = LocalDatabase(schema.newConnection());
     await verifier.migrateAndValidate(db, 7);
-    final meta = await db.metaDao.get();
-    expect(meta.lastReminderTone, 'SOFT');
-    expect((meta.ocrConsentAt, meta.ocrScanDay, meta.ocrScanCount, meta.ocrPermissionErrors, meta.ocrHiddenUntil), (null, null, 0, 0, null));
+    // Read raw: the current row class also maps columns added after v7 (archive_retention_days, schema 11).
+    Future<(String?, int?, String?, int, int, int?)> ocr() async {
+      final r = await db
+          .customSelect('SELECT last_reminder_tone, ocr_consent_at, ocr_scan_day, ocr_scan_count, '
+              'ocr_permission_errors, ocr_hidden_until FROM local_meta')
+          .getSingle();
+      return (
+        r.readNullable<String>('last_reminder_tone'),
+        r.readNullable<int>('ocr_consent_at'),
+        r.readNullable<String>('ocr_scan_day'),
+        r.read<int>('ocr_scan_count'),
+        r.read<int>('ocr_permission_errors'),
+        r.readNullable<int>('ocr_hidden_until'),
+      );
+    }
+
+    expect(await ocr(), ('SOFT', null, null, 0, 0, null));
     await db.metaDao.writeOcr(consentAt: 5, scanDay: '2026-11-19', scanCount: 3, permissionErrors: 1, hiddenUntil: 99);
-    final after = await db.metaDao.get();
-    expect((after.ocrConsentAt, after.ocrScanDay, after.ocrScanCount, after.ocrPermissionErrors, after.ocrHiddenUntil), (5, '2026-11-19', 3, 1, 99));
+    expect(await ocr(), ('SOFT', 5, '2026-11-19', 3, 1, 99));
     // The schema refuses a malformed day and a negative counter.
     await expectLater(db.metaDao.writeOcr(consentAt: null, scanDay: '19/11/2026', scanCount: 0, permissionErrors: 0, hiddenUntil: null), throwsA(anything));
     await expectLater(db.metaDao.writeOcr(consentAt: null, scanDay: null, scanCount: -1, permissionErrors: 0, hiddenUntil: null), throwsA(anything));
@@ -348,6 +362,101 @@ void _archiveMigrationTests(SchemaVerifier Function() verifier) {
         await expectLater(db.metaDao.setArchiveRetentionDays(bad), throwsA(anything), reason: '$bad');
       }
       await db.close();
+    });
+  });
+}
+
+/// v11 -> v12: SHARES and trip budget settings (SA18, Java V23). expenses and expense_splits are rebuilt; members and
+/// expense_groups gain nullable columns. Every existing row keeps its values and the new columns are NULL.
+void _sharesBudgetMigrationTests(SchemaVerifier Function() verifier) {
+  group('v11 -> v12 SHARES and trip budget (SA18, Java V23)', () {
+    const p = '00000000-0000-4000-8000-000000000001';
+    const g = '00000000-0000-4000-8000-0000000000a1';
+    const m1 = '00000000-0000-4000-8000-0000000000b1';
+    const m2 = '00000000-0000-4000-8000-0000000000b2';
+    const eq = '00000000-0000-4000-8000-0000000000c1';
+    const ex = '00000000-0000-4000-8000-0000000000c2';
+    const it = '00000000-0000-4000-8000-0000000000c3';
+    const st = '00000000-0000-4000-8000-0000000000d1';
+
+    void seedV11(dynamic raw) {
+      raw.execute('INSERT INTO local_meta (id, created_schema_version, created_at) VALUES (1, 11, 1000)');
+      raw.execute("INSERT INTO local_profile (id, display_name, created_at, updated_at) VALUES ('$p', 'Mona', 1, 1)");
+      raw.execute("INSERT INTO expense_groups (id, owner_user_id, name, type, created_at, updated_at) VALUES ('$g', '$p', 'Flat', 'HOUSING', 1, 1)");
+      raw.execute("INSERT INTO members (id, group_id, display_name, name_key, user_id, sort_order, role, created_at) VALUES ('$m1', '$g', 'Mona', 'mona', '$p', 1, 'OWNER', 1)");
+      raw.execute("INSERT INTO members (id, group_id, display_name, name_key, sort_order, created_at) VALUES ('$m2', '$g', 'Ali', 'ali', 2, 1)");
+      raw.execute("INSERT INTO expenses (id, group_id, title, split_type, total_minor, expense_date, created_by_user_id, created_at, updated_at) VALUES ('$eq', '$g', 'Taxi', 'EQUAL', 1001, '2026-11-10', '$p', 1, 1)");
+      raw.execute("INSERT INTO expense_payers (expense_id, member_id, amount_minor) VALUES ('$eq', '$m1', 1001)");
+      raw.execute("INSERT INTO expense_splits (expense_id, member_id, owed_minor) VALUES ('$eq', '$m1', 501), ('$eq', '$m2', 500)");
+      raw.execute("INSERT INTO expenses (id, group_id, title, split_type, total_minor, expense_date, created_by_user_id, created_at, updated_at, deleted_at, version) VALUES ('$ex', '$g', 'Rent', 'EXACT', 9000, '2026-11-01', '$p', 1, 2, 2, 2)");
+      raw.execute("INSERT INTO expense_payers (expense_id, member_id, amount_minor) VALUES ('$ex', '$m2', 9000)");
+      raw.execute("INSERT INTO expense_splits (expense_id, member_id, owed_minor) VALUES ('$ex', '$m1', 6000), ('$ex', '$m2', 3000)");
+      raw.execute("INSERT INTO expenses (id, group_id, title, split_type, total_minor, expense_date, subtotal_minor, service_minor, tax_minor, adjustment_minor, discount_minor, delivery_minor, created_by_user_id, created_at, updated_at) VALUES ('$it', '$g', 'Dinner', 'ITEMIZED', 3000, '2026-11-10', 3000, 0, 0, 0, 0, 0, '$p', 1, 1)");
+      raw.execute("INSERT INTO expense_payers (expense_id, member_id, amount_minor) VALUES ('$it', '$m2', 3000)");
+      raw.execute("INSERT INTO expense_splits (expense_id, member_id, owed_minor, items_minor, service_minor, tax_minor, adjustment_minor, discount_minor, delivery_minor) VALUES ('$it', '$m1', 1000, 1000, 0, 0, 0, 0, 0), ('$it', '$m2', 2000, 2000, 0, 0, 0, 0, 0)");
+      raw.execute("INSERT INTO expense_revisions (id, expense_id, version, change_type, snapshot, changed_by_user_id, changed_at) VALUES ('00000000-0000-4000-8000-0000000000e1', '$eq', 1, 'CREATE', '{\"id\":\"$eq\"}', '$p', 1)");
+      raw.execute("INSERT INTO settlements (id, group_id, from_member_id, to_member_id, amount_minor, settled_on, created_by_user_id, created_at, status, declared_at, confirmed_at) VALUES ('$st', '$g', '$m1', '$m2', 700, '2026-11-12', '$p', 1, 'CONFIRMED', 1, 1)");
+    }
+
+    // Nets as the ledger reads them: payers - owed over live expenses, plus CONFIRMED settlements.
+    const netsSql = '''
+      SELECT m.id AS id,
+        COALESCE((SELECT SUM(p.amount_minor) FROM expense_payers p JOIN expenses e ON e.id = p.expense_id
+                  WHERE p.member_id = m.id AND e.deleted_at IS NULL), 0)
+        - COALESCE((SELECT SUM(s.owed_minor) FROM expense_splits s JOIN expenses e ON e.id = s.expense_id
+                  WHERE s.member_id = m.id AND e.deleted_at IS NULL), 0)
+        + COALESCE((SELECT SUM(amount_minor) FROM settlements WHERE from_member_id = m.id AND status = 'CONFIRMED'), 0)
+        - COALESCE((SELECT SUM(amount_minor) FROM settlements WHERE to_member_id = m.id AND status = 'CONFIRMED'), 0)
+        AS net
+      FROM members m ORDER BY m.sort_order''';
+    const dumpSql = [
+      'SELECT id, split_type, total_minor, expense_date, subtotal_minor, discount_minor, delivery_minor, deleted_at, version FROM expenses ORDER BY id',
+      'SELECT * FROM expense_payers ORDER BY expense_id, member_id',
+      'SELECT expense_id, member_id, owed_minor, items_minor, discount_minor, delivery_minor FROM expense_splits ORDER BY expense_id, member_id',
+      'SELECT * FROM expense_revisions ORDER BY id',
+      'SELECT * FROM settlements ORDER BY id',
+      'SELECT id, name, version, treasurer_member_id, archived_at FROM expense_groups ORDER BY id',
+      'SELECT id, display_name, sort_order, role, status FROM members ORDER BY id',
+    ];
+
+    test('keeps every row and the nets; the new columns are NULL', () async {
+      final schema = await verifier().schemaAt(11);
+      final raw = schema.rawDatabase;
+      seedV11(raw);
+      List<Object?> dump() => [for (final q in dumpSql) for (final r in raw.select(q)) r.values];
+      final before = dump();
+      final netsBefore = [for (final r in raw.select(netsSql)) (r['id'], r['net'])];
+      // m1: paid 1001, owes 501 + 1000 (the EXACT rent is deleted), sent 700 -> 200; m2: 3000 - 2500 - 700 -> -200.
+      expect(netsBefore, [(m1, 200), (m2, -200)]);
+      final db = LocalDatabase(schema.newConnection());
+      await verifier().migrateAndValidate(db, 12);
+
+      expect(dump(), before);
+      expect([for (final r in raw.select(netsSql)) (r['id'], r['net'])], netsBefore);
+      expect(raw.select('SELECT period_from, period_to FROM expenses WHERE period_from IS NOT NULL OR period_to IS NOT NULL'), isEmpty);
+      expect(raw.select('SELECT 1 FROM expense_splits WHERE share_units IS NOT NULL OR present_from IS NOT NULL OR present_to IS NOT NULL'), isEmpty);
+      expect(raw.select('SELECT 1 FROM members WHERE default_share_units IS NOT NULL'), isEmpty);
+      expect(raw.select('SELECT 1 FROM expense_groups WHERE budget_minor IS NOT NULL OR trip_start_date IS NOT NULL OR trip_end_date IS NOT NULL'), isEmpty);
+      expect(await db.customSelect('PRAGMA foreign_key_check').get(), isEmpty);
+      // The treasurer triggers survived (expense_groups was not rebuilt) and the rebuilt tables keep their indexes.
+      final names = [for (final r in raw.select("SELECT name FROM sqlite_master WHERE type IN ('index', 'trigger')")) r['name']];
+      expect(names, containsAll(['expense_groups_treasurer_insert', 'expense_groups_treasurer_update', 'ix_expenses_group_list', 'ix_expense_splits_member']));
+      await db.close();
+    });
+
+    test('is atomic: a broken reference rolls the whole upgrade back and the file stays at v11', () async {
+      final schema = await verifier().schemaAt(11);
+      final raw = schema.rawDatabase;
+      seedV11(raw);
+      raw.execute('PRAGMA foreign_keys = OFF');
+      raw.execute("INSERT INTO expense_payers (expense_id, member_id, amount_minor) VALUES ('$eq', '00000000-0000-4000-8000-0000000000ff', 1)");
+      raw.execute('PRAGMA foreign_keys = ON');
+
+      final db = LocalDatabase(schema.newConnection());
+      await expectLater(db.customSelect('SELECT 1').get(), throwsA(anything));
+      expect(raw.select('PRAGMA user_version').single.values.single, 11);
+      expect([for (final c in raw.select('PRAGMA table_info(expense_splits)')) c['name']], isNot(contains('share_units')));
+      expect([for (final c in raw.select('PRAGMA table_info(members)')) c['name']], isNot(contains('default_share_units')));
     });
   });
 }

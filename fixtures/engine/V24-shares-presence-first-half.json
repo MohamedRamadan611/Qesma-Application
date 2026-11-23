@@ -1,0 +1,17 @@
+{
+  "name": "V24 shares, 600.00 over 2026-11-01..2026-11-10, units 1 / 1 / 1, B present 2026-11-01..2026-11-05 (weights 10 / 5 / 10)",
+  "input": {
+    "members": [ { "id": "A", "sortOrder": 1 }, { "id": "B", "sortOrder": 2 }, { "id": "C", "sortOrder": 3 } ],
+    "expenses": [
+      { "type": "SHARES", "totalMinor": 60000, "periodFrom": "2026-11-01", "periodTo": "2026-11-10",
+        "shareParticipants": [ { "memberId": "A", "shareUnits": 1 },
+                               { "memberId": "B", "shareUnits": 1, "presentFrom": "2026-11-01", "presentTo": "2026-11-05" },
+                               { "memberId": "C", "shareUnits": 1 } ],
+        "payers": [ { "memberId": "C", "amountMinor": 60000 } ] }
+    ],
+    "settlements": []
+  },
+  "expected": {
+    "expenses": [ { "owed": { "A": 24000, "B": 12000, "C": 24000 }, "totalMinor": 60000 } ]
+  }
+}

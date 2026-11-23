@@ -24,6 +24,16 @@ final class ApiExamples {
              "tax":{"bps":1400,"base":"SUBTOTAL_PLUS_SERVICE"},
              "adjustmentMinor":0}""";
 
+    /** BSA3 (A185-A186): rent for November by units 2 / 1 / 1, the third member present from the 12th (V23). */
+    static final String SHARES = """
+            {"title":"Rent","expenseDate":"2026-12-01","splitType":"SHARES","totalMinor":900000,
+             "payers":[{"memberId":"11111111-1111-1111-1111-111111111111","amountMinor":900000}],
+             "periodFrom":"2026-11-01","periodTo":"2026-11-30",
+             "shareParticipants":[{"memberId":"11111111-1111-1111-1111-111111111111","shareUnits":2},
+                                  {"memberId":"22222222-2222-2222-2222-222222222222","shareUnits":1},
+                                  {"memberId":"33333333-3333-3333-3333-333333333333","shareUnits":1,
+                                   "presentFrom":"2026-11-12"}]}""";
+
     private ApiExamples() {
     }
 }

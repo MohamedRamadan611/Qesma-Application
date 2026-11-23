@@ -1,0 +1,15 @@
+{
+  "name": "V26 shares, 10.00 with units 3 / 3 / 3 (the tie goes to the lower sortOrder; scaling units changes nothing)",
+  "input": {
+    "members": [ { "id": "A", "sortOrder": 1 }, { "id": "B", "sortOrder": 2 }, { "id": "C", "sortOrder": 3 } ],
+    "expenses": [
+      { "type": "SHARES", "totalMinor": 1000,
+        "shareParticipants": [ { "memberId": "A", "shareUnits": 3 }, { "memberId": "B", "shareUnits": 3 }, { "memberId": "C", "shareUnits": 3 } ],
+        "payers": [ { "memberId": "A", "amountMinor": 1000 } ] }
+    ],
+    "settlements": []
+  },
+  "expected": {
+    "expenses": [ { "owed": { "A": 334, "B": 333, "C": 333 }, "totalMinor": 1000 } ]
+  }
+}

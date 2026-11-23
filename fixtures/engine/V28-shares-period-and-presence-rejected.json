@@ -1,0 +1,28 @@
+{
+  "name": "V28 shares, presence outside the period, presence without a period, one period bound, a reversed period, or 367 days, is rejected",
+  "input": {
+    "members": [ { "id": "A", "sortOrder": 1 }, { "id": "B", "sortOrder": 2 }, { "id": "C", "sortOrder": 3 } ],
+    "expenses": [
+      { "type": "SHARES", "totalMinor": 1000, "payers": [ { "memberId": "A", "amountMinor": 1000 } ], "periodFrom": "2026-11-01", "periodTo": "2026-11-30",
+        "shareParticipants": [ { "memberId": "A", "shareUnits": 1, "presentFrom": "2026-10-31" }, { "memberId": "B", "shareUnits": 1 } ] },
+      { "type": "SHARES", "totalMinor": 1000, "payers": [ { "memberId": "A", "amountMinor": 1000 } ], "periodFrom": "2026-11-01", "periodTo": "2026-11-30",
+        "shareParticipants": [ { "memberId": "A", "shareUnits": 1, "presentTo": "2026-12-01" }, { "memberId": "B", "shareUnits": 1 } ] },
+      { "type": "SHARES", "totalMinor": 1000, "payers": [ { "memberId": "A", "amountMinor": 1000 } ],
+        "shareParticipants": [ { "memberId": "A", "shareUnits": 1, "presentFrom": "2026-11-05" }, { "memberId": "B", "shareUnits": 1 } ] },
+      { "type": "SHARES", "totalMinor": 1000, "payers": [ { "memberId": "A", "amountMinor": 1000 } ], "periodFrom": "2026-11-01",
+        "shareParticipants": [ { "memberId": "A", "shareUnits": 1 }, { "memberId": "B", "shareUnits": 1 } ] },
+      { "type": "SHARES", "totalMinor": 1000, "payers": [ { "memberId": "A", "amountMinor": 1000 } ], "periodFrom": "2026-11-30", "periodTo": "2026-11-01",
+        "shareParticipants": [ { "memberId": "A", "shareUnits": 1 }, { "memberId": "B", "shareUnits": 1 } ] },
+      { "type": "SHARES", "totalMinor": 1000, "payers": [ { "memberId": "A", "amountMinor": 1000 } ], "periodFrom": "2026-01-01", "periodTo": "2027-01-02",
+        "shareParticipants": [ { "memberId": "A", "shareUnits": 1 }, { "memberId": "B", "shareUnits": 1 } ] },
+      { "type": "SHARES", "totalMinor": 1000, "payers": [ { "memberId": "A", "amountMinor": 1000 } ], "periodFrom": "2026-11-01", "periodTo": "2026-11-30",
+        "shareParticipants": [ { "memberId": "A", "shareUnits": 1, "presentFrom": "2026-11-20", "presentTo": "2026-11-10" }, { "memberId": "B", "shareUnits": 1 } ] }
+    ],
+    "settlements": []
+  },
+  "expected": {
+    "expenses": [ { "error": "VALIDATION_ERROR" }, { "error": "VALIDATION_ERROR" }, { "error": "VALIDATION_ERROR" },
+                  { "error": "VALIDATION_ERROR" }, { "error": "VALIDATION_ERROR" }, { "error": "VALIDATION_ERROR" },
+                  { "error": "VALIDATION_ERROR" } ]
+  }
+}

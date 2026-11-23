@@ -5,6 +5,7 @@ import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/theme/palette.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
+import '../../expenses/presentation/expense_ui.dart' show unitsText;
 import '../application/member_actions.dart';
 
 /// Order of the rows: the role and lifecycle actions first, the Phase 1 rename and delete last.
@@ -16,10 +17,11 @@ const _order = [
   MemberAction.markLeft,
   MemberAction.reactivate,
   MemberAction.rename,
+  MemberAction.defaultShare,
   MemberAction.delete,
 ];
 
-({IconData icon, String title, String? hint}) _copy(AppLocalizations l10n, MemberAction action) => switch (action) {
+({IconData icon, String title, String? hint}) _copy(AppLocalizations l10n, MemberAction action, MemberDto member) => switch (action) {
       MemberAction.promote => (icon: Icons.verified_user_outlined, title: l10n.membersActionPromote, hint: l10n.membersActionPromoteHint),
       MemberAction.demote => (icon: Icons.remove_moderator_outlined, title: l10n.membersActionDemote, hint: l10n.membersActionDemoteHint),
       MemberAction.transferOwnership => (icon: Icons.swap_horiz, title: l10n.membersActionTransfer, hint: l10n.membersActionTransferHint),
@@ -27,6 +29,11 @@ const _order = [
       MemberAction.markLeft => (icon: Icons.logout, title: l10n.membersActionMarkLeft, hint: l10n.membersActionMarkLeftHint),
       MemberAction.reactivate => (icon: Icons.settings_backup_restore, title: l10n.membersActionReactivate, hint: l10n.membersActionReactivateHint),
       MemberAction.rename => (icon: Icons.edit_outlined, title: l10n.membersRename, hint: null),
+      MemberAction.defaultShare => (
+          icon: Icons.pie_chart_outline,
+          title: l10n.membersActionDefaultShare,
+          hint: member.defaultShareUnits == null ? l10n.membersActionDefaultShareHint : l10n.membersDefaultShareCurrent(unitsText(l10n, member.defaultShareUnits!)),
+        ),
       MemberAction.delete => (icon: Icons.delete_outline, title: l10n.membersDelete, hint: null),
     };
 
@@ -44,7 +51,7 @@ Future<MemberAction?> showMemberOptionsSheet(BuildContext context, {required Mem
           if (actions.contains(action)) ...[
             Builder(
               builder: (sheetContext) {
-                final copy = _copy(l10n, action);
+                final copy = _copy(l10n, action, member);
                 final destructive = action == MemberAction.delete || action == MemberAction.markLeft || action == MemberAction.unlink;
                 return _OptionRow(
                   icon: copy.icon,

@@ -12,6 +12,11 @@ void main() {
       // TODO
     });
 
+    // int defaultShareUnits
+    test('to test the property `defaultShareUnits`', () async {
+      // TODO
+    });
+
     // String displayName
     test('to test the property `displayName`', () async {
       // TODO

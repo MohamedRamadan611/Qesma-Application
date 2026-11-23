@@ -9,7 +9,7 @@ One file per scenario:
   "name": "human readable title",
   "input": {
     "members":     [ { "id": "A", "sortOrder": 1 } ],
-    "expenses":    [ { "type": "EQUAL | EXACT | ITEMIZED", "payers": [ { "memberId": "A", "amountMinor": 100 } ], "...": "type-specific fields" } ],
+    "expenses":    [ { "type": "EQUAL | EXACT | ITEMIZED | SHARES", "payers": [ { "memberId": "A", "amountMinor": 100 } ], "...": "type-specific fields" } ],
     "settlements": [ { "fromMemberId": "A", "toMemberId": "B", "amountMinor": 100 } ]
   },
   "expected": {
@@ -29,6 +29,7 @@ Type-specific expense fields:
   - `service { bps }` or `service { amountMinor }` (the legacy `serviceBps` is still read);
   - `tax { amountMinor, base }` next to the legacy `tax { bps, base }`;
   - map the item and each charge through the engine's shape rules (`Item.of`, `ChargeSpec.of` in Java), so both forms at once, or neither, is a `VALIDATION_ERROR`.
+- `SHARES` (BSA3, STANDALONE_SPEC 19, A185–A187, A194): `totalMinor`, `shareParticipants[] { memberId, shareUnits, presentFrom?, presentTo? }` (units 1..100; presence dates `YYYY-MM-DD`, inclusive, only with a period, each bound defaulting to the period bound), optional `periodFrom` / `periodTo` (both or neither, inclusive, at most 366 days). Each participant's `sortOrder` comes from `members`. Weight = `shareUnits × days present` with a period, `shareUnits` without; owed = LRM over the weights (ties to the lower `sortOrder`). Map the expense straight to the engine (`SplitCalculator.shares` in Java), which rejects every rule itself, so a rejected expense is `expected.expenses[i] = { "error": "VALIDATION_ERROR" }`. The expected keys are the usual `owed` and `totalMinor` (no extra keys).
 
 Extra `expected.expenses[i]` keys for ITEMIZED:
 - `discountMinor`: the discount total (0 without a discount);
@@ -41,13 +42,15 @@ Rules:
 - Only the keys present under `expected` are asserted. `transfers` is an ordered list (the order the spec 7.7 greedy rule produces).
 - `expected` is the single authoritative answer; every engine must reproduce it exactly.
 
-The standalone release (`docs/STANDALONE_SPEC.md`) adds more folders next to `engine/`: `pool/` (SA10), `ride/` (SA11) and `insights/` (SA7, SA8); each is defined by the prompt that adds it. Both engines (Java and the Dart port, ADR-011) must pass every engine vector.
+The standalone release (`docs/STANDALONE_SPEC.md`) adds more folders next to `engine/`: `pool/` (SA10), `ride/` (SA11) and `insights/` (SA7, SA8, and SA20's `budget-*` trip-budget vectors, Dart engine only: STANDALONE_SPEC 20.3); each is defined by the prompt that adds it. Both engines (Java and the Dart port, ADR-011) must pass every engine vector.
 
 Vectors V1–V8 come from `docs/PROJECT_SPEC.md` section 10. They are run by `FixtureTest` in the backend (Java, the reference) and by `test/fixture_test.dart` in `mobile/packages/qesma_engine` (the Dart port).
 
 Vectors V17–V20 (A180, delivery; `docs/STANDALONE_SPEC.md` 18.6) add `deliveryMinor` on the itemized expense (an amount, absent = none) and two `expected.expenses[i]` keys: `deliveryMinor` (the total) and `deliveries { memberId: n }` (each listed member's part). Delivery is outside discount, service and tax and goes equally to the members who have an item.
 
 Vectors V9–V16 come from `docs/STANDALONE_SPEC.md` 18.6 (BSA2). Both runners run them: `FixtureTest` (Java) and, since SA15, `test/fixture_test.dart` (Dart engine) and `test/local/backend/engine_vectors_test.dart` (the local backend over HTTP). An item and each charge are mapped through the engine shape rules (`Item.of`, `ChargeSpec.of` in both languages).
+
+Vectors V21–V28 (BSA3, `docs/STANDALONE_SPEC.md` 19.2) are the SHARES split: V21 units 1 = EQUAL, V22 units 2 / 1 / 1, V23 rent prorated by days present, V24 a half-period presence, V25 a one-day presence, V26 scaled units with the tie to the lower `sortOrder`, V27 and V28 the rejected shapes (units, duplicates, empty, presence and period rules). `FixtureTest` (Java), the Dart `fixture_test.dart` and the local-backend `engine_vectors_test.dart` (SA18) all run them.
 
 ## Parity rule (ADR-011)
 - Both engines must pass every vector in `engine/`. A vector that one engine fails is a bug in that engine, never a reason to edit `expected`. Java is the reference.

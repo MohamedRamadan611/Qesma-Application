@@ -51,6 +51,10 @@ public class Member implements Persistable<UUID> {
     @Column(name = "left_at")
     private Instant leftAt;
 
+    // A188: a SHARES form prefill only (1..100 or NULL); never changes an existing expense
+    @Column(name = "default_share_units")
+    private Integer defaultShareUnits;
+
     public static final String ROLE_OWNER = "OWNER";
     public static final String ROLE_ADMIN = "ADMIN";
     public static final String ROLE_MEMBER = "MEMBER";
@@ -162,6 +166,15 @@ public class Member implements Persistable<UUID> {
             throw new IllegalArgumentException("Role must be ADMIN or MEMBER");
         }
         this.role = newRole;
+    }
+
+    public Integer getDefaultShareUnits() {
+        return defaultShareUnits;
+    }
+
+    /** A188: set (1..100, validated by the service) or clear (null) the default weight. */
+    public void setDefaultShareUnits(Integer units) {
+        this.defaultShareUnits = units;
     }
 
     public int getSortOrder() {

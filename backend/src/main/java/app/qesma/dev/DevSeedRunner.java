@@ -121,9 +121,21 @@ public class DevSeedRunner implements ApplicationRunner {
                 List.of(new PayerInput(mohamed, 2750L), new PayerInput(asem, 2750L)), null, null,
                 List.of(new ItemInput("بيبسي", null, 1500L, 4, List.of(mohamed, asem))), null, null, null,
                 "FOOD", null, new ExpenseCommand.DiscountInput(null, 500L)));
+        // BSA3 (A185-A186): شاليه 300.00 for 16..18 Oct by units محمد 2 / عاصم 1, عاصم present only on the 18th
+        // (weights 6 / 1 -> 257.14 / 42.86); each paid their own share, so the balances above do not move.
+        create(owner, group, 5, new ExpenseCommand("شاليه", day1, "SHARES", 30000L,
+                List.of(new PayerInput(mohamed, 25714L), new PayerInput(asem, 4286L)), null, null, null, null, null,
+                null, "ACCOMMODATION", null, null, null,
+                List.of(new ExpenseCommand.ShareParticipantInput(mohamed, 2, null, null),
+                        new ExpenseCommand.ShareParticipantInput(asem, 1, LocalDate.of(2026, 10, 18), null)),
+                day1, LocalDate.of(2026, 10, 18)));
+        // A190: a trip budget of 10,000.00 for 16..19 Oct (figures are computed by the app, never stored).
+        groups.update(owner.getId(), group.getId(), groups.get(owner.getId(), group.getId()).group().getVersion(),
+                null, null, null, new GroupService.BudgetPatch(1_000_000L, false, day1, false,
+                        LocalDate.of(2026, 10, 19), false));
         User asemUser = seedLifecycle(owner, group, asem, ids.get(4));
         seedSettlements(owner, asemUser, group, mohamed, asem);
-        log.info("dev.seed created group {} with {} members and 4 expenses. Sign in with idToken {} "
+        log.info("dev.seed created group {} with {} members and 5 expenses. Sign in with idToken {} "
                 + "(admin: {}, member who left: {}); 1 PENDING and 1 DISPUTED settlement", group.getId(), ids.size(), FAKE_ID_TOKEN, ASEM_ID_TOKEN,
                 KARIM_ID_TOKEN);
     }

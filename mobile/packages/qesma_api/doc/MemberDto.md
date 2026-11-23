@@ -9,6 +9,7 @@ import 'package:qesma_api/api.dart';
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **createdAt** | [**DateTime**](DateTime.md) |  | 
+**defaultShareUnits** | **int** |  | [optional] 
 **displayName** | **String** |  | 
 **hasAccount** | **bool** |  | 
 **id** | **String** |  | 

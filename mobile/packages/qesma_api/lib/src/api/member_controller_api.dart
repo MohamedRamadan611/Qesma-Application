@@ -181,7 +181,7 @@ class MemberControllerApi {
   }
 
   /// Rename a member, change its role, or remove/reactivate it
-  /// Send at least one of displayName, role, status. displayName: Owner/Admin. role (ADMIN or MEMBER): Owner only. status (LEFT removes a linked member, ACTIVE reactivates): Owner, and Admin for members (not admins). The owner&#39;s member is protected (409 OWNER_MEMBER_PROTECTED). A member without an account has no role or status.
+  /// Send at least one of displayName, role, status, defaultShareUnits, clearDefaultShareUnits. displayName and defaultShareUnits (1..100, a SHARES prefill only; clearDefaultShareUnits&#x3D;true clears it): Owner/Admin. role (ADMIN or MEMBER): Owner only. status (LEFT removes a linked member, ACTIVE reactivates): Owner, and Admin for members (not admins). The owner&#39;s member is protected (409 OWNER_MEMBER_PROTECTED). A member without an account has no role or status.
   ///
   /// Parameters:
   /// * [gid] 

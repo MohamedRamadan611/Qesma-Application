@@ -85,6 +85,7 @@ export 'package:qesma_api/src/model/service_input.dart';
 export 'package:qesma_api/src/model/settlement_command.dart';
 export 'package:qesma_api/src/model/settlement_view.dart';
 export 'package:qesma_api/src/model/share_input.dart';
+export 'package:qesma_api/src/model/share_participant_input.dart';
 export 'package:qesma_api/src/model/share_view.dart';
 export 'package:qesma_api/src/model/tax_charge.dart';
 export 'package:qesma_api/src/model/tax_input.dart';

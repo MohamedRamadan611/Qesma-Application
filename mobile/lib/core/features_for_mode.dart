@@ -28,6 +28,7 @@ class ModeFeatures {
     required this.recap,
     required this.reminderTones,
     required this.pool,
+    required this.budget,
     required this.calculator,
     required this.receiptScan,
     required this.archive,
@@ -56,6 +57,7 @@ class ModeFeatures {
     recap: false,
     reminderTones: false,
     pool: false,
+    budget: false,
     calculator: false,
     receiptScan: false,
     archive: false,
@@ -84,6 +86,7 @@ class ModeFeatures {
     recap: true,
     reminderTones: true,
     pool: true,
+    budget: true,
     calculator: true,
     receiptScan: true,
     archive: true,
@@ -117,6 +120,9 @@ class ModeFeatures {
   /// SA10: pool & treasurer (edit-group section, pool card and screen, expense toggle). The breakdown comes from the
   /// local read-model, so it is a local-mode feature.
   final bool pool;
+
+  /// SA20: trip budget (edit-group section, budget card and screen). Computed by the local read-model, so local mode only.
+  final bool budget;
 
   /// SA11: the Khorouga calculator (fuel + tolls, multi-stop ride). It runs the local engine (A149), so it is a
   /// local-mode feature; its result only prefills the add-expense form.

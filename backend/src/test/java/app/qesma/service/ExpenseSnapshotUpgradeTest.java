@@ -37,4 +37,24 @@ class ExpenseSnapshotUpgradeTest {
         assertThat(current.get("shares").get(0).get("deliveryMinor").asLong()).isEqualTo(50);
         assertThat(current.get("charges").get("deliveryMinor").asLong()).isEqualTo(50);
     }
+
+    @Test
+    void aPreBsa3SnapshotReadsBackWithNullSharesFieldsAndASharesSnapshotIsUntouched() throws Exception {
+        JsonNode old = ExpenseService.upgradeSnapshot(MAPPER.readTree("""
+                {"splitType":"EQUAL","shares":[{"memberId":"a","owedMinor":100}],"charges":null}"""));
+        assertThat(old.get("periodFrom").isNull()).isTrue();
+        assertThat(old.get("periodTo").isNull()).isTrue();
+        JsonNode share = old.get("shares").get(0);
+        assertThat(share.get("shareUnits").isNull()).isTrue();
+        assertThat(share.get("presentFrom").isNull()).isTrue();
+        assertThat(share.get("presentTo").isNull()).isTrue();
+
+        JsonNode current = ExpenseService.upgradeSnapshot(MAPPER.readTree("""
+                {"splitType":"SHARES","periodFrom":"2026-11-01","periodTo":"2026-11-30",
+                 "shares":[{"memberId":"a","owedMinor":100,"shareUnits":2,"presentFrom":"2026-11-12",
+                            "presentTo":"2026-11-30"}],"charges":null}"""));
+        assertThat(current.get("periodFrom").asText()).isEqualTo("2026-11-01");
+        assertThat(current.get("shares").get(0).get("shareUnits").asInt()).isEqualTo(2);
+        assertThat(current.get("shares").get(0).get("presentFrom").asText()).isEqualTo("2026-11-12");
+    }
 }

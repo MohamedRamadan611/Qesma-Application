@@ -54,8 +54,23 @@ void main() {
       // TODO
     });
 
+    // Date periodFrom
+    test('to test the property `periodFrom`', () async {
+      // TODO
+    });
+
+    // Date periodTo
+    test('to test the property `periodTo`', () async {
+      // TODO
+    });
+
     // ServiceInput service
     test('to test the property `service`', () async {
+      // TODO
+    });
+
+    // BuiltList<ShareParticipantInput> shareParticipants
+    test('to test the property `shareParticipants`', () async {
       // TODO
     });
 

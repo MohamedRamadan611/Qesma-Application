@@ -373,4 +373,62 @@ class EnginePropertyTest {
         PayerValidator.validate(total, payers);
         return payers;
     }
+
+    // ---- SHARES (BSA3, STANDALONE_SPEC 19, A185-A187) ----
+
+    @Property(tries = 3000)
+    void sharesOwedSumsToTotalWithAndWithoutAPeriod(@ForAll long seed) {
+        Random rnd = new Random(seed);
+        long total = 1 + rnd.nextLong(Limits.MAX_AMOUNT_MINOR);
+        SharePeriod period = rnd.nextBoolean() ? null : randomPeriod(rnd);
+        List<WeightedShare> shares = randomShares(rnd, members(1 + rnd.nextInt(20)), period, 1);
+        Map<String, Long> owed = SplitCalculator.shares(total, shares, period);
+        assertThat(owed.values().stream().mapToLong(Long::longValue).sum()).isEqualTo(total);
+        assertThat(owed.values()).allSatisfy(v -> assertThat(v).isNotNegative());
+        assertThat(owed).hasSize(shares.size());
+    }
+
+    @Property(tries = 2000)
+    void sharesWithUnitOneAndNoPeriodEqualsEqual(
+            @ForAll @LongRange(min = 1, max = 1_000_000_000_000L) long total, @ForAll long seed) {
+        List<MemberRef> members = members(1 + new Random(seed).nextInt(30));
+        List<WeightedShare> shares = new ArrayList<>();
+        members.forEach(m -> shares.add(new WeightedShare(m.id(), m.sortOrder(), 1, null, null)));
+        assertThat(SplitCalculator.shares(total, shares, null)).isEqualTo(SplitCalculator.equal(total, members));
+    }
+
+    @Property(tries = 2000)
+    void scalingEveryUnitByTheSameFactorChangesNothing(@ForAll long seed) {
+        Random rnd = new Random(seed);
+        long total = 1 + rnd.nextInt(10_000_000);
+        SharePeriod period = rnd.nextBoolean() ? null : randomPeriod(rnd);
+        List<WeightedShare> base = randomShares(rnd, members(1 + rnd.nextInt(10)), period, 10);
+        int k = 2 + rnd.nextInt(9); // base units 1..10, so k x units stays within 1..100
+        List<WeightedShare> scaled = base.stream()
+                .map(s -> new WeightedShare(s.memberId(), s.sortOrder(), s.shareUnits() * k, s.presentFrom(), s.presentTo()))
+                .toList();
+        assertThat(SplitCalculator.shares(total, scaled, period)).isEqualTo(SplitCalculator.shares(total, base, period));
+    }
+
+    private static SharePeriod randomPeriod(Random rnd) {
+        java.time.LocalDate from = java.time.LocalDate.of(2026, 1, 1).plusDays(rnd.nextInt(700));
+        return new SharePeriod(from, from.plusDays(rnd.nextInt(Limits.MAX_PERIOD_DAYS)));
+    }
+
+    /** Units 1..maxUnits; with a period, a random presence inside it (or the whole period when absent). */
+    private static List<WeightedShare> randomShares(Random rnd, List<MemberRef> members, SharePeriod period,
+            int maxUnits) {
+        List<WeightedShare> shares = new ArrayList<>();
+        for (MemberRef m : members) {
+            java.time.LocalDate from = null;
+            java.time.LocalDate to = null;
+            if (period != null && rnd.nextBoolean()) {
+                long span = java.time.temporal.ChronoUnit.DAYS.between(period.from(), period.to());
+                from = period.from().plusDays(rnd.nextLong(span + 1));
+                to = from.plusDays(rnd.nextLong(java.time.temporal.ChronoUnit.DAYS.between(from, period.to()) + 1));
+            }
+            shares.add(new WeightedShare(m.id(), m.sortOrder(), 1 + rnd.nextInt(maxUnits), from, to));
+        }
+        return shares;
+    }
 }

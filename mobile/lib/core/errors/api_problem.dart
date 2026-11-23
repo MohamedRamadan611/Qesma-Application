@@ -49,6 +49,45 @@ enum ApiErrorCode {
   }
 }
 
+/// Which field of a shares split a validation problem is about (SA19, A194). Index is the position in the request's
+/// `shareParticipants` (null for the period).
+enum SharesField { shareUnits, presentFrom, presentTo, periodFrom, periodTo }
+
+class SharesFieldPath {
+  const SharesFieldPath(this.field, [this.index]);
+
+  final SharesField field;
+  final int? index;
+
+  bool get isPeriod => field == SharesField.periodFrom || field == SharesField.periodTo;
+
+  static final RegExp _pattern = RegExp(r'shareParticipants\[(\d{1,4})\]\.(shareUnits|presentFrom|presentTo)|\b(periodFrom|periodTo)\b');
+
+  /// The first shares field named in [text] (a problem's `title` or `detail`), or null. Strict: only these names.
+  static SharesFieldPath? parse(String? text) {
+    if (text == null) return null;
+    final match = _pattern.firstMatch(text);
+    if (match == null) return null;
+    final period = match.group(3);
+    if (period != null) return SharesFieldPath(period == 'periodFrom' ? SharesField.periodFrom : SharesField.periodTo);
+    final field = switch (match.group(2)) {
+      'shareUnits' => SharesField.shareUnits,
+      'presentFrom' => SharesField.presentFrom,
+      _ => SharesField.presentTo,
+    };
+    return SharesFieldPath(field, int.parse(match.group(1)!));
+  }
+
+  @override
+  bool operator ==(Object other) => other is SharesFieldPath && other.field == field && other.index == index;
+
+  @override
+  int get hashCode => Object.hash(field, index);
+
+  @override
+  String toString() => 'SharesFieldPath($field, $index)';
+}
+
 /// A parsed `application/problem+json` body.
 ///
 /// Only the machine-readable parts are kept. `title` and `detail` are English and
@@ -60,6 +99,7 @@ class ApiProblem {
     this.rawCode,
     this.requestId,
     this.nextAllowedAt,
+    this.fieldPath,
   });
 
   final ApiErrorCode code;
@@ -75,6 +115,9 @@ class ApiProblem {
 
   /// Only with `REMIND_RATE_LIMITED`: when a reminder may be sent again (the server's time, never derived here).
   final DateTime? nextAllowedAt;
+
+  /// Only for a shares split: the field the server's `title`/`detail` names. The English text itself is never shown.
+  final SharesFieldPath? fieldPath;
 
   /// Parses a response body (already decoded JSON map, or a raw JSON string).
   /// Returns null when the body is not a problem document (e.g. an HTML 502 page).
@@ -99,6 +142,8 @@ class ApiProblem {
       status: status is int ? status : fallbackStatus,
       requestId: requestId is String ? requestId : null,
       nextAllowedAt: next is String ? DateTime.tryParse(next) : null,
+      fieldPath: SharesFieldPath.parse(decoded['title'] is String ? decoded['title'] as String : null) ??
+          SharesFieldPath.parse(decoded['detail'] is String ? decoded['detail'] as String : null),
     );
   }
 

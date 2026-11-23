@@ -41,7 +41,8 @@ MemberDto memberDto(MemberRow m, String profileId) => MemberDto((b) => b
   ..isYou = m.userId == profileId
   ..role = m.role
   ..status = m.status
-  ..hasAccount = m.userId != null);
+  ..hasAccount = m.userId != null
+  ..defaultShareUnits = m.defaultShareUnits);
 
 SettlementView settlementView(SettlementRow s) => SettlementView((b) => b
   ..id = s.id
@@ -81,6 +82,9 @@ ExpenseView expenseView(ExpenseGraph g, Map<String, int> sortOrders) {
       ..version = e.version
       ..category = e.category
       ..paidFromPool = e.paidFromPool == 1
+      // SHARES only (A186): null without a period.
+      ..periodFrom = e.periodFrom == null ? null : dateOf(e.periodFrom!)
+      ..periodTo = e.periodTo == null ? null : dateOf(e.periodTo!)
       ..payers = ListBuilder([
         for (final p in payers)
           PayerView((v) => v
@@ -97,7 +101,10 @@ ExpenseView expenseView(ExpenseGraph g, Map<String, int> sortOrders) {
             ..serviceMinor = s.serviceMinor
             ..taxMinor = s.taxMinor
             ..adjustmentMinor = s.adjustmentMinor
-            ..deliveryMinor = s.deliveryMinor),
+            ..deliveryMinor = s.deliveryMinor
+            ..shareUnits = s.shareUnits
+            ..presentFrom = s.presentFrom == null ? null : dateOf(s.presentFrom!)
+            ..presentTo = s.presentTo == null ? null : dateOf(s.presentTo!)),
       ]);
     if (itemized) {
       final items = [...g.items]..sort((a, c) => a.sortOrder.compareTo(c.sortOrder));

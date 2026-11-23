@@ -52,6 +52,16 @@ void main() {
       // TODO
     });
 
+    // Date periodFrom
+    test('to test the property `periodFrom`', () async {
+      // TODO
+    });
+
+    // Date periodTo
+    test('to test the property `periodTo`', () async {
+      // TODO
+    });
+
     // BuiltList<ShareView> shares
     test('to test the property `shares`', () async {
       // TODO

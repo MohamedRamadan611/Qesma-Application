@@ -8,6 +8,7 @@ import 'package:qesma_api/api.dart';
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**budgetMinor** | **int** | Integer minor units (piasters: 1 EGP = 100). Never a decimal. | [optional] 
 **createdAt** | [**DateTime**](DateTime.md) |  | 
 **currencyCode** | **String** |  | 
 **id** | **String** |  | 
@@ -18,6 +19,8 @@ Name | Type | Description | Notes
 **poolBalanceMinor** | **int** | Integer minor units (piasters: 1 EGP = 100). Never a decimal. | [optional] 
 **totalSpentMinor** | **int** | Integer minor units (piasters: 1 EGP = 100). Never a decimal. | 
 **treasurerMemberId** | **String** |  | [optional] 
+**tripEndDate** | [**Date**](Date.md) |  | [optional] 
+**tripStartDate** | [**Date**](Date.md) |  | [optional] 
 **type** | **String** |  | 
 **updatedAt** | [**DateTime**](DateTime.md) |  | 
 **version** | **int** |  | 

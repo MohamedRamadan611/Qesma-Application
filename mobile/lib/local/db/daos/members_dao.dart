@@ -49,6 +49,10 @@ class MembersDao extends DatabaseAccessor<LocalDatabase> with _$MembersDaoMixin 
   Future<int> rename(String id, String displayName) => (update(members)..where((m) => m.id.equals(id)))
       .write(MembersCompanion(displayName: Value(displayName), nameKey: Value(memberNameKey(displayName))));
 
+  /// A188: the SHARES form prefill (null = none); never touches an existing expense.
+  Future<int> setDefaultShareUnits(String id, int? units) => (update(members)..where((m) => m.id.equals(id)))
+      .write(MembersCompanion(defaultShareUnits: Value(units)));
+
   /// Hard delete (A23); fails at the foreign keys if the member is referenced by the ledger.
   Future<int> deleteMember(String id) => (delete(members)..where((m) => m.id.equals(id))).go();
 }

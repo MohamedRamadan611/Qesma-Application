@@ -220,4 +220,39 @@ class RequestHasherTest {
         List<PayerInput> two = List.of(new PayerInput(A, 2L), new PayerInput(B, 1L));
         assertThat(h(equal("D", 3, one, null))).isNotEqualTo(h(equal("D", 3, two, null)));
     }
+
+    // ---- SHARES (BSA3, A189) ----
+
+    private static ExpenseValidator.Valid sharesValid(LocalDate from, LocalDate to,
+            ExpenseCommand.ShareParticipantInput... participants) {
+        return ExpenseValidator.validate(new ExpenseCommand("Rent", LocalDate.of(2026, 12, 1), "SHARES", 900000L,
+                List.of(new PayerInput(A, 900000L)), null, null, null, null, null, null, null, null, null, null,
+                List.of(participants), from, to));
+    }
+
+    private static ExpenseCommand.ShareParticipantInput sp(UUID id, int units, LocalDate from, LocalDate to) {
+        return new ExpenseCommand.ShareParticipantInput(id, units, from, to);
+    }
+
+    @Test
+    void sharesParticipantOrderAndANormalizedPresenceDoNotChangeTheHash() {
+        LocalDate nov1 = LocalDate.of(2026, 11, 1);
+        LocalDate nov30 = LocalDate.of(2026, 11, 30);
+        String base = h(sharesValid(nov1, nov30, sp(A, 2, null, null), sp(B, 1, LocalDate.of(2026, 11, 12), null)));
+        assertThat(h(sharesValid(nov1, nov30, sp(B, 1, LocalDate.of(2026, 11, 12), nov30), sp(A, 2, nov1, nov30))))
+                .isEqualTo(base);
+    }
+
+    @Test
+    void sharesUnitsPresenceAndPeriodChangeTheHash() {
+        LocalDate nov1 = LocalDate.of(2026, 11, 1);
+        LocalDate nov30 = LocalDate.of(2026, 11, 30);
+        String base = h(sharesValid(nov1, nov30, sp(A, 2, null, null), sp(B, 1, null, null)));
+        assertThat(java.util.Set.of(base,
+                h(sharesValid(nov1, nov30, sp(A, 3, null, null), sp(B, 1, null, null))),
+                h(sharesValid(nov1, nov30, sp(A, 2, null, null), sp(B, 1, LocalDate.of(2026, 11, 2), null))),
+                h(sharesValid(nov1, LocalDate.of(2026, 11, 29), sp(A, 2, null, null), sp(B, 1, null, null))),
+                h(sharesValid(null, null, sp(A, 2, null, null), sp(B, 1, null, null))),
+                h(sharesValid(nov1, nov30, sp(A, 2, null, null), sp(C, 1, null, null))))).hasSize(6);
+    }
 }

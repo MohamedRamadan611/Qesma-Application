@@ -7,6 +7,27 @@ void main() {
   // TODO add properties to the builder and call build()
 
   group(UpdateGroupRequest, () {
+    // Integer minor units (piasters: 1 EGP = 100). Never a decimal.
+    // int budgetMinor
+    test('to test the property `budgetMinor`', () async {
+      // TODO
+    });
+
+    // bool clearBudget
+    test('to test the property `clearBudget`', () async {
+      // TODO
+    });
+
+    // bool clearTripEndDate
+    test('to test the property `clearTripEndDate`', () async {
+      // TODO
+    });
+
+    // bool clearTripStartDate
+    test('to test the property `clearTripStartDate`', () async {
+      // TODO
+    });
+
     // String name
     test('to test the property `name`', () async {
       // TODO
@@ -14,6 +35,16 @@ void main() {
 
     // String treasurerMemberId
     test('to test the property `treasurerMemberId`', () async {
+      // TODO
+    });
+
+    // Date tripEndDate
+    test('to test the property `tripEndDate`', () async {
+      // TODO
+    });
+
+    // Date tripStartDate
+    test('to test the property `tripStartDate`', () async {
       // TODO
     });
 

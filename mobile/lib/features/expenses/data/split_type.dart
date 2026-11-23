@@ -6,7 +6,10 @@ import '../../../core/l10n/generated/app_localizations.dart';
 enum SplitType {
   equal('EQUAL', Icons.balance),
   exact('EXACT', Icons.pin_outlined),
-  itemized('ITEMIZED', Icons.receipt_long);
+  itemized('ITEMIZED', Icons.receipt_long),
+
+  /// BSA3 (A185): weighted units, optionally by days present (SA19: the form edits it).
+  shares('SHARES', Icons.pie_chart_outline);
 
   const SplitType(this.wire, this.icon);
 
@@ -26,5 +29,6 @@ enum SplitType {
         SplitType.equal => l10n.expenseSplitEqual,
         SplitType.exact => l10n.expenseSplitExact,
         SplitType.itemized => l10n.expenseSplitItemized,
+        SplitType.shares => l10n.expenseSplitShares,
       };
 }

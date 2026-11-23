@@ -123,6 +123,13 @@ class _RevisionRow extends StatelessWidget {
             label: payersSpoken(l10n, snapshot, nameOf),
             child: ExcludeSemantics(child: Text(nameOfPayers, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary))),
           ),
+          // SA19: a shares snapshot also lists the billing period and each person's units and days present.
+          if (snapshot.splitType == 'SHARES') ...[
+            if (periodLineOf(l10n, snapshot.periodFrom, snapshot.periodTo) case final period?)
+              Text(period, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
+            for (final share in snapshot.shares)
+              Text(shareHistoryLine(l10n, share, nameOf(share.memberId)), style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary)),
+          ],
         ],
       ),
     ),

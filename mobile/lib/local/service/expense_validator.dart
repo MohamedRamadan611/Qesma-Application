@@ -18,6 +18,15 @@ final class ValidItem {
   final List<String> assigneeMemberIds;
 }
 
+/// A SHARES participant after validation (A195): presence normalized, both bounds set exactly when there is a period.
+final class ValidShareParticipant {
+  const ValidShareParticipant(this.memberId, this.shareUnits, {this.presentFrom, this.presentTo});
+  final String memberId;
+  final int shareUnits;
+  final String? presentFrom;
+  final String? presentTo;
+}
+
 /// A payer or an EXACT share after validation.
 final class ValidAmount {
   const ValidAmount(this.memberId, this.amountMinor);
@@ -49,6 +58,9 @@ final class ValidExpense {
     this.adjustmentMinor = 0,
     this.deliveryMinor = 0,
     this.paidFromPool = false,
+    this.shareParticipants,
+    this.periodFrom,
+    this.periodTo,
   });
 
   final int? serviceAmountMinor;
@@ -77,6 +89,11 @@ final class ValidExpense {
 
   /// BSA1: a pool expense; checked against the group by [ExpenseValidator.requirePoolRules].
   final bool paidFromPool;
+
+  /// BSA3: SHARES only (null otherwise); the period is null when the expense has none.
+  final List<ValidShareParticipant>? shareParticipants;
+  final String? periodFrom;
+  final String? periodTo;
 
   bool get itemized => splitType == 'ITEMIZED';
 }
@@ -126,8 +143,8 @@ abstract final class ExpenseValidator {
     }
     final type = c.splitType == null ? '' : javaStrip(c.splitType!).toUpperCase();
     final itemized = type == 'ITEMIZED';
-    if (!itemized && type != 'EQUAL' && type != 'EXACT') {
-      throw LocalApiException.validation('splitType must be EQUAL, EXACT or ITEMIZED');
+    if (!itemized && type != 'EQUAL' && type != 'EXACT' && type != 'SHARES') {
+      throw LocalApiException.validation('splitType must be EQUAL, EXACT, ITEMIZED or SHARES');
     }
     var total = 0;
     final stated = c.totalMinor;
@@ -156,12 +173,14 @@ abstract final class ExpenseValidator {
     return switch (type) {
       'EQUAL' => _equal(c, title, date, total, payers),
       'EXACT' => _exact(c, title, date, total, payers),
+      'SHARES' => _shares(c, title, date, total, payers),
       _ => _itemized(c, title, date, total, payers),
     };
   }
 
   static ValidExpense _equal(ExpenseIn c, String title, String date, int total, List<ValidAmount> payers) {
     _rejectItemizedFields(c, 'EQUAL');
+    _rejectSharesFields(c, 'EQUAL');
     if (c.shares != null) throw LocalApiException.validation('shares is only allowed for EXACT expenses');
     final participants = c.participantMemberIds;
     if (participants != null) {
@@ -189,6 +208,7 @@ abstract final class ExpenseValidator {
 
   static ValidExpense _exact(ExpenseIn c, String title, String date, int total, List<ValidAmount> payers) {
     _rejectItemizedFields(c, 'EXACT');
+    _rejectSharesFields(c, 'EXACT');
     if (c.participantMemberIds != null) {
       throw LocalApiException.validation('participantMemberIds is only allowed for EQUAL expenses');
     }
@@ -216,6 +236,7 @@ abstract final class ExpenseValidator {
   }
 
   static ValidExpense _itemized(ExpenseIn c, String title, String date, int total, List<ValidAmount> payers) {
+    _rejectSharesFields(c, 'ITEMIZED');
     if (c.participantMemberIds != null) {
       throw LocalApiException.validation('participantMemberIds is only allowed for EQUAL expenses');
     }
@@ -282,6 +303,96 @@ abstract final class ExpenseValidator {
       adjustmentMinor: adjustment,
       deliveryMinor: delivery,
     );
+  }
+
+  /// SHARES (STANDALONE_SPEC 19.1, A185-A187; Java `ExpenseValidator.shares`): every rule is a 422 naming the field.
+  /// The engine enforces the money-relevant rules again; this layer adds field paths, null and date-range checks, and
+  /// normalizes presence (with a period, a missing bound becomes the period bound; A195).
+  static ValidExpense _shares(ExpenseIn c, String title, String date, int total, List<ValidAmount> payers) {
+    _rejectItemizedFields(c, 'SHARES');
+    if (c.participantMemberIds != null) {
+      throw LocalApiException.validation('participantMemberIds is only allowed for EQUAL expenses (this is SHARES)');
+    }
+    if (c.shares != null) throw LocalApiException.validation('shares is only allowed for EXACT expenses (this is SHARES)');
+    final periodFrom = c.periodFrom;
+    final periodTo = c.periodTo;
+    if ((periodFrom == null) != (periodTo == null)) {
+      throw LocalApiException.validation('periodFrom and periodTo must both be set or both be absent');
+    }
+    if (periodFrom != null && periodTo != null) {
+      _inDateRange(periodFrom, 'periodFrom');
+      _inDateRange(periodTo, 'periodTo');
+      if (periodTo.compareTo(periodFrom) < 0) throw LocalApiException.validation('periodTo must not be before periodFrom');
+      if (SplitCalculator.inclusiveDays(periodFrom, periodTo) > Limits.maxPeriodDays) {
+        throw LocalApiException.validation(
+            'The period (periodFrom..periodTo) must be at most ${Limits.maxPeriodDays} days');
+      }
+    }
+    final participants = c.shareParticipants;
+    if (participants == null || participants.isEmpty) {
+      throw LocalApiException.validation('shareParticipants is required for SHARES expenses');
+    }
+    if (participants.length > maxList) {
+      throw LocalApiException.validation('At most $maxList shareParticipants are allowed');
+    }
+    final seen = <String>{};
+    final clean = <ValidShareParticipant>[];
+    for (var i = 0; i < participants.length; i++) {
+      final path = 'shareParticipants[$i]';
+      final p = participants[i];
+      if (p == null || p.memberId == null) throw LocalApiException.validation('$path.memberId is required');
+      if (!seen.add(p.memberId!)) throw LocalApiException.validation('$path.memberId appears more than once');
+      final units = p.shareUnits;
+      if (units == null || units < Limits.minShareUnits || units > Limits.maxShareUnits) {
+        throw LocalApiException.validation(
+            '$path.shareUnits must be between ${Limits.minShareUnits} and ${Limits.maxShareUnits}');
+      }
+      var from = p.presentFrom;
+      var to = p.presentTo;
+      if (periodFrom == null || periodTo == null) {
+        if (from != null || to != null) {
+          throw LocalApiException.validation('$path.presentFrom/presentTo need periodFrom and periodTo');
+        }
+      } else {
+        // YYYY-MM-DD compares as text in calendar order.
+        from ??= periodFrom;
+        to ??= periodTo;
+        if (from.compareTo(periodFrom) < 0 || from.compareTo(periodTo) > 0) {
+          throw LocalApiException.validation('$path.presentFrom must lie inside the period');
+        }
+        if (to.compareTo(periodFrom) < 0 || to.compareTo(periodTo) > 0) {
+          throw LocalApiException.validation('$path.presentTo must lie inside the period');
+        }
+        if (to.compareTo(from) < 0) throw LocalApiException.validation('$path.presentTo must not be before presentFrom');
+      }
+      clean.add(ValidShareParticipant(p.memberId!, units, presentFrom: from, presentTo: to));
+    }
+    return ValidExpense(
+      title: title,
+      expenseDate: date,
+      splitType: 'SHARES',
+      totalMinor: total,
+      payers: payers,
+      category: category(c.category),
+      paidFromPool: c.paidFromPool == true,
+      shareParticipants: clean,
+      periodFrom: periodFrom,
+      periodTo: periodTo,
+    );
+  }
+
+  static void _inDateRange(String d, String field) {
+    if (d.compareTo(minDate) < 0 || d.compareTo(maxDate) > 0) {
+      throw LocalApiException.validation('$field must be between $minDate and $maxDate');
+    }
+  }
+
+  /// SHARES fields on any other split type are rejected (A187).
+  static void _rejectSharesFields(ExpenseIn c, String type) {
+    if (c.shareParticipants != null || c.periodFrom != null || c.periodTo != null) {
+      throw LocalApiException.validation(
+          'shareParticipants, periodFrom and periodTo are only allowed for SHARES expenses (this is $type)');
+    }
   }
 
   /// A172 shape and ranges (Java `ExpenseValidator.itemLine`): legacy amountMinor or unitAmountMinor with an optional

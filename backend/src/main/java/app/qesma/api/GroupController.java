@@ -82,7 +82,10 @@ public class GroupController {
                                            @RequestBody UpdateGroupRequest request) {
         int expected = IfMatch.version(ifMatch);
         try {
-            groups.update(currentUser.id(), gid, expected, request.name(), request.type(), request.treasurerMemberId());
+            groups.update(currentUser.id(), gid, expected, request.name(), request.type(), request.treasurerMemberId(),
+                    new GroupService.BudgetPatch(request.budgetMinor(), Boolean.TRUE.equals(request.clearBudget()),
+                            request.tripStartDate(), Boolean.TRUE.equals(request.clearTripStartDate()),
+                            request.tripEndDate(), Boolean.TRUE.equals(request.clearTripEndDate())));
         } catch (ApiException e) {
             if (e.code() != ErrorCode.VERSION_CONFLICT) {
                 throw e;

@@ -1,9 +1,11 @@
 import 'package:built_collection/built_collection.dart';
 import 'package:drift/drift.dart';
 import 'package:qesma_api/qesma_api.dart';
+import 'package:qesma_engine/qesma_engine.dart' show Limits;
 
 import '../db/local_database.dart';
 import '../errors.dart';
+import 'expense_validator.dart';
 import 'field_rules.dart';
 import 'ledger.dart';
 import 'local_context.dart';
@@ -93,10 +95,11 @@ final class GroupService {
 
   Future<GroupDto> get(String groupId) => _db.transaction(() async => detail(await _ctx.requireGroup(groupId)));
 
-  /// Edits name and/or type under If-Match. A stale version is 409 VERSION_CONFLICT with the current GroupDto
+  /// Edits name and/or type under If-Match (and, A190/A193, the trip budget settings in [budget]). A stale version is 409 VERSION_CONFLICT with the current GroupDto
   /// (A113), checked before the input; the version moves only when something really changed.
   /// [treasurerMemberId] null = unchanged (the treasurer cannot be cleared, as in Java); see [_requireTreasurerChange].
-  Future<GroupDto> update(String groupId, int expectedVersion, {String? name, String? type, String? treasurerMemberId}) =>
+  Future<GroupDto> update(String groupId, int expectedVersion,
+          {String? name, String? type, String? treasurerMemberId, BudgetPatch budget = BudgetPatch.none}) =>
       _db.transaction(() async {
         final access = await _ctx.requireGroup(groupId);
         final group = access.group;
@@ -111,7 +114,27 @@ final class GroupService {
         final newType = type == null ? group.type : FieldRules.groupType(type);
         final treasurerChanges = treasurerMemberId != null && treasurerMemberId != group.treasurerMemberId;
         if (treasurerChanges) await _requireTreasurerChange(access, treasurerMemberId);
-        if (newName != group.name || newType != group.type || treasurerChanges) {
+        final b = budget;
+        final newBudget = _resulting(b.budgetMinor, b.clearBudget, group.budgetMinor, 'budgetMinor');
+        final newStart = _resulting(b.tripStartDate, b.clearTripStartDate, group.tripStartDate, 'tripStartDate');
+        final newEnd = _resulting(b.tripEndDate, b.clearTripEndDate, group.tripEndDate, 'tripEndDate');
+        if (newBudget != null && (newBudget < 1 || newBudget > Limits.maxAmountMinor)) {
+          throw LocalApiException.validation('budgetMinor must be between 1 and ${Limits.maxAmountMinor}');
+        }
+        _requireTripDate(newStart, 'tripStartDate');
+        _requireTripDate(newEnd, 'tripEndDate');
+        // Checked on the resulting state, so sending only one date cannot leave the stored pair reversed.
+        if (newStart != null && newEnd != null && newEnd.compareTo(newStart) < 0) {
+          throw LocalApiException.validation('tripEndDate must not be before tripStartDate');
+        }
+        // A199: a group has a pool treasurer or a trip budget, never both (checked on the resulting state).
+        final newTreasurer = treasurerChanges ? treasurerMemberId : group.treasurerMemberId;
+        if (newBudget != null && newTreasurer != null) {
+          throw LocalApiException.validation('A group cannot have both a pool treasurer and a trip budget');
+        }
+        final budgetChanges =
+            newBudget != group.budgetMinor || newStart != group.tripStartDate || newEnd != group.tripEndDate;
+        if (newName != group.name || newType != group.type || treasurerChanges || budgetChanges) {
           final changed = await _db.groupsDao.updateIfVersion(
             groupId,
             expectedVersion,
@@ -119,6 +142,9 @@ final class GroupService {
               name: Value(newName),
               type: Value(newType),
               treasurerMemberId: treasurerChanges ? Value(treasurerMemberId) : const Value.absent(),
+              budgetMinor: Value(newBudget),
+              tripStartDate: Value(newStart),
+              tripEndDate: Value(newEnd),
               updatedAt: Value(_ctx.clock()),
               version: Value(group.version + 1),
             ),
@@ -129,6 +155,19 @@ final class GroupService {
         }
         return detail(await _ctx.requireGroup(groupId));
       });
+
+  /// A193: the value after the patch; a value together with its clear flag is a 422.
+  static T? _resulting<T extends Object>(T? sent, bool clear, T? stored, String field) {
+    if (clear && sent != null) throw LocalApiException.validation('$field and its clear flag cannot both be sent');
+    if (clear) return null;
+    return sent ?? stored;
+  }
+
+  static void _requireTripDate(String? d, String field) {
+    if (d != null && (d.compareTo(ExpenseValidator.minDate) < 0 || d.compareTo(ExpenseValidator.maxDate) > 0)) {
+      throw LocalApiException.validation('$field must be between ${ExpenseValidator.minDate} and ${ExpenseValidator.maxDate}');
+    }
+  }
 
   /// A137 (Java `GroupService.requireTreasurerChange`): the treasurer is an ACTIVE member of this group (422), and it
   /// changes only while the pool has no deposit and no pool expense, cancelled and soft-deleted rows included (409).
@@ -219,6 +258,10 @@ final class GroupService {
       ..muted = false
       ..treasurerMemberId = g.treasurerMemberId
       ..poolBalanceMinor = meter
+      // A190: the trip budget settings (figures are computed elsewhere, never stored: A191).
+      ..budgetMinor = g.budgetMinor
+      ..tripStartDate = g.tripStartDate == null ? null : dateOf(g.tripStartDate!)
+      ..tripEndDate = g.tripEndDate == null ? null : dateOf(g.tripEndDate!)
       ..members = ListBuilder([for (final m in access.members) memberDto(m, access.profile.id)]));
   }
 
@@ -228,4 +271,26 @@ final class GroupService {
     if (name.isEmpty) return 'Me';
     return FieldRules.cutCodePoints(name, FieldRules.memberNameMax);
   }
+}
+
+/// The trip budget part of a group PATCH (A190, A193; Java `GroupService.BudgetPatch`): absent or null = no change,
+/// a `clear*` flag = set to null.
+final class BudgetPatch {
+  const BudgetPatch({
+    this.budgetMinor,
+    this.clearBudget = false,
+    this.tripStartDate,
+    this.clearTripStartDate = false,
+    this.tripEndDate,
+    this.clearTripEndDate = false,
+  });
+
+  static const BudgetPatch none = BudgetPatch();
+
+  final int? budgetMinor;
+  final bool clearBudget;
+  final String? tripStartDate;
+  final bool clearTripStartDate;
+  final String? tripEndDate;
+  final bool clearTripEndDate;
 }

@@ -8,6 +8,8 @@ import 'package:qesma_api/api.dart';
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**clearDefaultShareUnits** | **bool** |  | [optional] 
+**defaultShareUnits** | **int** |  | [optional] 
 **displayName** | **String** |  | [optional] 
 **role** | **String** |  | [optional] 
 **status** | **String** |  | [optional] 

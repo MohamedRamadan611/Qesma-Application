@@ -63,6 +63,9 @@ class FakeMember {
   bool get hasAccount => linked;
   bool hasTransactions;
   final int sortOrder;
+
+  /// SA19 (BSA3): the units a shares split starts this member with (null = none set).
+  int? defaultShareUnits;
 }
 
 class FakeJoinRequest {
@@ -147,6 +150,7 @@ class FakeGroupsServer extends FakeBackend {
         'hasAccount': m.hasAccount,
         'sortOrder': m.sortOrder,
         'createdAt': '2026-10-01T09:00:00Z',
+        if (m.defaultShareUnits != null) 'defaultShareUnits': m.defaultShareUnits,
       };
 
   Map<String, dynamic> _group(FakeGroup g) => {
@@ -187,8 +191,8 @@ class FakeGroupsServer extends FakeBackend {
         },
       );
 
-  ResponseBody problemResponse(int status, String code) => ResponseBody.fromString(
-        jsonEncode({'type': 'https://qesma.app/problems/x', 'title': 'x', 'status': status, 'code': code, 'requestId': 'req-$status'}),
+  ResponseBody problemResponse(int status, String code, {String title = 'x'}) => ResponseBody.fromString(
+        jsonEncode({'type': 'https://qesma.app/problems/x', 'title': title, 'status': status, 'code': code, 'requestId': 'req-$status'}),
         status,
         headers: {
           Headers.contentTypeHeader: ['application/problem+json'],
@@ -341,6 +345,8 @@ class FakeGroupsServer extends FakeBackend {
         if (fault != null) return problemResponse(fault.$1, fault.$2);
         if (body['role'] != null) member.role = body['role'] as String;
         if (body['status'] != null) member.status = body['status'] as String;
+        if (body['defaultShareUnits'] != null) member.defaultShareUnits = body['defaultShareUnits'] as int;
+        if (body['clearDefaultShareUnits'] == true) member.defaultShareUnits = null;
         if (body['displayName'] == null) return jsonOk(200, _member(member));
         final name = body['displayName'] as String;
         if (group.members.any((m) => m.name == name && m.id != member.id)) return problemResponse(409, 'DUPLICATE_MEMBER_NAME');

@@ -5,6 +5,7 @@
 // ignore_for_file: unused_element
 import 'package:built_collection/built_collection.dart';
 import 'package:qesma_api/src/model/member_dto.dart';
+import 'package:qesma_api/src/model/date.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
@@ -13,6 +14,7 @@ part 'group_dto.g.dart';
 /// GroupDto
 ///
 /// Properties:
+/// * [budgetMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
 /// * [createdAt] 
 /// * [currencyCode] 
 /// * [id] 
@@ -23,6 +25,8 @@ part 'group_dto.g.dart';
 /// * [poolBalanceMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
 /// * [totalSpentMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
 /// * [treasurerMemberId] 
+/// * [tripEndDate] 
+/// * [tripStartDate] 
 /// * [type] 
 /// * [updatedAt] 
 /// * [version] 
@@ -31,6 +35,10 @@ part 'group_dto.g.dart';
 /// * [yourRole] 
 @BuiltValue()
 abstract class GroupDto implements Built<GroupDto, GroupDtoBuilder> {
+  /// Integer minor units (piasters: 1 EGP = 100). Never a decimal.
+  @BuiltValueField(wireName: r'budgetMinor')
+  int? get budgetMinor;
+
   @BuiltValueField(wireName: r'createdAt')
   DateTime get createdAt;
 
@@ -62,6 +70,12 @@ abstract class GroupDto implements Built<GroupDto, GroupDtoBuilder> {
 
   @BuiltValueField(wireName: r'treasurerMemberId')
   String? get treasurerMemberId;
+
+  @BuiltValueField(wireName: r'tripEndDate')
+  Date? get tripEndDate;
+
+  @BuiltValueField(wireName: r'tripStartDate')
+  Date? get tripStartDate;
 
   @BuiltValueField(wireName: r'type')
   String get type;
@@ -105,6 +119,13 @@ class _$GroupDtoSerializer implements PrimitiveSerializer<GroupDto> {
     GroupDto object, {
     FullType specifiedType = FullType.unspecified,
   }) sync* {
+    if (object.budgetMinor != null) {
+      yield r'budgetMinor';
+      yield serializers.serialize(
+        object.budgetMinor,
+        specifiedType: const FullType.nullable(int),
+      );
+    }
     yield r'createdAt';
     yield serializers.serialize(
       object.createdAt,
@@ -161,6 +182,20 @@ class _$GroupDtoSerializer implements PrimitiveSerializer<GroupDto> {
         specifiedType: const FullType.nullable(String),
       );
     }
+    if (object.tripEndDate != null) {
+      yield r'tripEndDate';
+      yield serializers.serialize(
+        object.tripEndDate,
+        specifiedType: const FullType.nullable(Date),
+      );
+    }
+    if (object.tripStartDate != null) {
+      yield r'tripStartDate';
+      yield serializers.serialize(
+        object.tripStartDate,
+        specifiedType: const FullType.nullable(Date),
+      );
+    }
     yield r'type';
     yield serializers.serialize(
       object.type,
@@ -214,6 +249,14 @@ class _$GroupDtoSerializer implements PrimitiveSerializer<GroupDto> {
       final key = serializedList[i] as String;
       final value = serializedList[i + 1];
       switch (key) {
+        case r'budgetMinor':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
+          if (valueDes == null) continue;
+          result.budgetMinor = valueDes;
+          break;
         case r'createdAt':
           final valueDes = serializers.deserialize(
             value,
@@ -286,6 +329,22 @@ class _$GroupDtoSerializer implements PrimitiveSerializer<GroupDto> {
           ) as String?;
           if (valueDes == null) continue;
           result.treasurerMemberId = valueDes;
+          break;
+        case r'tripEndDate':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(Date),
+          ) as Date?;
+          if (valueDes == null) continue;
+          result.tripEndDate = valueDes;
+          break;
+        case r'tripStartDate':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(Date),
+          ) as Date?;
+          if (valueDes == null) continue;
+          result.tripStartDate = valueDes;
           break;
         case r'type':
           final valueDes = serializers.deserialize(

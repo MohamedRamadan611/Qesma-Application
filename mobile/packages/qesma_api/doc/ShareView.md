@@ -14,7 +14,10 @@ Name | Type | Description | Notes
 **itemsMinor** | **int** | Integer minor units (piasters: 1 EGP = 100). Never a decimal. | [optional] 
 **memberId** | **String** |  | 
 **owedMinor** | **int** | Integer minor units (piasters: 1 EGP = 100). Never a decimal. | 
+**presentFrom** | [**Date**](Date.md) |  | [optional] 
+**presentTo** | [**Date**](Date.md) |  | [optional] 
 **serviceMinor** | **int** | Integer minor units (piasters: 1 EGP = 100). Never a decimal. | [optional] 
+**shareUnits** | **int** |  | [optional] 
 **taxMinor** | **int** | Integer minor units (piasters: 1 EGP = 100). Never a decimal. | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

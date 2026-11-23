@@ -1,0 +1,16 @@
+{
+  "name": "V25 shares, two members, 100.00 over November, B present on 2026-11-30 only (weights 30 / 1)",
+  "input": {
+    "members": [ { "id": "A", "sortOrder": 1 }, { "id": "B", "sortOrder": 2 } ],
+    "expenses": [
+      { "type": "SHARES", "totalMinor": 10000, "periodFrom": "2026-11-01", "periodTo": "2026-11-30",
+        "shareParticipants": [ { "memberId": "A", "shareUnits": 1 },
+                               { "memberId": "B", "shareUnits": 1, "presentFrom": "2026-11-30", "presentTo": "2026-11-30" } ],
+        "payers": [ { "memberId": "A", "amountMinor": 10000 } ] }
+    ],
+    "settlements": []
+  },
+  "expected": {
+    "expenses": [ { "owed": { "A": 9677, "B": 323 }, "totalMinor": 10000 } ]
+  }
+}

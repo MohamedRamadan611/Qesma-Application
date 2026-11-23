@@ -7,6 +7,16 @@ void main() {
   // TODO add properties to the builder and call build()
 
   group(UpdateMemberRequest, () {
+    // bool clearDefaultShareUnits
+    test('to test the property `clearDefaultShareUnits`', () async {
+      // TODO
+    });
+
+    // int defaultShareUnits
+    test('to test the property `defaultShareUnits`', () async {
+      // TODO
+    });
+
     // String displayName
     test('to test the property `displayName`', () async {
       // TODO

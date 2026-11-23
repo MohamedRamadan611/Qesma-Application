@@ -39,7 +39,7 @@ class DevSeedIT extends AbstractApiIT {
         JsonNode summary = groups.get(0);
         assertThat(summary.get("name").asText()).isEqualTo("رحلة دهب");
         assertThat(summary.get("memberCount").asInt()).isEqualTo(4);   // كريم left (B12): not counted, still listed
-        assertThat(summary.get("totalSpentMinor").asLong()).isEqualTo(60000 + 300000 + 56179 + 5500);
+        assertThat(summary.get("totalSpentMinor").asLong()).isEqualTo(60000 + 300000 + 56179 + 5500 + 30000);
         String gid = summary.get("id").asText();
 
         JsonNode group = body(call(GET, "/api/v1/groups/" + gid, owner, null));
@@ -72,9 +72,12 @@ class DevSeedIT extends AbstractApiIT {
 
         JsonNode dinner = null;
         JsonNode snacks = null;
+        JsonNode chalet = null;
         for (JsonNode e : body(call(GET, "/api/v1/groups/" + gid + "/expenses", owner, null)).get("items")) {
             if (e.get("totalMinor").asLong() == 56179) {
                 dinner = e;
+            } else if ("SHARES".equals(e.get("splitType").asText())) {
+                chalet = e;
             } else if (e.get("totalMinor").asLong() == 5500) {
                 snacks = e;
             }
@@ -91,13 +94,24 @@ class DevSeedIT extends AbstractApiIT {
         assertThat(dinner.get("shares").findValues("owedMinor").stream().map(JsonNode::asLong).toList())
                 .containsExactly(16599L, 16598L, 22982L);
 
+        // BSA3 example: SHARES with a period and one shorter presence; the group carries a trip budget
+        assertThat(chalet).isNotNull();
+        assertThat(chalet.get("periodFrom").asText()).isEqualTo("2026-10-16");
+        assertThat(chalet.get("shares").findValues("owedMinor").stream().map(JsonNode::asLong).toList())
+                .containsExactly(25714L, 4286L);
+        assertThat(chalet.get("shares").findValues("shareUnits").stream().map(JsonNode::asInt).toList())
+                .containsExactly(2, 1);
+        assertThat(chalet.get("shares").get(1).get("presentFrom").asText()).isEqualTo("2026-10-18");
+        assertThat(group.get("budgetMinor").asLong()).isEqualTo(1_000_000L);
+        assertThat(group.get("tripEndDate").asText()).isEqualTo("2026-10-19");
+
         // B15: the seed goes through the real services, so the feed has the events of what it created
         JsonNode feed = body(call(GET, "/api/v1/groups/" + gid + "/activity?limit=50", owner, null)).get("items");
         List<String> types = new java.util.ArrayList<>();
         feed.forEach(i -> types.add(i.get("type").asText()));
         assertThat(types).contains("EXPENSE_ADDED", "SETTLEMENT_PENDING", "SETTLEMENT_DISPUTED", "ROLE_CHANGED",
                 "MEMBER_LEFT");
-        assertThat(types.stream().filter("EXPENSE_ADDED"::equals).count()).isEqualTo(4L);
+        assertThat(types.stream().filter("EXPENSE_ADDED"::equals).count()).isEqualTo(5L);
         long eventsBefore = jdbc.queryForObject("select count(*) from group_events where group_id = ?::uuid", Long.class, gid);
 
         // running the seeder again changes nothing
@@ -105,6 +119,6 @@ class DevSeedIT extends AbstractApiIT {
         assertThat(jdbc.queryForObject("select count(*) from group_events where group_id = ?::uuid", Long.class, gid))
                 .as("a second run writes no events").isEqualTo(eventsBefore);
         assertThat(body(call(GET, "/api/v1/groups", owner, null)).get("items")).hasSize(1);
-        assertThat(jdbc.queryForObject("select count(*) from expenses where group_id = ?::uuid", Long.class, gid)).isEqualTo(4L);
+        assertThat(jdbc.queryForObject("select count(*) from expenses where group_id = ?::uuid", Long.class, gid)).isEqualTo(5L);
     }
 }

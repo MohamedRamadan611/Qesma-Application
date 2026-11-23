@@ -96,6 +96,14 @@ class FakeExpensesServer extends FakeGroupsServer {
   /// when an adjustment makes a share negative (A12). For the printed-total tolerance test (A174).
   bool rejectAdjustments = false;
 
+  /// SA19: while set, every preview and save of a SHARES expense is refused with 422 `VALIDATION_ERROR` and this title,
+  /// as the backend names the field in its message (for example `shareParticipants[1].shareUnits must be ...`).
+  String? sharesProblemTitle;
+
+  /// SA19: the fake's amount per share unit. Deliberately NOT the engine's proration, so a test can prove the app shows
+  /// the server's numbers and never its own.
+  static const int sharesPiastersPerUnit = 1111;
+
   /// Every create request: the key and the body, in arrival order (including replays).
   final List<({String? key, Map<String, dynamic> body})> creates = [];
 
@@ -284,7 +292,19 @@ class FakeExpensesServer extends FakeGroupsServer {
       return null;
     }
     Map<String, int> shares;
-    if (body['splitType'] == 'EXACT') {
+    if (body['splitType'] == 'SHARES') {
+      final problem = sharesProblemTitle;
+      final list = (body['shareParticipants'] as List?)?.cast<Map<String, dynamic>>() ?? const [];
+      if (problem != null) {
+        _problem = problemResponse(422, 'VALIDATION_ERROR', title: problem);
+        return null;
+      }
+      if (list.isEmpty || list.any((s) => !known.contains(s['memberId']))) {
+        _problem = problemResponse(422, list.isEmpty ? 'VALIDATION_ERROR' : 'MEMBER_NOT_IN_GROUP');
+        return null;
+      }
+      shares = {for (final s in list) s['memberId'] as String: (s['shareUnits'] as int) * sharesPiastersPerUnit};
+    } else if (body['splitType'] == 'EXACT') {
       final list = (body['shares'] as List?)?.cast<Map<String, dynamic>>() ?? const [];
       if (list.any((s) => !known.contains(s['memberId']))) {
         _problem = problemResponse(422, 'MEMBER_NOT_IN_GROUP');
@@ -358,13 +378,29 @@ class FakeExpensesServer extends FakeGroupsServer {
         'payers': [for (final p in (body['payers'] as List).cast<Map<String, dynamic>>()) {'memberId': p['memberId'], 'amountMinor': p['amountMinor']}],
         'shares': [
           for (final id in memberOrder)
-            if (shares.containsKey(id)) {'memberId': id, 'owedMinor': shares[id], 'itemsMinor': null, 'serviceMinor': null, 'taxMinor': null, 'adjustmentMinor': null},
+            if (shares.containsKey(id)) {'memberId': id, 'owedMinor': shares[id], 'itemsMinor': null, 'serviceMinor': null, 'taxMinor': null, 'adjustmentMinor': null, ..._shareExtras(body, id)},
         ],
+        if (body['splitType'] == 'SHARES') 'periodFrom': body['periodFrom'],
+        if (body['splitType'] == 'SHARES') 'periodTo': body['periodTo'],
         'items': null,
         'charges': null,
         'createdAt': '2026-11-09T10:00:00Z',
         'version': version,
       };
+
+  /// SA19: what a SHARES share carries besides the amount: its units and, with a period, the stored (normalized)
+  /// presence range (a missing bound is the period's bound, A195).
+  Map<String, dynamic> _shareExtras(Map<String, dynamic> body, String memberId) {
+    if (body['splitType'] != 'SHARES') return const {};
+    final person = (body['shareParticipants'] as List).cast<Map<String, dynamic>>().firstWhere((s) => s['memberId'] == memberId);
+    final periodFrom = body['periodFrom'];
+    final periodTo = body['periodTo'];
+    return {
+      'shareUnits': person['shareUnits'],
+      if (periodFrom != null) 'presentFrom': person['presentFrom'] ?? periodFrom,
+      if (periodTo != null) 'presentTo': person['presentTo'] ?? periodTo,
+    };
+  }
 
   ResponseBody _created(Map<String, dynamic> expense, {bool replayed = false}) => ResponseBody.fromString(
         jsonEncode(expense),
@@ -428,9 +464,11 @@ class FakeExpensesServer extends FakeGroupsServer {
     }
     return jsonOk(200, {
       'totalMinor': body['totalMinor'],
+      if (body['splitType'] == 'SHARES') 'periodFrom': body['periodFrom'],
+      if (body['splitType'] == 'SHARES') 'periodTo': body['periodTo'],
       'members': [
         for (final id in memberOrder)
-          if (shares.containsKey(id)) {'memberId': id, 'owedMinor': shares[id], 'itemsMinor': null, 'serviceMinor': null, 'taxMinor': null, 'adjustmentMinor': null},
+          if (shares.containsKey(id)) {'memberId': id, 'owedMinor': shares[id], 'itemsMinor': null, 'serviceMinor': null, 'taxMinor': null, 'adjustmentMinor': null, ..._shareExtras(body, id)},
       ],
       'payersTotalMatches': matches,
     });

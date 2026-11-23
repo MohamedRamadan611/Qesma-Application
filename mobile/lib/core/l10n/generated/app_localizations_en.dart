@@ -501,6 +501,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupPoolMe => 'Me';
 
   @override
+  String get groupMoneyModeLabel => 'Track the group\'s money';
+
+  @override
+  String get groupMoneyModeNone => 'Nothing extra';
+
+  @override
+  String get groupMoneyModeNoneHint => 'Just record who paid and who owes.';
+
+  @override
+  String get groupBudgetToggle => 'Set a trip budget';
+
+  @override
+  String get groupBudgetToggleHint => 'Follow your spending against a limit.';
+
+  @override
+  String get groupMoneyModeLocked =>
+      'A group can have a pool or a budget, not both. The pool can\'t be added later.';
+
+  @override
+  String get groupBudgetSetFailed =>
+      'The group was created but the budget was not saved. Set it from the group settings.';
+
+  @override
   String get groupPoolSetFailed =>
       'The group was created but the treasurer was not set. Set it from the group settings.';
 
@@ -801,6 +824,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get expenseSplitItemized => 'Itemized bill';
 
   @override
+  String get expenseSplitShares => 'By shares';
+
+  @override
   String get expenseDetailsTitle => 'Expense details';
 
   @override
@@ -873,6 +899,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String expenseBreakdownCount(String count) {
     return '$count people';
+  }
+
+  @override
+  String expensePersonItemsList(String names) {
+    return 'Items: $names';
   }
 
   @override
@@ -3787,4 +3818,258 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get expenseFormChange => 'Change';
+
+  @override
+  String get expenseFormSplitSubtitleShares =>
+      'Shares each, optionally by days present';
+
+  @override
+  String get sharesPeopleTitle => 'People';
+
+  @override
+  String get sharesEditPeople => 'Edit people';
+
+  @override
+  String get sharesPickerTitle => 'Who shares this?';
+
+  @override
+  String get sharesHint => 'More shares means a bigger part.';
+
+  @override
+  String get sharesNeedPeople => 'Pick at least one person.';
+
+  @override
+  String get sharesUnitsOne => '1 share';
+
+  @override
+  String get sharesUnitsTwo => '2 shares';
+
+  @override
+  String sharesUnitsFew(String count) {
+    return '$count shares';
+  }
+
+  @override
+  String sharesUnitsMany(String count) {
+    return '$count shares';
+  }
+
+  @override
+  String get sharesStepperLabel => 'Shares';
+
+  @override
+  String get sharesStepperMinus => 'Fewer shares';
+
+  @override
+  String get sharesStepperPlus => 'More shares';
+
+  @override
+  String get sharesPeriodTitle => 'Billing period';
+
+  @override
+  String get sharesPeriodSubtitle =>
+      'Use it when someone stayed for part of it only';
+
+  @override
+  String get sharesPeriodPick => 'Choose the period';
+
+  @override
+  String get sharesPeriodChange => 'Change the period';
+
+  @override
+  String sharesRange(String from, String to) {
+    return '$from – $to';
+  }
+
+  @override
+  String sharesPeriodLine(String range) {
+    return 'Billing period: $range';
+  }
+
+  @override
+  String get sharesDaysPresent => 'Days present';
+
+  @override
+  String get sharesFullPeriod => 'Full period';
+
+  @override
+  String get sharesPresencePick => 'Set days present';
+
+  @override
+  String get sharesPresenceReset => 'Back to the full period';
+
+  @override
+  String sharesPresenceFor(String name) {
+    return 'Days present for $name';
+  }
+
+  @override
+  String sharesDaysPresentLine(String range) {
+    return 'Days present: $range';
+  }
+
+  @override
+  String get sharesErrUnits => 'Shares must be from 1 to 100.';
+
+  @override
+  String get sharesErrPresence =>
+      'Days present must fall inside the billing period.';
+
+  @override
+  String get sharesErrPeriod =>
+      'The billing period is not valid. Pick other first and last days.';
+
+  @override
+  String sharesRowSpoken(String name, String units, String amount) {
+    return '$name, $units, share $amount';
+  }
+
+  @override
+  String sharesRowSpokenNoAmount(String name, String units) {
+    return '$name, $units';
+  }
+
+  @override
+  String sharesHistoryRow(String name, String units, String range) {
+    return '$name · $units · $range';
+  }
+
+  @override
+  String sharesHistoryRowNoRange(String name, String units) {
+    return '$name · $units';
+  }
+
+  @override
+  String get membersActionDefaultShare => 'Default share';
+
+  @override
+  String get membersActionDefaultShareHint =>
+      'Used automatically when splitting by shares';
+
+  @override
+  String membersDefaultShareCurrent(String units) {
+    return 'Now: $units';
+  }
+
+  @override
+  String memberDefaultShareTitle(String name) {
+    return 'Default share of $name';
+  }
+
+  @override
+  String get memberDefaultShareBody =>
+      'It is filled in when you split by shares, and you can change it on each expense.';
+
+  @override
+  String get memberDefaultShareClear => 'Clear the default share';
+
+  @override
+  String get poolBalanceLabel => 'Pool balance';
+
+  @override
+  String get budgetSectionTitle => 'Budget';
+
+  @override
+  String get budgetSectionHint =>
+      'Set a trip budget and follow your spending. It\'s for tracking only and changes no one\'s balance.';
+
+  @override
+  String get budgetAmountLabel => 'Budget amount';
+
+  @override
+  String get budgetAmountError => 'Enter an amount above zero';
+
+  @override
+  String get budgetStartLabel => 'Trip start (optional)';
+
+  @override
+  String get budgetEndLabel => 'Trip end (optional)';
+
+  @override
+  String get budgetDateNotSet => 'Not set';
+
+  @override
+  String get budgetDateClear => 'Clear date';
+
+  @override
+  String get budgetTopUpLabel => 'Add to the budget';
+
+  @override
+  String get budgetTopUpAction => 'Add';
+
+  @override
+  String get budgetTopUpHint =>
+      'The amount is added to the budget above. Tap Save to keep it.';
+
+  @override
+  String get budgetTopUpError =>
+      'Enter an amount above zero that keeps the budget within the limit';
+
+  @override
+  String get budgetClear => 'Remove budget';
+
+  @override
+  String get budgetCardTitle => 'Budget left';
+
+  @override
+  String budgetSpentOf(String spent, String budget) {
+    return '$spent spent of $budget';
+  }
+
+  @override
+  String budgetProgress(String percent) {
+    return '$percent of the budget';
+  }
+
+  @override
+  String budgetOverBy(String amount) {
+    return 'Over budget by $amount';
+  }
+
+  @override
+  String get budgetOpenDetails => 'Budget details';
+
+  @override
+  String get budgetScreenTitle => 'Budget';
+
+  @override
+  String get budgetDailyAverage => 'Average spent per day';
+
+  @override
+  String budgetOverDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'over $count days',
+      one: 'over 1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get budgetPerDayLeft => 'You can spend per day';
+
+  @override
+  String budgetDaysLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days left',
+      one: '1 day left',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get budgetCostPerHead => 'Budget per person (estimate)';
+
+  @override
+  String get budgetCostPerHeadHint =>
+      'An estimate only: each person\'s real share depends on how each expense is split.';
+
+  @override
+  String get budgetPerDayTitle => 'Spending per day';
+
+  @override
+  String get budgetNoExpenses => 'No expenses yet.';
 }

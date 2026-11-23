@@ -26,7 +26,13 @@ class _$ExpenseCommand extends ExpenseCommand {
   @override
   final BuiltList<PayerInput>? payers;
   @override
+  final Date? periodFrom;
+  @override
+  final Date? periodTo;
+  @override
   final ServiceInput? service;
+  @override
+  final BuiltList<ShareParticipantInput>? shareParticipants;
   @override
   final BuiltList<ShareInput>? shares;
   @override
@@ -51,7 +57,10 @@ class _$ExpenseCommand extends ExpenseCommand {
       this.paidFromPool,
       this.participantMemberIds,
       this.payers,
+      this.periodFrom,
+      this.periodTo,
       this.service,
+      this.shareParticipants,
       this.shares,
       required this.splitType,
       this.tax,
@@ -78,7 +87,10 @@ class _$ExpenseCommand extends ExpenseCommand {
         paidFromPool == other.paidFromPool &&
         participantMemberIds == other.participantMemberIds &&
         payers == other.payers &&
+        periodFrom == other.periodFrom &&
+        periodTo == other.periodTo &&
         service == other.service &&
+        shareParticipants == other.shareParticipants &&
         shares == other.shares &&
         splitType == other.splitType &&
         tax == other.tax &&
@@ -98,7 +110,10 @@ class _$ExpenseCommand extends ExpenseCommand {
     _$hash = $jc(_$hash, paidFromPool.hashCode);
     _$hash = $jc(_$hash, participantMemberIds.hashCode);
     _$hash = $jc(_$hash, payers.hashCode);
+    _$hash = $jc(_$hash, periodFrom.hashCode);
+    _$hash = $jc(_$hash, periodTo.hashCode);
     _$hash = $jc(_$hash, service.hashCode);
+    _$hash = $jc(_$hash, shareParticipants.hashCode);
     _$hash = $jc(_$hash, shares.hashCode);
     _$hash = $jc(_$hash, splitType.hashCode);
     _$hash = $jc(_$hash, tax.hashCode);
@@ -120,7 +135,10 @@ class _$ExpenseCommand extends ExpenseCommand {
           ..add('paidFromPool', paidFromPool)
           ..add('participantMemberIds', participantMemberIds)
           ..add('payers', payers)
+          ..add('periodFrom', periodFrom)
+          ..add('periodTo', periodTo)
           ..add('service', service)
+          ..add('shareParticipants', shareParticipants)
           ..add('shares', shares)
           ..add('splitType', splitType)
           ..add('tax', tax)
@@ -177,9 +195,24 @@ class ExpenseCommandBuilder
       _$this._payers ??= ListBuilder<PayerInput>();
   set payers(ListBuilder<PayerInput>? payers) => _$this._payers = payers;
 
+  Date? _periodFrom;
+  Date? get periodFrom => _$this._periodFrom;
+  set periodFrom(Date? periodFrom) => _$this._periodFrom = periodFrom;
+
+  Date? _periodTo;
+  Date? get periodTo => _$this._periodTo;
+  set periodTo(Date? periodTo) => _$this._periodTo = periodTo;
+
   ServiceInputBuilder? _service;
   ServiceInputBuilder get service => _$this._service ??= ServiceInputBuilder();
   set service(ServiceInputBuilder? service) => _$this._service = service;
+
+  ListBuilder<ShareParticipantInput>? _shareParticipants;
+  ListBuilder<ShareParticipantInput> get shareParticipants =>
+      _$this._shareParticipants ??= ListBuilder<ShareParticipantInput>();
+  set shareParticipants(
+          ListBuilder<ShareParticipantInput>? shareParticipants) =>
+      _$this._shareParticipants = shareParticipants;
 
   ListBuilder<ShareInput>? _shares;
   ListBuilder<ShareInput> get shares =>
@@ -218,7 +251,10 @@ class ExpenseCommandBuilder
       _paidFromPool = $v.paidFromPool;
       _participantMemberIds = $v.participantMemberIds?.toBuilder();
       _payers = $v.payers?.toBuilder();
+      _periodFrom = $v.periodFrom;
+      _periodTo = $v.periodTo;
       _service = $v.service?.toBuilder();
+      _shareParticipants = $v.shareParticipants?.toBuilder();
       _shares = $v.shares?.toBuilder();
       _splitType = $v.splitType;
       _tax = $v.tax?.toBuilder();
@@ -257,7 +293,10 @@ class ExpenseCommandBuilder
             paidFromPool: paidFromPool,
             participantMemberIds: _participantMemberIds?.build(),
             payers: _payers?.build(),
+            periodFrom: periodFrom,
+            periodTo: periodTo,
             service: _service?.build(),
+            shareParticipants: _shareParticipants?.build(),
             shares: _shares?.build(),
             splitType: BuiltValueNullFieldError.checkNotNull(
                 splitType, r'ExpenseCommand', 'splitType'),
@@ -279,8 +318,11 @@ class ExpenseCommandBuilder
         _participantMemberIds?.build();
         _$failedField = 'payers';
         _payers?.build();
+
         _$failedField = 'service';
         _service?.build();
+        _$failedField = 'shareParticipants';
+        _shareParticipants?.build();
         _$failedField = 'shares';
         _shares?.build();
 

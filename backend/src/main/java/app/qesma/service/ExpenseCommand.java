@@ -9,7 +9,7 @@ import java.util.UUID;
  * as a validation error rather than silently becoming 0. Bound directly from JSON; it has no fields a client
  * could use to set ids, owner, version or derived amounts.
  *
- * @param splitType            EQUAL, EXACT or ITEMIZED
+ * @param splitType            EQUAL, EXACT, ITEMIZED or SHARES
  * @param totalMinor           required for EQUAL/EXACT; for ITEMIZED optional (the engine computes it) and, when
  *                             given, must equal the computed total
  * @param participantMemberIds EQUAL only; null means "all current members" (resolved and stored explicitly)
@@ -22,11 +22,25 @@ import java.util.UUID;
  * @param paidFromPool         optional; true only when the group has a treasurer who is the single payer (BSA1)
  * @param discount             ITEMIZED only; absent = no discount (BSA2, A171)
  * @param deliveryMinor        ITEMIZED only; absent = no delivery (A180): outside discount, service and tax
+ * @param shareParticipants    SHARES only (A185): units 1..100 per member, optional presence inside the period
+ * @param periodFrom           SHARES only, optional (A186): inclusive, both bounds or neither, at most 366 days,
+ *                             independent of {@code expenseDate}
+ * @param periodTo             SHARES only, optional (A186)
  */
 public record ExpenseCommand(String title, LocalDate expenseDate, String splitType, Long totalMinor,
                              List<PayerInput> payers, List<UUID> participantMemberIds, List<ShareInput> shares,
                              List<ItemInput> items, ServiceInput service, TaxInput tax, Long adjustmentMinor,
-                             String category, Boolean paidFromPool, DiscountInput discount, Long deliveryMinor) {
+                             String category, Boolean paidFromPool, DiscountInput discount, Long deliveryMinor,
+                             List<ShareParticipantInput> shareParticipants, LocalDate periodFrom, LocalDate periodTo) {
+
+    /** Without the SHARES fields (BSA3). */
+    public ExpenseCommand(String title, LocalDate expenseDate, String splitType, Long totalMinor,
+                          List<PayerInput> payers, List<UUID> participantMemberIds, List<ShareInput> shares,
+                          List<ItemInput> items, ServiceInput service, TaxInput tax, Long adjustmentMinor,
+                          String category, Boolean paidFromPool, DiscountInput discount, Long deliveryMinor) {
+        this(title, expenseDate, splitType, totalMinor, payers, participantMemberIds, shares, items, service, tax,
+                adjustmentMinor, category, paidFromPool, discount, deliveryMinor, null, null, null);
+    }
 
     /** Without the delivery charge. */
     public ExpenseCommand(String title, LocalDate expenseDate, String splitType, Long totalMinor,
@@ -64,6 +78,13 @@ public record ExpenseCommand(String title, LocalDate expenseDate, String splitTy
     }
 
     public record ShareInput(UUID memberId, Long amountMinor) {
+    }
+
+    /**
+     * One SHARES participant (A185-A186): {@code shareUnits} 1..100; {@code presentFrom}/{@code presentTo} only with a
+     * period, each inside it, defaulting to the period bound.
+     */
+    public record ShareParticipantInput(UUID memberId, Integer shareUnits, LocalDate presentFrom, LocalDate presentTo) {
     }
 
     /**

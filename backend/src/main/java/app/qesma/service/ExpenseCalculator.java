@@ -12,6 +12,8 @@ import app.qesma.engine.MemberRef;
 import app.qesma.engine.Payer;
 import app.qesma.engine.PayerValidator;
 import app.qesma.engine.Share;
+import app.qesma.engine.SharePeriod;
+import app.qesma.engine.WeightedShare;
 import app.qesma.engine.SplitCalculator;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -36,7 +38,18 @@ final class ExpenseCalculator {
                        Long discountAmountMinor, long discountMinor, Integer serviceBps, Long serviceAmountMinor,
                        long serviceMinor, Integer taxBps, Long taxAmountMinor, String taxBase, long taxMinor,
                        long adjustmentMinor, List<ExpenseView.ShareView> shares, List<Payer> payers,
-                       long deliveryMinor) {
+                       long deliveryMinor, java.time.LocalDate periodFrom, java.time.LocalDate periodTo) {
+
+        /** Without the SHARES period. */
+        Computation(String splitType, long totalMinor, Long subtotalMinor, Integer discountBps,
+                    Long discountAmountMinor, long discountMinor, Integer serviceBps, Long serviceAmountMinor,
+                    long serviceMinor, Integer taxBps, Long taxAmountMinor, String taxBase, long taxMinor,
+                    long adjustmentMinor, List<ExpenseView.ShareView> shares, List<Payer> payers,
+                    long deliveryMinor) {
+            this(splitType, totalMinor, subtotalMinor, discountBps, discountAmountMinor, discountMinor, serviceBps,
+                    serviceAmountMinor, serviceMinor, taxBps, taxAmountMinor, taxBase, taxMinor, adjustmentMinor,
+                    shares, payers, deliveryMinor, null, null);
+        }
 
         /** Without delivery (0). */
         Computation(String splitType, long totalMinor, Long subtotalMinor, Integer discountBps,
@@ -112,6 +125,7 @@ final class ExpenseCalculator {
             Computation computed = switch (request.splitType()) {
                 case Expense.EQUAL -> equal(request, roster, payers);
                 case Expense.EXACT -> exact(request, roster, payers);
+                case Expense.SHARES -> shares(request, roster, payers);
                 default -> itemized(request, roster, payers);
             };
             // The engine computes an ITEMIZED total itself: it must respect the same cap as a stated one (CP2-001).
@@ -168,6 +182,29 @@ final class ExpenseCalculator {
             shares.add(new Share(requireMember(roster, s.memberId()), s.amountMinor()));
         }
         return plain(request, roster, SplitCalculator.exact(request.totalMinor(), shares), payers);
+    }
+
+    /** SHARES (A185-A186): members follow the EQUAL rules (usable roster); presence is already normalized. */
+    private static Computation shares(ExpenseValidator.Valid request, Roster roster, List<Payer> payers) {
+        List<WeightedShare> weighted = new ArrayList<>();
+        Map<String, ExpenseCommand.ShareParticipantInput> byId = new LinkedHashMap<>();
+        for (ExpenseCommand.ShareParticipantInput p : request.shareParticipants()) {
+            String id = requireMember(roster, p.memberId());
+            byId.put(id, p);
+            weighted.add(new WeightedShare(id, roster.usable().get(id).sortOrder(), p.shareUnits(), p.presentFrom(),
+                    p.presentTo()));
+        }
+        SharePeriod period = request.periodFrom() == null ? null
+                : new SharePeriod(request.periodFrom(), request.periodTo());
+        Map<String, Long> owed = SplitCalculator.shares(request.totalMinor(), weighted, period);
+        List<ExpenseView.ShareView> shares = new ArrayList<>();
+        owed.forEach((id, amount) -> {          // already in sortOrder order
+            ExpenseCommand.ShareParticipantInput p = byId.get(id);
+            shares.add(ExpenseView.ShareView.shares(UUID.fromString(id), amount, p.shareUnits(), p.presentFrom(),
+                    p.presentTo()));
+        });
+        return new Computation(request.splitType(), request.totalMinor(), null, null, null, 0, null, null, 0, null,
+                null, null, 0, 0, List.copyOf(shares), payers, 0, request.periodFrom(), request.periodTo());
     }
 
     private static Computation plain(ExpenseValidator.Valid request, Roster roster, Map<String, Long> owed,

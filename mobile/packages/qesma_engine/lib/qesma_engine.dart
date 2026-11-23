@@ -6,8 +6,10 @@ library;
 
 export 'src/balance_calculator.dart';
 export 'src/bps.dart';
+export 'src/civil_date.dart';
 export 'src/engine_exception.dart';
 export 'src/insights/my_share.dart';
+export 'src/insights/trip_budget.dart';
 export 'src/insights/trip_recap.dart';
 export 'src/itemized_calculator.dart';
 export 'src/limits.dart';

@@ -78,6 +78,23 @@ public class RequestHasher {
                 canonical.put("deliveryMinor", v.deliveryMinor());
             }
         }
+        if (v.shareParticipants() != null) {
+            // A189 (BSA3): SHARES keys are added only when present, so a replay of a pre-BSA3 key keeps its hash.
+            // Participant order is not meaning (the result is in sort order); presence is the normalized one, so an
+            // omitted bound and the same date given explicitly are the same request.
+            canonical.put("shareParticipants", v.shareParticipants().stream()
+                    .sorted(Comparator.comparing(p -> p.memberId().toString()))
+                    .map(p -> {
+                        Map<String, Object> m = new LinkedHashMap<>();
+                        m.put("memberId", p.memberId().toString());
+                        m.put("shareUnits", p.shareUnits());
+                        putIfSet(m, "presentFrom", p.presentFrom() == null ? null : p.presentFrom().toString());
+                        putIfSet(m, "presentTo", p.presentTo() == null ? null : p.presentTo().toString());
+                        return m;
+                    }).toList());
+        }
+        putIfSet(canonical, "periodFrom", v.periodFrom() == null ? null : v.periodFrom().toString());
+        putIfSet(canonical, "periodTo", v.periodTo() == null ? null : v.periodTo().toString());
         try {
             byte[] json = mapper.writeValueAsString(canonical).getBytes(StandardCharsets.UTF_8);
             return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(json));

@@ -8,6 +8,7 @@ import 'support/local_http.dart';
 /// The shared engine vectors V1-V20 (`/fixtures/engine`, the Java reference) reproduced end-to-end through the HTTP
 /// contract: members are created (fixture sortOrder 1 = "you", the group creator), expenses and settlements are
 /// POSTed, then each expense's shares and charges and `GET balances` must equal the fixture.
+
 void main() {
   final files = Directory('../fixtures/engine').listSync().whereType<File>().where((f) => f.path.endsWith('.json')).toList()
     ..sort((a, b) => a.path.compareTo(b.path));
@@ -16,7 +17,7 @@ void main() {
 
   test('all spec vectors are present', () {
     final ids = files.map(id).toSet();
-    for (var v = 1; v <= 20; v++) {
+    for (var v = 1; v <= 28; v++) {
       expect(ids, contains('V$v'));
     }
   });
@@ -74,11 +75,19 @@ void main() {
           'tax': ?x['tax'],
           'adjustmentMinor': ?x['adjustmentMinor'],
           'deliveryMinor': ?x['deliveryMinor'],
+          // SHARES (V21-V28): units and presence per participant, the optional period.
+          if (x['shareParticipants'] != null)
+            'shareParticipants': [
+              for (final p in (x['shareParticipants'] as List).cast<Map<String, dynamic>>())
+                {...p, 'memberId': ids[p['memberId']]},
+            ],
+          'periodFrom': ?x['periodFrom'],
+          'periodTo': ?x['periodTo'],
         };
         final r = await http.expense(gid, body);
         final want = expectedExpenses?[i];
         if (want?['error'] != null) {
-          // A rejected bill (V15, V16): the contract refuses it with the vector's code and nothing is stored.
+          // A rejected bill (V15, V16) or SHARES shape (V27, V28): the contract refuses it with the vector's code and nothing is stored.
           expect(r.statusCode, 422, reason: '${r.data}');
           expect(r.data['code'], want!['error']);
           continue;

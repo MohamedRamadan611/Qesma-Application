@@ -405,18 +405,22 @@ public class OpenApiConfig {
 
     /** Response fields that can be null (all other response fields are always present and non-null). */
     static final Map<String, java.util.Set<String>> NULLABLE = Map.ofEntries(
-            Map.entry("ExpenseView", java.util.Set.of("items", "charges")),
+            // BSA3 (A195): the SHARES period and per-share units/presence are null unless SHARES (presence also null
+            // without a period).
+            Map.entry("ExpenseView", java.util.Set.of("items", "charges", "periodFrom", "periodTo")),
             Map.entry("ShareView", java.util.Set.of("itemsMinor", "discountMinor", "serviceMinor", "taxMinor", "adjustmentMinor",
-                    "deliveryMinor")),
+                    "deliveryMinor", "shareUnits", "presentFrom", "presentTo")),
+            Map.entry("MemberDto", java.util.Set.of("defaultShareUnits")),
             Map.entry("Charges", java.util.Set.of("discount", "service", "tax")),
             // BSA2: bps is null when the charge was given as an amount.
             Map.entry("DiscountCharge", java.util.Set.of("bps")),
             Map.entry("ServiceCharge", java.util.Set.of("bps")),
             Map.entry("TaxCharge", java.util.Set.of("bps")),
             Map.entry("ExpensePreview", java.util.Set.of("subtotalMinor", "discountMinor", "serviceMinor", "taxMinor",
-                    "adjustmentMinor", "deliveryMinor")),
+                    "adjustmentMinor", "deliveryMinor", "periodFrom", "periodTo")),
             Map.entry("SettlementView", java.util.Set.of("note", "createdByMemberId", "confirmedAt", "disputedAt", "cancelledAt")),
-            Map.entry("GroupDto", java.util.Set.of("lastExpenseAt", "treasurerMemberId", "poolBalanceMinor")),
+            Map.entry("GroupDto", java.util.Set.of("lastExpenseAt", "treasurerMemberId", "poolBalanceMinor", "budgetMinor",
+                    "tripStartDate", "tripEndDate")),
             Map.entry("GroupSummaryDto", java.util.Set.of("lastExpenseAt")),
             Map.entry("UserDto", java.util.Set.of("email", "username")),
             Map.entry("TransferView", java.util.Set.of("receiverHandles", "canRemindAt")),
@@ -452,7 +456,9 @@ public class OpenApiConfig {
             Map.entry("ItemInput", List.of("name", "assigneeMemberIds")),
             Map.entry("ServiceInput", List.of()),
             Map.entry("TaxInput", List.of()),
-            Map.entry("DiscountInput", List.of()));
+            Map.entry("DiscountInput", List.of()),
+            // BSA3 (A185-A186): presence is optional (defaults to the period bounds).
+            Map.entry("ShareParticipantInput", List.of("memberId", "shareUnits")));
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     private static void markRequiredAndNullable(Components components) {

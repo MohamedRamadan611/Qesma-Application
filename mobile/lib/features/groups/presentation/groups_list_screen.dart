@@ -11,6 +11,7 @@ import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../application/groups_list_controller.dart';
 import '../../backup/presentation/backup_banner.dart';
+import 'group_actions.dart';
 import 'group_card.dart';
 import 'group_summary_card.dart';
 
@@ -132,7 +133,11 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
                       );
                     }
                     final group = state.items[index - 1];
-                    return GroupCard(group: group, onTap: () => context.push(Routes.group(group.id)));
+                    return GroupCard(
+                      group: group,
+                      onTap: () => context.push(Routes.group(group.id)),
+                      onLongPress: () => showGroupActions(context, ref, group),
+                    );
                   },
                 ),
               );

@@ -195,6 +195,7 @@ class _Content extends StatelessWidget {
                   AppTag(label: category.label(l10n), icon: category.icon),
                   if (expense.paidFromPool) AppTag(label: l10n.expensePoolTag, icon: Icons.savings_outlined, tone: AppTagTone.info),
                   if (split != null) AppTag(label: split.label(l10n), tone: split == SplitType.itemized ? AppTagTone.warning : AppTagTone.primary),
+                  if (periodLineOf(l10n, expense.periodFrom, expense.periodTo) case final period?) AppTag(label: period, icon: Icons.date_range_outlined, tone: AppTagTone.info),
                   if (expense.version > 1) AppTag(label: l10n.expenseEditedBadge('${expense.version}'), tone: AppTagTone.info, icon: Icons.history),
                 ],
               ),

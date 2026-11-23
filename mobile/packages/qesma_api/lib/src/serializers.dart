@@ -72,6 +72,7 @@ import 'package:qesma_api/src/model/service_input.dart';
 import 'package:qesma_api/src/model/settlement_command.dart';
 import 'package:qesma_api/src/model/settlement_view.dart';
 import 'package:qesma_api/src/model/share_input.dart';
+import 'package:qesma_api/src/model/share_participant_input.dart';
 import 'package:qesma_api/src/model/share_view.dart';
 import 'package:qesma_api/src/model/tax_charge.dart';
 import 'package:qesma_api/src/model/tax_input.dart';
@@ -151,6 +152,7 @@ part 'serializers.g.dart';
   SettlementCommand,
   SettlementView,
   ShareInput,
+  ShareParticipantInput,
   ShareView,
   TaxCharge,
   TaxInput,

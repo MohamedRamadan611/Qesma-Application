@@ -932,6 +932,48 @@ abstract class AppLocalizations {
   /// **'أنا'**
   String get groupPoolMe;
 
+  /// A199: label above the none / pool / budget radio group on the create-group screen.
+  ///
+  /// In ar, this message translates to:
+  /// **'تتبّع فلوس الجروب'**
+  String get groupMoneyModeLabel;
+
+  /// A199: radio option, neither a pool nor a budget.
+  ///
+  /// In ar, this message translates to:
+  /// **'من غير إضافات'**
+  String get groupMoneyModeNone;
+
+  /// A199: hint under the 'nothing extra' option.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجّلوا مين دفع ومين عليه بس.'**
+  String get groupMoneyModeNoneHint;
+
+  /// A199: radio option on the create-group screen.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحديد ميزانية للرحلة'**
+  String get groupBudgetToggle;
+
+  /// A199: hint under the budget option.
+  ///
+  /// In ar, this message translates to:
+  /// **'تابعوا صرفكم مقارنة بحد معيّن.'**
+  String get groupBudgetToggleHint;
+
+  /// A199: one-line rule under the radio group.
+  ///
+  /// In ar, this message translates to:
+  /// **'الجروب يا صندوق يا ميزانية، مش الاتنين. والصندوق مينفعش يتضاف بعدين.'**
+  String get groupMoneyModeLocked;
+
+  /// A199: snackbar when the budget could not be saved right after creating the group.
+  ///
+  /// In ar, this message translates to:
+  /// **'الجروب اتعمل بس الميزانية ماتحفظتش. حدّدوها من إعدادات الجروب.'**
+  String get groupBudgetSetFailed;
+
   /// Snackbar when the treasurer could not be set right after creating the group.
   ///
   /// In ar, this message translates to:
@@ -1407,6 +1449,12 @@ abstract class AppLocalizations {
   /// **'فاتورة مفصلة'**
   String get expenseSplitItemized;
 
+  /// Split type chip: SHARES (weighted units, optionally by days present; BSA3).
+  ///
+  /// In ar, this message translates to:
+  /// **'بالحصص'**
+  String get expenseSplitShares;
+
   /// Title of the expense details screen.
   ///
   /// In ar, this message translates to:
@@ -1532,6 +1580,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'{count} أفراد'**
   String expenseBreakdownCount(String count);
+
+  /// Under a person's share on the details page: the names of the items they take part in.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأصناف: {names}'**
+  String expensePersonItemsList(String names);
 
   /// Share breakdown part: items.
   ///
@@ -6374,6 +6428,402 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تغيير'**
   String get expenseFormChange;
+
+  /// Split method row: shares (SA19).
+  ///
+  /// In ar, this message translates to:
+  /// **'كل واحد بعدد حصص، وممكن بأيام الإقامة'**
+  String get expenseFormSplitSubtitleShares;
+
+  /// Shares editor: header of the list of people.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأشخاص'**
+  String get sharesPeopleTitle;
+
+  /// Shares editor: opens the member picker.
+  ///
+  /// In ar, this message translates to:
+  /// **'عدّل الأشخاص'**
+  String get sharesEditPeople;
+
+  /// Shares editor: title of the member picker.
+  ///
+  /// In ar, this message translates to:
+  /// **'مين بيشارك؟'**
+  String get sharesPickerTitle;
+
+  /// Shares editor: one-line explanation.
+  ///
+  /// In ar, this message translates to:
+  /// **'اللي حصصه أكتر بيدفع أكتر.'**
+  String get sharesHint;
+
+  /// Shares editor: nobody selected.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختار شخص واحد على الأقل.'**
+  String get sharesNeedPeople;
+
+  /// Shares: one unit.
+  ///
+  /// In ar, this message translates to:
+  /// **'حصة واحدة'**
+  String get sharesUnitsOne;
+
+  /// Shares: two units.
+  ///
+  /// In ar, this message translates to:
+  /// **'حصتين'**
+  String get sharesUnitsTwo;
+
+  /// Shares: 3 to 10 units.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} حصص'**
+  String sharesUnitsFew(String count);
+
+  /// Shares: 11 or more units.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} حصة'**
+  String sharesUnitsMany(String count);
+
+  /// Stepper label (spoken) of a person's shares.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحصص'**
+  String get sharesStepperLabel;
+
+  /// Stepper button.
+  ///
+  /// In ar, this message translates to:
+  /// **'قلّل الحصص'**
+  String get sharesStepperMinus;
+
+  /// Stepper button.
+  ///
+  /// In ar, this message translates to:
+  /// **'زوّد الحصص'**
+  String get sharesStepperPlus;
+
+  /// Shares editor: switch title and details tag.
+  ///
+  /// In ar, this message translates to:
+  /// **'فترة الفاتورة'**
+  String get sharesPeriodTitle;
+
+  /// Shares editor: switch subtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'لو فيه حد قعد جزء من الفترة بس'**
+  String get sharesPeriodSubtitle;
+
+  /// Shares editor: opens the date range picker.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدّد الفترة'**
+  String get sharesPeriodPick;
+
+  /// Shares editor: opens the date range picker again.
+  ///
+  /// In ar, this message translates to:
+  /// **'غيّر الفترة'**
+  String get sharesPeriodChange;
+
+  /// A date range as typed by the user or sent by the server.
+  ///
+  /// In ar, this message translates to:
+  /// **'{from} – {to}'**
+  String sharesRange(String from, String to);
+
+  /// Details and history: the billing period.
+  ///
+  /// In ar, this message translates to:
+  /// **'فترة الفاتورة: {range}'**
+  String sharesPeriodLine(String range);
+
+  /// Shares editor: label of a person's presence.
+  ///
+  /// In ar, this message translates to:
+  /// **'أيام الإقامة'**
+  String get sharesDaysPresent;
+
+  /// Shares editor: the person is there for the whole billing period.
+  ///
+  /// In ar, this message translates to:
+  /// **'الفترة كلها'**
+  String get sharesFullPeriod;
+
+  /// Shares editor: opens the range picker for a person.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدّد أيام الإقامة'**
+  String get sharesPresencePick;
+
+  /// Shares editor: clears a person's presence range.
+  ///
+  /// In ar, this message translates to:
+  /// **'ارجع للفترة كلها'**
+  String get sharesPresenceReset;
+
+  /// Spoken label of the presence control.
+  ///
+  /// In ar, this message translates to:
+  /// **'أيام إقامة {name}'**
+  String sharesPresenceFor(String name);
+
+  /// Details and editor: a person's presence range.
+  ///
+  /// In ar, this message translates to:
+  /// **'أيام الإقامة: {range}'**
+  String sharesDaysPresentLine(String range);
+
+  /// Shares editor: the server refused the units.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحصص من 1 لـ 100.'**
+  String get sharesErrUnits;
+
+  /// Shares editor: the server refused the presence range.
+  ///
+  /// In ar, this message translates to:
+  /// **'أيام الإقامة لازم تبقى جوه فترة الفاتورة.'**
+  String get sharesErrPresence;
+
+  /// Shares editor: the server refused the billing period.
+  ///
+  /// In ar, this message translates to:
+  /// **'فترة الفاتورة مش مظبوطة. اختار أول وآخر يوم تاني.'**
+  String get sharesErrPeriod;
+
+  /// Screen-reader label of a person row with the server amount.
+  ///
+  /// In ar, this message translates to:
+  /// **'{name}، {units}، نصيبه {amount}'**
+  String sharesRowSpoken(String name, String units, String amount);
+
+  /// Screen-reader label of a person row before the amount is known.
+  ///
+  /// In ar, this message translates to:
+  /// **'{name}، {units}'**
+  String sharesRowSpokenNoAmount(String name, String units);
+
+  /// History: a person with units and presence.
+  ///
+  /// In ar, this message translates to:
+  /// **'{name} · {units} · {range}'**
+  String sharesHistoryRow(String name, String units, String range);
+
+  /// History: a person with units.
+  ///
+  /// In ar, this message translates to:
+  /// **'{name} · {units}'**
+  String sharesHistoryRowNoRange(String name, String units);
+
+  /// Member options: default shares for a shares split.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحصة الافتراضية'**
+  String get membersActionDefaultShare;
+
+  /// Member options: hint when none is set.
+  ///
+  /// In ar, this message translates to:
+  /// **'بتتحط تلقائي لما التقسيم بالحصص'**
+  String get membersActionDefaultShareHint;
+
+  /// Member options: hint with the current default share.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحالية: {units}'**
+  String membersDefaultShareCurrent(String units);
+
+  /// Default share sheet: title.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحصة الافتراضية لـ {name}'**
+  String memberDefaultShareTitle(String name);
+
+  /// Default share sheet: explanation.
+  ///
+  /// In ar, this message translates to:
+  /// **'بتتحط تلقائي لما تقسم بالحصص، وتقدر تغيّرها في كل مصروف.'**
+  String get memberDefaultShareBody;
+
+  /// Default share sheet: clears it.
+  ///
+  /// In ar, this message translates to:
+  /// **'امسح الحصة الافتراضية'**
+  String get memberDefaultShareClear;
+
+  /// SA20: title of the pool card on the group home (the budget card says 'budget left').
+  ///
+  /// In ar, this message translates to:
+  /// **'رصيد الصندوق'**
+  String get poolBalanceLabel;
+
+  /// SA20: edit-group section title for the trip budget.
+  ///
+  /// In ar, this message translates to:
+  /// **'الميزانية'**
+  String get budgetSectionTitle;
+
+  /// SA20: one-line explanation under the budget section title.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدّدوا ميزانية للرحلة وتابعوا الصرف. دي للمتابعة بس ومش بتغيّر حساب حد.'**
+  String get budgetSectionHint;
+
+  /// SA20: label of the budget amount field.
+  ///
+  /// In ar, this message translates to:
+  /// **'مبلغ الميزانية'**
+  String get budgetAmountLabel;
+
+  /// SA20: inline error for an invalid budget amount.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب مبلغ أكبر من صفر'**
+  String get budgetAmountError;
+
+  /// SA20: trip start date row.
+  ///
+  /// In ar, this message translates to:
+  /// **'أول يوم في الرحلة (اختياري)'**
+  String get budgetStartLabel;
+
+  /// SA20: trip end date row.
+  ///
+  /// In ar, this message translates to:
+  /// **'آخر يوم في الرحلة (اختياري)'**
+  String get budgetEndLabel;
+
+  /// SA20: a trip date that is not set.
+  ///
+  /// In ar, this message translates to:
+  /// **'مش محدّد'**
+  String get budgetDateNotSet;
+
+  /// SA20: clears a trip date.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسح التاريخ'**
+  String get budgetDateClear;
+
+  /// Edit group: label of the field for extra budget to add on top of the current one.
+  ///
+  /// In ar, this message translates to:
+  /// **'زوّد الميزانية'**
+  String get budgetTopUpLabel;
+
+  /// Edit group: button that adds the typed amount to the budget amount.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة'**
+  String get budgetTopUpAction;
+
+  /// Edit group: hint under the add-to-budget field.
+  ///
+  /// In ar, this message translates to:
+  /// **'المبلغ بيتضاف على الميزانية اللي فوق. اضغط حفظ عشان يتثبّت.'**
+  String get budgetTopUpHint;
+
+  /// Edit group: inline error for the amount to add.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب مبلغ أكبر من صفر وميعدّيش الحد الأقصى للميزانية'**
+  String get budgetTopUpError;
+
+  /// SA20: removes the budget from the group.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسح الميزانية'**
+  String get budgetClear;
+
+  /// SA20: title of the budget card on the group home.
+  ///
+  /// In ar, this message translates to:
+  /// **'الميزانية المتبقية'**
+  String get budgetCardTitle;
+
+  /// SA20: spent versus budget line.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتصرف {spent} من {budget}'**
+  String budgetSpentOf(String spent, String budget);
+
+  /// SA20: progress text next to the bar (uncapped).
+  ///
+  /// In ar, this message translates to:
+  /// **'{percent} من الميزانية'**
+  String budgetProgress(String percent);
+
+  /// SA20: said in words when the spending is above the budget.
+  ///
+  /// In ar, this message translates to:
+  /// **'تخطّيتوا الميزانية بـ {amount}'**
+  String budgetOverBy(String amount);
+
+  /// SA20: screen-reader label of the budget card.
+  ///
+  /// In ar, this message translates to:
+  /// **'تفاصيل الميزانية'**
+  String get budgetOpenDetails;
+
+  /// SA20: budget screen title.
+  ///
+  /// In ar, this message translates to:
+  /// **'الميزانية'**
+  String get budgetScreenTitle;
+
+  /// SA20: average spending per elapsed day.
+  ///
+  /// In ar, this message translates to:
+  /// **'متوسط الصرف في اليوم'**
+  String get budgetDailyAverage;
+
+  /// SA20: the number of days the daily average covers.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =1{على يوم واحد} =2{على يومين} few{على {count} أيام} many{على {count} يوم} other{على {count} يوم}}'**
+  String budgetOverDays(int count);
+
+  /// SA20: what is left per remaining day.
+  ///
+  /// In ar, this message translates to:
+  /// **'تقدروا تصرفوا في اليوم'**
+  String get budgetPerDayLeft;
+
+  /// SA20: days left in the trip.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =1{باقي يوم واحد} =2{باقي يومين} few{باقي {count} أيام} many{باقي {count} يوم} other{باقي {count} يوم}}'**
+  String budgetDaysLeft(int count);
+
+  /// SA20: the budget divided over the active members, an estimate.
+  ///
+  /// In ar, this message translates to:
+  /// **'نصيب الفرد من الميزانية (تقريبًا)'**
+  String get budgetCostPerHead;
+
+  /// SA20: says the per-person figure is not anyone's real share.
+  ///
+  /// In ar, this message translates to:
+  /// **'تقدير بس: نصيب كل واحد الفعلي على حسب تقسيم كل مصروف.'**
+  String get budgetCostPerHeadHint;
+
+  /// SA20: heading of the per-day spending list.
+  ///
+  /// In ar, this message translates to:
+  /// **'الصرف في كل يوم'**
+  String get budgetPerDayTitle;
+
+  /// SA20: empty state of the per-day list.
+  ///
+  /// In ar, this message translates to:
+  /// **'لسه مفيش مصاريف.'**
+  String get budgetNoExpenses;
 }
 
 class _AppLocalizationsDelegate

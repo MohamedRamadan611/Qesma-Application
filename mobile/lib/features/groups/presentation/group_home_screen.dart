@@ -14,6 +14,7 @@ import '../../balances/presentation/receiver_card.dart';
 import '../../expenses/application/expenses_list_controller.dart';
 import '../../expenses/presentation/expenses_tab.dart';
 import '../../invites/presentation/invite_sheet.dart';
+import '../../budget/presentation/budget_card.dart';
 import '../../pool/presentation/pool_card.dart';
 import '../../receipt_scan/application/receipt_scan_providers.dart';
 import '../../receipt_scan/presentation/scan_flow.dart';
@@ -166,6 +167,12 @@ class _GroupHomeScreenState extends ConsumerState<GroupHomeScreen> {
               padding: const EdgeInsetsDirectional.fromSTEB(QesmaSpacing.margin, 0, QesmaSpacing.margin, QesmaSpacing.sm),
               child: PoolCard(group: group),
             ),
+          // SA20: the budget card, only when the group has a budget.
+          if (ref.watch(modeFeaturesProvider).budget && group.budgetMinor != null)
+            Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(QesmaSpacing.margin, 0, QesmaSpacing.margin, QesmaSpacing.sm),
+              child: BudgetCard(gid: group.id),
+            ),
           Padding(
             padding: const EdgeInsetsDirectional.fromSTEB(
               QesmaSpacing.margin,
@@ -183,7 +190,8 @@ class _GroupHomeScreenState extends ConsumerState<GroupHomeScreen> {
             ),
           ),
         ],
-        body: tabBody,
+        // SA20: the header (summary, pool and budget cards, tabs) can fill the screen at large text sizes.
+        body: MinHeightBody(child: tabBody),
       ),
     );
   }

@@ -151,7 +151,7 @@ public class ExpenseService {
         return new ExpensePreview(calc.totalMinor(), calc.subtotalMinor(), itemized ? calc.discountMinor() : null,
                 itemized ? calc.serviceMinor() : null, itemized ? calc.taxMinor() : null,
                 itemized ? calc.adjustmentMinor() : null, calc.shares(), payersMatch,
-                itemized ? calc.deliveryMinor() : null);
+                itemized ? calc.deliveryMinor() : null, calc.periodFrom(), calc.periodTo());
     }
 
     /**
@@ -317,11 +317,19 @@ public class ExpenseService {
             return Expense.itemized(id, groupId, request.title(), calc.totalMinor(), request.expenseDate(), userId,
                     now, calc.charges()).withPool(request.category(), request.paidFromPool());
         }
+        if (Expense.SHARES.equals(calc.splitType())) {
+            return Expense.shares(id, groupId, request.title(), calc.totalMinor(), request.expenseDate(), userId, now,
+                    calc.periodFrom(), calc.periodTo()).withPool(request.category(), request.paidFromPool());
+        }
         return new Expense(id, groupId, request.title(), request.splitType(), calc.totalMinor(),
                 request.expenseDate(), userId, now).withPool(request.category(), request.paidFromPool());
     }
 
     private static ExpenseSplit split(UUID expenseId, ExpenseView.ShareView s) {
+        if (s.shareUnits() != null) {
+            return ExpenseSplit.shares(expenseId, s.memberId(), s.owedMinor(), s.shareUnits(), s.presentFrom(),
+                    s.presentTo());
+        }
         if (s.itemsMinor() == null) {
             return new ExpenseSplit(expenseId, s.memberId(), s.owedMinor());
         }
@@ -344,7 +352,7 @@ public class ExpenseService {
         return new ExpenseView(expenseId, expense.getGroupId(), expense.getTitle(), expense.getSplitType(),
                 calc.totalMinor(), expense.getExpenseDate(), payerViews(calc.payers(), order), calc.shares(),
                 expense.getCreatedAt(), expense.getVersion(), itemViews, calc.itemized() ? charges(calc) : null,
-                expense.getCategory(), expense.isPaidFromPool());
+                expense.getCategory(), expense.isPaidFromPool(), expense.getPeriodFrom(), expense.getPeriodTo());
     }
 
     /** Items keep the order the client sent; each item's assignees are listed in member sort order. */
@@ -407,6 +415,20 @@ public class ExpenseService {
                 } else {
                     o.put("deliveryMinor", 0L);
                 }
+            }
+        }
+        // A197 (BSA3): revisions written before V23 have no SHARES fields; they were never SHARES, so all are null.
+        if (!root.has("periodFrom")) {
+            root.putNull("periodFrom");
+        }
+        if (!root.has("periodTo")) {
+            root.putNull("periodTo");
+        }
+        for (com.fasterxml.jackson.databind.JsonNode share : root.path("shares")) {
+            if (share instanceof com.fasterxml.jackson.databind.node.ObjectNode o && !o.has("shareUnits")) {
+                o.putNull("shareUnits");
+                o.putNull("presentFrom");
+                o.putNull("presentTo");
             }
         }
         if (root.get("charges") instanceof com.fasterxml.jackson.databind.node.ObjectNode charges) {
@@ -491,14 +513,14 @@ public class ExpenseService {
             List<ExpenseView.ShareView> shareViews = splitsByExpense.getOrDefault(e.getId(), List.of()).stream()
                     .map(s -> new ExpenseView.ShareView(s.getMemberId(), s.getOwedMinor(), s.getItemsMinor(),
                             s.getDiscountMinor(), s.getServiceMinor(), s.getTaxMinor(), s.getAdjustmentMinor(),
-                            s.getDeliveryMinor()))
+                            s.getDeliveryMinor(), s.getShareUnits(), s.getPresentFrom(), s.getPresentTo()))
                     .sorted(Comparator.comparingInt(s -> order.getOrDefault(s.memberId(), Integer.MAX_VALUE)))
                     .toList();
             boolean itemized = Expense.ITEMIZED.equals(e.getSplitType());
             return new ExpenseView(e.getId(), e.getGroupId(), e.getTitle(), e.getSplitType(), e.getTotalMinor(),
                     e.getExpenseDate(), payerViews, shareViews, e.getCreatedAt(), e.getVersion(),
                     itemized ? itemViews(e) : null, itemized ? charges(e) : null, e.getCategory(),
-                    e.isPaidFromPool());
+                    e.isPaidFromPool(), e.getPeriodFrom(), e.getPeriodTo());
         }
 
         private List<ExpenseView.ItemView> itemViews(Expense e) {

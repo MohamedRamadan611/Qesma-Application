@@ -70,3 +70,27 @@ final class Transfer {
   @override
   String toString() => 'Transfer($fromMemberId -> $toMemberId, $amountMinor)';
 }
+
+/// One SHARES participant (STANDALONE_SPEC 19.1, A185-A186): integer [shareUnits] (1..100) and, only when the expense
+/// has a period, an optional inclusive presence inside it (`YYYY-MM-DD`; each bound defaults to the period bound).
+final class WeightedShare {
+  const WeightedShare(this.memberId, this.sortOrder, this.shareUnits, {this.presentFrom, this.presentTo});
+
+  final String memberId;
+  final int sortOrder;
+  final int shareUnits;
+  final String? presentFrom;
+  final String? presentTo;
+
+  @override
+  String toString() => 'WeightedShare($memberId, $sortOrder, $shareUnits, $presentFrom..$presentTo)';
+}
+
+/// The optional inclusive period of a SHARES expense (A186), `YYYY-MM-DD`. Both bounds are required; one bound is
+/// accepted here so the engine can reject it with `VALIDATION_ERROR` (Java `SharePeriod`).
+final class SharePeriod {
+  const SharePeriod(this.from, this.to);
+
+  final String? from;
+  final String? to;
+}

@@ -1,0 +1,33 @@
+{
+  "name": "budget-basic",
+  "description": "STANDALONE_SPEC 20.3: budget 10,000.00, two expenses, trip 11-01..11-05, today 11-02 (2 elapsed days, 4 days left including today).",
+  "input": {
+    "budgetMinor": 1000000,
+    "tripStartDate": "2026-11-01",
+    "tripEndDate": "2026-11-05",
+    "activeMemberCount": 4,
+    "today": "2026-11-02",
+    "expenses": [
+      {"expenseId": "e1", "totalMinor": 150000, "expenseDate": "2026-11-01", "paidFromPool": false, "deleted": false},
+      {"expenseId": "e2", "totalMinor": 250000, "expenseDate": "2026-11-02", "paidFromPool": false, "deleted": false}
+    ]
+  },
+  "expected": {
+    "budgetMinor": 1000000,
+    "spentMinor": 400000,
+    "remainingMinor": 600000,
+    "overBudget": false,
+    "overByMinor": null,
+    "progressBps": 4000,
+    "barFillBps": 4000,
+    "perDay": [
+      {"date": "2026-11-02", "totalMinor": 250000},
+      {"date": "2026-11-01", "totalMinor": 150000}
+    ],
+    "elapsedDays": 2,
+    "dailyAverageMinor": 200000,
+    "daysLeft": 4,
+    "perDayLeftMinor": 150000,
+    "costPerHeadMinor": 250000
+  }
+}

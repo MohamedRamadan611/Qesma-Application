@@ -10,6 +10,7 @@ class AppCard extends StatelessWidget {
     super.key,
     required this.child,
     this.onTap,
+    this.onLongPress,
     this.padding = const EdgeInsets.all(QesmaSpacing.md),
     this.color,
     this.semanticLabel,
@@ -17,6 +18,9 @@ class AppCard extends StatelessWidget {
 
   final Widget child;
   final VoidCallback? onTap;
+
+  /// Secondary actions (for example the groups list menu); used together with [onTap].
+  final VoidCallback? onLongPress;
   final EdgeInsetsGeometry padding;
   /// Fill; the theme's card colour when null.
   final Color? color;
@@ -43,6 +47,7 @@ class AppCard extends StatelessWidget {
             : InkWell(
                 borderRadius: radius,
                 onTap: onTap,
+                onLongPress: onLongPress,
                 child: ConstrainedBox(constraints: const BoxConstraints(minHeight: kMinTouch), child: body),
               ),
       ),
@@ -53,6 +58,7 @@ class AppCard extends StatelessWidget {
       button: onTap != null,
       label: semanticLabel,
       onTap: onTap,
+      onLongPress: onLongPress,
       child: ExcludeSemantics(child: card),
     );
   }

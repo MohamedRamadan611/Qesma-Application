@@ -35,6 +35,16 @@ void main() {
       // TODO
     });
 
+    // Date periodFrom
+    test('to test the property `periodFrom`', () async {
+      // TODO
+    });
+
+    // Date periodTo
+    test('to test the property `periodTo`', () async {
+      // TODO
+    });
+
     // Integer minor units (piasters: 1 EGP = 100). Never a decimal.
     // int serviceMinor
     test('to test the property `serviceMinor`', () async {

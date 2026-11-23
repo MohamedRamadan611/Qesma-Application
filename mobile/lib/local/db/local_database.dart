@@ -60,7 +60,7 @@ class LocalDatabase extends _$LocalDatabase {
   final int Function() _clock;
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -194,6 +194,22 @@ class LocalDatabase extends _$LocalDatabase {
           from10To11: (m, schema) async {
             await m.addColumn(schema.expenseGroups, schema.expenseGroups.archivedAt);
             await m.addColumn(schema.localMeta, schema.localMeta.archiveRetentionDays);
+          },
+          // SA18: SHARES and trip budget settings, mirroring Java V23 (A185-A190, A196). expenses (the split_type CHECK
+          // gains SHARES, plus the period and its CHECK) and expense_splits (units, presence and two table CHECKs) are
+          // rebuilt with drift's 12-step copy like in 7 -> 8; members and expense_groups get nullable columns with
+          // column CHECKs (expense_groups is the FK parent of everything and keeps its treasurer triggers). Every new
+          // column is NULL on every existing row; owed_minor and expense_payers are copied unchanged, so balances
+          // cannot move.
+          from11To12: (m, schema) async {
+            final e = schema.expenses;
+            await m.alterTable(TableMigration(e, newColumns: [e.periodFrom, e.periodTo]));
+            final s = schema.expenseSplits;
+            await m.alterTable(TableMigration(s, newColumns: [s.shareUnits, s.presentFrom, s.presentTo]));
+            await m.addColumn(schema.members, schema.members.defaultShareUnits);
+            await m.addColumn(schema.expenseGroups, schema.expenseGroups.budgetMinor);
+            await m.addColumn(schema.expenseGroups, schema.expenseGroups.tripStartDate);
+            await m.addColumn(schema.expenseGroups, schema.expenseGroups.tripEndDate);
           },
         );
 }

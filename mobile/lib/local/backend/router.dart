@@ -95,7 +95,17 @@ final class LocalRouter {
         final f = JsonFields.body(r.body);
         final version = _ifMatch(r);
         final g = await _groups.update(p[0], version,
-            name: f.str('name'), type: f.str('type'), treasurerMemberId: f.uuid('treasurerMemberId'));
+            name: f.str('name'),
+            type: f.str('type'),
+            treasurerMemberId: f.uuid('treasurerMemberId'),
+            budget: BudgetPatch(
+              budgetMinor: f.integer('budgetMinor'),
+              clearBudget: f.boolean('clearBudget') == true,
+              tripStartDate: f.date('tripStartDate'),
+              clearTripStartDate: f.boolean('clearTripStartDate') == true,
+              tripEndDate: f.date('tripEndDate'),
+              clearTripEndDate: f.boolean('clearTripEndDate') == true,
+            ));
         return _ok(GroupDto.serializer, g, etag: g.version);
       }),
       _Route('DELETE', '/groups/{gid}', (r, p) async {
@@ -110,7 +120,11 @@ final class LocalRouter {
       _Route('PATCH', '/groups/{gid}/members/{mid}', (r, p) async {
         final f = JsonFields.body(r.body);
         final m = await _members.update(p[0], p[1],
-            displayName: f.str('displayName'), role: f.str('role'), status: f.str('status'));
+            displayName: f.str('displayName'),
+            role: f.str('role'),
+            status: f.str('status'),
+            defaultShareUnits: f.integer('defaultShareUnits'),
+            clearDefaultShareUnits: f.boolean('clearDefaultShareUnits') == true);
         return _ok(MemberDto.serializer, m);
       }),
       _Route('DELETE', '/groups/{gid}/members/{mid}', (r, p) async {

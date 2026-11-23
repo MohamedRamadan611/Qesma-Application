@@ -50,6 +50,8 @@ void main() {
   _sa10PoolGuard();
   _sa16ItemizedGuard();
   _sa17ReceiptScanGuard();
+  _sa19SharesGuard();
+  _sa20BudgetGuard();
   test('no money arithmetic or floating point outside core/money', () {
     final hits = <String>[
       // Floating point types and conversions: allowed only for pixel sizes in theme/widgets.
@@ -401,6 +403,54 @@ void _sa16ItemizedGuard() {
   });
 }
 
+// SA19 (STANDALONE_SPEC 15, BSA3): the shares editor shows what the server returned. Owed amounts, units and presence
+// ranges are the preview's / the expense's; the UI does no money math and no date or day arithmetic (no day count is
+// shown, A198). Choosing dates is a picker's job and comparing them is the controller's; formatting is text only.
+final _sharesDateMath = RegExp(
+  r'\.difference\(|\binDays\b|\bDuration\(|\bDateUtils\.|\b\w*(Date|date|From|To|from|to)\w*\.(add|subtract)\(',
+);
+
+bool _isSharesUi(String path) =>
+    path == 'lib/features/expenses/presentation/shares_editor.dart' ||
+    path == 'lib/features/expenses/presentation/split_section.dart' ||
+    path == 'lib/features/expenses/presentation/revisions_sheet.dart' ||
+    path == 'lib/features/expenses/presentation/expense_ui.dart' ||
+    path == 'lib/features/expenses/presentation/expense_blocks.dart' ||
+    path == 'lib/features/members/presentation/default_share_sheet.dart';
+
+void _sa19SharesGuard() {
+  test('no money arithmetic in the shares UI (SA19): amounts come from the preview', () {
+    final hits = _scan(_itemizedArithmetic, skip: (p) => !_isSharesUi(p));
+    expect(hits, isEmpty, reason: 'Owed amounts come from the preview and are shown as sent.\n${hits.join('\n')}');
+  });
+
+  test('no date or day arithmetic in the shares UI (SA19): no day count, no computed default range', () {
+    final hits = _scan(_sharesDateMath, skip: (p) => !_isSharesUi(p));
+    expect(hits, isEmpty, reason: 'Days present are shown as the server stored them; nothing is counted or computed here (A198).\n${hits.join('\n')}');
+  });
+
+  test('the shares guard is alive: the six files are scanned and the patterns catch widget-side math', () {
+    final scanned = _dartFiles().map(_rel).where(_isSharesUi).toList();
+    expect(scanned, hasLength(6), reason: scanned.join('\n'));
+    expect(_sharesDateMath.hasMatch('final days = to.difference(from).inDays + 1;'), isTrue);
+    expect(_sharesDateMath.hasMatch('final days = range.end.difference(range.start);'), isTrue);
+    expect(_sharesDateMath.hasMatch('final end = periodFrom.add(const Duration(days: 30));'), isTrue);
+    expect(_sharesDateMath.hasMatch('final last = DateUtils.addDaysToDate(from, 30);'), isTrue);
+    expect(_sharesDateMath.hasMatch('final start = presentFrom.subtract(x);'), isTrue);
+    expect(_sharesDateMath.hasMatch('if (from.compareTo(periodFrom) < 0) return;'), isFalse);
+    expect(_sharesDateMath.hasMatch('items.add(Text(dateRangeText(l10n, from, to)));'), isFalse);
+    expect(_itemizedArithmetic.hasMatch('final left = share.owedMinor - other.owedMinor;'), isTrue);
+  });
+
+  test('only the request builder constructs a ShareParticipantInput (SA19)', () {
+    final hits = _scan(
+      RegExp(r'\bShareParticipantInput\('),
+      skip: (p) => p == 'lib/features/expenses/application/expense_command_builder.dart' || p.startsWith('lib/local/'),
+    );
+    expect(hits, isEmpty, reason: 'Build the request with buildExpenseCommand.\n${hits.join('\n')}');
+  });
+}
+
 // SA17 (STANDALONE_SPEC 18.4, A176): the receipt scan copies what the model read and never computes. A quantity above 1
 // without a unit price is flagged for the user; the client does not divide the line total. The parser and the mapper
 // may compare (>=, ==) but never add, multiply, divide or round an amount, a quantity or a percentage.
@@ -438,5 +488,37 @@ void _sa17ReceiptScanGuard() {
     final reader = File('lib/features/receipt_scan/application/firebase_receipt_reader.dart').readAsStringSync();
     expect(reader, contains('Never calculate, correct or guess a number.'));
     expect(RegExp(r'gemini-[\w.-]+').allMatches(reader).length, 1, reason: 'the model id appears once (kReceiptModel)');
+  });
+}
+
+// SA20 (STANDALONE_SPEC 20.2, A191): every trip-budget figure (remaining, over by, progress, per day, per head) is a
+// field of `BudgetSummary`, computed by the pure engine in lib/local. Widgets under lib/features/budget never add,
+// subtract, multiply, divide, fold or round; the bar's fraction is made in core/widgets (`BpsBar`).
+final _budgetArithmetic = RegExp(
+  r'\b(\w*Minor|\w*Bps|elapsedDays|daysLeft|totalMinor)\b\s*(~/|[-+*/%])=?\s*[\w(]'
+  r'|[\w)\]]\s*(~/|[-+*/%])=?\s*\b(\w*Minor|\w*Bps|elapsedDays|daysLeft)\b'
+  r'|\.fold\(|\.reduce\(|\.round\(|\.floor\(|\.ceil\(|\.truncate\(|\.toInt\(|\.abs\(\)|\bdouble\b|\bnum\b|toDouble|\.sum\b',
+);
+
+bool _isBudgetUi(String path) => path.startsWith('lib/features/budget/');
+
+void _sa20BudgetGuard() {
+  test('no arithmetic or floating point on budget figures in lib/features/budget (SA20)', () {
+    final hits = _scan(_budgetArithmetic, skip: (p) => !_isBudgetUi(p));
+    expect(hits, isEmpty, reason: 'Budget figures come precomputed from BudgetSummary.\n${hits.join('\n')}');
+  });
+
+  test('the budget guard is alive: the budget files are scanned, import no engine, and the pattern catches widget math', () {
+    final scanned = _dartFiles().where((f) => _isBudgetUi(_rel(f))).toList();
+    expect(scanned.length, greaterThanOrEqualTo(3), reason: scanned.map(_rel).join('\n'));
+    for (final file in scanned) {
+      expect(file.readAsStringSync(), isNot(contains('package:qesma_engine')), reason: _rel(file));
+    }
+    expect(_budgetArithmetic.hasMatch('final left = summary.budgetMinor - summary.spentMinor;'), isTrue);
+    expect(_budgetArithmetic.hasMatch('final pct = summary.spentMinor * 100;'), isTrue);
+    expect(_budgetArithmetic.hasMatch('final fill = summary.barFillBps / 10000;'), isTrue);
+    expect(_budgetArithmetic.hasMatch('final total = days.fold(0, (a, d) => a + d.totalMinor);'), isTrue);
+    expect(_budgetArithmetic.hasMatch('MoneyText(summary.remainingMinor, size: MoneySize.large)'), isFalse);
+    expect(_budgetArithmetic.hasMatch("Text(ltrIsolate('\${Bps.format(summary.progressBps)}%'))"), isFalse);
   });
 }

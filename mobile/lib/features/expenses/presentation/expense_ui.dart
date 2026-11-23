@@ -85,3 +85,49 @@ String payersSpoken(AppLocalizations l10n, ExpenseView expense, String Function(
 /// A date as a person would say it ("Sunday, 18 October 2026"), from the platform's own
 /// localisation, for screen readers; the screen shows the ISO form.
 String spokenDate(BuildContext context, Date date) => MaterialLocalizations.of(context).formatFullDate(date.toDateTime());
+
+// ---- shares (SA19): text only, every number and date is the server's or the user's ----
+
+/// "حصة واحدة" / "حصتين" / "3 حصص" / "11 حصة" (Arabic has its own forms; English is "1 share" / "n shares").
+String unitsText(AppLocalizations l10n, int units) => countPhrase(
+      units,
+      one: l10n.sharesUnitsOne,
+      two: l10n.sharesUnitsTwo,
+      few: (count) => l10n.sharesUnitsFew(ltrIsolate(count)),
+      many: (count) => l10n.sharesUnitsMany(ltrIsolate(count)),
+    );
+
+/// The same, for a screen reader: no direction marks.
+String unitsSpoken(AppLocalizations l10n, int units) => countPhrase(
+      units,
+      one: l10n.sharesUnitsOne,
+      two: l10n.sharesUnitsTwo,
+      few: l10n.sharesUnitsFew,
+      many: l10n.sharesUnitsMany,
+    );
+
+/// "2026-11-12 – 2026-11-30", the dates exactly as stored (no day count).
+String dateRangeText(AppLocalizations l10n, Date from, Date to) => l10n.sharesRange(dateText(from), dateText(to));
+
+/// The range as it is said ("Thursday, 12 November 2026 – ...").
+String dateRangeSpoken(BuildContext context, Date from, Date to) =>
+    AppLocalizations.of(context).sharesRange(spokenDate(context, from), spokenDate(context, to));
+
+/// "Days present: 2026-11-12 – 2026-11-30" for a share that has a presence range in the server's answer, or null.
+String? presenceLineOf(AppLocalizations l10n, ShareView share) {
+  final from = share.presentFrom, to = share.presentTo;
+  return from == null || to == null ? null : l10n.sharesDaysPresentLine(dateRangeText(l10n, from, to));
+}
+
+/// "Billing period: ..." of an expense or preview that has one, or null.
+String? periodLineOf(AppLocalizations l10n, Date? from, Date? to) =>
+    from == null || to == null ? null : l10n.sharesPeriodLine(dateRangeText(l10n, from, to));
+
+/// One compact history line for a share of a SHARES snapshot: "name · units · range".
+String shareHistoryLine(AppLocalizations l10n, ShareView share, String name) {
+  final from = share.presentFrom, to = share.presentTo;
+  final units = unitsText(l10n, share.shareUnits ?? 1);
+  return from == null || to == null
+      ? l10n.sharesHistoryRowNoRange(fsIsolate(name), units)
+      : l10n.sharesHistoryRow(fsIsolate(name), units, dateRangeText(l10n, from, to));
+}

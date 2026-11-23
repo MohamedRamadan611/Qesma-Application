@@ -8,6 +8,7 @@ import 'package:qesma/features/expenses/presentation/expense_card.dart';
 import '../support/expenses_rig.dart';
 import '../support/expenses_ui.dart';
 import '../support/fake_expenses_server.dart';
+import '../support/shares_fixture.dart';
 import '../support/test_app.dart';
 
 /// Goldens of the expense row (three split types) and of the expense details page (the
@@ -66,5 +67,21 @@ void main() {
     );
     expect(find.text('تفاصيل المصروف'), findsOneWidget);
     await expectLater(find.byType(MaterialApp), matchesGoldenFile('expense_details_v5_ar.png'));
+  });
+
+  testWidgets('shares: the editor of a saved expense with a billing period and a presence range', (tester) async {
+    final server = FakeExpensesServer();
+    server.expenses.add(sharesExpenseJson());
+    await pumpExpensesApp(tester, server, height: 2000, route: Routes.editExpense(server.gid, 'shares-1'));
+    await settleForm(tester);
+    await expectLater(find.byType(MaterialApp), matchesGoldenFile('shares_editor_ar.png'));
+  });
+
+  testWidgets('shares: expense details with the billing period, units and days present', (tester) async {
+    final server = FakeExpensesServer();
+    server.expenses.add(sharesExpenseJson());
+    await pumpExpensesApp(tester, server, height: 1700, route: Routes.expense(server.gid, 'shares-1'));
+    expect(find.text('تفاصيل المصروف'), findsOneWidget);
+    await expectLater(find.byType(MaterialApp), matchesGoldenFile('shares_details_ar.png'));
   });
 }

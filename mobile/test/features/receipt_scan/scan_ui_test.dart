@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:qesma/core/app_mode.dart';
-import 'package:qesma/features/receipt_scan/application/cairo_day.dart';
+import 'package:qesma/core/format/cairo_day.dart';
 import 'package:qesma/features/receipt_scan/application/ocr_settings_store.dart';
 import 'package:qesma/features/receipt_scan/application/receipt_reader.dart';
 import 'package:qesma/features/receipt_scan/application/receipt_scan_providers.dart';

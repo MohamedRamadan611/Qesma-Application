@@ -1,0 +1,16 @@
+{
+  "name": "V22 shares, units 2 / 1 / 1 without a period (100.00)",
+  "input": {
+    "members": [ { "id": "A", "sortOrder": 1 }, { "id": "B", "sortOrder": 2 }, { "id": "C", "sortOrder": 3 } ],
+    "expenses": [
+      { "type": "SHARES", "totalMinor": 10000,
+        "shareParticipants": [ { "memberId": "A", "shareUnits": 2 }, { "memberId": "B", "shareUnits": 1 }, { "memberId": "C", "shareUnits": 1 } ],
+        "payers": [ { "memberId": "B", "amountMinor": 10000 } ] }
+    ],
+    "settlements": []
+  },
+  "expected": {
+    "expenses": [ { "owed": { "A": 5000, "B": 2500, "C": 2500 }, "totalMinor": 10000 } ],
+    "nets": { "A": -5000, "B": 7500, "C": -2500 }
+  }
+}

@@ -4,6 +4,7 @@ import app.qesma.api.ApiException;
 import app.qesma.engine.EngineException;
 import app.qesma.engine.ItemizedCalculator;
 import app.qesma.engine.Limits;
+import app.qesma.engine.SplitCalculator;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,13 +47,30 @@ final class ExpenseValidator {
      * @param discountAmountMinor ITEMIZED only; the amount form of the discount; never with discountBps
      * @param adjustmentMinor ITEMIZED only, 0 when absent
      * @param deliveryMinor  ITEMIZED only, 0 when absent (A180)
+     * @param shareParticipants SHARES only; presence normalized: both bounds when there is a period (defaulted to
+     *                       the period bounds), both null without one (A195)
+     * @param periodFrom     SHARES only, null = no period (A186)
+     * @param periodTo       SHARES only, null = no period
      */
     record Valid(String title, LocalDate expenseDate, String splitType, long totalMinor,
                  List<ExpenseCommand.PayerInput> payers, List<UUID> participantMemberIds,
                  List<ExpenseCommand.ShareInput> shares, List<ExpenseCommand.ItemInput> items, Integer serviceBps,
                  Long serviceAmountMinor, Integer taxBps, Long taxAmountMinor, String taxBase, Integer discountBps,
                  Long discountAmountMinor, long adjustmentMinor, String category, boolean paidFromPool,
-                 long deliveryMinor) {
+                 long deliveryMinor, List<ExpenseCommand.ShareParticipantInput> shareParticipants,
+                 LocalDate periodFrom, LocalDate periodTo) {
+
+        /** Without the SHARES fields (BSA3). */
+        Valid(String title, LocalDate expenseDate, String splitType, long totalMinor,
+              List<ExpenseCommand.PayerInput> payers, List<UUID> participantMemberIds,
+              List<ExpenseCommand.ShareInput> shares, List<ExpenseCommand.ItemInput> items, Integer serviceBps,
+              Long serviceAmountMinor, Integer taxBps, Long taxAmountMinor, String taxBase, Integer discountBps,
+              Long discountAmountMinor, long adjustmentMinor, String category, boolean paidFromPool,
+              long deliveryMinor) {
+            this(title, expenseDate, splitType, totalMinor, payers, participantMemberIds, shares, items, serviceBps,
+                    serviceAmountMinor, taxBps, taxAmountMinor, taxBase, discountBps, discountAmountMinor,
+                    adjustmentMinor, category, paidFromPool, deliveryMinor, null, null, null);
+        }
 
         /** Without delivery (A180). */
         Valid(String title, LocalDate expenseDate, String splitType, long totalMinor,
@@ -86,7 +104,8 @@ final class ExpenseValidator {
         Valid withPoolFields(String newCategory, boolean newPaidFromPool) {
             return new Valid(title, expenseDate, splitType, totalMinor, payers, participantMemberIds, shares, items,
                     serviceBps, serviceAmountMinor, taxBps, taxAmountMinor, taxBase, discountBps, discountAmountMinor,
-                    adjustmentMinor, newCategory, newPaidFromPool, deliveryMinor);
+                    adjustmentMinor, newCategory, newPaidFromPool, deliveryMinor, shareParticipants, periodFrom,
+                    periodTo);
         }
 
         /** True when the tax is applied, in either form. */
@@ -128,8 +147,8 @@ final class ExpenseValidator {
 
         String type = c.splitType() == null ? "" : c.splitType().strip().toUpperCase(Locale.ROOT);
         boolean itemized = type.equals("ITEMIZED");
-        if (!itemized && !type.equals("EQUAL") && !type.equals("EXACT")) {
-            throw ApiException.validation("splitType must be EQUAL, EXACT or ITEMIZED");
+        if (!itemized && !type.equals("EQUAL") && !type.equals("EXACT") && !type.equals("SHARES")) {
+            throw ApiException.validation("splitType must be EQUAL, EXACT, ITEMIZED or SHARES");
         }
 
         long total = 0;
@@ -166,6 +185,7 @@ final class ExpenseValidator {
         Valid shape = switch (type) {
             case "EQUAL" -> equal(c, title, date, total, payers);
             case "EXACT" -> exact(c, title, date, total, payers);
+            case "SHARES" -> shares(c, title, date, total, payers);
             default -> itemized(c, title, date, total, payers);
         };
         return shape.withPoolFields(category(c.category()), c.paidFromPool() != null && c.paidFromPool());
@@ -202,6 +222,7 @@ final class ExpenseValidator {
     private static Valid equal(ExpenseCommand c, String title, LocalDate date, long total,
                                List<ExpenseCommand.PayerInput> payers) {
         rejectItemizedFields(c, "EQUAL");
+        rejectSharesFields(c, "EQUAL");
         if (c.shares() != null) {
             throw ApiException.validation("shares is only allowed for EXACT expenses");
         }
@@ -224,6 +245,7 @@ final class ExpenseValidator {
     private static Valid exact(ExpenseCommand c, String title, LocalDate date, long total,
                                List<ExpenseCommand.PayerInput> payers) {
         rejectItemizedFields(c, "EXACT");
+        rejectSharesFields(c, "EXACT");
         if (c.participantMemberIds() != null) {
             throw ApiException.validation("participantMemberIds is only allowed for EQUAL expenses");
         }
@@ -245,6 +267,7 @@ final class ExpenseValidator {
 
     private static Valid itemized(ExpenseCommand c, String title, LocalDate date, long total,
                                   List<ExpenseCommand.PayerInput> payers) {
+        rejectSharesFields(c, "ITEMIZED");
         if (c.participantMemberIds() != null) {
             throw ApiException.validation("participantMemberIds is only allowed for EQUAL expenses");
         }
@@ -307,6 +330,99 @@ final class ExpenseValidator {
                 tax == null ? null : tax.bps(), tax == null ? null : tax.amountMinor(), taxBase,
                 discount == null ? null : discount.bps(), discount == null ? null : discount.amountMinor(),
                 adjustment, DEFAULT_CATEGORY, false, delivery);
+    }
+
+    /**
+     * SHARES (STANDALONE_SPEC 19.1, A185-A187): every rule is a 422 naming the field. The engine enforces the same
+     * money-relevant rules again (it is the authority for the shared vectors); this layer adds field paths, null and
+     * date-range checks, and normalizes presence (with a period, a missing bound becomes the period bound).
+     */
+    private static Valid shares(ExpenseCommand c, String title, LocalDate date, long total,
+                                List<ExpenseCommand.PayerInput> payers) {
+        rejectItemizedFields(c, "SHARES");
+        if (c.participantMemberIds() != null) {
+            throw ApiException.validation("participantMemberIds is only allowed for EQUAL expenses (this is SHARES)");
+        }
+        if (c.shares() != null) {
+            throw ApiException.validation("shares is only allowed for EXACT expenses (this is SHARES)");
+        }
+        LocalDate periodFrom = c.periodFrom();
+        LocalDate periodTo = c.periodTo();
+        if ((periodFrom == null) != (periodTo == null)) {
+            throw ApiException.validation("periodFrom and periodTo must both be set or both be absent");
+        }
+        boolean hasPeriod = periodFrom != null;
+        if (hasPeriod) {
+            inDateRange(periodFrom, "periodFrom");
+            inDateRange(periodTo, "periodTo");
+            if (periodTo.isBefore(periodFrom)) {
+                throw ApiException.validation("periodTo must not be before periodFrom");
+            }
+            if (SplitCalculator.inclusiveDays(periodFrom, periodTo) > Limits.MAX_PERIOD_DAYS) {
+                throw ApiException.validation("The period (periodFrom..periodTo) must be at most "
+                        + Limits.MAX_PERIOD_DAYS + " days");
+            }
+        }
+        List<ExpenseCommand.ShareParticipantInput> participants = c.shareParticipants();
+        if (participants == null || participants.isEmpty()) {
+            throw ApiException.validation("shareParticipants is required for SHARES expenses");
+        }
+        if (participants.size() > MAX_LIST) {
+            throw ApiException.validation("At most " + MAX_LIST + " shareParticipants are allowed");
+        }
+        java.util.Set<UUID> seen = new java.util.HashSet<>();
+        List<ExpenseCommand.ShareParticipantInput> clean = new ArrayList<>();
+        for (int i = 0; i < participants.size(); i++) {
+            String path = "shareParticipants[" + i + "]";
+            ExpenseCommand.ShareParticipantInput p = participants.get(i);
+            if (p == null || p.memberId() == null) {
+                throw ApiException.validation(path + ".memberId is required");
+            }
+            if (!seen.add(p.memberId())) {
+                throw ApiException.validation(path + ".memberId appears more than once");
+            }
+            if (p.shareUnits() == null || p.shareUnits() < Limits.MIN_SHARE_UNITS
+                    || p.shareUnits() > Limits.MAX_SHARE_UNITS) {
+                throw ApiException.validation(path + ".shareUnits must be between " + Limits.MIN_SHARE_UNITS + " and "
+                        + Limits.MAX_SHARE_UNITS);
+            }
+            LocalDate from = p.presentFrom();
+            LocalDate to = p.presentTo();
+            if (!hasPeriod) {
+                if (from != null || to != null) {
+                    throw ApiException.validation(path + ".presentFrom/presentTo need periodFrom and periodTo");
+                }
+            } else {
+                from = from == null ? periodFrom : from;
+                to = to == null ? periodTo : to;
+                if (from.isBefore(periodFrom) || from.isAfter(periodTo)) {
+                    throw ApiException.validation(path + ".presentFrom must lie inside the period");
+                }
+                if (to.isBefore(periodFrom) || to.isAfter(periodTo)) {
+                    throw ApiException.validation(path + ".presentTo must lie inside the period");
+                }
+                if (to.isBefore(from)) {
+                    throw ApiException.validation(path + ".presentTo must not be before presentFrom");
+                }
+            }
+            clean.add(new ExpenseCommand.ShareParticipantInput(p.memberId(), p.shareUnits(), from, to));
+        }
+        return new Valid(title, date, "SHARES", total, List.copyOf(payers), null, null, null, null, null, null, null,
+                null, null, null, 0, DEFAULT_CATEGORY, false, 0, List.copyOf(clean), periodFrom, periodTo);
+    }
+
+    private static void inDateRange(LocalDate d, String field) {
+        if (d.isBefore(MIN_DATE) || d.isAfter(MAX_DATE)) {
+            throw ApiException.validation(field + " must be between " + MIN_DATE + " and " + MAX_DATE);
+        }
+    }
+
+    /** SHARES fields on any other split type are rejected (A187). */
+    private static void rejectSharesFields(ExpenseCommand c, String type) {
+        if (c.shareParticipants() != null || c.periodFrom() != null || c.periodTo() != null) {
+            throw ApiException.validation("shareParticipants, periodFrom and periodTo are only allowed for SHARES "
+                    + "expenses (this is " + type + ")");
+        }
     }
 
     /**

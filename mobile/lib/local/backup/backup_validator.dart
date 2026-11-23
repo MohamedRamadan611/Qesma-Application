@@ -23,7 +23,10 @@ abstract final class BackupValidator {
   /// rows, and checked against the V22 rules (it is part of the total and of each member's owed amount).
   /// 11 (A184) added expense_groups.archived_at (optional on import, null = active); the archive retention is a device setting.
   /// 10 widened the InstaPay handle to also allow an https://ipn.eg/ link: no new field, so older files import as they are.
-  static const int currentSchemaVersion = 11;
+  /// 12 (SA18, Java V23) added SHARES (expenses.period_from/to, expense_splits.share_units/present_from/present_to), the
+  /// member default weight and the group budget and trip dates: all optional on import (absent = NULL), and a SHARES
+  /// expense is checked against the V23 rules and recomputed by the engine before anything is written.
+  static const int currentSchemaVersion = 12;
 
   static BackupData parse(Uint8List bytes, {int maxBytes = maxBackupBytes}) {
     if (bytes.isEmpty) throw const BackupException(BackupError.unreadable);
@@ -139,6 +142,10 @@ abstract final class BackupValidator {
         memberSeq: r.integer('member_seq', min: 0, max: _maxCount),
         treasurerMemberId: r.optId('treasurer_member_id'), // schema 5 (SA10); older files have none
         archivedAt: r.optTimestamp('archived_at'), // schema 11 (A184); older files have none
+        // Schema 12 (A190): the trip budget settings; older files have none.
+        budgetMinor: r.optInteger('budget_minor', min: 1, max: Limits.maxAmountMinor),
+        tripStartDate: r.optDate('trip_start_date'),
+        tripEndDate: r.optDate('trip_end_date'),
       );
 
   static const int _maxCount = 1 << 40;
@@ -155,10 +162,12 @@ abstract final class BackupValidator {
         joinedAt: r.optTimestamp('joined_at'),
         leftAt: r.optTimestamp('left_at'),
         createdAt: r.timestamp('created_at'),
+        // Schema 12 (A188): the SHARES prefill; older files have none.
+        defaultShareUnits: r.optInteger('default_share_units', min: Limits.minShareUnits, max: Limits.maxShareUnits),
       );
 
   static ExpenseRow _expense(_Reader r) {
-    final splitType = r.oneOf('split_type', const {'EQUAL', 'EXACT', 'ITEMIZED'});
+    final splitType = r.oneOf('split_type', const {'EQUAL', 'EXACT', 'ITEMIZED', 'SHARES'});
     return ExpenseRow(
         id: r.id('id'),
         groupId: r.id('group_id'),
@@ -193,6 +202,8 @@ abstract final class BackupValidator {
             }) ??
             'OTHER',
         paidFromPool: r.optInteger('paid_from_pool', min: 0, max: 1) ?? 0, // schema 5 (SA10)
+        periodFrom: r.optDate('period_from'), // schema 12 (SA18)
+        periodTo: r.optDate('period_to'),
       );
   }
 
@@ -215,6 +226,10 @@ abstract final class BackupValidator {
       // Schema 9 (A180): an itemized breakdown row without it had no delivery.
       deliveryMinor:
           r.optInteger('delivery_minor', min: 0, max: Limits.maxAmountMinor) ?? (itemsMinor == null ? null : 0),
+      // Schema 12 (SA18): SHARES units and normalized presence.
+      shareUnits: r.optInteger('share_units', min: Limits.minShareUnits, max: Limits.maxShareUnits),
+      presentFrom: r.optDate('present_from'),
+      presentTo: r.optDate('present_to'),
     );
   }
 
@@ -327,6 +342,11 @@ abstract final class BackupValidator {
       if (t != null && memberGroup[t] != data.groups[i].id) {
         throw BackupException(BackupError.invalid, 'groups[$i].treasurer_member_id');
       }
+      // Schema 12 (A190): the trip end is not before the start when both are set.
+      final start = data.groups[i].tripStartDate, end = data.groups[i].tripEndDate;
+      if (start != null && end != null && end.compareTo(start) < 0) {
+        throw BackupException(BackupError.invalid, 'groups[$i].trip_end_date');
+      }
     }
 
     // Expenses and their children.
@@ -423,6 +443,61 @@ abstract final class BackupValidator {
           e.deliveryMinor != null ||
           e.adjustmentMinor != null) {
         throw BackupException(BackupError.invalid, at);
+      }
+    }
+
+    // Schema 12 (SA18, Java V23): SHARES rows. Row rules mirror the CHECKs; the cross-table ones (units exactly on the
+    // splits of a SHARES expense, presence normalized inside the period) are the validator's, like A196.
+    final splitsBy = <String, List<SplitRow>>{};
+    for (final s in data.splits) {
+      (splitsBy[s.expenseId] ??= []).add(s);
+    }
+    final sortOrderOf = {for (final m in data.members) m.id: m.sortOrder};
+    for (var i = 0; i < data.expenses.length; i++) {
+      final e = data.expenses[i];
+      final at = 'expenses[$i]';
+      final splits = splitsBy[e.id] ?? const <SplitRow>[];
+      final shares = e.splitType == 'SHARES';
+      if (!shares) {
+        if (e.periodFrom != null || e.periodTo != null) throw BackupException(BackupError.invalid, '$at.period_from');
+        if (splits.any((s) => s.shareUnits != null || s.presentFrom != null || s.presentTo != null)) {
+          throw BackupException(BackupError.invalid, '$at.share_units');
+        }
+        continue;
+      }
+      final from = e.periodFrom, to = e.periodTo;
+      if ((from == null) != (to == null)) throw BackupException(BackupError.invalid, '$at.period_from');
+      if (from != null && (to!.compareTo(from) < 0 || SplitCalculator.inclusiveDays(from, to) > Limits.maxPeriodDays)) {
+        throw BackupException(BackupError.invalid, '$at.period_to');
+      }
+      for (final s in splits) {
+        final ok = s.shareUnits != null &&
+            s.itemsMinor == null &&
+            (from == null
+                ? s.presentFrom == null && s.presentTo == null
+                : s.presentFrom != null &&
+                    s.presentTo != null &&
+                    s.presentFrom!.compareTo(from) >= 0 &&
+                    s.presentTo!.compareTo(to!) <= 0 &&
+                    s.presentTo!.compareTo(s.presentFrom!) >= 0);
+        if (!ok) throw BackupException(BackupError.invalid, '$at.share_units');
+      }
+      // Recompute check: the stored owed amounts are what the engine gives for the stored units and presence.
+      try {
+        final owed = SplitCalculator.shares(
+          e.totalMinor,
+          [
+            for (final s in splits)
+              WeightedShare(s.memberId, sortOrderOf[s.memberId]!, s.shareUnits!,
+                  presentFrom: s.presentFrom, presentTo: s.presentTo),
+          ],
+          period: from == null ? null : SharePeriod(from, to),
+        );
+        for (final s in splits) {
+          if (owed[s.memberId] != s.owedMinor) throw BackupException(BackupError.inconsistent, '$at.owed_minor');
+        }
+      } on EngineException {
+        throw BackupException(BackupError.inconsistent, '$at.owed_minor');
       }
     }
 
@@ -615,6 +690,8 @@ final class _Reader {
     if (v is! String || !RegExp(r'^[A-Z]{3}$').hasMatch(v)) _fail(key);
     return v;
   }
+
+  String? optDate(String key) => map[key] == null ? null : date(key);
 
   String date(String key) {
     final v = map[key];

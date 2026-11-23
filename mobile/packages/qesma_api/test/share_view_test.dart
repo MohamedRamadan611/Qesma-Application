@@ -42,9 +42,24 @@ void main() {
       // TODO
     });
 
+    // Date presentFrom
+    test('to test the property `presentFrom`', () async {
+      // TODO
+    });
+
+    // Date presentTo
+    test('to test the property `presentTo`', () async {
+      // TODO
+    });
+
     // Integer minor units (piasters: 1 EGP = 100). Never a decimal.
     // int serviceMinor
     test('to test the property `serviceMinor`', () async {
+      // TODO
+    });
+
+    // int shareUnits
+    test('to test the property `shareUnits`', () async {
       // TODO
     });
 

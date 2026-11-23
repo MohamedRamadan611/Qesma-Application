@@ -17,7 +17,10 @@ Name | Type | Description | Notes
 **paidFromPool** | **bool** |  | [optional] 
 **participantMemberIds** | **BuiltList&lt;String&gt;** |  | [optional] 
 **payers** | [**BuiltList&lt;PayerInput&gt;**](PayerInput.md) |  | [optional] 
+**periodFrom** | [**Date**](Date.md) |  | [optional] 
+**periodTo** | [**Date**](Date.md) |  | [optional] 
 **service** | [**ServiceInput**](ServiceInput.md) |  | [optional] 
+**shareParticipants** | [**BuiltList&lt;ShareParticipantInput&gt;**](ShareParticipantInput.md) |  | [optional] 
 **shares** | [**BuiltList&lt;ShareInput&gt;**](ShareInput.md) |  | [optional] 
 **splitType** | **String** |  | 
 **tax** | [**TaxInput**](TaxInput.md) |  | [optional] 

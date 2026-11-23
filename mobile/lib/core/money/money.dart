@@ -35,6 +35,9 @@ abstract final class Money {
     return negative ? -minor : minor;
   }
 
+  /// A + B for adding to a budget (A199 follow-up), or null when the result is beyond [maxMinor].
+  static int? addCapped(int a, int b) => a + b > maxMinor ? null : a + b;
+
   /// The number without the currency: "1,061.79", "−5.25"; with [signed] also "+1,061.79".
   /// Widgets add the (localized) currency and isolate this part for right-to-left layouts.
   static String formatNumber(int minor, {bool signed = false}) {

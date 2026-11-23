@@ -7,9 +7,9 @@ void main() {
   final instance = QesmaApi().getExpenseControllerApi();
 
   group(ExpenseControllerApi, () {
-    // Create an expense (EQUAL, EXACT or ITEMIZED)
+    // Create an expense (EQUAL, EXACT, ITEMIZED or SHARES)
     //
-    // Idempotency-Key (UUID) is required. For ITEMIZED, totalMinor is optional: the server computes it and the payers must add up to it (PAYERS_TOTAL_MISMATCH otherwise).
+    // Idempotency-Key (UUID) is required. For ITEMIZED, totalMinor is optional: the server computes it and the payers must add up to it (PAYERS_TOTAL_MISMATCH otherwise). SHARES splits totalMinor by shareUnits (1..100) x days present in the optional periodFrom..periodTo (inclusive, at most 366 days); see STANDALONE_SPEC 19.
     //
     //Future<ExpenseView> createExpense(String gid, String idempotencyKey, ExpenseCommand expenseCommand) async
     test('test createExpense', () async {

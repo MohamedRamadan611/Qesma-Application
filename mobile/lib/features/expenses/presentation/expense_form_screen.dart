@@ -260,9 +260,13 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
     final total = form.totalMinor;
     final participants = form.participantIds(memberIds);
     final isItemized = form.splitMode == SplitMode.itemized;
-    final splitCommand = (form.splitMode == SplitMode.all || form.splitMode == SplitMode.selected) && total != null && participants.isNotEmpty
-        ? buildEqualPreview(title: form.title, date: form.date, totalMinor: total, participantIds: participants)
-        : null;
+    final isShares = form.splitMode == SplitMode.shares;
+    final splitCommand = isShares
+        // Shares: the same request the save would send (units, period, presence), with a placeholder title while empty.
+        ? buildExpenseCommand(form, edit: _isEdit, memberIds: memberIds, preview: true)
+        : (form.splitMode == SplitMode.all || form.splitMode == SplitMode.selected) && total != null && participants.isNotEmpty
+            ? buildEqualPreview(title: form.title, date: form.date, totalMinor: total, participantIds: participants)
+            : null;
     final previewKey = splitCommand == null ? null : commandKey(splitCommand);
     if (!isItemized) {
       // A restaurant bill's previews are driven by the controller, which owns that total.

@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'cairo_day.dart';
+import '../../../core/format/cairo_day.dart';
 import 'firebase_receipt_reader.dart' show classifyScanError;
 import 'jpeg_metadata.dart';
 import 'ocr_settings_store.dart';

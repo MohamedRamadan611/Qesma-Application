@@ -5,6 +5,7 @@
 // ignore_for_file: unused_element
 import 'package:built_collection/built_collection.dart';
 import 'package:qesma_api/src/model/share_view.dart';
+import 'package:qesma_api/src/model/date.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
@@ -18,6 +19,8 @@ part 'expense_preview.g.dart';
 /// * [discountMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
 /// * [members] 
 /// * [payersTotalMatches] 
+/// * [periodFrom] 
+/// * [periodTo] 
 /// * [serviceMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
 /// * [subtotalMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
 /// * [taxMinor] - Integer minor units (piasters: 1 EGP = 100). Never a decimal.
@@ -41,6 +44,12 @@ abstract class ExpensePreview implements Built<ExpensePreview, ExpensePreviewBui
 
   @BuiltValueField(wireName: r'payersTotalMatches')
   bool get payersTotalMatches;
+
+  @BuiltValueField(wireName: r'periodFrom')
+  Date? get periodFrom;
+
+  @BuiltValueField(wireName: r'periodTo')
+  Date? get periodTo;
 
   /// Integer minor units (piasters: 1 EGP = 100). Never a decimal.
   @BuiltValueField(wireName: r'serviceMinor')
@@ -112,6 +121,20 @@ class _$ExpensePreviewSerializer implements PrimitiveSerializer<ExpensePreview> 
       object.payersTotalMatches,
       specifiedType: const FullType(bool),
     );
+    if (object.periodFrom != null) {
+      yield r'periodFrom';
+      yield serializers.serialize(
+        object.periodFrom,
+        specifiedType: const FullType.nullable(Date),
+      );
+    }
+    if (object.periodTo != null) {
+      yield r'periodTo';
+      yield serializers.serialize(
+        object.periodTo,
+        specifiedType: const FullType.nullable(Date),
+      );
+    }
     if (object.serviceMinor != null) {
       yield r'serviceMinor';
       yield serializers.serialize(
@@ -198,6 +221,22 @@ class _$ExpensePreviewSerializer implements PrimitiveSerializer<ExpensePreview> 
             specifiedType: const FullType(bool),
           ) as bool;
           result.payersTotalMatches = valueDes;
+          break;
+        case r'periodFrom':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(Date),
+          ) as Date?;
+          if (valueDes == null) continue;
+          result.periodFrom = valueDes;
+          break;
+        case r'periodTo':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(Date),
+          ) as Date?;
+          if (valueDes == null) continue;
+          result.periodTo = valueDes;
           break;
         case r'serviceMinor':
           final valueDes = serializers.deserialize(

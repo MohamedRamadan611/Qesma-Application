@@ -147,12 +147,17 @@ class ApiContractCoverageIT extends AbstractApiIT {
         String g = "/api/v1/groups/" + gid;
         assertThat(status(hit(GET, "/api/v1/groups", me, null))).isEqualTo(200);
         assertThat(status(hit(GET, g, me, null))).isEqualTo(200);
-        MvcResult patched = hit(PATCH, g, me, Map.of("name", "Walk 2"), "If-Match", "\"1\"");
+        // BSA3 (A190): the trip budget settings ride on the same PATCH.
+        MvcResult patched = hit(PATCH, g, me, Map.of("name", "Walk 2", "budgetMinor", 100000L, "tripStartDate", "2026-10-18"),
+                "If-Match", "\"1\"");
         assertThat(status(patched)).isEqualTo(200);
+        assertThat(body(patched).get("budgetMinor").asLong()).isEqualTo(100000L);
         String a = body(hit(POST, g + "/members", me, Map.of("displayName", "A"))).get("id").asText();
         String b = body(hit(POST, g + "/members", me, Map.of("displayName", "B"))).get("id").asText();
         String c = body(hit(POST, g + "/members", me, Map.of("displayName", "C"))).get("id").asText();
         assertThat(status(hit(PATCH, g + "/members/" + c, me, Map.of("displayName", "C2")))).isEqualTo(200);
+        assertThat(body(hit(PATCH, g + "/members/" + b, me, Map.of("defaultShareUnits", 2))).get("defaultShareUnits")
+                .asInt()).isEqualTo(2);   // BSA3 (A188)
         assertThat(status(hit(DELETE, g + "/members/" + c, me, null))).isEqualTo(204);
 
         // ---- expenses ---------------------------------------------------------------------------------------------
@@ -178,6 +183,17 @@ class ApiContractCoverageIT extends AbstractApiIT {
                 "splitType", "ITEMIZED", "items", List.of(Map.of("name", "X", "amountMinor", 1L, "unitAmountMinor", 1L,
                         "assigneeMemberIds", List.of(a)))))))
                 .isEqualTo("VALIDATION_ERROR");
+        // BSA3: a SHARES expense with a period and a shorter presence (request and response fields).
+        Map<String, Object> rent = Map.of("title", "Rent", "expenseDate", "2026-12-01", "splitType", "SHARES",
+                "totalMinor", 10000L, "payers", List.of(Map.of("memberId", a, "amountMinor", 10000L)),
+                "periodFrom", "2026-11-01", "periodTo", "2026-11-30",
+                "shareParticipants", List.of(Map.of("memberId", a, "shareUnits", 1),
+                        Map.of("memberId", b, "shareUnits", 1, "presentFrom", "2026-11-30", "presentTo", "2026-11-30")));
+        assertThat(body(hit(POST, g + "/expenses/preview", me, rent)).get("periodFrom").asText()).isEqualTo("2026-11-01");
+        JsonNode rentExpense = body(hit(POST, g + "/expenses", me, rent, "Idempotency-Key", key()));
+        assertThat(rentExpense.get("shares").findValues("owedMinor").stream().map(JsonNode::asLong).toList())
+                .containsExactly(9677L, 323L);   // V25
+        assertThat(rentExpense.get("shares").get(1).get("shareUnits").asInt()).isEqualTo(1);
         JsonNode expense = body(hit(POST, g + "/expenses", me, equalBody("Dinner", 3000, null, a, 3000L),
                 "Idempotency-Key", key()));
         String eid = expense.get("id").asText();

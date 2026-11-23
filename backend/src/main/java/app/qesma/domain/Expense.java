@@ -23,6 +23,7 @@ public class Expense implements Persistable<UUID> {
     public static final String EQUAL = "EQUAL";
     public static final String EXACT = "EXACT";
     public static final String ITEMIZED = "ITEMIZED";
+    public static final String SHARES = "SHARES";
 
     @Id
     private UUID id;
@@ -83,6 +84,13 @@ public class Expense implements Persistable<UUID> {
 
     @Column(name = "tax_amount_minor")
     private Long taxAmountMinor;
+
+    // SHARES only (A186): the optional inclusive period; NULL otherwise
+    @Column(name = "period_from")
+    private LocalDate periodFrom;
+
+    @Column(name = "period_to")
+    private LocalDate periodTo;
 
     @Column(name = "category", nullable = false)
     private String category = "OTHER";
@@ -163,6 +171,15 @@ public class Expense implements Persistable<UUID> {
         return e;
     }
 
+    /** A SHARES expense (A185-A186); the period is both bounds or null. */
+    public static Expense shares(UUID id, UUID groupId, String title, long totalMinor, LocalDate expenseDate,
+                                 UUID createdByUserId, Instant createdAt, LocalDate periodFrom, LocalDate periodTo) {
+        Expense e = new Expense(id, groupId, title, SHARES, totalMinor, expenseDate, createdByUserId, createdAt);
+        e.periodFrom = periodFrom;
+        e.periodTo = periodTo;
+        return e;
+    }
+
     /** BSA1: category and pool flag (validated by the service). */
     public Expense withPool(String category, boolean paidFromPool) {
         this.category = category;
@@ -193,6 +210,8 @@ public class Expense implements Persistable<UUID> {
         this.discountMinor = next.discountMinor;
         this.serviceAmountMinor = next.serviceAmountMinor;
         this.taxAmountMinor = next.taxAmountMinor;
+        this.periodFrom = next.periodFrom;
+        this.periodTo = next.periodTo;
         this.category = next.category;
         this.paidFromPool = next.paidFromPool;
         this.updatedAt = now;
@@ -292,6 +311,14 @@ public class Expense implements Persistable<UUID> {
 
     public Long getTaxAmountMinor() {
         return taxAmountMinor;
+    }
+
+    public LocalDate getPeriodFrom() {
+        return periodFrom;
+    }
+
+    public LocalDate getPeriodTo() {
+        return periodTo;
     }
 
     public String getCategory() {

@@ -4,6 +4,7 @@
 
 // ignore_for_file: unused_element
 import 'package:qesma_api/src/model/item_input.dart';
+import 'package:qesma_api/src/model/share_participant_input.dart';
 import 'package:built_collection/built_collection.dart';
 import 'package:qesma_api/src/model/payer_input.dart';
 import 'package:qesma_api/src/model/service_input.dart';
@@ -28,7 +29,10 @@ part 'expense_command.g.dart';
 /// * [paidFromPool] 
 /// * [participantMemberIds] 
 /// * [payers] 
+/// * [periodFrom] 
+/// * [periodTo] 
 /// * [service] 
+/// * [shareParticipants] 
 /// * [shares] 
 /// * [splitType] 
 /// * [tax] 
@@ -65,8 +69,17 @@ abstract class ExpenseCommand implements Built<ExpenseCommand, ExpenseCommandBui
   @BuiltValueField(wireName: r'payers')
   BuiltList<PayerInput>? get payers;
 
+  @BuiltValueField(wireName: r'periodFrom')
+  Date? get periodFrom;
+
+  @BuiltValueField(wireName: r'periodTo')
+  Date? get periodTo;
+
   @BuiltValueField(wireName: r'service')
   ServiceInput? get service;
+
+  @BuiltValueField(wireName: r'shareParticipants')
+  BuiltList<ShareParticipantInput>? get shareParticipants;
 
   @BuiltValueField(wireName: r'shares')
   BuiltList<ShareInput>? get shares;
@@ -168,11 +181,32 @@ class _$ExpenseCommandSerializer implements PrimitiveSerializer<ExpenseCommand> 
         specifiedType: const FullType(BuiltList, [FullType(PayerInput)]),
       );
     }
+    if (object.periodFrom != null) {
+      yield r'periodFrom';
+      yield serializers.serialize(
+        object.periodFrom,
+        specifiedType: const FullType(Date),
+      );
+    }
+    if (object.periodTo != null) {
+      yield r'periodTo';
+      yield serializers.serialize(
+        object.periodTo,
+        specifiedType: const FullType(Date),
+      );
+    }
     if (object.service != null) {
       yield r'service';
       yield serializers.serialize(
         object.service,
         specifiedType: const FullType(ServiceInput),
+      );
+    }
+    if (object.shareParticipants != null) {
+      yield r'shareParticipants';
+      yield serializers.serialize(
+        object.shareParticipants,
+        specifiedType: const FullType(BuiltList, [FullType(ShareParticipantInput)]),
       );
     }
     if (object.shares != null) {
@@ -292,12 +326,33 @@ class _$ExpenseCommandSerializer implements PrimitiveSerializer<ExpenseCommand> 
           ) as BuiltList<PayerInput>;
           result.payers.replace(valueDes);
           break;
+        case r'periodFrom':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(Date),
+          ) as Date;
+          result.periodFrom = valueDes;
+          break;
+        case r'periodTo':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(Date),
+          ) as Date;
+          result.periodTo = valueDes;
+          break;
         case r'service':
           final valueDes = serializers.deserialize(
             value,
             specifiedType: const FullType(ServiceInput),
           ) as ServiceInput;
           result.service.replace(valueDes);
+          break;
+        case r'shareParticipants':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(BuiltList, [FullType(ShareParticipantInput)]),
+          ) as BuiltList<ShareParticipantInput>;
+          result.shareParticipants.replace(valueDes);
           break;
         case r'shares':
           final valueDes = serializers.deserialize(

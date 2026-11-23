@@ -720,11 +720,34 @@ class LabeledStepper extends StatelessWidget {
 /// − n + in one bordered capsule (44 dp tall, two 44 dp buttons around the number); a screen reader hears "Quantity n"
 /// and can adjust it.
 class QuantityStepper extends StatelessWidget {
-  const QuantityStepper({super.key, required this.quantity, required this.name, required this.onStep});
+  const QuantityStepper({
+    super.key,
+    required this.quantity,
+    required this.name,
+    required this.onStep,
+    this.min = kMinQuantity,
+    this.max = kMaxQuantity,
+    this.label,
+    this.decreaseTooltip,
+    this.increaseTooltip,
+    this.threeDigits = false,
+  });
 
   final int quantity;
   final String name;
   final ValueChanged<int> onStep;
+
+  /// The range the stepper stays in (an item's quantity by default; SA19 reuses it for shares).
+  final int min;
+  final int max;
+
+  /// What the value is called for a screen reader and the buttons' tooltips; the item quantity by default.
+  final String? label;
+  final String? decreaseTooltip;
+  final String? increaseTooltip;
+
+  /// Leaves room for a value up to 100 (shares) instead of up to 99 wide.
+  final bool threeDigits;
 
   @override
   Widget build(BuildContext context) {
@@ -740,12 +763,12 @@ class QuantityStepper extends StatelessWidget {
     );
     return Semantics(
       container: true,
-      label: '$name: ${l10n.expenseItzQuantityLabel}',
+      label: '$name: ${label ?? l10n.expenseItzQuantityLabel}',
       value: '$quantity',
       increasedValue: '${quantity + 1}',
       decreasedValue: '${quantity - 1}',
-      onIncrease: quantity < kMaxQuantity ? () => onStep(1) : null,
-      onDecrease: quantity > kMinQuantity ? () => onStep(-1) : null,
+      onIncrease: quantity < max ? () => onStep(1) : null,
+      onDecrease: quantity > min ? () => onStep(-1) : null,
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: context.colors.card,
@@ -755,14 +778,14 @@ class QuantityStepper extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            button(Icons.remove, l10n.expenseItzQuantityMinus, quantity > kMinQuantity ? () => onStep(-1) : null),
+            button(Icons.remove, decreaseTooltip ?? l10n.expenseItzQuantityMinus, quantity > min ? () => onStep(-1) : null),
             ExcludeSemantics(
               child: SizedBox(
-                width: 28,
+                width: threeDigits ? 40 : 28,
                 child: Center(child: Text(ltrIsolate('$quantity'), style: theme.textTheme.titleMedium)),
               ),
             ),
-            button(Icons.add, l10n.expenseItzQuantityPlus, quantity < kMaxQuantity ? () => onStep(1) : null),
+            button(Icons.add, increaseTooltip ?? l10n.expenseItzQuantityPlus, quantity < max ? () => onStep(1) : null),
           ],
         ),
       ),

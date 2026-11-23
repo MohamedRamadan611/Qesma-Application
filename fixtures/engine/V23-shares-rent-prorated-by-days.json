@@ -1,0 +1,16 @@
+{
+  "name": "V23 shares, rent 9,000.00 for November, units 2 / 1 / 1, C present from 2026-11-12 (weights 60 / 30 / 19)",
+  "input": {
+    "members": [ { "id": "A", "sortOrder": 1 }, { "id": "B", "sortOrder": 2 }, { "id": "C", "sortOrder": 3 } ],
+    "expenses": [
+      { "type": "SHARES", "totalMinor": 900000, "periodFrom": "2026-11-01", "periodTo": "2026-11-30",
+        "shareParticipants": [ { "memberId": "A", "shareUnits": 2 }, { "memberId": "B", "shareUnits": 1 },
+                               { "memberId": "C", "shareUnits": 1, "presentFrom": "2026-11-12" } ],
+        "payers": [ { "memberId": "A", "amountMinor": 900000 } ] }
+    ],
+    "settlements": []
+  },
+  "expected": {
+    "expenses": [ { "owed": { "A": 495413, "B": 247706, "C": 156881 }, "totalMinor": 900000 } ]
+  }
+}

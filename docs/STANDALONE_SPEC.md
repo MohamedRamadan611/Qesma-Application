@@ -14,9 +14,10 @@ The first public release is a **standalone Android app for one organizer**: no d
 |---|---|---|
 | **Launch (1.0.0)** | Phase 1 core (groups, ghost members, equal / exact / itemized, multi-payer, revisions, balances, simplified transfers, payments); categories; My share; trip recap image; reminder tones (WhatsApp); pool & treasurer (أمين الصندوق); Khorouga fuel / ride calculator; receipt OCR; backup | SA1–SA13, BSA1 |
 | **Update 1** | Voice entry | SA14 |
+| **Fair-share & budget** (run before SA13) | SHARES split with proration by days present (section 19); trip budget (section 20) | BSA3, SA18–SA20 |
 | **Server phase** (not written yet) | To-buy checklist (members claim items); multi-user features (invites, join, roles management, settlement confirm/dispute, remind, notifications, activity, push B18/FL17, FL15, FL16, B19/FL18); "upload my local data" import endpoint and the `RemoteRepository` switch; server endpoints for My share and recap | later |
 
-Out of the standalone release (not built): accounts and sign-in, any server call except the OCR request (section 13) and, in update 1, the speech service (section 14), analytics, crash reporting, ads, iOS, web, multi-currency conversion, percent/shares splits, refunds, user-defined categories, offline queue (the app is offline by design), exports other than the backup (section 6).
+Out of the standalone release (not built): accounts and sign-in, any server call except the OCR request (section 13) and, in update 1, the speech service (section 14), analytics, crash reporting, ads, iOS, web, multi-currency conversion, percent splits, refunds, user-defined categories, offline queue (the app is offline by design), exports other than the backup (section 6).
 
 ## 2. App modes
 
@@ -167,6 +168,8 @@ A 20-item restaurant bill is unusable by hand. The AI only **proposes**; the use
 | `calculator` | SA11 | calculator words (fuel, tolls, ride); route `'/calculator` |
 | `receiptScan` | SA12 | `receipt`, `scan`, `إيصال`; Icons.camera, Icons.receipt, Icons.document_scanner, Icons.photo |
 | `voice` | SA14 | `voice`, `microphone`; Icons.mic |
+| `shares` | SA19 | `shares`, `حصص`, `حصة`, `days present`, `أيام الإقامة`; the "Shares" split label (section 19) |
+| `budget` | SA20 | `budget`, `ميزانية`, `per day`, `في اليوم`, `cost per head`; Icons.savings; route `'/budget` (section 20) |
 
 SA4 adds a **per-mode allow-list**: in local mode the server-only features (`invites`, `settlements` pending/dispute copy, server `reminders`, `notifications`, `accountDeletion`, sign-in copy) must be unreachable. The `_permanent*` lists keep `guest`, `contacts`, `coupon`, `premium`, `subscribe`, `ads`, `coming soon`, `قريبا`, `pay now`, `ready to settle`, `cover photo`; `receipt`, `scan`, `export`, `إيصال`, `monthly spend` and the camera/photo/receipt/scanner/download/upload icons move out of the permanent lists into the keys above.
 
@@ -209,6 +212,8 @@ SA4 adds a **per-mode allow-list**: in local mode the server-only features (`inv
 | Receipt OCR | 13 | A144–A146 | SA12 |
 | Voice entry | 14 | A147 | SA14 |
 | Itemized v2 (discount, quantity, charges as amounts, editor UX, OCR v2) | 18 | A171–A176 | BSA2, SA15, SA16, SA17 |
+| Fair-share (SHARES split, proration by days present) | 19 | A185–A189, A192 | BSA3, SA18, SA19 |
+| Trip budget | 20 | A190, A191, A199 | BSA3, SA18 (schema), SA20 |
 | Release, privacy | all | — | SA13 |
 
 ## 18. Itemized bill v2: discount, quantity, charges as amounts (BSA2, SA15–SA17)
@@ -292,3 +297,62 @@ Vectors V9, V10, V12 and V13 use the V5 items: members A, B, C in `sort_order`; 
 | V18 | V9 (discount 10%, service 12%, tax 14%) plus delivery 10.00 | Every V9 part is unchanged; delivery 3.34 / 3.33 / 3.33. Owed **A 152.73, B 152.71, C 210.17**, total **515.61** |
 | V19 | Members A, B, C. Burger 60.00 (A), Salad 30.00 (B); delivery 10.00; adjustment −5.00 | Delivery 5.00 / 5.00 (C has no item). Adjustment −5.00 by net 60:30 → −3.33 / −1.67. Owed **A 61.67, B 33.33**, total **95.00** |
 | V20 | Delivery −0.01, or 10,000,000,000.01 | `VALIDATION_ERROR` |
+
+## 19. Fair-share: SHARES split and proration by days present (BSA3, SA18, SA19)
+
+For flats and long stays: the big room pays more, and someone who moves in on the 12th pays only for the days they were there. Decision Log A185–A189, A192. Contract first (BSA3), then the Dart engine and local backend (SA18), then the editor (SA19).
+
+### 19.1 Rules
+1. **New split type `SHARES`** (next to EQUAL, EXACT, ITEMIZED). The request carries `shareParticipants: [{memberId, shareUnits, presentFrom?, presentTo?}]` and, optionally, `periodFrom` / `periodTo` on the expense. `participantMemberIds`, `shares` and itemized fields are rejected on a SHARES expense; `shareParticipants`, `periodFrom` and `periodTo` are rejected on any other type.
+2. **Units:** `shareUnits` is an integer 1..100. At least one participant; each member at most once; members follow the same participant rules as EQUAL (same group, ACTIVE).
+3. **Period (optional):** `periodFrom` and `periodTo` are both present or both absent, `YYYY-MM-DD`, inclusive, `periodTo ≥ periodFrom`, at most **366 days**. It is independent of `expenseDate` (rent paid on 1 Dec may cover November).
+4. **Presence (only with a period):** `presentFrom` / `presentTo` default to `periodFrom` / `periodTo`; each must lie inside the period and `presentTo ≥ presentFrom`. `days = presentTo − presentFrom + 1` (≥ 1). Presence dates without a period are rejected.
+5. **Weight** = `shareUnits × days` with a period, `shareUnits` without (max 100 × 366 = 36,600). The sum of weights is always ≥ 1 (rules 2 and 4), so the LRM "all zero → equal" fallback can never apply; the validator still rejects Σweight = 0 explicitly.
+6. **Owed** = `Lrm.allocate(total, weights, sortOrders)`: floors of `total × weight ÷ Σweight` (BigInt / `Math.multiplyExact`), leftover piasters by largest remainder, ties to the lower `sort_order`. Σ owed = total. Units 1 for everyone without a period gives exactly the EQUAL result. A participant whose share rounds to 0 is kept with 0 (no drop rule: weights are ≥ 1, so this only happens on tiny totals).
+7. **Payers, pool and balances are unchanged.** A SHARES expense can be paid from the pool (section 10); the treasurer's share is calculated like anyone's.
+8. **Stored per split** (`expense_splits`): `owed_minor` as today plus `share_units`, `present_from`, `present_to` (NULL on other types). Expense: `period_from`, `period_to` (NULL unless SHARES with a period). Balances keep reading `owed_minor` only.
+9. **Member default weight** `members.default_share_units` (nullable, 1..100): a **form prefill only**. Changing it never changes an existing expense (A188). Edited from the member options sheet.
+10. **Revisions and idempotency:** the revision snapshot carries the period, units and presence; old revisions read back unchanged (they are not SHARES). The request hash adds the new fields only when present (A166 pattern), so earlier replays keep their hash.
+11. **Errors:** every rule above is `422 VALIDATION_ERROR` with a field path (no new error code).
+
+### 19.2 Test vectors (shared, `fixtures/engine/`)
+Members A, B, C in `sort_order`.
+
+| # | Input | Expected |
+|---|---|---|
+| V21 | 300.00, units 1 / 1 / 1, no period | **A 100.00, B 100.00, C 100.00** (same as EQUAL) |
+| V22 | 100.00, units 2 / 1 / 1, no period | **A 50.00, B 25.00, C 25.00** |
+| V23 | Rent 9,000.00, period 2026-11-01..2026-11-30, units 2 / 1 / 1, C present from 2026-11-12 | Days 30 / 30 / 19, weights 60 / 30 / 19 (Σ 109). Floors 4954.12 / 2477.06 / 1568.80 (remainders 92, 46, 80 of 109); 2 piasters to A and C. **A 4954.13, B 2477.06, C 1568.81**, total 9,000.00 |
+| V24 | 600.00, period 2026-11-01..2026-11-10, units 1 / 1 / 1, B present 2026-11-01..2026-11-05 | Weights 10 / 5 / 10. **A 240.00, B 120.00, C 240.00** |
+| V25 | Members A, B. 100.00, period 2026-11-01..2026-11-30, units 1 / 1, B present 2026-11-30..2026-11-30 | Weights 30 / 1. Floors 96.77 / 3.22 (remainders 13, 18 of 31); 1 piaster to B. **A 96.77, B 3.23** |
+| V26 | 10.00, units 3 / 3 / 3, no period | **A 3.34, B 3.33, C 3.33** (the tie goes to A; scaling all units changes nothing) |
+| V27 | Units 0 or 101; the same member twice; no participants | `VALIDATION_ERROR` |
+| V28 | Presence outside the period; presence without a period; only one of `periodFrom`/`periodTo`; `periodTo < periodFrom`; a period of 367 days | `VALIDATION_ERROR` |
+
+## 20. Trip budget (BSA3, SA18 schema, SA20)
+
+A budget for the group, how much of it is used, spending per day, and an estimated cost per head. Decision Log A190, A191. It **records and shows only**: it never moves money and never changes a balance.
+
+### 20.1 Settings (contract, BSA3)
+`GroupDto` and the group update request gain `budgetMinor` (nullable, 1..A43 cap), `tripStartDate` and `tripEndDate` (nullable `YYYY-MM-DD`, each optional, `tripEndDate ≥ tripStartDate` when both are set). They can be changed or cleared at any time (unlike the treasurer, A137). Offered for every group type; the group home shows the budget card only when `budgetMinor` is set. Errors: `422 VALIDATION_ERROR`. **Exclusive with the pool (A199):** a group has a treasurer or a budget, never both; a PATCH that would leave both is `422 VALIDATION_ERROR`. The create-group screen offers one radio choice (nothing extra / pool / trip budget), and edit group keeps the budget editable and clearable; its Pool section hides while a budget is set and its Budget section hides while a treasurer is set.
+
+### 20.2 Figures (computed, never stored; local computation like A150)
+Computed by a pure engine function `TripBudget` from the live expenses, the settings, the ACTIVE member count and `today` (passed in, Africa/Cairo date). Hidden in server mode until the server phase adds an endpoint.
+1. **Spent** = Σ totals of non-deleted expenses (current revision). The `paidFromPool` flag is ignored: a pool expense counts once, like any expense. **Pool deposits (`POOL_DEPOSIT`) and payments never count** — they move money between members, they are not spending.
+2. **Remaining** = budget − spent; may be negative ("over budget by X", with an icon and words, not colour only).
+3. **Progress** = spent × 10,000 ÷ budget in basis points, round half up, not capped (over 10,000 = over budget); the bar is drawn capped at full.
+4. **Per day** = Σ totals grouped by `expense_date`, newest first; days without expenses are not listed.
+5. **Daily average** = spent ÷ elapsed days, round half up. Elapsed days = `tripStartDate` .. min(`today`, `tripEndDate`) inclusive; without a start date, first .. last expense date inclusive; absent when there are no expenses or the trip has not started.
+6. **Per day left** = remaining ÷ days left, round half up; days left = max(`today`, `tripStartDate`) .. `tripEndDate` inclusive. Only when `tripEndDate` is set, `today ≤ tripEndDate` and remaining > 0.
+7. **Cost per head (estimate)** = the largest part of `Lrm.allocate(budget, 1 per ACTIVE member)` (that is, the budget ÷ members rounded up to the piaster), labelled "تقريبًا" / "estimate". It is not anyone's actual share (shares can be unequal, section 19).
+8. **Kept apart from the pool meter (a group never has both, A199):** the budget card says "الميزانية المتبقية" and the pool card says "رصيد الصندوق"; neither is derived from the other.
+
+### 20.3 Test vectors (`fixtures/insights/budget-*.json`)
+| File | Case | Expected |
+|---|---|---|
+| `budget-basic` | Budget 10,000.00; expenses 1,500.00 (11-01) and 2,500.00 (11-02); 4 ACTIVE members; dates 11-01..11-05; today 11-02 | spent 4,000.00, remaining 6,000.00, progress 4,000 bps, daily average 2,000.00, per day left 1,500.00 (4 days), cost per head 2,500.00 |
+| `budget-pool-counted-once` | Budget 10,000.00; deposit 3,000.00 (POOL_DEPOSIT); pool expense 1,200.00 | spent **1,200.00** (not 4,200.00), remaining 8,800.00 |
+| `budget-soft-deleted` | Two expenses, one soft-deleted; one edited to a new total | only the live current revision counts |
+| `budget-overspent` | Budget 1,000.00; spent 1,250.50 | remaining −250.50, progress 12,505 bps, no per day left |
+| `budget-no-dates` | No trip dates; expenses on 11-01 and 11-03 | daily average over 3 days; no per day left |
+| `budget-cost-per-head-rounding` | Budget 100.00; 3 ACTIVE members (one LEFT member ignored) | cost per head 33.34 |

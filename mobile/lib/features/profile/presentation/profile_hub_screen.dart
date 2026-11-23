@@ -22,6 +22,9 @@ import 'language_sheet.dart';
 import 'profile_rows.dart';
 import '../../../core/theme/palette.dart';
 
+/// Terms of Use and Privacy Policy rows in the Account tab: hidden until the legal pages are published.
+const bool _showLegalLinks = false;
+
 /// Asks, then signs out (the local wipe happens first, the router moves to the welcome screen).
 Future<void> confirmSignOut(BuildContext context, WidgetRef ref) async {
   final l10n = AppLocalizations.of(context);
@@ -149,8 +152,11 @@ class ProfileHubScreen extends ConsumerWidget {
           ProfileSection(
             title: l10n.profileSectionAbout,
             children: [
-              ProfileRow(icon: Icons.description_outlined, title: l10n.legalTerms, onTap: () => open(LegalLinks.terms)),
-              ProfileRow(icon: Icons.lock_outline, title: l10n.legalPrivacy, onTap: () => open(LegalLinks.privacy)),
+              // Hidden for now (the legal pages are not published yet). Flip the flag to bring them back.
+              if (_showLegalLinks) ...[
+                ProfileRow(icon: Icons.description_outlined, title: l10n.legalTerms, onTap: () => open(LegalLinks.terms)),
+                ProfileRow(icon: Icons.lock_outline, title: l10n.legalPrivacy, onTap: () => open(LegalLinks.privacy)),
+              ],
               ProfileRow(icon: Icons.info_outline, title: l10n.profileVersion, value: ltrIsolate(AppInfo.display)),
             ],
           ),

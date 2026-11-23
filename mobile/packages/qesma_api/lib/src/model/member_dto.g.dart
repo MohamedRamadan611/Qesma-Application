@@ -10,6 +10,8 @@ class _$MemberDto extends MemberDto {
   @override
   final DateTime createdAt;
   @override
+  final int? defaultShareUnits;
+  @override
   final String displayName;
   @override
   final bool hasAccount;
@@ -29,6 +31,7 @@ class _$MemberDto extends MemberDto {
 
   _$MemberDto._(
       {required this.createdAt,
+      this.defaultShareUnits,
       required this.displayName,
       required this.hasAccount,
       required this.id,
@@ -49,6 +52,7 @@ class _$MemberDto extends MemberDto {
     if (identical(other, this)) return true;
     return other is MemberDto &&
         createdAt == other.createdAt &&
+        defaultShareUnits == other.defaultShareUnits &&
         displayName == other.displayName &&
         hasAccount == other.hasAccount &&
         id == other.id &&
@@ -62,6 +66,7 @@ class _$MemberDto extends MemberDto {
   int get hashCode {
     var _$hash = 0;
     _$hash = $jc(_$hash, createdAt.hashCode);
+    _$hash = $jc(_$hash, defaultShareUnits.hashCode);
     _$hash = $jc(_$hash, displayName.hashCode);
     _$hash = $jc(_$hash, hasAccount.hashCode);
     _$hash = $jc(_$hash, id.hashCode);
@@ -77,6 +82,7 @@ class _$MemberDto extends MemberDto {
   String toString() {
     return (newBuiltValueToStringHelper(r'MemberDto')
           ..add('createdAt', createdAt)
+          ..add('defaultShareUnits', defaultShareUnits)
           ..add('displayName', displayName)
           ..add('hasAccount', hasAccount)
           ..add('id', id)
@@ -94,6 +100,11 @@ class MemberDtoBuilder implements Builder<MemberDto, MemberDtoBuilder> {
   DateTime? _createdAt;
   DateTime? get createdAt => _$this._createdAt;
   set createdAt(DateTime? createdAt) => _$this._createdAt = createdAt;
+
+  int? _defaultShareUnits;
+  int? get defaultShareUnits => _$this._defaultShareUnits;
+  set defaultShareUnits(int? defaultShareUnits) =>
+      _$this._defaultShareUnits = defaultShareUnits;
 
   String? _displayName;
   String? get displayName => _$this._displayName;
@@ -131,6 +142,7 @@ class MemberDtoBuilder implements Builder<MemberDto, MemberDtoBuilder> {
     final $v = _$v;
     if ($v != null) {
       _createdAt = $v.createdAt;
+      _defaultShareUnits = $v.defaultShareUnits;
       _displayName = $v.displayName;
       _hasAccount = $v.hasAccount;
       _id = $v.id;
@@ -161,6 +173,7 @@ class MemberDtoBuilder implements Builder<MemberDto, MemberDtoBuilder> {
         _$MemberDto._(
           createdAt: BuiltValueNullFieldError.checkNotNull(
               createdAt, r'MemberDto', 'createdAt'),
+          defaultShareUnits: defaultShareUnits,
           displayName: BuiltValueNullFieldError.checkNotNull(
               displayName, r'MemberDto', 'displayName'),
           hasAccount: BuiltValueNullFieldError.checkNotNull(

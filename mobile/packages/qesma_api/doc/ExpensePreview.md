@@ -13,6 +13,8 @@ Name | Type | Description | Notes
 **discountMinor** | **int** | Integer minor units (piasters: 1 EGP = 100). Never a decimal. | [optional] 
 **members** | [**BuiltList&lt;ShareView&gt;**](ShareView.md) |  | 
 **payersTotalMatches** | **bool** |  | 
+**periodFrom** | [**Date**](Date.md) |  | [optional] 
+**periodTo** | [**Date**](Date.md) |  | [optional] 
 **serviceMinor** | **int** | Integer minor units (piasters: 1 EGP = 100). Never a decimal. | [optional] 
 **subtotalMinor** | **int** | Integer minor units (piasters: 1 EGP = 100). Never a decimal. | [optional] 
 **taxMinor** | **int** | Integer minor units (piasters: 1 EGP = 100). Never a decimal. | [optional] 

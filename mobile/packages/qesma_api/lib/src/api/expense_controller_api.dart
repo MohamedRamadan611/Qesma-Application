@@ -27,8 +27,8 @@ class ExpenseControllerApi {
 
   const ExpenseControllerApi(this._dio, this._serializers);
 
-  /// Create an expense (EQUAL, EXACT or ITEMIZED)
-  /// Idempotency-Key (UUID) is required. For ITEMIZED, totalMinor is optional: the server computes it and the payers must add up to it (PAYERS_TOTAL_MISMATCH otherwise).
+  /// Create an expense (EQUAL, EXACT, ITEMIZED or SHARES)
+  /// Idempotency-Key (UUID) is required. For ITEMIZED, totalMinor is optional: the server computes it and the payers must add up to it (PAYERS_TOTAL_MISMATCH otherwise). SHARES splits totalMinor by shareUnits (1..100) x days present in the optional periodFrom..periodTo (inclusive, at most 366 days); see STANDALONE_SPEC 19.
   ///
   /// Parameters:
   /// * [gid] 

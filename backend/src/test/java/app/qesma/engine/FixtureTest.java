@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -42,8 +43,8 @@ class FixtureTest {
         try (Stream<Path> s = Files.list(DIR)) {
             names = s.map(p -> p.getFileName().toString()).filter(n -> n.endsWith(".json")).toList();
         }
-        assertThat(names).hasSizeGreaterThanOrEqualTo(16);
-        for (int v = 1; v <= 16; v++) {
+        assertThat(names).hasSizeGreaterThanOrEqualTo(28);
+        for (int v = 1; v <= 28; v++) {
             String prefix = "V" + v + "-";
             assertThat(names).as("vector %s", prefix).anyMatch(n -> n.startsWith(prefix));
         }
@@ -110,6 +111,18 @@ class FixtureTest {
                     for (MemberBreakdown b : itemized.members()) {
                         owed.put(b.memberId(), b.owedMinor());
                     }
+                }
+                case "SHARES" -> {
+                    total = e.get("totalMinor").asLong();
+                    JsonNode rejected = expected.path("expenses").path(i);
+                    if (rejected.has("error")) {
+                        int index = i;
+                        assertThatThrownBy(() -> SplitCalculator.shares(total, weightedShares(e, members), period(e)))
+                                .as("expense %d", index).isInstanceOf(EngineException.class)
+                                .extracting("code").isEqualTo(EngineErrorCode.valueOf(rejected.get("error").asText()));
+                        continue;
+                    }
+                    owed.putAll(SplitCalculator.shares(total, weightedShares(e, members), period(e)));
                 }
                 default -> throw new IllegalArgumentException("unknown expense type " + e.get("type"));
             }
@@ -198,6 +211,29 @@ class FixtureTest {
         ChargeSpec discount = e.hasNonNull("discount") ? charge(e.get("discount")) : null;
         return new ItemizedInput(members, items, discount, service, tax, e.path("adjustmentMinor").asLong(0),
                 e.path("deliveryMinor").asLong(0));
+    }
+
+    /** SHARES participants (STANDALONE_SPEC 19, V21-V28); the sortOrder comes from {@code members}. */
+    private static List<WeightedShare> weightedShares(JsonNode e, List<MemberRef> members) {
+        List<WeightedShare> shares = new ArrayList<>();
+        for (JsonNode p : e.get("shareParticipants")) {
+            String id = p.get("memberId").asText();
+            int sortOrder = members.stream().filter(m -> m.id().equals(id)).findFirst().orElseThrow().sortOrder();
+            shares.add(new WeightedShare(id, sortOrder, p.get("shareUnits").asInt(), dateOrNull(p, "presentFrom"),
+                    dateOrNull(p, "presentTo")));
+        }
+        return shares;
+    }
+
+    /** Both bounds, one bound (rejected by the engine) or none. */
+    private static SharePeriod period(JsonNode e) {
+        LocalDate from = dateOrNull(e, "periodFrom");
+        LocalDate to = dateOrNull(e, "periodTo");
+        return from == null && to == null ? null : new SharePeriod(from, to);
+    }
+
+    private static LocalDate dateOrNull(JsonNode node, String field) {
+        return node.hasNonNull(field) ? LocalDate.parse(node.get(field).asText()) : null;
     }
 
     private static ChargeSpec charge(JsonNode node) {

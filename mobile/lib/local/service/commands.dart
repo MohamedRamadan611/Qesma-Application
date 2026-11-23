@@ -50,6 +50,23 @@ final class TaxIn {
   final int? amountMinor;
 }
 
+/// `ShareParticipantInput` (BSA3, A195): one SHARES participant; presence only with a period (validator).
+final class ShareParticipantIn {
+  const ShareParticipantIn(this.memberId, this.shareUnits, {this.presentFrom, this.presentTo});
+  final String? memberId;
+  final int? shareUnits;
+  final String? presentFrom;
+  final String? presentTo;
+
+  static ShareParticipantIn? read(Object? v) {
+    final f = JsonFields.object(v);
+    return f == null
+        ? null
+        : ShareParticipantIn(f.uuid('memberId'), f.integer('shareUnits'),
+            presentFrom: f.date('presentFrom'), presentTo: f.date('presentTo'));
+  }
+}
+
 /// `ExpenseCommand` (create, preview and update share it).
 final class ExpenseIn {
   const ExpenseIn({
@@ -68,6 +85,9 @@ final class ExpenseIn {
     this.deliveryMinor,
     this.category,
     this.paidFromPool,
+    this.shareParticipants,
+    this.periodFrom,
+    this.periodTo,
   });
 
   final String? title;
@@ -96,6 +116,11 @@ final class ExpenseIn {
   /// BSA1: optional; true only for a pool expense (single payer = the treasurer).
   final bool? paidFromPool;
 
+  /// BSA3 (A185-A187): SHARES only; the period is optional (both bounds or neither).
+  final List<ShareParticipantIn?>? shareParticipants;
+  final String? periodFrom;
+  final String? periodTo;
+
   static ExpenseIn read(JsonFields f) {
     final tax = f.obj('tax');
     return ExpenseIn(
@@ -114,6 +139,9 @@ final class ExpenseIn {
       deliveryMinor: f.integer('deliveryMinor'),
       category: f.str('category'),
       paidFromPool: f.boolean('paidFromPool'),
+      shareParticipants: f.list('shareParticipants')?.map(ShareParticipantIn.read).toList(),
+      periodFrom: f.date('periodFrom'),
+      periodTo: f.date('periodTo'),
     );
   }
 }

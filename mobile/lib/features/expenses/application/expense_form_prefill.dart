@@ -24,6 +24,7 @@ ExpenseFormState formFromExpense(
 
   final itemized = expense.splitType == 'ITEMIZED';
   final exact = expense.splitType == 'EXACT';
+  final sharesSplit = expense.splitType == 'SHARES';
   final charges = expense.charges;
 
   return ExpenseFormState(
@@ -38,7 +39,9 @@ ExpenseFormState formFromExpense(
         ? SplitMode.itemized
         : exact
             ? SplitMode.exact
-            : everyone
+            : sharesSplit
+                ? SplitMode.shares
+                : everyone
                 ? SplitMode.all
                 : SplitMode.selected,
     selectedIds: shareIds,
@@ -46,7 +49,32 @@ ExpenseFormState formFromExpense(
     payerMode: single ? PayerMode.single : PayerMode.multiple,
     payerTexts: single ? const {} : {for (final p in payers) p.memberId: Money.formatPlain(p.amountMinor)},
     itemized: itemized ? _itemizedFrom(expense, charges) : const ItemizedDraft(),
+    shares: sharesSplit ? _sharesFrom(expense, memberIds) : const SharesDraft(),
     serverTotalMinor: itemized ? expense.totalMinor : null,
+  );
+}
+
+/// A saved shares expense opens with its units and period. The server stores presence normalized (a missing bound is the
+/// period bound), so a person present for the whole period opens as "full period" (null), not as two dates.
+SharesDraft _sharesFrom(ExpenseView expense, List<String> memberIds) {
+  final from = expense.periodFrom;
+  final to = expense.periodTo;
+  final periodOn = from != null && to != null;
+  final byMember = {for (final s in expense.shares) s.memberId: s};
+  ShareRowDraft rowOf(String id, ShareView share) {
+    final pf = share.presentFrom, pt = share.presentTo;
+    final partial = periodOn && pf != null && pt != null && !(pf == from && pt == to);
+    return ShareRowDraft(memberId: id, units: share.shareUnits ?? kMinShareUnits, presentFrom: partial ? pf : null, presentTo: partial ? pt : null);
+  }
+
+  return SharesDraft(
+    rows: [
+      for (final id in memberIds)
+        if (byMember[id] case final share?) rowOf(id, share),
+    ],
+    periodOn: periodOn,
+    periodFrom: from,
+    periodTo: to,
   );
 }
 

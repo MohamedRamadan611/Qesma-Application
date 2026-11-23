@@ -23,6 +23,8 @@ const enabledFeatures = <String>{
   'pool', // SA10: pool & treasurer (edit-group section, pool card and screen, deposit sheet, expense toggle)
   'calculator', // SA11: Khorouga calculator (fuel + tolls, multi-stop ride), prefills an EXACT expense
   'receiptScan', // SA12: receipt photo -> unsaved itemized bill (consent, scan entry points, profile switch)
+  'shares', // SA19: shares split (units per person, billing period, days present, member default share)
+  'budget', // SA20: trip budget (edit-group section, budget card and screen)
 };
 
 /// Words, Arabic words, phrases, icons and routes of one Phase 2 feature.
@@ -85,6 +87,20 @@ const phase2Features = <String, Phase2Feature>{
     words: ['receipt', 'scan'],
     arabic: ['إيصال', 'الإيصال', 'إيصالات', 'الإيصالات'],
     icons: ['Icons.camera', 'Icons.receipt', 'Icons.document_scanner'],
+  ),
+  // SA20: trip budget (STANDALONE_SPEC 15, 20). Local mode only (ModeFeatures.budget).
+  'budget': Phase2Feature(
+    words: ['budget'],
+    arabic: ['ميزانية', 'الميزانية'],
+    phrases: ['per day', 'cost per head', 'في اليوم'],
+    icons: ['Icons.savings'],
+    routes: ["'/budget", "/budget'"],
+  ),
+  // SA19: fair-share split (STANDALONE_SPEC 15, BSA3). Works in both modes (no ModeFeatures flag).
+  'shares': Phase2Feature(
+    words: ['shares'],
+    arabic: ['حصص', 'حصة'],
+    phrases: ['days present', 'أيام الإقامة'],
   ),
 };
 
@@ -249,6 +265,17 @@ void main() {
       expect(copyViolations({'en': <String, dynamic>{'k': 'Scan receipt'}}, const {'receiptScan'}), isEmpty);
       expect(copyViolations({'ar': <String, dynamic>{'k': 'تصوير الإيصال'}}, const {'receiptScan'}), isEmpty);
       expect(sourceViolations({'lib/g.dart': 'Icon(Icons.document_scanner, size: 8)'}, const {'receiptScan'}), isEmpty);
+    });
+
+    test('shares words are caught until the shares key is enabled (SA19)', () {
+      expect(copyViolations({'en': <String, dynamic>{'k': 'Split by shares'}}, const {}), isNotEmpty);
+      expect(copyViolations({'en': <String, dynamic>{'k': 'Days present'}}, const {}), isNotEmpty);
+      expect(copyViolations({'ar': <String, dynamic>{'k': 'بالحصص'}}, const {}), isEmpty, reason: 'the Arabic match is on whole words');
+      expect(copyViolations({'ar': <String, dynamic>{'k': 'حصة واحدة'}}, const {}), isNotEmpty);
+      expect(copyViolations({'ar': <String, dynamic>{'k': 'أيام الإقامة'}}, const {}), isNotEmpty);
+      expect(copyViolations({'en': <String, dynamic>{'k': 'Split by shares'}}, const {'shares'}), isEmpty);
+      expect(copyViolations({'ar': <String, dynamic>{'k': 'أيام الإقامة'}}, const {'shares'}), isEmpty);
+      expect(enabledFeatures, contains('shares'));
     });
 
     test('whole words only: the Arabic "adds" is not "guest"', () {

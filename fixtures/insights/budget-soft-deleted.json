@@ -1,0 +1,32 @@
+{
+  "name": "budget-soft-deleted",
+  "description": "STANDALONE_SPEC 20.3: e1 is soft-deleted (ignored, and its date does not widen the no-start-date range); e2 was edited from 1,000.00 to 750.00 and only its current revision total is passed.",
+  "input": {
+    "budgetMinor": 500000,
+    "tripStartDate": null,
+    "tripEndDate": null,
+    "activeMemberCount": 2,
+    "today": "2026-11-03",
+    "expenses": [
+      {"expenseId": "e1", "totalMinor": 100000, "expenseDate": "2026-11-01", "paidFromPool": false, "deleted": true},
+      {"expenseId": "e2", "totalMinor": 75000, "expenseDate": "2026-11-02", "paidFromPool": false, "deleted": false}
+    ]
+  },
+  "expected": {
+    "budgetMinor": 500000,
+    "spentMinor": 75000,
+    "remainingMinor": 425000,
+    "overBudget": false,
+    "overByMinor": null,
+    "progressBps": 1500,
+    "barFillBps": 1500,
+    "perDay": [
+      {"date": "2026-11-02", "totalMinor": 75000}
+    ],
+    "elapsedDays": 1,
+    "dailyAverageMinor": 75000,
+    "daysLeft": null,
+    "perDayLeftMinor": null,
+    "costPerHeadMinor": 250000
+  }
+}

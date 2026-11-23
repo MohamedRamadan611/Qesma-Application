@@ -13,7 +13,7 @@ import 'idempotency_service.dart';
 import 'local_context.dart';
 import 'views.dart';
 
-/// Expenses of a group (spec 3.1, 7.9, 8.2): EQUAL, EXACT and ITEMIZED with one or more payers, the preview, edits,
+/// Expenses of a group (spec 3.1, 7.9, 8.2): EQUAL, EXACT, ITEMIZED and SHARES with one or more payers, the preview, edits,
 /// soft deletes and revisions. A port of Java `ExpenseService`: this class validates and persists; every money rule
 /// is the engine's, reached only through [ExpenseCalculator]. Every write is ONE drift transaction together with its
 /// revision and (create) its idempotency record (STANDALONE_SPEC 3.8).
@@ -73,6 +73,8 @@ final class ExpenseService {
           ..taxMinor = calc.itemized ? calc.taxMinor : null
           ..adjustmentMinor = calc.itemized ? calc.adjustmentMinor : null
           ..deliveryMinor = calc.itemized ? calc.deliveryMinor : null
+          ..periodFrom = calc.periodFrom == null ? null : dateOf(calc.periodFrom!)
+          ..periodTo = calc.periodTo == null ? null : dateOf(calc.periodTo!)
           ..members = ListBuilder([for (final s in calc.shares) _shareView(s)])
           ..payersTotalMatches = payersMatch);
       });
@@ -262,6 +264,20 @@ final class ExpenseService {
         'discountBps': ?v.discountBps,
         'discountAmountMinor': ?v.discountAmountMinor,
       },
+      // A189 (BSA3): SHARES keys only when present, so a replay of a pre-SA18 key keeps its hash. Participant order is
+      // not meaning; presence is the normalized one, so an omitted bound and the same date sent explicitly agree.
+      if (v.shareParticipants != null)
+        'shareParticipants': [
+          for (final p in [...v.shareParticipants!]..sort((a, b) => a.memberId.compareTo(b.memberId)))
+            {
+              'memberId': p.memberId,
+              'shareUnits': p.shareUnits,
+              'presentFrom': ?p.presentFrom,
+              'presentTo': ?p.presentTo,
+            },
+        ],
+      'periodFrom': ?v.periodFrom,
+      'periodTo': ?v.periodTo,
     };
   }
 
@@ -355,6 +371,8 @@ final class ExpenseService {
         version: version,
         category: request.category,
         paidFromPool: request.paidFromPool ? 1 : 0,
+        periodFrom: calc.periodFrom,
+        periodTo: calc.periodTo,
       ),
       payers: [for (final p in calc.payers) PayerRow(expenseId: id, memberId: p.memberId, amountMinor: p.amountMinor)],
       splits: [
@@ -369,6 +387,9 @@ final class ExpenseService {
             taxMinor: s.taxMinor,
             adjustmentMinor: s.adjustmentMinor,
             deliveryMinor: s.deliveryMinor,
+            shareUnits: s.shareUnits,
+            presentFrom: s.presentFrom,
+            presentTo: s.presentTo,
           ),
       ],
       items: items,
@@ -384,5 +405,8 @@ final class ExpenseService {
     ..serviceMinor = s.serviceMinor
     ..taxMinor = s.taxMinor
     ..adjustmentMinor = s.adjustmentMinor
-    ..deliveryMinor = s.deliveryMinor);
+    ..deliveryMinor = s.deliveryMinor
+    ..shareUnits = s.shareUnits
+    ..presentFrom = s.presentFrom == null ? null : dateOf(s.presentFrom!)
+    ..presentTo = s.presentTo == null ? null : dateOf(s.presentTo!));
 }

@@ -12,6 +12,7 @@ part 'member_dto.g.dart';
 ///
 /// Properties:
 /// * [createdAt] 
+/// * [defaultShareUnits] 
 /// * [displayName] 
 /// * [hasAccount] 
 /// * [id] 
@@ -23,6 +24,9 @@ part 'member_dto.g.dart';
 abstract class MemberDto implements Built<MemberDto, MemberDtoBuilder> {
   @BuiltValueField(wireName: r'createdAt')
   DateTime get createdAt;
+
+  @BuiltValueField(wireName: r'defaultShareUnits')
+  int? get defaultShareUnits;
 
   @BuiltValueField(wireName: r'displayName')
   String get displayName;
@@ -73,6 +77,13 @@ class _$MemberDtoSerializer implements PrimitiveSerializer<MemberDto> {
       object.createdAt,
       specifiedType: const FullType(DateTime),
     );
+    if (object.defaultShareUnits != null) {
+      yield r'defaultShareUnits';
+      yield serializers.serialize(
+        object.defaultShareUnits,
+        specifiedType: const FullType.nullable(int),
+      );
+    }
     yield r'displayName';
     yield serializers.serialize(
       object.displayName,
@@ -137,6 +148,14 @@ class _$MemberDtoSerializer implements PrimitiveSerializer<MemberDto> {
             specifiedType: const FullType(DateTime),
           ) as DateTime;
           result.createdAt = valueDes;
+          break;
+        case r'defaultShareUnits':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
+          if (valueDes == null) continue;
+          result.defaultShareUnits = valueDes;
           break;
         case r'displayName':
           final valueDes = serializers.deserialize(

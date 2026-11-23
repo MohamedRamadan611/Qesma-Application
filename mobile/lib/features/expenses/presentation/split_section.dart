@@ -8,15 +8,18 @@ import '../../../core/widgets/widgets.dart';
 import '../application/expense_form_controller.dart';
 import '../application/expense_form_state.dart';
 import '../application/expense_preview_controller.dart';
+import '../application/shares_field_errors.dart';
 import '../../../core/theme/palette.dart';
+import 'shares_editor.dart';
 
-/// The split part of the form (P5-01): the four tabs and the member list.
+/// The split part of the form (P5-01): the split method and the member list.
 ///
 /// - **Everyone / Selected:** every number per member is the server's (`members[].owedMinor` of
 ///   the preview). While the preview is loading, failed or older than the input, the amounts are
 ///   not shown as if they were current.
 /// - **Exact:** boxes the user edits; they start from the server's equal split.
 /// - **Restaurant bill:** opens the FL6 stub; the form keeps its mode.
+/// - **Shares (SA19):** [SharesEditor]; its numbers are the preview's, like Everyone / Selected.
 class SplitSection extends ConsumerWidget {
   const SplitSection({super.key, required this.formKey, required this.form, required this.members, required this.previewKey});
 
@@ -38,6 +41,11 @@ class SplitSection extends ConsumerWidget {
 
     final current = preview.isCurrentFor(previewKey) ? preview.preview : null;
     final owedByMember = {for (final s in current?.members ?? const <ShareView>[]) s.memberId: s.owedMinor};
+    // Shares: the server's refusal names a person's row or the period; shown under it, never as the English text.
+    final previewFailure = preview.status == PreviewStatus.failed && preview.key == previewKey ? preview.failure : null;
+    final sharesErrors = mode == SplitMode.shares
+        ? sharesFieldErrorsOf([view.failure, previewFailure], form.participantIds([for (final m in members) m.id]))
+        : SharesFieldErrors.none;
 
     return AppCard(
       child: Column(
@@ -48,7 +56,7 @@ class SplitSection extends ConsumerWidget {
             onChosen: controller.setSplitMode,
           ),
           const SizedBox(height: QesmaSpacing.md),
-          if (mode == SplitMode.all || mode == SplitMode.selected) _PreviewStatus(form: form, state: preview, current: current != null, previewKey: previewKey, formKey: formKey),
+          if (mode == SplitMode.all || mode == SplitMode.selected || (mode == SplitMode.shares && sharesErrors.isEmpty)) _PreviewStatus(form: form, state: preview, current: current != null, previewKey: previewKey, formKey: formKey),
           if (mode == SplitMode.exact) ...[
             Row(
               children: [
@@ -76,7 +84,15 @@ class SplitSection extends ConsumerWidget {
               ),
             const SizedBox(height: QesmaSpacing.sm),
           ],
-          if (mode != SplitMode.itemized)
+          if (mode == SplitMode.shares)
+            SharesEditor(
+              formKey: formKey,
+              form: form,
+              members: members,
+              previewShares: {for (final s in current?.members ?? const <ShareView>[]) s.memberId: s},
+              errors: sharesErrors,
+            ),
+          if (mode != SplitMode.itemized && mode != SplitMode.shares)
             for (final member in members)
             Padding(
               padding: const EdgeInsets.only(bottom: QesmaSpacing.sm),
@@ -110,6 +126,7 @@ class SplitMethodRow extends StatelessWidget {
         SplitMode.selected => l10n.expenseFormSplitSelected,
         SplitMode.exact => l10n.expenseSplitExact,
         SplitMode.itemized => l10n.expenseSplitItemized,
+        SplitMode.shares => l10n.expenseSplitShares,
       };
 
   static String subtitleOf(AppLocalizations l10n, SplitMode mode) => switch (mode) {
@@ -117,6 +134,7 @@ class SplitMethodRow extends StatelessWidget {
         SplitMode.selected => l10n.expenseFormSplitSubtitleSelected,
         SplitMode.exact => l10n.expenseFormSplitSubtitleExact,
         SplitMode.itemized => l10n.expenseFormSplitSubtitleItemized,
+        SplitMode.shares => l10n.expenseFormSplitSubtitleShares,
       };
 
   static IconData iconOf(SplitMode mode) => switch (mode) {
@@ -124,6 +142,7 @@ class SplitMethodRow extends StatelessWidget {
         SplitMode.selected => Icons.group_outlined,
         SplitMode.exact => Icons.pin_outlined,
         SplitMode.itemized => Icons.receipt_long,
+        SplitMode.shares => Icons.pie_chart_outline,
       };
 
   Future<void> _choose(BuildContext context) async {

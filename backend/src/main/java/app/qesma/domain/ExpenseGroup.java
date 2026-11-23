@@ -6,6 +6,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -47,6 +48,16 @@ public class ExpenseGroup {
 
     @Column(name = "treasurer_member_id")
     private UUID treasurerMemberId;
+
+    // A190: trip budget settings; each optional and clearable. Budget figures are computed, never stored (A191).
+    @Column(name = "budget_minor")
+    private Long budgetMinor;
+
+    @Column(name = "trip_start_date")
+    private LocalDate tripStartDate;
+
+    @Column(name = "trip_end_date")
+    private LocalDate tripEndDate;
 
     @Column(name = "member_seq", nullable = false, insertable = false, updatable = false)
     private int memberSeq;
@@ -93,6 +104,26 @@ public class ExpenseGroup {
     /** BSA1: the caller (GroupService) has checked the member is ACTIVE in this group and the pool is untouched. */
     public void setTreasurer(UUID memberId, Instant now) {
         this.treasurerMemberId = memberId;
+        this.updatedAt = now;
+    }
+
+    public Long getBudgetMinor() {
+        return budgetMinor;
+    }
+
+    public LocalDate getTripStartDate() {
+        return tripStartDate;
+    }
+
+    public LocalDate getTripEndDate() {
+        return tripEndDate;
+    }
+
+    /** A190, A193: the caller (GroupService) has validated the resulting state; null clears a field. */
+    public void setBudget(Long budgetMinor, LocalDate tripStartDate, LocalDate tripEndDate, Instant now) {
+        this.budgetMinor = budgetMinor;
+        this.tripStartDate = tripStartDate;
+        this.tripEndDate = tripEndDate;
         this.updatedAt = now;
     }
 

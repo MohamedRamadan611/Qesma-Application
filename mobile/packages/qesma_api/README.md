@@ -76,7 +76,7 @@ Class | Method | HTTP request | Description
 [*AuthControllerApi*](doc/AuthControllerApi.md) | [**signInWithGoogle**](doc/AuthControllerApi.md#signinwithgoogle) | **POST** /api/v1/auth/google | 
 [*AuthControllerApi*](doc/AuthControllerApi.md) | [**signOut**](doc/AuthControllerApi.md#signout) | **POST** /api/v1/auth/logout | 
 [*BalanceControllerApi*](doc/BalanceControllerApi.md) | [**getBalances**](doc/BalanceControllerApi.md#getbalances) | **GET** /api/v1/groups/{gid}/balances | Net balance per member and the simplified transfers that settle the group
-[*ExpenseControllerApi*](doc/ExpenseControllerApi.md) | [**createExpense**](doc/ExpenseControllerApi.md#createexpense) | **POST** /api/v1/groups/{gid}/expenses | Create an expense (EQUAL, EXACT or ITEMIZED)
+[*ExpenseControllerApi*](doc/ExpenseControllerApi.md) | [**createExpense**](doc/ExpenseControllerApi.md#createexpense) | **POST** /api/v1/groups/{gid}/expenses | Create an expense (EQUAL, EXACT, ITEMIZED or SHARES)
 [*ExpenseControllerApi*](doc/ExpenseControllerApi.md) | [**deleteExpense**](doc/ExpenseControllerApi.md#deleteexpense) | **DELETE** /api/v1/groups/{gid}/expenses/{eid} | Delete an expense (soft delete, keeps the history)
 [*ExpenseControllerApi*](doc/ExpenseControllerApi.md) | [**getExpense**](doc/ExpenseControllerApi.md#getexpense) | **GET** /api/v1/groups/{gid}/expenses/{eid} | 
 [*ExpenseControllerApi*](doc/ExpenseControllerApi.md) | [**listExpenseRevisions**](doc/ExpenseControllerApi.md#listexpenserevisions) | **GET** /api/v1/groups/{gid}/expenses/{eid}/revisions | History of an expense, oldest first
@@ -187,6 +187,7 @@ Class | Method | HTTP request | Description
  - [SettlementCommand](doc/SettlementCommand.md)
  - [SettlementView](doc/SettlementView.md)
  - [ShareInput](doc/ShareInput.md)
+ - [ShareParticipantInput](doc/ShareParticipantInput.md)
  - [ShareView](doc/ShareView.md)
  - [TaxCharge](doc/TaxCharge.md)
  - [TaxInput](doc/TaxInput.md)

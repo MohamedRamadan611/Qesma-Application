@@ -38,14 +38,14 @@ class ExpenseShareCard extends StatelessWidget {
         section(l10n.expenseBreakdownTitle),
         for (final s in expense.shares) ...[
           ShareCardRow(label: nameOf(s.memberId), value: moneyDisplay(l10n, s.owedMinor), boldLabel: true),
-          ..._detailLines(l10n, s, items, muted),
+          ..._detailLines(l10n, s, items, muted, theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
         ],
       ],
     );
   }
 
   /// The parts of one person's share as a small grey line under their row.
-  List<Widget> _detailLines(AppLocalizations l10n, ShareView share, List<ItemView> items, TextStyle? style) {
+  List<Widget> _detailLines(AppLocalizations l10n, ShareView share, List<ItemView> items, TextStyle? style, TextStyle? mainStyle) {
     final parts = breakdownOf(share);
     final texts = [
       if (parts.itemsMinor != null) l10n.expensePartItems(moneyDisplay(l10n, parts.itemsMinor!)),
@@ -55,8 +55,14 @@ class ExpenseShareCard extends StatelessWidget {
       if (parts.deliveryMinor != null) l10n.expensePartDelivery(moneyDisplay(l10n, parts.deliveryMinor!)),
       if (parts.adjustmentMinor != null) l10n.expensePartAdjustment(moneyDisplay(l10n, parts.adjustmentMinor!, signed: true)),
     ];
+    final names = [
+      for (final item in items)
+        if (item.assigneeMemberIds.contains(share.memberId)) item.quantity > 1 ? '${item.name} ×${item.quantity}' : item.name,
+    ];
+    // Main line: the parts of the share; the item names follow as a description.
     return [
-      if (texts.isNotEmpty) Text(texts.join(' + '), style: style),
+      if (texts.isNotEmpty) Text(texts.join(' + '), style: mainStyle),
+      if (names.isNotEmpty) Text(l10n.expensePersonItemsList(names.join(l10n.expenseListSeparator)), style: style),
       const SizedBox(height: 6),
     ];
   }

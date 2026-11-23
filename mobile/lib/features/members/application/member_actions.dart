@@ -5,7 +5,7 @@ import '../../../core/permissions/permissions.dart';
 
 /// What the options sheet of one member can offer (FL12). Only a UI decision: the server is the authority and
 /// every action still handles `403 FORBIDDEN`, `404` and `409`/`422`.
-enum MemberAction { rename, delete, promote, demote, unlink, markLeft, reactivate, transferOwnership }
+enum MemberAction { rename, defaultShare, delete, promote, demote, unlink, markLeft, reactivate, transferOwnership }
 
 /// The actions the [viewer] may be offered for [target], from the viewer's role and the target's state.
 /// Pure: no I/O, no state. The matrix is in `.claude/mobile/SCREEN_MAP.md` and the FL12 plan.
@@ -22,6 +22,8 @@ Set<MemberAction> memberActionsFor({required Permissions viewer, required Member
 
   return {
     MemberAction.rename,
+    // SA19: the default shares of a shares split, offered with rename (the same permission: `canManageMembers`).
+    MemberAction.defaultShare,
     // Ghosts only: a person with an account leaves, or is unlinked first.
     if (!self && !linked && role == GroupRole.member) MemberAction.delete,
     if (viewer.canChangeRoles && !left && !self && linked && role == GroupRole.member) MemberAction.promote,

@@ -492,6 +492,29 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupPoolMe => 'أنا';
 
   @override
+  String get groupMoneyModeLabel => 'تتبّع فلوس الجروب';
+
+  @override
+  String get groupMoneyModeNone => 'من غير إضافات';
+
+  @override
+  String get groupMoneyModeNoneHint => 'تسجّلوا مين دفع ومين عليه بس.';
+
+  @override
+  String get groupBudgetToggle => 'تحديد ميزانية للرحلة';
+
+  @override
+  String get groupBudgetToggleHint => 'تابعوا صرفكم مقارنة بحد معيّن.';
+
+  @override
+  String get groupMoneyModeLocked =>
+      'الجروب يا صندوق يا ميزانية، مش الاتنين. والصندوق مينفعش يتضاف بعدين.';
+
+  @override
+  String get groupBudgetSetFailed =>
+      'الجروب اتعمل بس الميزانية ماتحفظتش. حدّدوها من إعدادات الجروب.';
+
+  @override
   String get groupPoolSetFailed =>
       'الجروب اتعمل بس أمين الصندوق ماتحددش. حدده من إعدادات الجروب.';
 
@@ -793,6 +816,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get expenseSplitItemized => 'فاتورة مفصلة';
 
   @override
+  String get expenseSplitShares => 'بالحصص';
+
+  @override
   String get expenseDetailsTitle => 'تفاصيل المصروف';
 
   @override
@@ -865,6 +891,11 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String expenseBreakdownCount(String count) {
     return '$count أفراد';
+  }
+
+  @override
+  String expensePersonItemsList(String names) {
+    return 'الأصناف: $names';
   }
 
   @override
@@ -3762,4 +3793,261 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get expenseFormChange => 'تغيير';
+
+  @override
+  String get expenseFormSplitSubtitleShares =>
+      'كل واحد بعدد حصص، وممكن بأيام الإقامة';
+
+  @override
+  String get sharesPeopleTitle => 'الأشخاص';
+
+  @override
+  String get sharesEditPeople => 'عدّل الأشخاص';
+
+  @override
+  String get sharesPickerTitle => 'مين بيشارك؟';
+
+  @override
+  String get sharesHint => 'اللي حصصه أكتر بيدفع أكتر.';
+
+  @override
+  String get sharesNeedPeople => 'اختار شخص واحد على الأقل.';
+
+  @override
+  String get sharesUnitsOne => 'حصة واحدة';
+
+  @override
+  String get sharesUnitsTwo => 'حصتين';
+
+  @override
+  String sharesUnitsFew(String count) {
+    return '$count حصص';
+  }
+
+  @override
+  String sharesUnitsMany(String count) {
+    return '$count حصة';
+  }
+
+  @override
+  String get sharesStepperLabel => 'الحصص';
+
+  @override
+  String get sharesStepperMinus => 'قلّل الحصص';
+
+  @override
+  String get sharesStepperPlus => 'زوّد الحصص';
+
+  @override
+  String get sharesPeriodTitle => 'فترة الفاتورة';
+
+  @override
+  String get sharesPeriodSubtitle => 'لو فيه حد قعد جزء من الفترة بس';
+
+  @override
+  String get sharesPeriodPick => 'حدّد الفترة';
+
+  @override
+  String get sharesPeriodChange => 'غيّر الفترة';
+
+  @override
+  String sharesRange(String from, String to) {
+    return '$from – $to';
+  }
+
+  @override
+  String sharesPeriodLine(String range) {
+    return 'فترة الفاتورة: $range';
+  }
+
+  @override
+  String get sharesDaysPresent => 'أيام الإقامة';
+
+  @override
+  String get sharesFullPeriod => 'الفترة كلها';
+
+  @override
+  String get sharesPresencePick => 'حدّد أيام الإقامة';
+
+  @override
+  String get sharesPresenceReset => 'ارجع للفترة كلها';
+
+  @override
+  String sharesPresenceFor(String name) {
+    return 'أيام إقامة $name';
+  }
+
+  @override
+  String sharesDaysPresentLine(String range) {
+    return 'أيام الإقامة: $range';
+  }
+
+  @override
+  String get sharesErrUnits => 'الحصص من 1 لـ 100.';
+
+  @override
+  String get sharesErrPresence => 'أيام الإقامة لازم تبقى جوه فترة الفاتورة.';
+
+  @override
+  String get sharesErrPeriod =>
+      'فترة الفاتورة مش مظبوطة. اختار أول وآخر يوم تاني.';
+
+  @override
+  String sharesRowSpoken(String name, String units, String amount) {
+    return '$name، $units، نصيبه $amount';
+  }
+
+  @override
+  String sharesRowSpokenNoAmount(String name, String units) {
+    return '$name، $units';
+  }
+
+  @override
+  String sharesHistoryRow(String name, String units, String range) {
+    return '$name · $units · $range';
+  }
+
+  @override
+  String sharesHistoryRowNoRange(String name, String units) {
+    return '$name · $units';
+  }
+
+  @override
+  String get membersActionDefaultShare => 'الحصة الافتراضية';
+
+  @override
+  String get membersActionDefaultShareHint => 'بتتحط تلقائي لما التقسيم بالحصص';
+
+  @override
+  String membersDefaultShareCurrent(String units) {
+    return 'الحالية: $units';
+  }
+
+  @override
+  String memberDefaultShareTitle(String name) {
+    return 'الحصة الافتراضية لـ $name';
+  }
+
+  @override
+  String get memberDefaultShareBody =>
+      'بتتحط تلقائي لما تقسم بالحصص، وتقدر تغيّرها في كل مصروف.';
+
+  @override
+  String get memberDefaultShareClear => 'امسح الحصة الافتراضية';
+
+  @override
+  String get poolBalanceLabel => 'رصيد الصندوق';
+
+  @override
+  String get budgetSectionTitle => 'الميزانية';
+
+  @override
+  String get budgetSectionHint =>
+      'حدّدوا ميزانية للرحلة وتابعوا الصرف. دي للمتابعة بس ومش بتغيّر حساب حد.';
+
+  @override
+  String get budgetAmountLabel => 'مبلغ الميزانية';
+
+  @override
+  String get budgetAmountError => 'اكتب مبلغ أكبر من صفر';
+
+  @override
+  String get budgetStartLabel => 'أول يوم في الرحلة (اختياري)';
+
+  @override
+  String get budgetEndLabel => 'آخر يوم في الرحلة (اختياري)';
+
+  @override
+  String get budgetDateNotSet => 'مش محدّد';
+
+  @override
+  String get budgetDateClear => 'مسح التاريخ';
+
+  @override
+  String get budgetTopUpLabel => 'زوّد الميزانية';
+
+  @override
+  String get budgetTopUpAction => 'إضافة';
+
+  @override
+  String get budgetTopUpHint =>
+      'المبلغ بيتضاف على الميزانية اللي فوق. اضغط حفظ عشان يتثبّت.';
+
+  @override
+  String get budgetTopUpError =>
+      'اكتب مبلغ أكبر من صفر وميعدّيش الحد الأقصى للميزانية';
+
+  @override
+  String get budgetClear => 'مسح الميزانية';
+
+  @override
+  String get budgetCardTitle => 'الميزانية المتبقية';
+
+  @override
+  String budgetSpentOf(String spent, String budget) {
+    return 'اتصرف $spent من $budget';
+  }
+
+  @override
+  String budgetProgress(String percent) {
+    return '$percent من الميزانية';
+  }
+
+  @override
+  String budgetOverBy(String amount) {
+    return 'تخطّيتوا الميزانية بـ $amount';
+  }
+
+  @override
+  String get budgetOpenDetails => 'تفاصيل الميزانية';
+
+  @override
+  String get budgetScreenTitle => 'الميزانية';
+
+  @override
+  String get budgetDailyAverage => 'متوسط الصرف في اليوم';
+
+  @override
+  String budgetOverDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'على $count يوم',
+      many: 'على $count يوم',
+      few: 'على $count أيام',
+      two: 'على يومين',
+      one: 'على يوم واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get budgetPerDayLeft => 'تقدروا تصرفوا في اليوم';
+
+  @override
+  String budgetDaysLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'باقي $count يوم',
+      many: 'باقي $count يوم',
+      few: 'باقي $count أيام',
+      two: 'باقي يومين',
+      one: 'باقي يوم واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get budgetCostPerHead => 'نصيب الفرد من الميزانية (تقريبًا)';
+
+  @override
+  String get budgetCostPerHeadHint =>
+      'تقدير بس: نصيب كل واحد الفعلي على حسب تقسيم كل مصروف.';
+
+  @override
+  String get budgetPerDayTitle => 'الصرف في كل يوم';
+
+  @override
+  String get budgetNoExpenses => 'لسه مفيش مصاريف.';
 }

@@ -12,10 +12,11 @@ import '../../../core/theme/palette.dart';
 /// One row of the groups list (P2-01): type icon, name, type tag, last activity, total spent,
 /// member count and the "you are owed / you owe / settled" chip from the server's `yourNetMinor`.
 class GroupCard extends StatelessWidget {
-  const GroupCard({super.key, required this.group, required this.onTap});
+  const GroupCard({super.key, required this.group, required this.onTap, this.onLongPress});
 
   final GroupSummaryDto group;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +34,7 @@ class GroupCard extends StatelessWidget {
 
     return AppCard(
       onTap: onTap,
+      onLongPress: onLongPress,
       semanticLabel: l10n.groupCardSpoken(group.name, type.label(l10n), members, moneySpoken(l10n, group.totalSpentMinor), balanceSpoken),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:qesma/core/app_mode.dart';
+import 'package:qesma/core/features_for_mode.dart';
 import 'scope_guard_test.dart' show copyViolations;
 
 /// Per-mode scope guard (SA4, STANDALONE_SPEC 2 and 15). Build mode `local` must not be able to show a server-only
@@ -67,6 +69,28 @@ List<String> ungatedServerRoutes(String router) {
   return hits;
 }
 
+/// ARB keys of the shares split (SA19). It works in both modes, so its copy must read right in local mode too.
+bool _isSharesKey(String key) =>
+    key.startsWith('shares') || key.startsWith('membersActionDefaultShare') || key.startsWith('membersDefaultShare') || key.startsWith('memberDefaultShare') || key == 'expenseSplitShares' || key == 'expenseFormSplitSubtitleShares';
+
+/// Server-only words in the given strings (no key prefix filter).
+List<String> serverWordsIn(Map<String, Map<String, dynamic>> arb, bool Function(String key) wanted) {
+  final hits = <String>[];
+  arb.forEach((lang, strings) {
+    strings.forEach((key, value) {
+      if (value is! String || key.startsWith('@') || !wanted(key)) return;
+      final text = value.toLowerCase();
+      for (final word in _localBannedWords) {
+        if (RegExp('\\b${RegExp.escape(word)}\\b').hasMatch(text)) hits.add('$lang:$key contains "$word"');
+      }
+      for (final word in _localBannedArabic) {
+        if (value.contains(word)) hits.add('$lang:$key contains "$word"');
+      }
+    });
+  });
+  return hits;
+}
+
 List<String> localCopyViolations(Map<String, Map<String, dynamic>> arb) {
   final hits = <String>[...copyViolations(arb, const <String>{})];
   arb.forEach((lang, strings) {
@@ -104,6 +128,14 @@ void main() {
     expect(local['ar']!.keys.toSet(), local['en']!.keys.toSet().union(local['ar']!.keys.where((k) => k.startsWith('@')).toSet()));
   });
 
+  test('the shares copy (SA19) has no server-only word: the feature works in local mode', () {
+    final shares = {for (final e in arb.entries) e.key: {for (final k in e.value.entries.where((k) => _isSharesKey(k.key))) k.key: k.value}};
+    expect(shares['en']!.keys.where((k) => !k.startsWith('@')).length, greaterThan(20), reason: 'the shares keys exist');
+    final hits = serverWordsIn(shares, (_) => true);
+    expect(hits, isEmpty, reason: hits.join('\n'));
+    expect(serverWordsIn({'en': <String, dynamic>{'sharesX': 'Ask the owner to join'}}, _isSharesKey), isNotEmpty, reason: 'the check is alive');
+  });
+
   test('every use of a server-only feature outside its own files goes through the mode table', () {
     final hits = ungatedServerUses(sources);
     expect(hits, isEmpty, reason: hits.join('\n'));
@@ -112,6 +144,17 @@ void main() {
   test('every server-only route of the route table is declared only when its feature is on', () {
     final hits = ungatedServerRoutes(sources['lib/core/router/app_router.dart']!);
     expect(hits, isEmpty, reason: hits.join('\n'));
+  });
+
+  test('the trip budget exists in local mode only (SA20): the tables, the route and both entry points are gated', () {
+    expect(ModeFeatures.of(AppMode.server).budget, isFalse);
+    expect(ModeFeatures.of(AppMode.local).budget, isTrue);
+    expect(sources['lib/core/router/app_router.dart'], contains("if (features.budget) GoRoute(path: 'budget'"));
+    expect(sources['lib/features/groups/presentation/group_home_screen.dart'], contains('modeFeaturesProvider).budget && group.budgetMinor != null'));
+    expect(sources['lib/features/groups/presentation/edit_group_screen.dart'], contains('modeFeaturesProvider).budget;'));
+    expect(sources['lib/features/groups/presentation/edit_group_screen.dart'], contains('if (budgetOn && _treasurerId == null) ...['));
+    // A199: the create screen offers the budget choice only where the budget exists.
+    expect(sources['lib/features/groups/presentation/create_group_screen.dart'], contains('if (features.budget)'));
   });
 
   group('the guard is alive', () {

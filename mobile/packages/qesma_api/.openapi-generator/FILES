@@ -76,6 +76,7 @@ doc/SettlementCommand.md
 doc/SettlementControllerApi.md
 doc/SettlementView.md
 doc/ShareInput.md
+doc/ShareParticipantInput.md
 doc/ShareView.md
 doc/TaxCharge.md
 doc/TaxInput.md
@@ -177,6 +178,7 @@ lib/src/model/service_input.dart
 lib/src/model/settlement_command.dart
 lib/src/model/settlement_view.dart
 lib/src/model/share_input.dart
+lib/src/model/share_participant_input.dart
 lib/src/model/share_view.dart
 lib/src/model/tax_charge.dart
 lib/src/model/tax_input.dart
@@ -270,6 +272,7 @@ test/settlement_command_test.dart
 test/settlement_controller_api_test.dart
 test/settlement_view_test.dart
 test/share_input_test.dart
+test/share_participant_input_test.dart
 test/share_view_test.dart
 test/tax_charge_test.dart
 test/tax_input_test.dart

@@ -4,6 +4,7 @@ import app.qesma.api.ApiException;
 import app.qesma.api.ErrorCode;
 import app.qesma.domain.ExpenseGroup;
 import app.qesma.domain.Member;
+import app.qesma.engine.Limits;
 import app.qesma.persistence.ExpenseGroupRepository;
 import app.qesma.persistence.MemberRepository;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -140,8 +141,20 @@ public class MemberService {
                 GroupEventRecorder.Recipients.none());           // feed only: the account has no access any more
     }
 
-    /** The fields of {@code PATCH /members/{mid}}; null means "not sent". Nothing else can be set (B12, A80). */
-    public record MemberPatch(String displayName, String role, String status) {
+    /**
+     * The fields of {@code PATCH /members/{mid}}; null means "not sent". {@code clearDefaultShareUnits} clears the
+     * default weight (A193). Nothing else can be set (B12, A80).
+     */
+    public record MemberPatch(String displayName, String role, String status, Integer defaultShareUnits,
+                              boolean clearDefaultShareUnits) {
+
+        public MemberPatch(String displayName, String role, String status) {
+            this(displayName, role, status, null, false);
+        }
+
+        boolean touchesDefaultShareUnits() {
+            return defaultShareUnits != null || clearDefaultShareUnits;
+        }
     }
 
     /**
@@ -153,10 +166,12 @@ public class MemberService {
     public Member update(UUID userId, UUID groupId, UUID memberId, MemberPatch patch) {
         GroupContext ctx = access.requireForUpdate(userId, groupId, Permission.READ_GROUP);
         Member member = access.requireMemberInGroup(ctx, memberId);
-        if (patch == null || patch.displayName() == null && patch.role() == null && patch.status() == null) {
-            throw ApiException.validation("Send at least one of displayName, role or status");
+        if (patch == null || patch.displayName() == null && patch.role() == null && patch.status() == null
+                && !patch.touchesDefaultShareUnits()) {
+            throw ApiException.validation(
+                    "Send at least one of displayName, role, status, defaultShareUnits or clearDefaultShareUnits");
         }
-        if (patch.displayName() != null) {
+        if (patch.displayName() != null || patch.touchesDefaultShareUnits()) { // A188: the same permission as a rename
             access.requireAlso(ctx, userId, Permission.MANAGE_MEMBERS);
         }
         if (patch.role() != null) {
@@ -188,6 +203,14 @@ public class MemberService {
                 throw ApiException.validation("Only an active member can get a role");
             }
         }
+        if (patch.defaultShareUnits() != null && patch.clearDefaultShareUnits()) {
+            throw ApiException.validation("defaultShareUnits and clearDefaultShareUnits cannot both be sent");
+        }
+        if (patch.defaultShareUnits() != null && (patch.defaultShareUnits() < Limits.MIN_SHARE_UNITS
+                || patch.defaultShareUnits() > Limits.MAX_SHARE_UNITS)) {
+            throw ApiException.validation("defaultShareUnits must be between " + Limits.MIN_SHARE_UNITS + " and "
+                    + Limits.MAX_SHARE_UNITS);
+        }
         String name = null;
         if (patch.displayName() != null) {
             name = FieldRules.name(patch.displayName(), FieldRules.MEMBER_NAME_MAX, "displayName");
@@ -198,6 +221,13 @@ public class MemberService {
         if (name != null && !name.equals(member.getDisplayName())) {
             member.rename(name);
             record("renamed", userId, groupId, memberId);
+        }
+        if (patch.touchesDefaultShareUnits()) {
+            Integer units = patch.clearDefaultShareUnits() ? null : patch.defaultShareUnits();
+            if (!java.util.Objects.equals(units, member.getDefaultShareUnits())) {
+                member.setDefaultShareUnits(units); // A188: a prefill only; no existing expense changes
+                record("default_share_units_changed", userId, groupId, memberId);
+            }
         }
         UUID actor = ctx.me().getId();
         if (Member.STATUS_LEFT.equals(newStatus) && !Member.STATUS_LEFT.equals(member.getStatus())) {

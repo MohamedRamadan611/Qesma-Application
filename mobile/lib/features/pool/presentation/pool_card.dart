@@ -40,7 +40,7 @@ class PoolCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(l10n.poolSectionTitle, style: theme.textTheme.titleSmall),
+                  Text(l10n.poolBalanceLabel, style: theme.textTheme.titleSmall),
                   Text(
                     l10n.poolTreasurerIs(fsIsolate(treasurer)),
                     style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary),

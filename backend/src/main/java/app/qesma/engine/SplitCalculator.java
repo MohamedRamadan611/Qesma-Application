@@ -1,5 +1,7 @@
 package app.qesma.engine;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -7,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** EQUAL (spec 7.2) and EXACT (spec 7.3) splits. Results map memberId to owed minor units. */
+/** EQUAL (spec 7.2), EXACT (spec 7.3) and SHARES (STANDALONE_SPEC 19) splits. Results map memberId to owed minor units. */
 public final class SplitCalculator {
 
     private SplitCalculator() {
@@ -42,6 +44,84 @@ public final class SplitCalculator {
             owed.put(sorted.get(i).id(), parts[i]);
         }
         return owed;
+    }
+
+    /**
+     * SHARES (STANDALONE_SPEC 19.1, A185-A187): weight = {@code shareUnits × days present} with a period, else
+     * {@code shareUnits}; owed = {@link Lrm#allocate} (ties to the lower {@code sortOrder}), so Σ owed = total.
+     * Days are inclusive; presence bounds default to the period bounds. Participants are returned in
+     * {@code sortOrder} order, including any that owe 0.
+     *
+     * @param period nullable; when present both bounds are required, {@code to ≥ from}, at most
+     *               {@link Limits#MAX_PERIOD_DAYS} days
+     */
+    public static Map<String, Long> shares(long total, List<WeightedShare> shares, SharePeriod period) {
+        if (total <= 0) {
+            throw EngineException.invalid("Total must be greater than zero");
+        }
+        if (shares.isEmpty()) {
+            throw EngineException.invalid("At least one participant is required");
+        }
+        if (period != null) {
+            if (period.from() == null || period.to() == null) {
+                throw EngineException.invalid("periodFrom and periodTo must both be set or both be absent");
+            }
+            if (period.to().isBefore(period.from())) {
+                throw EngineException.invalid("periodTo must not be before periodFrom");
+            }
+            if (inclusiveDays(period.from(), period.to()) > Limits.MAX_PERIOD_DAYS) {
+                throw EngineException.invalid("The period must be at most " + Limits.MAX_PERIOD_DAYS + " days");
+            }
+        }
+        List<WeightedShare> sorted = new ArrayList<>(shares);
+        sorted.sort(java.util.Comparator.comparingInt(WeightedShare::sortOrder));
+        Set<String> seen = new HashSet<>();
+        long[] weights = new long[sorted.size()];
+        int[] order = new int[sorted.size()];
+        long weightSum = 0;
+        for (int i = 0; i < sorted.size(); i++) {
+            WeightedShare s = sorted.get(i);
+            if (!seen.add(s.memberId())) {
+                throw EngineException.invalid("Duplicate participant");
+            }
+            if (s.shareUnits() < Limits.MIN_SHARE_UNITS || s.shareUnits() > Limits.MAX_SHARE_UNITS) {
+                throw EngineException.invalid("shareUnits must be between " + Limits.MIN_SHARE_UNITS + " and "
+                        + Limits.MAX_SHARE_UNITS);
+            }
+            long days = 1;
+            if (period == null) {
+                if (s.presentFrom() != null || s.presentTo() != null) {
+                    throw EngineException.invalid("Presence dates need a period");
+                }
+            } else {
+                LocalDate from = s.presentFrom() == null ? period.from() : s.presentFrom();
+                LocalDate to = s.presentTo() == null ? period.to() : s.presentTo();
+                if (from.isBefore(period.from()) || to.isAfter(period.to())) {
+                    throw EngineException.invalid("Presence must lie inside the period");
+                }
+                if (to.isBefore(from)) {
+                    throw EngineException.invalid("presentTo must not be before presentFrom");
+                }
+                days = inclusiveDays(from, to);
+            }
+            weights[i] = Exact.multiply(s.shareUnits(), days);
+            weightSum = Exact.add(weightSum, weights[i]);
+            order[i] = s.sortOrder();
+        }
+        if (weightSum == 0) { // unreachable by the rules above; rejected rather than falling back to equal (A187)
+            throw EngineException.invalid("The sum of weights must be greater than zero");
+        }
+        long[] parts = Lrm.allocate(total, weights, order);
+        Map<String, Long> owed = new LinkedHashMap<>();
+        for (int i = 0; i < parts.length; i++) {
+            owed.put(sorted.get(i).memberId(), parts[i]);
+        }
+        return owed;
+    }
+
+    /** Inclusive day count: the same date is one day. */
+    public static long inclusiveDays(LocalDate from, LocalDate to) {
+        return Exact.add(ChronoUnit.DAYS.between(from, to), 1);
     }
 
     /**

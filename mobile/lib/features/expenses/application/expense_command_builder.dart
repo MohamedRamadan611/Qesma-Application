@@ -16,6 +16,9 @@ const String kPreviewTitle = 'x';
 /// - EQUAL "selected": the explicit selected ids.
 /// - EXACT: `shares` for the selected members with the typed amounts.
 /// - ITEMIZED: [buildItemizedCommand] (items, service, tax, adjustment; no total).
+/// - SHARES (SA19): `shareParticipants` (member, units, and presence only when it is not the whole period) in member
+///   order; `periodFrom`/`periodTo` only while the billing period is on. Never `participantMemberIds`, `shares` or
+///   `items`; the server prorates (this builder never counts days).
 /// - Payers: single = the payer with the total (a copy, not a division); several = the typed
 ///   amounts. A PREVIEW may go without payers, so it sends them only when they are valid.
 ExpenseCommand? buildExpenseCommand(
@@ -60,6 +63,27 @@ ExpenseCommand? buildExpenseCommand(
             ..memberId = id
             ..amountMinor = form.exactMinorOf(id) ?? 0),
       ]);
+    } else if (form.splitMode == SplitMode.shares) {
+      final draft = form.shares;
+      b.splitType = 'SHARES';
+      b.shareParticipants.addAll([
+        for (final row in draft.rowsAmong(memberIds))
+          ShareParticipantInput((s) {
+            s
+              ..memberId = row.memberId
+              ..shareUnits = row.units;
+            if (draft.periodOn && row.hasPresence) {
+              s
+                ..presentFrom = row.presentFrom
+                ..presentTo = row.presentTo;
+            }
+          }),
+      ]);
+      if (draft.periodOn) {
+        b
+          ..periodFrom = draft.periodFrom
+          ..periodTo = draft.periodTo;
+      }
     } else {
       b.splitType = 'EQUAL';
       final explicit = form.splitMode == SplitMode.selected || edit;
@@ -112,6 +136,7 @@ String commandKey(ExpenseCommand command) {
     if (json['payers'] != null) 'payers': sorted('payers'),
     if (json['participantMemberIds'] != null) 'participantMemberIds': sorted('participantMemberIds'),
     if (json['shares'] != null) 'shares': sorted('shares'),
+    if (json['shareParticipants'] != null) 'shareParticipants': sorted('shareParticipants'),
   });
 }
 

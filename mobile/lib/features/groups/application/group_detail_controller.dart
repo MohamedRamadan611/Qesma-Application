@@ -109,8 +109,30 @@ class GroupDetailController extends Notifier<GroupDetailState> {
 
   /// `PATCH` with `If-Match`. On `VERSION_CONFLICT` the caller shows the conflict dialog and
   /// calls [load] when the user agrees; the form keeps what they typed.
-  Future<ApiFailure?> save({required String name, required String type, String? treasurerMemberId}) => _change(() async {
-        final updated = await _repo.update(gid, name: name, type: type, treasurerMemberId: treasurerMemberId);
+  /// SA20: the budget fields are sent only when set; a `clear…` flag removes the stored value.
+  Future<ApiFailure?> save({
+    required String name,
+    required String type,
+    String? treasurerMemberId,
+    int? budgetMinor,
+    bool clearBudget = false,
+    Date? tripStartDate,
+    Date? tripEndDate,
+    bool clearTripStartDate = false,
+    bool clearTripEndDate = false,
+  }) => _change(() async {
+        final updated = await _repo.update(
+          gid,
+          name: name,
+          type: type,
+          treasurerMemberId: treasurerMemberId,
+          budgetMinor: budgetMinor,
+          clearBudget: clearBudget,
+          tripStartDate: tripStartDate,
+          tripEndDate: tripEndDate,
+          clearTripStartDate: clearTripStartDate,
+          clearTripEndDate: clearTripEndDate,
+        );
         state = state.copyWith(group: updated);
       });
 
@@ -119,6 +141,9 @@ class GroupDetailController extends Notifier<GroupDetailState> {
   Future<ApiFailure?> addMember(String name) => _change(() => _repo.addMember(gid, name));
 
   Future<ApiFailure?> renameMember(String mid, String name) => _change(() => _repo.renameMember(gid, mid, name));
+
+  /// SA19: sets (1..100) or clears (null) the member's default share; the group is re-read so the members carry it.
+  Future<ApiFailure?> setDefaultShare(String mid, int? units) => _change(() => _repo.setMemberDefaultShare(gid, mid, units));
 
   Future<ApiFailure?> deleteMember(String mid) => _change(() => _repo.deleteMember(gid, mid));
 

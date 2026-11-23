@@ -20,7 +20,13 @@ class _$ShareView extends ShareView {
   @override
   final int owedMinor;
   @override
+  final Date? presentFrom;
+  @override
+  final Date? presentTo;
+  @override
   final int? serviceMinor;
+  @override
+  final int? shareUnits;
   @override
   final int? taxMinor;
 
@@ -34,7 +40,10 @@ class _$ShareView extends ShareView {
       this.itemsMinor,
       required this.memberId,
       required this.owedMinor,
+      this.presentFrom,
+      this.presentTo,
       this.serviceMinor,
+      this.shareUnits,
       this.taxMinor})
       : super._();
   @override
@@ -54,7 +63,10 @@ class _$ShareView extends ShareView {
         itemsMinor == other.itemsMinor &&
         memberId == other.memberId &&
         owedMinor == other.owedMinor &&
+        presentFrom == other.presentFrom &&
+        presentTo == other.presentTo &&
         serviceMinor == other.serviceMinor &&
+        shareUnits == other.shareUnits &&
         taxMinor == other.taxMinor;
   }
 
@@ -67,7 +79,10 @@ class _$ShareView extends ShareView {
     _$hash = $jc(_$hash, itemsMinor.hashCode);
     _$hash = $jc(_$hash, memberId.hashCode);
     _$hash = $jc(_$hash, owedMinor.hashCode);
+    _$hash = $jc(_$hash, presentFrom.hashCode);
+    _$hash = $jc(_$hash, presentTo.hashCode);
     _$hash = $jc(_$hash, serviceMinor.hashCode);
+    _$hash = $jc(_$hash, shareUnits.hashCode);
     _$hash = $jc(_$hash, taxMinor.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
@@ -82,7 +97,10 @@ class _$ShareView extends ShareView {
           ..add('itemsMinor', itemsMinor)
           ..add('memberId', memberId)
           ..add('owedMinor', owedMinor)
+          ..add('presentFrom', presentFrom)
+          ..add('presentTo', presentTo)
           ..add('serviceMinor', serviceMinor)
+          ..add('shareUnits', shareUnits)
           ..add('taxMinor', taxMinor))
         .toString();
   }
@@ -118,9 +136,21 @@ class ShareViewBuilder implements Builder<ShareView, ShareViewBuilder> {
   int? get owedMinor => _$this._owedMinor;
   set owedMinor(int? owedMinor) => _$this._owedMinor = owedMinor;
 
+  Date? _presentFrom;
+  Date? get presentFrom => _$this._presentFrom;
+  set presentFrom(Date? presentFrom) => _$this._presentFrom = presentFrom;
+
+  Date? _presentTo;
+  Date? get presentTo => _$this._presentTo;
+  set presentTo(Date? presentTo) => _$this._presentTo = presentTo;
+
   int? _serviceMinor;
   int? get serviceMinor => _$this._serviceMinor;
   set serviceMinor(int? serviceMinor) => _$this._serviceMinor = serviceMinor;
+
+  int? _shareUnits;
+  int? get shareUnits => _$this._shareUnits;
+  set shareUnits(int? shareUnits) => _$this._shareUnits = shareUnits;
 
   int? _taxMinor;
   int? get taxMinor => _$this._taxMinor;
@@ -139,7 +169,10 @@ class ShareViewBuilder implements Builder<ShareView, ShareViewBuilder> {
       _itemsMinor = $v.itemsMinor;
       _memberId = $v.memberId;
       _owedMinor = $v.owedMinor;
+      _presentFrom = $v.presentFrom;
+      _presentTo = $v.presentTo;
       _serviceMinor = $v.serviceMinor;
+      _shareUnits = $v.shareUnits;
       _taxMinor = $v.taxMinor;
       _$v = null;
     }
@@ -170,7 +203,10 @@ class ShareViewBuilder implements Builder<ShareView, ShareViewBuilder> {
               memberId, r'ShareView', 'memberId'),
           owedMinor: BuiltValueNullFieldError.checkNotNull(
               owedMinor, r'ShareView', 'owedMinor'),
+          presentFrom: presentFrom,
+          presentTo: presentTo,
           serviceMinor: serviceMinor,
+          shareUnits: shareUnits,
           taxMinor: taxMinor,
         );
     replace(_$result);

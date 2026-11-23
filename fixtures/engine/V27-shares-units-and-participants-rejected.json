@@ -1,0 +1,20 @@
+{
+  "name": "V27 shares, units 0 or 101, the same member twice, or no participant, is rejected",
+  "input": {
+    "members": [ { "id": "A", "sortOrder": 1 }, { "id": "B", "sortOrder": 2 }, { "id": "C", "sortOrder": 3 } ],
+    "expenses": [
+      { "type": "SHARES", "totalMinor": 1000, "payers": [ { "memberId": "A", "amountMinor": 1000 } ],
+        "shareParticipants": [ { "memberId": "A", "shareUnits": 0 }, { "memberId": "B", "shareUnits": 1 } ] },
+      { "type": "SHARES", "totalMinor": 1000, "payers": [ { "memberId": "A", "amountMinor": 1000 } ],
+        "shareParticipants": [ { "memberId": "A", "shareUnits": 101 }, { "memberId": "B", "shareUnits": 1 } ] },
+      { "type": "SHARES", "totalMinor": 1000, "payers": [ { "memberId": "A", "amountMinor": 1000 } ],
+        "shareParticipants": [ { "memberId": "A", "shareUnits": 1 }, { "memberId": "A", "shareUnits": 2 } ] },
+      { "type": "SHARES", "totalMinor": 1000, "payers": [ { "memberId": "A", "amountMinor": 1000 } ],
+        "shareParticipants": [] }
+    ],
+    "settlements": []
+  },
+  "expected": {
+    "expenses": [ { "error": "VALIDATION_ERROR" }, { "error": "VALIDATION_ERROR" }, { "error": "VALIDATION_ERROR" }, { "error": "VALIDATION_ERROR" } ]
+  }
+}

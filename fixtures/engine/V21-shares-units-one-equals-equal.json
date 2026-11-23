@@ -1,0 +1,16 @@
+{
+  "name": "V21 shares, units 1 / 1 / 1 without a period equals EQUAL (300.00)",
+  "input": {
+    "members": [ { "id": "A", "sortOrder": 1 }, { "id": "B", "sortOrder": 2 }, { "id": "C", "sortOrder": 3 } ],
+    "expenses": [
+      { "type": "SHARES", "totalMinor": 30000,
+        "shareParticipants": [ { "memberId": "A", "shareUnits": 1 }, { "memberId": "B", "shareUnits": 1 }, { "memberId": "C", "shareUnits": 1 } ],
+        "payers": [ { "memberId": "A", "amountMinor": 30000 } ] }
+    ],
+    "settlements": []
+  },
+  "expected": {
+    "expenses": [ { "owed": { "A": 10000, "B": 10000, "C": 10000 }, "totalMinor": 30000 } ],
+    "nets": { "A": 20000, "B": -10000, "C": -10000 }
+  }
+}

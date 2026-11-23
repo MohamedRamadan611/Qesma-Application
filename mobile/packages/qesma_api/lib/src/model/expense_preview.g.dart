@@ -18,6 +18,10 @@ class _$ExpensePreview extends ExpensePreview {
   @override
   final bool payersTotalMatches;
   @override
+  final Date? periodFrom;
+  @override
+  final Date? periodTo;
+  @override
   final int? serviceMinor;
   @override
   final int? subtotalMinor;
@@ -35,6 +39,8 @@ class _$ExpensePreview extends ExpensePreview {
       this.discountMinor,
       required this.members,
       required this.payersTotalMatches,
+      this.periodFrom,
+      this.periodTo,
       this.serviceMinor,
       this.subtotalMinor,
       this.taxMinor,
@@ -56,6 +62,8 @@ class _$ExpensePreview extends ExpensePreview {
         discountMinor == other.discountMinor &&
         members == other.members &&
         payersTotalMatches == other.payersTotalMatches &&
+        periodFrom == other.periodFrom &&
+        periodTo == other.periodTo &&
         serviceMinor == other.serviceMinor &&
         subtotalMinor == other.subtotalMinor &&
         taxMinor == other.taxMinor &&
@@ -70,6 +78,8 @@ class _$ExpensePreview extends ExpensePreview {
     _$hash = $jc(_$hash, discountMinor.hashCode);
     _$hash = $jc(_$hash, members.hashCode);
     _$hash = $jc(_$hash, payersTotalMatches.hashCode);
+    _$hash = $jc(_$hash, periodFrom.hashCode);
+    _$hash = $jc(_$hash, periodTo.hashCode);
     _$hash = $jc(_$hash, serviceMinor.hashCode);
     _$hash = $jc(_$hash, subtotalMinor.hashCode);
     _$hash = $jc(_$hash, taxMinor.hashCode);
@@ -86,6 +96,8 @@ class _$ExpensePreview extends ExpensePreview {
           ..add('discountMinor', discountMinor)
           ..add('members', members)
           ..add('payersTotalMatches', payersTotalMatches)
+          ..add('periodFrom', periodFrom)
+          ..add('periodTo', periodTo)
           ..add('serviceMinor', serviceMinor)
           ..add('subtotalMinor', subtotalMinor)
           ..add('taxMinor', taxMinor)
@@ -123,6 +135,14 @@ class ExpensePreviewBuilder
   set payersTotalMatches(bool? payersTotalMatches) =>
       _$this._payersTotalMatches = payersTotalMatches;
 
+  Date? _periodFrom;
+  Date? get periodFrom => _$this._periodFrom;
+  set periodFrom(Date? periodFrom) => _$this._periodFrom = periodFrom;
+
+  Date? _periodTo;
+  Date? get periodTo => _$this._periodTo;
+  set periodTo(Date? periodTo) => _$this._periodTo = periodTo;
+
   int? _serviceMinor;
   int? get serviceMinor => _$this._serviceMinor;
   set serviceMinor(int? serviceMinor) => _$this._serviceMinor = serviceMinor;
@@ -152,6 +172,8 @@ class ExpensePreviewBuilder
       _discountMinor = $v.discountMinor;
       _members = $v.members.toBuilder();
       _payersTotalMatches = $v.payersTotalMatches;
+      _periodFrom = $v.periodFrom;
+      _periodTo = $v.periodTo;
       _serviceMinor = $v.serviceMinor;
       _subtotalMinor = $v.subtotalMinor;
       _taxMinor = $v.taxMinor;
@@ -185,6 +207,8 @@ class ExpensePreviewBuilder
             members: members.build(),
             payersTotalMatches: BuiltValueNullFieldError.checkNotNull(
                 payersTotalMatches, r'ExpensePreview', 'payersTotalMatches'),
+            periodFrom: periodFrom,
+            periodTo: periodTo,
             serviceMinor: serviceMinor,
             subtotalMinor: subtotalMinor,
             taxMinor: taxMinor,

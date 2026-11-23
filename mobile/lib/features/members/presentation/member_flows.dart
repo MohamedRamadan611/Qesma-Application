@@ -15,6 +15,7 @@ import '../../groups/presentation/group_dialogs.dart';
 import '../../groups/presentation/group_ui.dart';
 import '../../groups/presentation/member_sheets.dart';
 import '../application/member_actions.dart';
+import 'default_share_sheet.dart';
 
 /// Runs one action chosen in the options sheet: confirmation (when it changes who can do what), the call, then the
 /// error handling. The group (so the members, roles and statuses) is re-read by the controller after each success;
@@ -38,6 +39,8 @@ Future<void> runMemberAction(
         initialName: name,
         onSave: (value) => value == name ? Future.value() : controller.renameMember(member.id, value),
       );
+    case MemberAction.defaultShare:
+      await showDefaultShareSheet(context, member: member, onSave: (units) => controller.setDefaultShare(member.id, units));
     case MemberAction.delete:
       if (!await showConfirmDialog(
         context,
