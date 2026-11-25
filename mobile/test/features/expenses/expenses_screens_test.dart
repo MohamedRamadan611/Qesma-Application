@@ -19,6 +19,12 @@ const String _v5 = '7e3b3a23-d844-4889-99ae-5cba254d1173';
 const Locale _ar = Locale('ar');
 const Locale _en = Locale('en');
 
+/// Opens the filter button's sheet and picks one of its rows ('العضو', 'التاريخ', ...).
+Future<void> openFilter(WidgetTester tester, String row) async {
+  await tapText(tester, 'تصفية');
+  await tapText(tester, row);
+}
+
 void main() {
   setUpAll(loadAppFonts);
 
@@ -76,8 +82,8 @@ void main() {
       expect(find.text('النهارده — ${isolated('2026-10-18')}'), findsOneWidget);
       expect(find.text('دفع: Mohamed'), findsWidgets);
       expect(find.text('مقسومة على 3 أفراد'), findsWidgets);
-      expect(find.text('التاريخ: الكل'), findsOneWidget);
-      expect(find.text('العضو: الكل'), findsOneWidget);
+      expect(find.descendant(of: find.byType(ExpenseFilterBar), matching: find.textContaining('من ')), findsNothing);
+      expect(find.descendant(of: find.byType(ExpenseFilterBar), matching: find.text('Asem')), findsNothing);
       expect(find.text('إضافة مصروف'), findsOneWidget);
     });
 
@@ -140,7 +146,7 @@ void main() {
       testWidgets('member filter: sheet lists members (you first), choosing one sends memberId, shows a removable chip', (tester) async {
         seedAllFixtures(server);
         await pumpExpensesApp(tester, server);
-        await tapText(tester, 'العضو: الكل');
+        await openFilter(tester, 'العضو');
         expect(find.text('فلتر العضو'), findsOneWidget);
         expect(find.text('كل الأعضاء'), findsOneWidget);
         expect(find.text('Mohamed'), findsWidgets);
@@ -148,18 +154,18 @@ void main() {
 
         await tapText(tester, 'Asem');
         expect(server.requests.where((r) => r.contains('/expenses?')).last, contains('memberId=$_asem'));
-        expect(find.text('العضو: Asem'), findsOneWidget);
+        expect(find.text('Asem'), findsOneWidget);
 
         await tester.tap(find.byTooltip('شيل الفلتر: العضو: Asem'));
         await tester.pumpAndSettle();
         expect(server.requests.where((r) => r.contains('/expenses?')).last, isNot(contains('memberId')));
-        expect(find.text('العضو: الكل'), findsOneWidget);
+        expect(find.descendant(of: find.byType(ExpenseFilterBar), matching: find.text('Asem')), findsNothing);
       });
 
       testWidgets('date filter: the Arabic date picker opens, a date is applied and the chip says so', (tester) async {
         seedAllFixtures(server);
         await pumpExpensesApp(tester, server);
-        await tapText(tester, 'التاريخ: الكل');
+        await openFilter(tester, 'التاريخ');
         expect(find.text('فلتر التاريخ'), findsOneWidget);
         expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'تطبيق')).onPressed, isNull, reason: 'nothing picked yet');
 
@@ -174,7 +180,7 @@ void main() {
         final request = server.requests.where((r) => r.contains('/expenses?')).last;
         expect(request, matches(RegExp(r'fromDate=\d{4}-\d{2}-\d{2}')));
         expect(request, isNot(contains('toDate')));
-        expect(find.textContaining('التاريخ: من '), findsOneWidget);
+        expect(find.descendant(of: find.byType(ExpenseFilterBar), matching: find.textContaining('من ')), findsOneWidget);
       });
 
       testWidgets('a backwards range shows the message and cannot be applied', (tester) async {
@@ -196,25 +202,25 @@ void main() {
       testWidgets('clearing the date filter from its sheet removes it', (tester) async {
         seedAllFixtures(server);
         await pumpExpensesApp(tester, server);
-        await tapText(tester, 'العضو: الكل');
+        await openFilter(tester, 'العضو');
         await tapText(tester, 'Asem');
-        await tapText(tester, 'التاريخ: الكل');
+        await openFilter(tester, 'التاريخ');
         await tapText(tester, 'من تاريخ: اختار التاريخ');
         await tester.tap(find.text(MaterialLocalizations.of(tester.element(find.byType(DatePickerDialog))).okButtonLabel));
         await tester.pumpAndSettle();
         await tapText(tester, 'تطبيق');
-        expect(find.textContaining('التاريخ: من '), findsOneWidget);
+        expect(find.descendant(of: find.byType(ExpenseFilterBar), matching: find.textContaining('من ')), findsOneWidget);
 
-        final dateLabel = tester.widget<Text>(find.textContaining('التاريخ: من ')).data!;
-        await tester.tap(find.byTooltip('شيل الفلتر: $dateLabel'));
+        final dateLabel = tester.widget<Text>(find.descendant(of: find.byType(ExpenseFilterBar), matching: find.textContaining('من '))).data!;
+        await tester.tap(find.byTooltip('شيل الفلتر: التاريخ: $dateLabel'));
         await tester.pumpAndSettle();
-        expect(find.text('التاريخ: الكل'), findsOneWidget);
-        expect(find.text('العضو: Asem'), findsOneWidget, reason: 'the member filter stays');
+        expect(find.descendant(of: find.byType(ExpenseFilterBar), matching: find.textContaining('من ')), findsNothing);
+        expect(find.text('Asem'), findsOneWidget, reason: 'the member filter stays');
       });
 
       testWidgets('no match: says so and one tap clears the filters; the true empty state is a different screen', (tester) async {
         await pumpExpensesApp(tester, server);
-        await tapText(tester, 'العضو: الكل');
+        await openFilter(tester, 'العضو');
         await tapText(tester, 'Asem');
         expect(find.text('مفيش مصاريف مطابقة'), findsOneWidget);
         expect(find.text('لسه مفيش مصاريف'), findsNothing);
@@ -222,7 +228,7 @@ void main() {
         server.expenses.add(copyJson(fixtureMap('expense_exact')));
         await tapText(tester, 'امسح الفلاتر');
         expect(find.text('Tickets'), findsOneWidget);
-        expect(find.text('العضو: الكل'), findsOneWidget);
+        expect(find.descendant(of: find.byType(ExpenseFilterBar), matching: find.text('Asem')), findsNothing);
       });
     });
 
@@ -593,7 +599,7 @@ void main() {
       final handle = tester.ensureSemantics();
       seedAllFixtures(server);
       await pumpExpensesApp(tester, server);
-      for (final label in ['التاريخ: الكل', 'العضو: الكل']) {
+      for (final label in ['تصفية']) {
         final data = tester.getSemantics(find.bySemanticsLabel(label)).getSemanticsData();
         expect(data.hasAction(SemanticsAction.tap), isTrue, reason: label);
         expect(data.flagsCollection.isButton, isTrue, reason: label);

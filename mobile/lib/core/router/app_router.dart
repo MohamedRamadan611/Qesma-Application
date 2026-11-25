@@ -233,6 +233,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               draft: state.extra is ExpenseDraft ? state.extra! as ExpenseDraft : null,
               // SA12: the receipt scan hands over an unsaved itemized bill the same way.
               scanDraft: state.extra is ScanDraft ? state.extra! as ScanDraft : null,
+              startAsShares: state.extra is SharesStart,
             ),
           ),
           GoRoute(

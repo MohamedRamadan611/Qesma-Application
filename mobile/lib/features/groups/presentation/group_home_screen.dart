@@ -11,6 +11,7 @@ import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../balances/presentation/balances_tab.dart';
 import '../../balances/presentation/receiver_card.dart';
+import '../../expenses/application/expense_draft.dart';
 import '../../expenses/application/expenses_list_controller.dart';
 import '../../expenses/presentation/expenses_tab.dart';
 import '../../invites/presentation/invite_sheet.dart';
@@ -202,41 +203,55 @@ class _GroupHomeScreenState extends ConsumerState<GroupHomeScreen> {
     showAppBottomSheet<void>(
       context,
       title: l10n.expensesAdd,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(
-            leading: const Icon(Icons.edit_note),
-            title: Text(l10n.calcMenuAddExpense),
-            subtitle: Text(l10n.calcMenuAddExpenseHint),
-            onTap: () {
-              Navigator.of(context).pop();
-              context.push(Routes.addExpense(gid));
-            },
-          ),
-          if (ref.read(modeFeaturesProvider).calculator)
+      child: Builder(builder: (context) {
+        // Option titles are bold in both languages.
+        final bold = Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700);
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
             ListTile(
-              leading: const Icon(Icons.local_gas_station_outlined),
-              title: Text(l10n.calcMenuCalculator),
-              subtitle: Text(l10n.calcMenuCalculatorHint),
+              leading: const Icon(Icons.edit_note),
+              title: Text(l10n.calcMenuAddExpense, style: bold),
+              subtitle: Text(l10n.calcMenuAddExpenseHint),
               onTap: () {
                 Navigator.of(context).pop();
-                context.push(Routes.calculator(gid));
+                context.push(Routes.addExpense(gid));
               },
             ),
-          // SA12: a photo of the receipt becomes an unsaved itemized bill.
-          if (ref.read(receiptScanVisibleProvider))
+            // SA12: a photo of the receipt becomes an unsaved itemized bill.
+            if (ref.read(receiptScanVisibleProvider))
+              ListTile(
+                leading: const Icon(Icons.document_scanner_outlined),
+                title: Text(l10n.scanReceiptAction, style: bold),
+                subtitle: Text(l10n.scanReceiptHint),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _scanReceipt(gid);
+                },
+              ),
+            if (ref.read(modeFeaturesProvider).calculator)
+              ListTile(
+                leading: const Icon(Icons.local_gas_station_outlined),
+                title: Text(l10n.calcMenuCalculator, style: bold),
+                subtitle: Text(l10n.calcMenuCalculatorHint),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  context.push(Routes.calculator(gid));
+                },
+              ),
+            // Flat-share bills (rent, utilities) open the form already on the "by shares" split.
             ListTile(
-              leading: const Icon(Icons.document_scanner_outlined),
-              title: Text(l10n.scanReceiptAction),
-              subtitle: Text(l10n.scanReceiptHint),
+              leading: const Icon(Icons.home_work_outlined),
+              title: Text(l10n.calcMenuFlatShare, style: bold),
+              subtitle: Text(l10n.calcMenuFlatShareHint),
               onTap: () {
                 Navigator.of(context).pop();
-                _scanReceipt(gid);
+                context.push(Routes.addExpense(gid), extra: const SharesStart());
               },
             ),
-        ],
-      ),
+          ],
+        );
+      }),
     );
   }
 

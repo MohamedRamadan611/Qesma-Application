@@ -48,6 +48,11 @@ enum ScanNote {
   truncated,
 }
 
+/// Handed to the add-expense form as `extra` to open it on the "by shares" split (the flat-share bill entry).
+final class SharesStart {
+  const SharesStart();
+}
+
 /// An unsaved expense another screen hands to the add-expense form (SA11 calculator; SA14 voice may reuse it). The
 /// form opens with it filled in and the user reviews and saves as usual; nothing is saved here (A142).
 ///

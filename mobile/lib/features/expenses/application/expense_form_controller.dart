@@ -176,7 +176,7 @@ class ExpenseFormController extends Notifier<ExpenseFormView> {
   ///
   /// With a [draft] (SA11 calculator) the form opens filled in from it, while "how it was opened" stays the empty
   /// form: leaving without saving asks first, so a calculated draft is never lost silently nor saved silently.
-  void startCreate({ExpenseDraft? draft, ScanDraft? scanDraft}) {
+  void startCreate({ExpenseDraft? draft, ScanDraft? scanDraft, bool startAsShares = false}) {
     if (_started) return;
     _started = true;
     final today = ref.read(clockProvider)().toDate();
@@ -188,6 +188,11 @@ class ExpenseFormController extends Notifier<ExpenseFormView> {
             ? formFromDraft(draft, date: today)
             : f;
     state = ExpenseFormView(form: filled, phase: FormPhase.ready);
+    if (startAsShares && scanDraft == null && draft == null) {
+      setSplitMode(SplitMode.shares);
+      // Opening on shares is not a user edit: leaving right away must not ask to discard.
+      _initial = form;
+    }
   }
 
   /// Edit mode: reads the expense (which also records its version for `If-Match`) and fills the form.

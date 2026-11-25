@@ -34,9 +34,12 @@ import '../../../core/theme/palette.dart';
 /// (everyone / selected / exact amounts; the restaurant bill is FL6). Every per-member number
 /// is the server's; the form only adds up what the user typed.
 class ExpenseFormScreen extends ConsumerStatefulWidget {
-  const ExpenseFormScreen({super.key, required this.gid, this.eid, this.draft, this.scanDraft});
+  const ExpenseFormScreen({super.key, required this.gid, this.eid, this.draft, this.scanDraft, this.startAsShares = false});
 
   final String gid;
+
+  /// Add mode only: open on the "by shares" split (the flat-share bill entry).
+  final bool startAsShares;
 
   /// Null when adding.
   final String? eid;
@@ -224,7 +227,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
           if (_isEdit) {
             _controller.startEdit();
           } else {
-            _controller.startCreate(draft: widget.draft, scanDraft: widget.scanDraft);
+            _controller.startCreate(draft: widget.draft, scanDraft: widget.scanDraft, startAsShares: widget.startAsShares);
           }
         });
         return scaffold(const SkeletonList(itemCount: 3));
@@ -286,6 +289,24 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
 
     final canSave = form.canSave(memberIds);
     final payersMismatch = form.payerMode == PayerMode.multiple && total != null && !form.payersValid;
+
+    // Who paid (and the pool switch): always after "How to split"; on a restaurant bill it sits between the charges and each person's share.
+    final paidBySection = KeyedSubtree(
+      key: _sectionKeys[ErrorSection.payers],
+      child: _PaidByCard(
+        form: form,
+        nameOf: nameOf,
+        mismatch: payersMismatch,
+        serverBanner: payersBanner,
+        onEdit: () => showPayersSheet(context, formKey: _key),
+        // SA10: the pool switch exists only when the group has a treasurer.
+        treasurerId: ref.watch(modeFeaturesProvider).pool ? group.treasurerMemberId : null,
+        onPoolChanged: (on) {
+          final t = group.treasurerMemberId;
+          if (t != null) _controller.setPaidFromPool(on, treasurerId: t);
+        },
+      ),
+    );
 
     final body = PopScope(
       canPop: !_controller.dirty || view.savedId != null,
@@ -381,24 +402,12 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
           ),
           ),
           const SizedBox(height: QesmaSpacing.md),
-          KeyedSubtree(
-            key: _sectionKeys[ErrorSection.payers],
-            child: _PaidByCard(
-            form: form,
-            nameOf: nameOf,
-            mismatch: payersMismatch,
-            serverBanner: payersBanner,
-            onEdit: () => showPayersSheet(context, formKey: _key),
-            // SA10: the pool switch exists only when the group has a treasurer.
-            treasurerId: ref.watch(modeFeaturesProvider).pool ? group.treasurerMemberId : null,
-            onPoolChanged: (on) {
-              final t = group.treasurerMemberId;
-              if (t != null) _controller.setPaidFromPool(on, treasurerId: t);
-            },
-          ),
-          ),
-          const SizedBox(height: QesmaSpacing.md),
           SplitSection(formKey: _key, form: form, members: members, previewKey: previewKey),
+          // Every split except a restaurant bill: who paid comes right after how it is split.
+          if (!isItemized) ...[
+            const SizedBox(height: QesmaSpacing.md),
+            paidBySection,
+          ],
           if (isItemized) ...[
             const SizedBox(height: QesmaSpacing.md),
             ItemizedEditor(
@@ -408,6 +417,8 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
               nameOf: nameOf,
               itemsSectionKey: _sectionKeys[ErrorSection.items],
               chargesSectionKey: _sectionKeys[ErrorSection.charges],
+              // A restaurant bill: divide the items and set the charges first, then who paid, then each person's share.
+              beforeBreakdown: paidBySection,
             ),
           ],
           if (splitBanner != null) ...[const SizedBox(height: QesmaSpacing.sm), ErrorBanner(splitBanner)],

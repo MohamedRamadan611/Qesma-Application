@@ -44,7 +44,7 @@ class GroupSummaryCard extends StatelessWidget {
     final net = netMinor;
     return AppCard(
       color: colors.successContainer,
-      padding: const EdgeInsets.all(QesmaSpacing.sm + 4),
+      padding: const EdgeInsets.symmetric(horizontal: QesmaSpacing.sm + 4, vertical: QesmaSpacing.sm),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -56,15 +56,15 @@ class GroupSummaryCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(QesmaRadii.control),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(QesmaSpacing.sm),
+                  padding: const EdgeInsets.all(QesmaSpacing.xs + 2),
                   child: Icon(
                     Icons.receipt_long_outlined,
                     color: colors.success,
-                    size: 20,
+                    size: 18,
                   ),
                 ),
               ),
-              const SizedBox(width: QesmaSpacing.sm + 4),
+              const SizedBox(width: QesmaSpacing.sm),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,14 +82,11 @@ class GroupSummaryCard extends StatelessWidget {
               AppTag(label: countLabel, icon: Icons.groups_outlined),
             ],
           ),
-          const SizedBox(height: QesmaSpacing.sm),
+          const SizedBox(height: QesmaSpacing.xs),
           Padding(
             padding: EdgeInsets.zero,
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: QesmaSpacing.sm + 4,
-                vertical: QesmaSpacing.sm,
-              ),
+              padding: const EdgeInsets.symmetric(vertical: QesmaSpacing.xs),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -107,9 +104,8 @@ class GroupSummaryCard extends StatelessWidget {
                               color: colors.textSecondary,
                             ),
                           ),
-                          const SizedBox(height: QesmaSpacing.xs),
                           SizedBox(
-                            height: 32,
+                            height: 28,
                             child: Align(
                               alignment: AlignmentDirectional.centerStart,
                               child: FittedBox(
@@ -137,9 +133,8 @@ class GroupSummaryCard extends StatelessWidget {
                             color: colors.textSecondary,
                           ),
                         ),
-                        const SizedBox(height: QesmaSpacing.xs),
                         SizedBox(
-                          height: 32,
+                          height: 28,
                           child: Align(
                             alignment: AlignmentDirectional.centerStart,
                             child: FittedBox(
@@ -164,7 +159,7 @@ class GroupSummaryCard extends StatelessWidget {
             ),
           ),
           if (footnote != null) ...[
-            const SizedBox(height: QesmaSpacing.sm),
+            const SizedBox(height: QesmaSpacing.xs),
             Text(
               footnote!,
               style: theme.textTheme.bodySmall?.copyWith(

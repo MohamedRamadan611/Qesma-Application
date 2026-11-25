@@ -2693,7 +2693,7 @@ abstract class AppLocalizations {
   /// Edit profile: name label.
   ///
   /// In ar, this message translates to:
-  /// **'الاسم المعروض'**
+  /// **'الاسم'**
   String get profileNameLabel;
 
   /// Edit profile: helper under the name.
@@ -5234,6 +5234,30 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'قسّم البنزين والكارتة، أو مشوار مشترك فيه محطات'**
   String get calcMenuCalculatorHint;
+
+  /// No description provided for @calcMenuFlatShare.
+  ///
+  /// In ar, this message translates to:
+  /// **'فاتورة السكن المشترك'**
+  String get calcMenuFlatShare;
+
+  /// No description provided for @calcMenuFlatShareHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'إيجار أو كهرباء أو إنترنت، بالحصص أو بأيام الإقامة'**
+  String get calcMenuFlatShareHint;
+
+  /// No description provided for @expenseFilterButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'تصفية'**
+  String get expenseFilterButton;
+
+  /// No description provided for @expenseFilterSheetTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تصفية المصاريف'**
+  String get expenseFilterSheetTitle;
 
   /// SA11: calculator tab: road-trip fuel and tolls.
   ///

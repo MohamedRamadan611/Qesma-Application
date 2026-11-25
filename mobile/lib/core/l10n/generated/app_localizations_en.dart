@@ -3074,6 +3074,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Split fuel and tolls, or a shared ride with stops';
 
   @override
+  String get calcMenuFlatShare => 'Flat-share bill';
+
+  @override
+  String get calcMenuFlatShareHint =>
+      'Rent, electricity or internet, split by shares or days present';
+
+  @override
+  String get expenseFilterButton => 'Filter';
+
+  @override
+  String get expenseFilterSheetTitle => 'Filter expenses';
+
+  @override
   String get calcTabFuel => 'Fuel';
 
   @override

@@ -1545,7 +1545,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get profileEditTitle => 'تعديل الملف الشخصي';
 
   @override
-  String get profileNameLabel => 'الاسم المعروض';
+  String get profileNameLabel => 'الاسم';
 
   @override
   String get profileNameHint =>
@@ -3048,6 +3048,19 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get calcMenuCalculatorHint =>
       'قسّم البنزين والكارتة، أو مشوار مشترك فيه محطات';
+
+  @override
+  String get calcMenuFlatShare => 'فاتورة السكن المشترك';
+
+  @override
+  String get calcMenuFlatShareHint =>
+      'إيجار أو كهرباء أو إنترنت، بالحصص أو بأيام الإقامة';
+
+  @override
+  String get expenseFilterButton => 'تصفية';
+
+  @override
+  String get expenseFilterSheetTitle => 'تصفية المصاريف';
 
   @override
   String get calcTabFuel => 'بنزين';

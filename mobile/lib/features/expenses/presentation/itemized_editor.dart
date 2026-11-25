@@ -30,7 +30,11 @@ class ItemizedEditor extends ConsumerStatefulWidget {
     required this.nameOf,
     this.itemsSectionKey,
     this.chargesSectionKey,
+    this.beforeBreakdown,
   });
+
+  /// Shown between the charges and "each person's share" (the form screen puts "Who paid?" here).
+  final Widget? beforeBreakdown;
 
   final ExpenseFormKey formKey;
   final ExpenseFormState form;
@@ -98,6 +102,10 @@ class _ItemizedEditorState extends ConsumerState<ItemizedEditor> {
           child: ChargesCard(formKey: widget.formKey, form: form, current: current, discountTooLarge: _discountTooLarge(preview, splitKey, form, memberIds)),
         ),
         const SizedBox(height: QesmaSpacing.md),
+        if (widget.beforeBreakdown != null) ...[
+          widget.beforeBreakdown!,
+          const SizedBox(height: QesmaSpacing.md),
+        ],
         BreakdownCard(
           formKey: widget.formKey,
           form: form,
