@@ -529,20 +529,20 @@ class _PaidByCard extends StatelessWidget {
       children: [
         Row(
           children: [
-            Flexible(child: Semantics(header: true, child: Text(l10n.expenseFormPaidByTitle, style: theme.textTheme.titleMedium))),
+            Flexible(child: Semantics(header: true, child: Text(l10n.expenseFormPaidByTitle, style: theme.textTheme.labelLarge?.copyWith(color: context.colors.primary, fontWeight: FontWeight.bold)))),
             if (count > 0) ...[
               const SizedBox(width: QesmaSpacing.sm),
               Flexible(
                 child: Text(
                   countPhrase(count, one: l10n.expensePayersCountOne, two: l10n.expensePayersCountTwo, few: l10n.expensePayersCount, many: l10n.expensePayersCountMany),
-                  style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textHelper),
+                  style: theme.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary),
                 ),
               ),
             ],
           ],
         ),
         const SizedBox(height: QesmaSpacing.xs),
-        Semantics(label: stripIsolates(_summary(l10n)), child: ExcludeSemantics(child: Text(_summary(l10n), style: theme.textTheme.bodyMedium))),
+        Semantics(label: stripIsolates(_summary(l10n)), child: ExcludeSemantics(child: Text(_summary(l10n), style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)))),
       ],
     );
     // While the expense is paid from the pool the treasurer is the only payer (A135): no payer editor.
@@ -553,11 +553,26 @@ class _PaidByCard extends StatelessWidget {
       expand: false,
       onPressed: form.paidFromPool ? null : onEdit,
     );
-    return AppCard(
+    final icon = ExcludeSemantics(child: Icon(Icons.payments_outlined, color: context.colors.primary));
+    const iconGap = SizedBox(width: QesmaSpacing.sm + 4);
+    // The same look as the "How to split" row: light brand fill, brand border, leading icon.
+    return Material(
+      color: context.colors.primaryContainer.withValues(alpha: 0.35),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(QesmaRadii.control),
+        side: BorderSide(color: context.colors.primary, width: 1.5),
+      ),
+      child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: QesmaSpacing.sm + 4, vertical: QesmaSpacing.sm),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (stacked) ...[info, const SizedBox(height: QesmaSpacing.sm), Align(alignment: AlignmentDirectional.centerStart, child: change)] else Row(crossAxisAlignment: CrossAxisAlignment.center, children: [Expanded(child: info), const SizedBox(width: QesmaSpacing.sm), change]),
+          if (stacked) ...[
+            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [icon, iconGap, Expanded(child: info)]),
+            const SizedBox(height: QesmaSpacing.sm),
+            Align(alignment: AlignmentDirectional.centerStart, child: change),
+          ] else
+            Row(children: [icon, iconGap, Expanded(child: info), const SizedBox(width: QesmaSpacing.sm), change]),
           if (treasurerId != null) ...[
             const SizedBox(height: QesmaSpacing.xs),
             SwitchListTile(
@@ -576,6 +591,7 @@ class _PaidByCard extends StatelessWidget {
           if (mismatch) ...[const SizedBox(height: QesmaSpacing.sm), ErrorBanner(l10n.expenseFormPayersMismatch)],
           if (serverBanner != null) ...[const SizedBox(height: QesmaSpacing.sm), ErrorBanner(serverBanner!)],
         ],
+      ),
       ),
     );
   }
